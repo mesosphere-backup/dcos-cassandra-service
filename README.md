@@ -2,6 +2,11 @@
 
 Running managed Cassandra rings on DCOS.
 
+## Build instructions
+```
+$ ./gradlew clean build
+```
+
 ## Overview
 
 ### Benefits
