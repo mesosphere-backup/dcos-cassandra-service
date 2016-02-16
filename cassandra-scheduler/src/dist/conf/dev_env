@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export ZOOKEEPER_SERVERS=localhost:2181
+export MESOS_SERVERS=localhost:2181

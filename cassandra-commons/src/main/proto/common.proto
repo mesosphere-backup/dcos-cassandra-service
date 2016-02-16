@@ -1,0 +1,122 @@
+package com.mesosphere.dcos.cassandra.common;
+option java_outer_classname = "CassandraProtos";
+message Volume{
+
+    optional string path = 1;
+
+    optional int32 sizeMb = 2;
+
+    optional string id = 3;
+}
+
+message HeapConfig{
+
+    optional int32 sizeMb = 1;
+
+    optional int32 newMb = 2;
+}
+
+message Location{
+
+    optional string rack = 1;
+
+    optional string dataCenter = 2;
+}
+
+message CassandraConfig{
+
+    optional string version = 1;
+
+    optional double cpus = 2;
+
+    optional int32 memoryMb = 3;
+
+    optional int32 diskMb = 4;
+
+    optional string replaceIp = 5;
+
+    optional HeapConfig heap = 6;
+
+    optional Location location = 7;
+
+    optional int32 jmxPort = 8;
+
+    optional Volume volume = 9;
+
+    optional bytes application = 10;
+}
+
+message CassandraTaskData{
+
+    enum TYPE{
+        CASSANDRA_DAEMON = 1;
+        BACKUP = 2;
+        RESTORE = 3;
+    }
+
+    required TYPE type = 1;
+
+    optional string address = 2;
+
+    optional CassandraConfig config = 3;
+
+    optional string directory = 4;
+
+    optional string backupName = 5;
+
+    optional string externalLocation = 6;
+
+    repeated string keySpaces = 7;
+
+    repeated string columnFamilies = 8;
+
+    optional string s3AccessKey = 9;
+
+    optional string s3SecretKey = 10;
+}
+
+message CassandraStatus{
+
+  optional int32 mode = 1;
+
+  optional bool joined = 2;
+
+  optional bool rpcServerRunning = 3;
+
+  optional bool nativeTransportRunning = 4;
+
+  optional bool gossipInitialized = 5;
+
+  optional bool gossipRunning = 6;
+
+  optional string hostId = 7;
+
+  optional string endpoint = 8;
+
+  optional int32 tokenCount = 9;
+
+  optional string dataCenter = 10;
+
+  optional string rack = 11;
+
+  optional string version = 12;
+}
+
+message CassandraTaskStatusData{
+
+  required CassandraTaskData.TYPE type = 1;
+
+  optional int32 mode = 2;
+
+  optional CassandraStatus status = 3;
+
+  optional string directory = 4;
+
+  optional string backupName = 5;
+
+  optional string externalLocation = 6;
+
+  repeated string keySpaces = 7;
+
+  repeated string columnFamilies =8;
+}

@@ -1,0 +1,15 @@
+apply plugin: 'application'
+mainClassName = 'com.mesosphere.dcos.cassandra.executor.Main'
+
+dependencies {
+    compile project(':cassandra-commons')
+    compile 'org.apache.cassandra:cassandra-all:2.2.5'
+    compile 'org.apache.commons:commons-compress:1.5'
+}
+
+distributions {
+    main {
+        baseName = 'executor'
+        version = ""
+    }
+}

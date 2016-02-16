@@ -1,0 +1,13 @@
+apply plugin: 'application'
+mainClassName = 'com.mesosphere.dcos.cassandra.scheduler.Main'
+
+dependencies {
+    compile project(':cassandra-commons')
+}
+
+distributions {
+    main {
+        baseName = 'scheduler'
+        version = ""
+    }
+}
