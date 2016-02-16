@@ -1,10 +1,15 @@
 apply plugin: 'application'
 mainClassName = 'com.mesosphere.dcos.cassandra.executor.Main'
 
+ext {
+    junitVer = '4.12'
+}
+
 dependencies {
     compile project(':cassandra-commons')
     compile 'org.apache.cassandra:cassandra-all:2.2.5'
     compile 'org.apache.commons:commons-compress:1.5'
+    testCompile "junit:junit:${junitVer}"
 }
 
 distributions {
