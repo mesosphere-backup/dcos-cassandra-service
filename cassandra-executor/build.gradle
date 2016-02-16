@@ -9,6 +9,8 @@ dependencies {
     compile project(':cassandra-commons')
     compile 'org.apache.cassandra:cassandra-all:2.2.5'
     compile 'org.apache.commons:commons-compress:1.5'
+    // To override the junit compile dependency that cassandra brings in.
+    compile "junit:junit:${junitVer}"
     testCompile "junit:junit:${junitVer}"
 }
 
