@@ -65,7 +65,7 @@ public class CassandraRepairScheduler {
         final List<CassandraTask> terminatedCassandraTasks = cassandraTasks.getTerminatedTasks();
         terminatedCassandraTasks.stream()
                 .filter(task -> (block == null) ? true :
-                        task.getId() != block.getTaskId())
+                        task.getId().equals(block.getTaskId()))
                 .forEach(cassandraTask -> terminatedTasks.add(
                                 cassandraTask.toProto()));
         return terminatedTasks;
