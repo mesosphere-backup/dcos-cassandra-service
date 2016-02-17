@@ -6,6 +6,9 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraStatus;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import com.mesosphere.dcos.cassandra.executor.CassandraExecutor;
+import org.apache.mesos.Executor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -14,6 +17,9 @@ import java.util.Optional;
 @Path("/v1/cassandra")
 @Produces(MediaType.APPLICATION_JSON)
 public class CassandraDaemonController {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(CassandraDaemonController.class);
 
     private final CassandraExecutor executor;
 
@@ -28,10 +34,13 @@ public class CassandraDaemonController {
     }
 
     @Inject
-    public CassandraDaemonController(CassandraExecutor executor) {
+    public CassandraDaemonController(Executor executor) {
 
-        this.executor = executor;
+        LOGGER.info("Setting executor to {}",executor);
 
+        this.executor = (CassandraExecutor) executor;
+
+        LOGGER.info("Set executor to {}",this.executor);
     }
 
     @GET

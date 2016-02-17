@@ -19,21 +19,16 @@ public class CassandraExecutor implements Executor {
             CassandraExecutor.class
     );
 
-    public static CassandraExecutor create() {
-        return new CassandraExecutor();
-    }
-
-    @Inject
-    public CassandraExecutor() {
-
-    }
 
     private ExecutorDriver driver;
-
     private volatile CassandraDaemonProcess cassandra;
+    private final ScheduledExecutorService executor;
 
-    private final ScheduledExecutorService executor =
-            Executors.newScheduledThreadPool(10);
+    @Inject
+    public CassandraExecutor(final ScheduledExecutorService executor) {
+        this.executor = executor;
+    }
+
 
     @Override
     public void registered(ExecutorDriver driver,

@@ -55,39 +55,17 @@ public class Main extends Application<CassandraExecutorConfiguration> {
 
         Injector injector = Guice.createInjector(baseModule);
 
-
         environment.healthChecks().register(DaemonRunning.NAME,
                 injector.getInstance(DaemonRunning.class));
-
         environment.healthChecks().register(DaemonMode.NAME,
                 injector.getInstance(DaemonMode.class));
-
         environment.jersey().register(
                 injector.getInstance(CassandraDaemonController.class));
 
-        final MesosExecutorDriver driver = new MesosExecutorDriver(
-                injector.getInstance(CassandraExecutor.class));
+        environment.lifecycle().manage(
+                injector.getInstance(ExecutorDriverDispatcher.class));
 
-        final int status;
 
-        switch (driver.run()) {
-            case DRIVER_STOPPED:
-                status = 0;
-                break;
-            case DRIVER_ABORTED:
-                status = 1;
-                break;
-            case DRIVER_NOT_STARTED:
-                status = 2;
-                break;
-            default:
-                status = 3;
-                break;
-        }
-
-        driver.stop();
-
-        System.exit(status);
 
 
     }
