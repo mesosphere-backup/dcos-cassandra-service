@@ -20,6 +20,8 @@ import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executors;
+
 public class SchedulerModule extends AbstractModule {
     private final static Logger LOGGER = LoggerFactory.getLogger(
             SchedulerModule.class);
@@ -29,9 +31,9 @@ public class SchedulerModule extends AbstractModule {
 
     public SchedulerModule(
             final CassandraSchedulerConfiguration configuration,
-            final Environment enviornment) {
+            final Environment environment) {
         this.configuration = configuration;
-        this.environment = enviornment;
+        this.environment = environment;
     }
 
     @Override
@@ -96,8 +98,7 @@ public class SchedulerModule extends AbstractModule {
                 new HttpClientBuilder(environment).using(
                         configuration.getHttpClientConfiguration())
                         .build("example-http-client"),
-                environment.lifecycle().executorService("client").maxThreads
-                        (100).minThreads(5).build()
+                Executors.newCachedThreadPool()
         ));
         bind(IdentityManager.class).asEagerSingleton();
         bind(ConfigurationManager.class).asEagerSingleton();

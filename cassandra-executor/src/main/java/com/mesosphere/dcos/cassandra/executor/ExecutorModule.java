@@ -2,6 +2,13 @@ package com.mesosphere.dcos.cassandra.executor;
 
 import com.google.inject.AbstractModule;
 import com.mesosphere.dcos.cassandra.executor.config.CassandraExecutorConfiguration;
+import org.apache.mesos.Executor;
+import org.apache.mesos.ExecutorDriver;
+import org.apache.mesos.MesosExecutorDriver;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by kowens on 2/10/16.
@@ -16,16 +23,21 @@ public class ExecutorModule extends AbstractModule {
     }
 
     public ExecutorModule(final CassandraExecutorConfiguration configuration) {
-
         this.configuration = configuration;
-
     }
 
 
     @Override
     protected void configure() {
 
-        bind(CassandraExecutor.class).asEagerSingleton();
+        bind(ExecutorService.class).toInstance(
+                Executors.newCachedThreadPool());
+        bind(ScheduledExecutorService.class).toInstance(
+                Executors.newScheduledThreadPool(10));
+        bind(Executor.class).to(CassandraExecutor.class).asEagerSingleton();
+        bind(ExecutorDriverFactory.class)
+                .to(MesosExecutorDriverFactory.class)
+                .asEagerSingleton();
 
     }
 }
