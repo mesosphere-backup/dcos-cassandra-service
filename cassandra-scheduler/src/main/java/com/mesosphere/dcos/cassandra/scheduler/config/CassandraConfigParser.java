@@ -34,8 +34,8 @@ public class CassandraConfigParser {
     private int batchlogReplayThrottleInKb;
     @JsonProperty("partitioner")
     private String partitioner;
-    @JsonProperty("persistentVolumeSize")
-    private int persistentVolumeSizeMb;
+    @JsonProperty("volumeSizeMb")
+    private int volumeSizeMb;
     @JsonProperty("diskFailurePolicy")
     private String diskFailurePolicy;
     @JsonProperty("commitFailurePolicy")
@@ -159,7 +159,7 @@ public class CassandraConfigParser {
         maxHintsDeliveryThreads = DEFAULT_MAX_HINTS_DELIVERY_THREADS;
         batchlogReplayThrottleInKb = DEFAULT_BATCHLOG_REPLAY_THROTTLE_IN_KB;
         partitioner = DEFAULT_PARTITIONER;
-        persistentVolumeSizeMb = CassandraConfig.DEFAULT.getVolume().getSizeMb();
+        volumeSizeMb = CassandraConfig.DEFAULT.getVolume().getSizeMb();
         diskFailurePolicy = DEFAULT_DISK_FAILURE_POLICY;
         commitFailurePolicy = DEFAULT_COMMIT_FAILURE_POLICY;
         keyCacheSizeInMb = DEFAULT_KEY_CACHE_SIZE_IN_MB;
@@ -643,12 +643,12 @@ public class CassandraConfigParser {
         this.partitioner = partitioner;
     }
 
-    public int getPersistentVolumeSizeMb() {
-        return persistentVolumeSizeMb;
+    public int getVolumeSizeMb() {
+        return volumeSizeMb;
     }
 
-    public void setPersistentVolumeSizeMb(int persistentVolumeSizeMb) {
-        this.persistentVolumeSizeMb = persistentVolumeSizeMb;
+    public void setVolumeSizeMb(int persistentVolumeSizeMb) {
+        this.volumeSizeMb = volumeSizeMb;
     }
 
     public int getRangeRequestTimeoutInMs() {

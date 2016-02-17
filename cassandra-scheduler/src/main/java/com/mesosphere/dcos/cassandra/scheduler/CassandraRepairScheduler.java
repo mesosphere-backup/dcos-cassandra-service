@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
@@ -9,7 +10,6 @@ import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.OfferRecommendation;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.scheduler.plan.Block;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ public class CassandraRepairScheduler {
 
     public List<Protos.OfferID> resourceOffers(SchedulerDriver driver,
                                                List<Protos.Offer> offers,
-                                               Block block) {
+                                               CassandraBlock block) {
         List<Protos.OfferID> acceptedOffers = new ArrayList<>();
         List<Protos.TaskInfo> terminatedTasks = getTerminatedTasks(block);
 
@@ -46,9 +46,10 @@ public class CassandraRepairScheduler {
                     new Random().nextInt(terminatedTasks.size()));
             OfferRequirement offerReq =
                     offerRequirementProvider.getReplacementOfferRequirement(
-                    terminatedTask);
+                            terminatedTask);
             OfferEvaluator offerEvaluator = new OfferEvaluator(offerReq);
-            List<OfferRecommendation> recommendations = offerEvaluator.evaluate(offers);
+            List<OfferRecommendation> recommendations = offerEvaluator.evaluate(
+                    offers);
             LOGGER.debug("Got recommendations: {} for terminated task: {}",
                     recommendations,
                     terminatedTask.getTaskId().getValue());
@@ -59,11 +60,14 @@ public class CassandraRepairScheduler {
         return acceptedOffers;
     }
 
-    private List<Protos.TaskInfo> getTerminatedTasks(Block block) {
+    private List<Protos.TaskInfo> getTerminatedTasks(CassandraBlock block) {
         final List<Protos.TaskInfo> terminatedTasks = new ArrayList<>();
         final List<CassandraTask> terminatedCassandraTasks = cassandraTasks.getTerminatedTasks();
-        terminatedCassandraTasks.stream().forEach(
-                cassandraTask -> terminatedTasks.add(cassandraTask.toProto()));
+        terminatedCassandraTasks.stream()
+                .filter(task -> (block == null) ? true :
+                        task.getId() != block.getTaskId())
+                .forEach(cassandraTask -> terminatedTasks.add(
+                                cassandraTask.toProto()));
         return terminatedTasks;
     }
 }
