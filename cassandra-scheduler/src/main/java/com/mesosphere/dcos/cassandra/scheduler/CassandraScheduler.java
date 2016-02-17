@@ -9,6 +9,7 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlan;
 import com.mesosphere.dcos.cassandra.scheduler.plan.PlanFactory;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -126,13 +127,16 @@ public class CassandraScheduler implements Scheduler, Managed {
 
             List<Protos.OfferID> acceptedOffers = new ArrayList<>();
             final Block currentBlock = planManager.getCurrentBlock();
+
             acceptedOffers.addAll(
                     planScheduler.resourceOffers(driver, offers, currentBlock));
             List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(offers,
                     acceptedOffers);
             acceptedOffers.addAll(
-                    repairScheduler.resourceOffers(driver, unacceptedOffers,
-                            currentBlock));
+                    repairScheduler.resourceOffers(
+                            driver,
+                            unacceptedOffers,
+                            (CassandraBlock)currentBlock));
 
             declineOffers(driver, acceptedOffers, offers);
         }

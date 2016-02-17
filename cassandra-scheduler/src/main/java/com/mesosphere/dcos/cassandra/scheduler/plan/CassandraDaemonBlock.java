@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class CassandraDaemonBlock implements Block {
+public class CassandraDaemonBlock implements CassandraBlock {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraDaemonBlock.class);
@@ -124,7 +124,7 @@ public class CassandraDaemonBlock implements Block {
                         taskId,
                         id);
             } else {
-                //update the stat
+                //update the status
                 cassandraTasks.update(status);
                 CassandraDaemonTask task = cassandraTasks.getDaemons().get(
                         taskId);
@@ -184,4 +184,8 @@ public class CassandraDaemonBlock implements Block {
                 + oldStatus + " to: " + status);
     }
 
+    @Override
+    public String getTaskId() {
+        return taskId;
+    }
 }

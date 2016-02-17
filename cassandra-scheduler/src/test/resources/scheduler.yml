@@ -22,6 +22,7 @@ cassandra:
     sizeMb : ${CASSANDRA_HEAP_MB:-2048}
     newMb : ${CASSANDRA_HEAP_MB:-100}
   jmxPort: ${CASSANDRA_JMX_PORT:-7199}
+  volumeSizeMb : ${CASSANDRA_VOLUME_SIZE_MB :- 9216}
   numTokens : ${CASSANDRA_NUM_TOKENS:-256}
   hintedHandoffEnabled : ${CASSANDRA_HINTED_HANDOFF_ENABLED:-true}
   maxHintWindowInMs : ${CASSANDRA_MAX_HINT_WINDOW_IN_MS:-10800000}
