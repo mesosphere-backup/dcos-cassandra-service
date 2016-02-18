@@ -2,16 +2,14 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
-import com.mesosphere.dcos.cassandra.scheduler.resources.ConfigurationResource;
-import com.mesosphere.dcos.cassandra.scheduler.resources.IdentityResource;
+import com.mesosphere.dcos.cassandra.scheduler.resources.*;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
-import com.mesosphere.dcos.cassandra.scheduler.resources.Seeds;
-import com.mesosphere.dcos.cassandra.scheduler.resources.TasksResources;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
@@ -77,6 +75,8 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
                 injector.getInstance(ConfigurationResource.class));
         environment.jersey().register(
                 injector.getInstance(TasksResources.class));
+        environment.jersey().register(
+                injector.getInstance(BackupResource.class));
     }
 
     private void registerManagedObjects(Environment environment, Injector injector) {

@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
@@ -30,7 +31,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CassandraScheduler implements Scheduler, Managed {
-
     private final static Logger LOGGER = LoggerFactory.getLogger(
             CassandraScheduler.class);
 
@@ -45,6 +45,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private PersistentOfferRequirementProvider offerRequirementProvider;
     private CassandraTasks cassandraTasks;
     private EventBus eventBus;
+    private BackupManager backupManager;
 
     @Inject
     public CassandraScheduler(
@@ -53,15 +54,15 @@ public class CassandraScheduler implements Scheduler, Managed {
             MesosConfig mesosConfig,
             PersistentOfferRequirementProvider offerRequirementProvider,
             CassandraTasks cassandraTasks,
-            EventBus eventBus) {
+            EventBus eventBus,
+            BackupManager backupManager) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
+        this.backupManager = backupManager;
         this.cassandraTasks = cassandraTasks;
         this.identityManager = identityManager;
         this.configurationManager = configurationManager;
         this.offerRequirementProvider = offerRequirementProvider;
-
-
     }
 
     @Override
@@ -120,26 +121,38 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void resourceOffers(SchedulerDriver driver,
                                List<Protos.Offer> offers) {
         logOffers(offers);
+        // Perform backup operation if required
+
         // TODO: Add logic for handling tasks ops
         // TODO: Wait for reconciliation to finish
+        List<Protos.OfferID> acceptedOffers = new ArrayList<>();
 
         if (planManager != null) {
-
-            List<Protos.OfferID> acceptedOffers = new ArrayList<>();
             final Block currentBlock = planManager.getCurrentBlock();
 
+            // Schedule next block from install/update plan
             acceptedOffers.addAll(
                     planScheduler.resourceOffers(driver, offers, currentBlock));
+
+            // Perform any required repairs
             List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(offers,
                     acceptedOffers);
             acceptedOffers.addAll(
                     repairScheduler.resourceOffers(
                             driver,
                             unacceptedOffers,
-                            (CassandraBlock)currentBlock));
+                            (CassandraBlock) currentBlock));
 
-            declineOffers(driver, acceptedOffers, offers);
+            // Schedule backup tasks
+            unacceptedOffers = filterAcceptedOffers(offers,
+                    acceptedOffers);
+            acceptedOffers.addAll(
+                    backupManager.resourceOffers(
+                            driver,
+                            unacceptedOffers
+                    ));
         }
+        declineOffers(driver, acceptedOffers, offers);
     }
 
     @Override

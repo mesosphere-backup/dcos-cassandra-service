@@ -9,6 +9,8 @@ import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
@@ -66,6 +68,8 @@ public abstract class CassandraTask {
 
     public enum TYPE {
         CASSANDRA_DAEMON,
+        BACKUP_SNAPSHOT,
+        BACKUP_UPLOAD,
         S3_BACKUP,
         S3_RESTORE
     }
@@ -105,8 +109,8 @@ public abstract class CassandraTask {
                                 Optional.empty(),
                                 CassandraMode.STARTING));
 
-            case BACKUP:
-                return S3BackupTask.create(
+            case BACKUP_SNAPSHOT:
+                return BackupSnapshotTask.create(
                         info.getTaskId().getValue(),
                         info.getSlaveId().getValue(),
                         data.getAddress(),
@@ -122,7 +126,7 @@ public abstract class CassandraTask {
                         (int) getReservedDisk(resources,
                                 role,
                                 principal),
-                        S3BackupStatus.create(Protos.TaskState.TASK_STAGING,
+                        BackupSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
                                 info.getTaskId().getValue(),
                                 info.getSlaveId().getValue(),
                                 info.getExecutor().getExecutorId().getValue(),
@@ -134,7 +138,7 @@ public abstract class CassandraTask {
                         data.getS3SecretKey()
                 );
 
-            case RESTORE:
+            case RESTORE_DOWNLOAD:
                 return S3RestoreTask.create(
                         info.getTaskId().getValue(),
                         info.getSlaveId().getValue(),

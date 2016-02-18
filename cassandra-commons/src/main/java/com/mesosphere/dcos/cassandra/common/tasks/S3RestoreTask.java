@@ -358,7 +358,7 @@ public class S3RestoreTask extends CassandraTask {
     @Override
     public CassandraProtos.CassandraTaskData getTaskData() {
         return CassandraProtos.CassandraTaskData.newBuilder()
-                .setType(CassandraProtos.CassandraTaskData.TYPE.RESTORE)
+                .setType(CassandraProtos.CassandraTaskData.TYPE.RESTORE_DOWNLOAD)
                 .addAllColumnFamilies(columnFamilies)
                 .addAllKeySpaces(keySpaces)
                 .setExternalLocation(externalLocation)
@@ -422,7 +422,9 @@ public class S3RestoreTask extends CassandraTask {
         return (S3RestoreStatus) status;
     }
 
-    public Builder mutable(){return new Builder(this);}
+    public Builder mutable() {
+        return new Builder(this);
+    }
 
     @Override
     public List<Protos.Resource> getReserveResources() {

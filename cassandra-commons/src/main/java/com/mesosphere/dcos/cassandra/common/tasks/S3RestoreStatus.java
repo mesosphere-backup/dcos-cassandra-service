@@ -43,7 +43,7 @@ public class S3RestoreStatus extends CassandraTaskStatus {
     @Override
     protected CassandraProtos.CassandraTaskStatusData getData() {
         return CassandraProtos.CassandraTaskStatusData.newBuilder()
-                .setType(CassandraProtos.CassandraTaskData.TYPE.RESTORE)
+                .setType(CassandraProtos.CassandraTaskData.TYPE.RESTORE_DOWNLOAD)
                 .build();
     }
 

@@ -198,7 +198,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
                 name,
                 Optional.empty(),
                 version,
-                "root",
+                "",
                 name + "_cluster",
                 name + "_role",
                 name + "_principal",

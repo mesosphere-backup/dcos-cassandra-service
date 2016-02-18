@@ -10,6 +10,7 @@ import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerialize
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
@@ -38,6 +39,7 @@ public class SchedulerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(Environment.class).toInstance(this.environment);
 
         bind(CassandraSchedulerConfiguration.class).toInstance(
                 this.configuration);
@@ -105,5 +107,6 @@ public class SchedulerModule extends AbstractModule {
         bind(PersistentOfferRequirementProvider.class);
         bind(CassandraTasks.class).asEagerSingleton();
         bind(EventBus.class).asEagerSingleton();
+        bind(BackupManager.class).asEagerSingleton();
     }
 }
