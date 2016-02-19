@@ -1,13 +1,14 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.eventbus.Subscribe;
+import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,28 +37,52 @@ public class CassandraDaemonBlock implements CassandraBlock {
     private final int id;
     private final CassandraTasks cassandraTasks;
     private final CassandraOfferRequirementProvider provider;
+    private final ExecutorClient client;
     private String taskId;
     private Status status;
+    private boolean terminated = false;
+
+    private void terminate(CassandraDaemonTask task) {
+        if (!terminated) {
+            try {
+                if (client.shutdown(task.getHostname(),
+                        task.getExecutor().getApiPort()
+                ).toCompletableFuture().get()) {
+                    terminated = true;
+                }
+            } catch (Throwable t) {
+                LOGGER.error(String.format("Error terminating task = %s",
+                        task)
+                        , t);
+            }
+        }
+    }
+
+
 
     public static CassandraDaemonBlock create(
-            int id,
-            String taskId,
-            CassandraOfferRequirementProvider provider,
-            CassandraTasks cassandraTasks) {
+            final int id,
+            final String taskId,
+            final CassandraOfferRequirementProvider provider,
+            final CassandraTasks cassandraTasks,
+            final ExecutorClient client) {
 
-        return new CassandraDaemonBlock(id, taskId, provider, cassandraTasks);
+        return new CassandraDaemonBlock(id, taskId, provider, cassandraTasks,
+                client);
     }
 
     public CassandraDaemonBlock(
             int id,
             String taskId,
-            CassandraOfferRequirementProvider provider,
-            CassandraTasks cassandraTasks) {
+            final CassandraOfferRequirementProvider provider,
+            final CassandraTasks cassandraTasks,
+            final ExecutorClient client) {
         this.status = Status.Pending;
         this.cassandraTasks = cassandraTasks;
         this.taskId = taskId;
         this.id = id;
         this.provider = provider;
+        this.client = client;
     }
 
     @Override
@@ -81,8 +106,26 @@ public class CassandraDaemonBlock implements CassandraBlock {
 
         CassandraDaemonTask task = cassandraTasks.getDaemons().get(taskId);
 
-        // This will work better once reconcilation is implemented
-        if (Protos.TaskState.TASK_RUNNING.equals(task.getStatus().getState())
+        if (cassandraTasks.needsConfigUpdate(task)) {
+
+            if (!isTerminal(task.getStatus().getState())) {
+                terminate(task);
+                return null;
+            } else {
+
+                terminated = false;
+                try {
+                    return provider.getUpdateOfferRequirement(
+                            cassandraTasks.updateConfig(task).toProto());
+                } catch (PersistenceException e) {
+                    LOGGER.error(String.format("Error updating task " +
+                            "configuration task = %s",task),
+                            e);
+                    return null;
+                }
+            }
+        } else if (Protos.TaskState.TASK_RUNNING.equals(task.getStatus()
+                .getState())
                 && CassandraMode.NORMAL.equals(task.getStatus().getMode())) {
             //We are running and normal complete this block
             LOGGER.info(
@@ -116,14 +159,7 @@ public class CassandraDaemonBlock implements CassandraBlock {
                         "Irrelevant status id = {}, task = {}, status = {}",
                         id, taskId, status);
                 return;
-            } else if (isTerminal(status.getState())) {
-                //need to progress with a new task
-                cassandraTasks.remove(status.getTaskId().getValue());
-                taskId = cassandraTasks.createDaemon().getId();
-                LOGGER.info("Reallocating task {} for block {}",
-                        taskId,
-                        id);
-            } else {
+            }  else {
                 //update the status
                 cassandraTasks.update(status);
                 CassandraDaemonTask task = cassandraTasks.getDaemons().get(

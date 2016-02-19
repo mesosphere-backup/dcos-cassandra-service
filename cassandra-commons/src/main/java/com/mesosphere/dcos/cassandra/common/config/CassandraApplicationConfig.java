@@ -26,10 +26,7 @@ import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.mesosphere.dcos.cassandra.common.util.JsonUtils.MAPPER;
 import static com.mesosphere.dcos.cassandra.common.util.JsonUtils.YAML_MAPPER;
@@ -1143,182 +1140,134 @@ public class CassandraApplicationConfig {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof CassandraApplicationConfig)) return false;
         CassandraApplicationConfig that = (CassandraApplicationConfig) o;
-
-        if (numTokens != that.numTokens) return false;
-        if (hintedHandoffEnabled != that.hintedHandoffEnabled) return false;
-        if (maxHintWindowInMs != that.maxHintWindowInMs) return false;
-        if (hintedHandoffThrottleInKb != that.hintedHandoffThrottleInKb) return false;
-        if (maxHintsDeliveryThreads != that.maxHintsDeliveryThreads) return false;
-        if (batchlogReplayThrottleInKb != that.batchlogReplayThrottleInKb) return false;
-        if (rolesValidityInMs != that.rolesValidityInMs) return false;
-        if (permissionsValidityInMs != that.permissionsValidityInMs) return false;
-        if (keyCacheSavePeriod != that.keyCacheSavePeriod) return false;
-        if (rowCacheSizeInMb != that.rowCacheSizeInMb) return false;
-        if (rowCacheSavePeriod != that.rowCacheSavePeriod) return false;
-        if (counterCacheSavePeriod != that.counterCacheSavePeriod) return false;
-        if (commitlogSyncPeriodInMs != that.commitlogSyncPeriodInMs) return false;
-        if (commitlogSegmentSizeInMb != that.commitlogSegmentSizeInMb) return false;
-        if (concurrentReads != that.concurrentReads) return false;
-        if (concurrentWrites != that.concurrentWrites) return false;
-        if (concurrentCounterWrites != that.concurrentCounterWrites) return false;
-        if (indexSummaryResizeIntervalInMinutes != that.indexSummaryResizeIntervalInMinutes) return false;
-        if (trickleFsync != that.trickleFsync) return false;
-        if (trickleFsyncIntervalInKb != that.trickleFsyncIntervalInKb) return false;
-        if (storagePort != that.storagePort) return false;
-        if (sslStoragePort != that.sslStoragePort) return false;
-        if (startNativeTransport != that.startNativeTransport) return false;
-        if (nativeTransportPort != that.nativeTransportPort) return false;
-        if (startRpc != that.startRpc) return false;
-        if (rpcPort != that.rpcPort) return false;
-        if (rpcKeepalive != that.rpcKeepalive) return false;
-        if (thriftFramedTransportSizeInMb != that.thriftFramedTransportSizeInMb) return false;
-        if (incrementalBackups != that.incrementalBackups) return false;
-        if (snapshotBeforeCompaction != that.snapshotBeforeCompaction) return false;
-        if (autoSnapshot != that.autoSnapshot) return false;
-        if (tombstoneWarnThreshold != that.tombstoneWarnThreshold) return false;
-        if (tombstoneFailureThreshold != that.tombstoneFailureThreshold) return false;
-        if (columnIndexSizeInKb != that.columnIndexSizeInKb) return false;
-        if (batchSizeWarnThresholdInKb != that.batchSizeWarnThresholdInKb) return false;
-        if (batchSizeFailThresholdInKb != that.batchSizeFailThresholdInKb) return false;
-        if (compactionThroughputMbPerSec != that.compactionThroughputMbPerSec) return false;
-        if (compactionLargePartitionWarningThresholdMb != that.compactionLargePartitionWarningThresholdMb) return false;
-        if (sstablePreemptiveOpenIntervalInMb != that.sstablePreemptiveOpenIntervalInMb) return false;
-        if (readRequestTimeoutInMs != that.readRequestTimeoutInMs) return false;
-        if (rangeRequestTimeoutInMs != that.rangeRequestTimeoutInMs) return false;
-        if (writeRequestTimeoutInMs != that.writeRequestTimeoutInMs) return false;
-        if (counterWriteRequestTimeoutInMs != that.counterWriteRequestTimeoutInMs) return false;
-        if (casContentionTimeoutInMs != that.casContentionTimeoutInMs) return false;
-        if (truncateRequestTimeoutInMs != that.truncateRequestTimeoutInMs) return false;
-        if (requestTimeoutInMs != that.requestTimeoutInMs) return false;
-        if (crossNodeTimeout != that.crossNodeTimeout) return false;
-        if (dynamicSnitchUpdateIntervalInMs != that.dynamicSnitchUpdateIntervalInMs) return false;
-        if (dynamicSnitchResetIntervalInMs != that.dynamicSnitchResetIntervalInMs) return false;
-        if (Double.compare(that.dynamicSnitchBadnessThreshold, dynamicSnitchBadnessThreshold) != 0) return false;
-        if (interDcTcpNodelay != that.interDcTcpNodelay) return false;
-        if (tracetypeQueryTtl != that.tracetypeQueryTtl) return false;
-        if (tracetypeRepairTtl != that.tracetypeRepairTtl) return false;
-        if (enableUserDefinedFunctions != that.enableUserDefinedFunctions) return false;
-        if (windowsTimerInterval != that.windowsTimerInterval) return false;
-        if (clusterName != null ? !clusterName.equals(that.clusterName) : that.clusterName != null) return false;
-        if (authenticator != null ? !authenticator.equals(that.authenticator) : that.authenticator != null)
-            return false;
-        if (authorizer != null ? !authorizer.equals(that.authorizer) : that.authorizer != null) return false;
-        if (roleManager != null ? !roleManager.equals(that.roleManager) : that.roleManager != null) return false;
-        if (partitioner != null ? !partitioner.equals(that.partitioner) : that.partitioner != null) return false;
-        if (persistentVolume != null ? !persistentVolume.equals(that.persistentVolume) : that.persistentVolume != null)
-            return false;
-        if (diskFailurePolicy != null ? !diskFailurePolicy.equals(that.diskFailurePolicy) : that.diskFailurePolicy != null)
-            return false;
-        if (commitFailurePolicy != null ? !commitFailurePolicy.equals(that.commitFailurePolicy) : that.commitFailurePolicy != null)
-            return false;
-        if (keyCacheSizeInMb != null ? !keyCacheSizeInMb.equals(that.keyCacheSizeInMb) : that.keyCacheSizeInMb != null)
-            return false;
-        if (counterCacheSizeInMb != null ? !counterCacheSizeInMb.equals(that.counterCacheSizeInMb) : that.counterCacheSizeInMb != null)
-            return false;
-        if (commitlogSync != null ? !commitlogSync.equals(that.commitlogSync) : that.commitlogSync != null)
-            return false;
-        if (seedProvider != null ? !seedProvider.equals(that.seedProvider) : that.seedProvider != null) return false;
-        if (memtableAllocationType != null ? !memtableAllocationType.equals(that.memtableAllocationType) : that.memtableAllocationType != null)
-            return false;
-        if (indexSummaryCapacityInMb != null ? !indexSummaryCapacityInMb.equals(that.indexSummaryCapacityInMb) : that.indexSummaryCapacityInMb != null)
-            return false;
-        if (listenAddress != null ? !listenAddress.equals(that.listenAddress) : that.listenAddress != null)
-            return false;
-        if (rpcAddress != null ? !rpcAddress.equals(that.rpcAddress) : that.rpcAddress != null) return false;
-        if (rpcServerType != null ? !rpcServerType.equals(that.rpcServerType) : that.rpcServerType != null)
-            return false;
-        if (endpointSnitch != null ? !endpointSnitch.equals(that.endpointSnitch) : that.endpointSnitch != null)
-            return false;
-        if (requestScheduler != null ? !requestScheduler.equals(that.requestScheduler) : that.requestScheduler != null)
-            return false;
-        return internodeCompression != null ? internodeCompression.equals(that.internodeCompression) : that.internodeCompression == null;
-
+        return isHintedHandoffEnabled() == that.isHintedHandoffEnabled() &&
+                getMaxHintWindowInMs() == that.getMaxHintWindowInMs() &&
+                getHintedHandoffThrottleInKb() == that.getHintedHandoffThrottleInKb() &&
+                getMaxHintsDeliveryThreads() == that.getMaxHintsDeliveryThreads() &&
+                getBatchlogReplayThrottleInKb() == that.getBatchlogReplayThrottleInKb() &&
+                getRolesValidityInMs() == that.getRolesValidityInMs() &&
+                getPermissionsValidityInMs() == that.getPermissionsValidityInMs() &&
+                getKeyCacheSavePeriod() == that.getKeyCacheSavePeriod() &&
+                getRowCacheSizeInMb() == that.getRowCacheSizeInMb() &&
+                getRowCacheSavePeriod() == that.getRowCacheSavePeriod() &&
+                getCounterCacheSavePeriod() == that.getCounterCacheSavePeriod() &&
+                getCommitlogSyncPeriodInMs() == that.getCommitlogSyncPeriodInMs() &&
+                getCommitlogSegmentSizeInMb() == that.getCommitlogSegmentSizeInMb() &&
+                getConcurrentReads() == that.getConcurrentReads() &&
+                getConcurrentWrites() == that.getConcurrentWrites() &&
+                getConcurrentCounterWrites() == that.getConcurrentCounterWrites() &&
+                getIndexSummaryResizeIntervalInMinutes() == that.getIndexSummaryResizeIntervalInMinutes() &&
+                isTrickleFsync() == that.isTrickleFsync() &&
+                getTrickleFsyncIntervalInKb() == that.getTrickleFsyncIntervalInKb() &&
+                getStoragePort() == that.getStoragePort() &&
+                getSslStoragePort() == that.getSslStoragePort() &&
+                isStartNativeTransport() == that.isStartNativeTransport() &&
+                getNativeTransportPort() == that.getNativeTransportPort() &&
+                isStartRpc() == that.isStartRpc() &&
+                getRpcPort() == that.getRpcPort() &&
+                isRpcKeepalive() == that.isRpcKeepalive() &&
+                getThriftFramedTransportSizeInMb() == that.getThriftFramedTransportSizeInMb() &&
+                isIncrementalBackups() == that.isIncrementalBackups() &&
+                isSnapshotBeforeCompaction() == that.isSnapshotBeforeCompaction() &&
+                isAutoSnapshot() == that.isAutoSnapshot() &&
+                getTombstoneWarnThreshold() == that.getTombstoneWarnThreshold() &&
+                getTombstoneFailureThreshold() == that.getTombstoneFailureThreshold() &&
+                getColumnIndexSizeInKb() == that.getColumnIndexSizeInKb() &&
+                getBatchSizeWarnThresholdInKb() == that.getBatchSizeWarnThresholdInKb() &&
+                getBatchSizeFailThresholdInKb() == that.getBatchSizeFailThresholdInKb() &&
+                getCompactionThroughputMbPerSec() == that.getCompactionThroughputMbPerSec() &&
+                getCompactionLargePartitionWarningThresholdMb() == that.getCompactionLargePartitionWarningThresholdMb() &&
+                getSstablePreemptiveOpenIntervalInMb() == that.getSstablePreemptiveOpenIntervalInMb() &&
+                getReadRequestTimeoutInMs() == that.getReadRequestTimeoutInMs() &&
+                getRangeRequestTimeoutInMs() == that.getRangeRequestTimeoutInMs() &&
+                getWriteRequestTimeoutInMs() == that.getWriteRequestTimeoutInMs() &&
+                getCounterWriteRequestTimeoutInMs() == that.getCounterWriteRequestTimeoutInMs() &&
+                getCasContentionTimeoutInMs() == that.getCasContentionTimeoutInMs() &&
+                getTruncateRequestTimeoutInMs() == that.getTruncateRequestTimeoutInMs() &&
+                getRequestTimeoutInMs() == that.getRequestTimeoutInMs() &&
+                isCrossNodeTimeout() == that.isCrossNodeTimeout() &&
+                getDynamicSnitchUpdateIntervalInMs() == that.getDynamicSnitchUpdateIntervalInMs() &&
+                getDynamicSnitchResetIntervalInMs() == that.getDynamicSnitchResetIntervalInMs() &&
+                Double.compare(that.getDynamicSnitchBadnessThreshold(),
+                        getDynamicSnitchBadnessThreshold()) == 0 &&
+                isInterDcTcpNodelay() == that.isInterDcTcpNodelay() &&
+                getTracetypeQueryTtl() == that.getTracetypeQueryTtl() &&
+                getTracetypeRepairTtl() == that.getTracetypeRepairTtl() &&
+                isEnableUserDefinedFunctions() == that.isEnableUserDefinedFunctions() &&
+                getWindowsTimerInterval() == that.getWindowsTimerInterval() &&
+                Objects.equals(getClusterName(), that.getClusterName()) &&
+                Objects.equals(getAuthenticator(),
+                        that.getAuthenticator()) &&
+                Objects.equals(getAuthorizer(), that.getAuthorizer()) &&
+                Objects.equals(getRoleManager(), that.getRoleManager()) &&
+                Objects.equals(getPartitioner(), that.getPartitioner()) &&
+                Objects.equals(getDiskFailurePolicy(),
+                        that.getDiskFailurePolicy()) &&
+                Objects.equals(getCommitFailurePolicy(),
+                        that.getCommitFailurePolicy()) &&
+                Objects.equals(getKeyCacheSizeInMb(),
+                        that.getKeyCacheSizeInMb()) &&
+                Objects.equals(getCounterCacheSizeInMb(),
+                        that.getCounterCacheSizeInMb()) &&
+                Objects.equals(getCommitlogSync(),
+                        that.getCommitlogSync()) &&
+                Objects.equals(getMemtableAllocationType(),
+                        that.getMemtableAllocationType()) &&
+                Objects.equals(getIndexSummaryCapacityInMb(),
+                        that.getIndexSummaryCapacityInMb()) &&
+                Objects.equals(getRpcServerType(),
+                        that.getRpcServerType()) &&
+                Objects.equals(getEndpointSnitch(),
+                        that.getEndpointSnitch()) &&
+                Objects.equals(getRequestScheduler(),
+                        that.getRequestScheduler()) &&
+                Objects.equals(getInternodeCompression(),
+                        that.getInternodeCompression());
     }
 
     @Override
     public int hashCode() {
-        int result;
-        long temp;
-        result = clusterName != null ? clusterName.hashCode() : 0;
-        result = 31 * result + numTokens;
-        result = 31 * result + (hintedHandoffEnabled ? 1 : 0);
-        result = 31 * result + maxHintWindowInMs;
-        result = 31 * result + hintedHandoffThrottleInKb;
-        result = 31 * result + maxHintsDeliveryThreads;
-        result = 31 * result + batchlogReplayThrottleInKb;
-        result = 31 * result + (authenticator != null ? authenticator.hashCode() : 0);
-        result = 31 * result + (authorizer != null ? authorizer.hashCode() : 0);
-        result = 31 * result + (roleManager != null ? roleManager.hashCode() : 0);
-        result = 31 * result + rolesValidityInMs;
-        result = 31 * result + permissionsValidityInMs;
-        result = 31 * result + (partitioner != null ? partitioner.hashCode() : 0);
-        result = 31 * result + (persistentVolume != null ? persistentVolume.hashCode() : 0);
-        result = 31 * result + (diskFailurePolicy != null ? diskFailurePolicy.hashCode() : 0);
-        result = 31 * result + (commitFailurePolicy != null ? commitFailurePolicy.hashCode() : 0);
-        result = 31 * result + (keyCacheSizeInMb != null ? keyCacheSizeInMb.hashCode() : 0);
-        result = 31 * result + keyCacheSavePeriod;
-        result = 31 * result + rowCacheSizeInMb;
-        result = 31 * result + rowCacheSavePeriod;
-        result = 31 * result + (counterCacheSizeInMb != null ? counterCacheSizeInMb.hashCode() : 0);
-        result = 31 * result + counterCacheSavePeriod;
-        result = 31 * result + (commitlogSync != null ? commitlogSync.hashCode() : 0);
-        result = 31 * result + commitlogSyncPeriodInMs;
-        result = 31 * result + commitlogSegmentSizeInMb;
-        result = 31 * result + (seedProvider != null ? seedProvider.hashCode() : 0);
-        result = 31 * result + concurrentReads;
-        result = 31 * result + concurrentWrites;
-        result = 31 * result + concurrentCounterWrites;
-        result = 31 * result + (memtableAllocationType != null ? memtableAllocationType.hashCode() : 0);
-        result = 31 * result + (indexSummaryCapacityInMb != null ? indexSummaryCapacityInMb.hashCode() : 0);
-        result = 31 * result + indexSummaryResizeIntervalInMinutes;
-        result = 31 * result + (trickleFsync ? 1 : 0);
-        result = 31 * result + trickleFsyncIntervalInKb;
-        result = 31 * result + storagePort;
-        result = 31 * result + sslStoragePort;
-        result = 31 * result + (listenAddress != null ? listenAddress.hashCode() : 0);
-        result = 31 * result + (startNativeTransport ? 1 : 0);
-        result = 31 * result + nativeTransportPort;
-        result = 31 * result + (startRpc ? 1 : 0);
-        result = 31 * result + (rpcAddress != null ? rpcAddress.hashCode() : 0);
-        result = 31 * result + rpcPort;
-        result = 31 * result + (rpcKeepalive ? 1 : 0);
-        result = 31 * result + (rpcServerType != null ? rpcServerType.hashCode() : 0);
-        result = 31 * result + thriftFramedTransportSizeInMb;
-        result = 31 * result + (incrementalBackups ? 1 : 0);
-        result = 31 * result + (snapshotBeforeCompaction ? 1 : 0);
-        result = 31 * result + (autoSnapshot ? 1 : 0);
-        result = 31 * result + tombstoneWarnThreshold;
-        result = 31 * result + tombstoneFailureThreshold;
-        result = 31 * result + columnIndexSizeInKb;
-        result = 31 * result + batchSizeWarnThresholdInKb;
-        result = 31 * result + batchSizeFailThresholdInKb;
-        result = 31 * result + compactionThroughputMbPerSec;
-        result = 31 * result + compactionLargePartitionWarningThresholdMb;
-        result = 31 * result + sstablePreemptiveOpenIntervalInMb;
-        result = 31 * result + readRequestTimeoutInMs;
-        result = 31 * result + rangeRequestTimeoutInMs;
-        result = 31 * result + writeRequestTimeoutInMs;
-        result = 31 * result + counterWriteRequestTimeoutInMs;
-        result = 31 * result + casContentionTimeoutInMs;
-        result = 31 * result + truncateRequestTimeoutInMs;
-        result = 31 * result + requestTimeoutInMs;
-        result = 31 * result + (crossNodeTimeout ? 1 : 0);
-        result = 31 * result + (endpointSnitch != null ? endpointSnitch.hashCode() : 0);
-        result = 31 * result + dynamicSnitchUpdateIntervalInMs;
-        result = 31 * result + dynamicSnitchResetIntervalInMs;
-        temp = Double.doubleToLongBits(dynamicSnitchBadnessThreshold);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + (requestScheduler != null ? requestScheduler.hashCode() : 0);
-        result = 31 * result + (internodeCompression != null ? internodeCompression.hashCode() : 0);
-        result = 31 * result + (interDcTcpNodelay ? 1 : 0);
-        result = 31 * result + tracetypeQueryTtl;
-        result = 31 * result + tracetypeRepairTtl;
-        result = 31 * result + (enableUserDefinedFunctions ? 1 : 0);
-        result = 31 * result + windowsTimerInterval;
-        return result;
+        return Objects.hash(getClusterName(), isHintedHandoffEnabled(),
+                getMaxHintWindowInMs(), getHintedHandoffThrottleInKb(),
+                getMaxHintsDeliveryThreads(), getBatchlogReplayThrottleInKb(),
+                getAuthenticator(), getAuthorizer(), getRoleManager(),
+                getRolesValidityInMs(), getPermissionsValidityInMs(),
+                getPartitioner(), getDiskFailurePolicy(),
+                getCommitFailurePolicy(),
+                getKeyCacheSizeInMb(), getKeyCacheSavePeriod(),
+                getRowCacheSizeInMb(), getRowCacheSavePeriod(),
+                getCounterCacheSizeInMb(), getCounterCacheSavePeriod(),
+                getCommitlogSync(), getCommitlogSyncPeriodInMs(),
+                getCommitlogSegmentSizeInMb(), getConcurrentReads(),
+                getConcurrentWrites(), getConcurrentCounterWrites(),
+                getMemtableAllocationType(), getIndexSummaryCapacityInMb(),
+                getIndexSummaryResizeIntervalInMinutes(), isTrickleFsync(),
+                getTrickleFsyncIntervalInKb(), getStoragePort(),
+                getSslStoragePort(), isStartNativeTransport(),
+                getNativeTransportPort(), isStartRpc(), getRpcPort(),
+                isRpcKeepalive(), getRpcServerType(),
+                getThriftFramedTransportSizeInMb(), isIncrementalBackups(),
+                isSnapshotBeforeCompaction(), isAutoSnapshot(),
+                getTombstoneWarnThreshold(), getTombstoneFailureThreshold(),
+                getColumnIndexSizeInKb(), getBatchSizeWarnThresholdInKb(),
+                getBatchSizeFailThresholdInKb(),
+                getCompactionThroughputMbPerSec(),
+                getCompactionLargePartitionWarningThresholdMb(),
+                getSstablePreemptiveOpenIntervalInMb(),
+                getReadRequestTimeoutInMs(),
+                getRangeRequestTimeoutInMs(), getWriteRequestTimeoutInMs(),
+                getCounterWriteRequestTimeoutInMs(),
+                getCasContentionTimeoutInMs(),
+                getTruncateRequestTimeoutInMs(), getRequestTimeoutInMs(),
+                isCrossNodeTimeout(), getEndpointSnitch(),
+                getDynamicSnitchUpdateIntervalInMs(),
+                getDynamicSnitchResetIntervalInMs(),
+                getDynamicSnitchBadnessThreshold(), getRequestScheduler(),
+                getInternodeCompression(), isInterDcTcpNodelay(),
+                getTracetypeQueryTtl(), getTracetypeRepairTtl(),
+                isEnableUserDefinedFunctions(), getWindowsTimerInterval());
     }
 
     @Override

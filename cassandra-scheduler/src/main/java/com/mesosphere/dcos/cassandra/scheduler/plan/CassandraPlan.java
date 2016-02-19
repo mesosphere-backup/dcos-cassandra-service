@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.eventbus.EventBus;
+import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -12,15 +13,22 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CassandraPlan implements Plan {
-    private CassandraDaemonPhase phase;
-    private CassandraOfferRequirementProvider offerRequirementProvider;
+    private final CassandraDaemonPhase phase;
+    private final CassandraOfferRequirementProvider offerRequirementProvider;
 
     public CassandraPlan(
-            CassandraOfferRequirementProvider offerRequirementProvider,
-            ConfigurationManager configurationManager, EventBus eventBus, CassandraTasks cassandraTasks) {
+            final CassandraOfferRequirementProvider offerRequirementProvider,
+            final ConfigurationManager configurationManager,
+            final EventBus eventBus,
+            final CassandraTasks cassandraTasks,
+            final ExecutorClient client) {
         this.offerRequirementProvider = offerRequirementProvider;
-        this.phase = new CassandraDaemonPhase(configurationManager,
-                this.offerRequirementProvider, eventBus, cassandraTasks);
+        this.phase = new CassandraDaemonPhase(
+                configurationManager,
+                this.offerRequirementProvider,
+                eventBus,
+                cassandraTasks,
+                client);
     }
 
     @Override
