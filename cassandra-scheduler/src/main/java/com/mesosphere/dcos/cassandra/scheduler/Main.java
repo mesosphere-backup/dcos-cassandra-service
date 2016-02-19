@@ -111,7 +111,7 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
         LOGGER.info(
                 "------------ Cassandra Configuration ------------");
         LOGGER.info("heap = {}", configuration.getCassandraConfig().getHeap());
-        LOGGER.info("jxm port = {}", configuration.getCassandraConfig()
+        LOGGER.info("jmx port = {}", configuration.getCassandraConfig()
                 .getJmxPort());
         LOGGER.info("location = {}", configuration.getCassandraConfig()
                 .getLocation());
