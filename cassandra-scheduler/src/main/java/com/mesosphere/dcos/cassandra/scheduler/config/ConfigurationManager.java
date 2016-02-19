@@ -1,15 +1,11 @@
 package com.mesosphere.dcos.cassandra.scheduler.config;
 
-import com.google.common.net.InetAddresses;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
@@ -18,8 +14,6 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -127,9 +121,9 @@ public class ConfigurationManager implements Managed {
         this.planStrategy = planStrategy;
         this.seedsUrl = seedsUrl;
 
-        try{
+        try {
             reconcileConfiguration();
-        } catch(Throwable throwable){
+        } catch (Throwable throwable) {
             throw new IllegalStateException("Failed to reconcile " +
                     "configuration",
                     throwable);
@@ -244,11 +238,12 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getDiskMb(),
                 cassandraConfig.mutable().setVolume(
                         cassandraConfig.getVolume().withId()).
-                setApplication(cassandraConfig.getApplication()
-                .toBuilder().setSeedProvider(
-                                CassandraApplicationConfig
-                                .createDcosSeedProvider(seedsUrl))
-                        .build())
+                        setApplication(cassandraConfig.getApplication()
+                                .toBuilder().setSeedProvider(
+                                        CassandraApplicationConfig
+                                                .createDcosSeedProvider(
+                                                        seedsUrl))
+                                .build())
                         .build(),
                 CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
                         id,
@@ -258,6 +253,55 @@ public class ConfigurationManager implements Managed {
                         CassandraMode.STARTING)
 
         );
+    }
+
+    public boolean hasCurrentConfig(final CassandraDaemonTask task){
+
+        return task.getExecutor().getCommand().equals(executorConfig
+                .getCommand()) &&
+                Double.compare(task.getExecutor().getCpus(),
+                executorConfig.getCpus()) == 0 &&
+                task.getExecutor().getDiskMb() ==
+                        executorConfig.getDiskMb() &&
+                task.getExecutor().getMemoryMb() ==
+                        executorConfig.getMemoryMb() &&
+                task.getExecutor().getUriStrings().containsAll(
+                       Arrays.asList(
+                               executorConfig.getCassandraLocationString(),
+                               executorConfig.getExecutorLocationString(),
+                               executorConfig.getJreLocationString()
+                       )
+                ) &&
+                task.getExecutor().getHeapMb() == executorConfig.getHeapMb() &&
+                task.getConfig().equals(cassandraConfig);
+
+    }
+
+    public CassandraDaemonTask updateConfig(final CassandraDaemonTask task){
+
+        return CassandraDaemonTask.create(
+                task.getId(),
+                task.getSlaveId(),
+                task.getHostname(),
+                createExecutor(
+                        task.getExecutor().getFrameworkId(),
+                        task.getExecutor().getId()),
+                task.getName(),
+                task.getRole(),
+                task.getPrincipal(),
+                cassandraConfig.getCpus(),
+                cassandraConfig.getMemoryMb(),
+                cassandraConfig.getDiskMb(),
+                cassandraConfig.mutable().setVolume(
+                        task.getConfig().getVolume()).
+                        setApplication(cassandraConfig.getApplication()
+                                .toBuilder().setSeedProvider(
+                                        CassandraApplicationConfig
+                                                .createDcosSeedProvider(
+                                                        seedsUrl))
+                                .build())
+                        .build(),
+                task.getStatus());
     }
 
     @Override

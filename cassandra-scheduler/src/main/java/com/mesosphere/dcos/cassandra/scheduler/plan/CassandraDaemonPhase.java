@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.eventbus.EventBus;
+import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -18,22 +19,25 @@ public class CassandraDaemonPhase implements Phase {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CassandraDaemonPhase.class);
     private List<Block> blocks = null;
-    private int servers;
-    private int seeds;
-    private EventBus eventBus;
-    private CassandraOfferRequirementProvider offerRequirementProvider;
-    private CassandraTasks cassandraTasks;
+    private final int servers;
+    private final int seeds;
+    private final EventBus eventBus;
+    private final CassandraOfferRequirementProvider offerRequirementProvider;
+    private final CassandraTasks cassandraTasks;
+    private final ExecutorClient client;
 
     public CassandraDaemonPhase(
-            ConfigurationManager configurationManager,
-            CassandraOfferRequirementProvider offerRequirementProvider,
-            EventBus eventBus,
-            CassandraTasks cassandraTasks) {
+            final ConfigurationManager configurationManager,
+            final CassandraOfferRequirementProvider offerRequirementProvider,
+            final EventBus eventBus,
+            final CassandraTasks cassandraTasks,
+            final ExecutorClient client) {
         this.servers = configurationManager.getServers();
         this.seeds = configurationManager.getSeeds();
         this.offerRequirementProvider = offerRequirementProvider;
         this.eventBus = eventBus;
         this.cassandraTasks = cassandraTasks;
+        this.client = client;
         this.blocks = createBlocks();
     }
 
@@ -50,7 +54,8 @@ public class CassandraDaemonPhase implements Phase {
                                 (i < created.size()) ? created.get(i) :
                                         cassandraTasks.createDaemon().getId(),
                                 offerRequirementProvider,
-                                cassandraTasks);
+                                cassandraTasks,
+                                this.client);
                 eventBus.register(daemonBlock);
                 blocks.add(daemonBlock);
             }

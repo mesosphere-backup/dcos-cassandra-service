@@ -153,7 +153,6 @@ public class CassandraTasks implements Managed {
         return task;
     }
 
-
     public CassandraDaemonTask createDaemon(Protos.Offer offer) throws
             PersistenceException {
         CassandraDaemonTask task = configuration.createDaemon(
@@ -170,6 +169,17 @@ public class CassandraTasks implements Managed {
         }
 
         return task;
+    }
+
+    public boolean needsConfigUpdate(final CassandraDaemonTask daemon){
+        return !configuration.hasCurrentConfig(daemon);
+    }
+
+    public CassandraDaemonTask updateConfig(
+            final CassandraDaemonTask daemon) throws PersistenceException {
+        CassandraDaemonTask updated = configuration.updateConfig(daemon);
+        update(updated);
+        return updated;
     }
 
     public Optional<CassandraTask> update(String taskId, Protos.Offer offer)
@@ -205,6 +215,7 @@ public class CassandraTasks implements Managed {
             }
         }
     }
+
 
     public void remove(String id) throws PersistenceException {
         synchronized (persistent) {
