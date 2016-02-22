@@ -11,13 +11,13 @@ public class PlanFactory {
     private PlanFactory() {
     }
 
-    public static CassandraPlan getPlan(
+    public static CassandraDeploy getPlan(
             final CassandraOfferRequirementProvider offerRequirementProvider,
             final ConfigurationManager configurationManager,
             final EventBus eventBus,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client) {
-        return new CassandraPlan(
+        return new CassandraDeploy(
                 offerRequirementProvider,
                 configurationManager,
                 eventBus,

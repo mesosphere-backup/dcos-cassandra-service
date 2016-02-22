@@ -12,11 +12,26 @@ import org.apache.mesos.scheduler.plan.Status;
 import java.util.Arrays;
 import java.util.List;
 
-public class CassandraPlan implements Plan {
+public class CassandraDeploy implements Plan {
     private final CassandraDaemonPhase phase;
     private final CassandraOfferRequirementProvider offerRequirementProvider;
 
-    public CassandraPlan(
+    public static final CassandraDeploy create(
+            final CassandraOfferRequirementProvider offerRequirementProvider,
+            final ConfigurationManager configurationManager,
+            final EventBus eventBus,
+            final CassandraTasks cassandraTasks,
+            final ExecutorClient client) {
+
+        return new CassandraDeploy(
+                offerRequirementProvider,
+                configurationManager,
+                eventBus,
+                cassandraTasks,
+                client);
+    }
+
+    public CassandraDeploy(
             final CassandraOfferRequirementProvider offerRequirementProvider,
             final ConfigurationManager configurationManager,
             final EventBus eventBus,

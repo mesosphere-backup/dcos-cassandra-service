@@ -224,4 +224,13 @@ public class CassandraDaemonBlock implements CassandraBlock {
     public String getTaskId() {
         return taskId;
     }
+
+    @Override
+    public String toString() {
+        return "CassandraDaemonBlock{" +
+                "taskId='" + taskId + '\'' +
+                ", status=" + status +
+                ", id=" + id +
+                '}';
+    }
 }

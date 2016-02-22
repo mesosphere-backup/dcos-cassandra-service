@@ -436,5 +436,11 @@ public class CassandraDaemonProcess {
         this.probe.drain();
     }
 
+    public void upgradeTables()
+            throws InterruptedException, ExecutionException, IOException {
+
+        this.probe.upgradeSSTables(null,true);
+    }
+
 
 }
