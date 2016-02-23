@@ -48,13 +48,13 @@ public class ConfigurationManager implements Managed {
 
             if (serversOption.isPresent()) {
                 int servers = serversOption.get();
-                if (servers > this.servers) {
+                if (this.servers < servers) {
                     String error = String.format("The number of configured " +
                                     "servers (%d) is less than the current " +
                                     "number of configured servers (%d). Reduce the " +
                                     "number of servers by removing them from the cluster",
-                            servers,
-                            this.servers);
+                            this.servers,
+                            servers);
                     LOGGER.error(error);
                     throw new IllegalStateException(error);
                 }
@@ -63,11 +63,11 @@ public class ConfigurationManager implements Managed {
 
             if (seeds > servers) {
                 String error = String.format("The number of configured " +
-                                "seeds (%d) is less than the current number " +
+                                "seeds (%d) is greater than the current number " +
                                 "of configured servers (%d). Reduce the " +
                                 "number of seeds or increase the number of servers",
-                        servers,
-                        this.servers);
+                        seeds,
+                        servers);
                 LOGGER.error(error);
                 throw new IllegalStateException(error);
             }
