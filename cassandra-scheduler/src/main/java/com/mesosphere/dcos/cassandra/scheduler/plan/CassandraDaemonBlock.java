@@ -167,7 +167,8 @@ public class CassandraDaemonBlock implements CassandraBlock {
                 if (Protos.TaskState.TASK_RUNNING.equals(
                         task.getStatus().getState())
                         && CassandraMode.NORMAL.equals(
-                        task.getStatus().getMode())) {
+                        task.getStatus().getMode()) &&
+                        ! cassandraTasks.needsConfigUpdate(task)) {
                     setStatus(Status.Complete);
                 }
 

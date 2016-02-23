@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
+import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
 import com.mesosphere.dcos.cassandra.scheduler.resources.*;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
@@ -98,6 +99,8 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
                 injector.getInstance(RegisteredCheck.class));
         environment.healthChecks().register(ServersCheck.NAME,
                 injector.getInstance(ServersCheck.class));
+        environment.healthChecks().register(ReconciledCheck.NAME,
+                injector.getInstance(ReconciledCheck.class));
     }
 
 

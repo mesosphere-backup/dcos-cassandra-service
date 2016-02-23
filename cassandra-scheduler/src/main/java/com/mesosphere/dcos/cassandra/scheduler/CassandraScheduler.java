@@ -15,6 +15,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDeploy;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.PlanFactory;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.Reconciler;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
@@ -25,10 +26,7 @@ import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -47,10 +45,9 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraTasks cassandraTasks;
+    private final Reconciler reconciler;
     private final EventBus eventBus;
     private final ExecutorClient client;
-
-
 
     @Inject
     public CassandraScheduler(
@@ -60,6 +57,7 @@ public class CassandraScheduler implements Scheduler, Managed {
             final PersistentOfferRequirementProvider offerRequirementProvider,
             final CassandraPlanManager planManager,
             final CassandraTasks cassandraTasks,
+            final Reconciler reconciler,
             final ExecutorClient client,
             final EventBus eventBus) {
         this.eventBus = eventBus;
@@ -77,6 +75,7 @@ public class CassandraScheduler implements Scheduler, Managed {
                 offerAccepter, cassandraTasks);
         this.client = client;
         this.planManager = planManager;
+        this.reconciler = reconciler;
 
 
     }
@@ -85,6 +84,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void start() throws Exception {
         registerFramework();
         eventBus.register(cassandraTasks);
+        eventBus.register(reconciler);
     }
 
     @Override
@@ -110,31 +110,30 @@ public class CassandraScheduler implements Scheduler, Managed {
                     eventBus,
                     cassandraTasks,
                     client));
+            reconciler.start();
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";
             LOGGER.error(error, t);
             throw new RuntimeException(error, t);
         }
-
-        // TODO: Perform reconciliation
     }
 
     @Override
     public void reregistered(SchedulerDriver driver,
                              Protos.MasterInfo masterInfo) {
         LOGGER.info("Re-registered with master: {}", masterInfo);
-        // TODO: Perform reconciliation
+        reconciler.start();
     }
 
     @Override
     public void resourceOffers(SchedulerDriver driver,
                                List<Protos.Offer> offers) {
         logOffers(offers);
-        // TODO: Add logic for handling tasks ops
-        // TODO: Wait for reconciliation to finish
 
-        if(identityManager.isRegistered()){
+        reconciler.reconcile(driver);
+
+        if(identityManager.isRegistered() && reconciler.isReconciled()){
 
             List<Protos.OfferID> acceptedOffers = new ArrayList<>();
 
@@ -160,6 +159,13 @@ public class CassandraScheduler implements Scheduler, Managed {
                             (CassandraBlock)currentBlock));
 
             declineOffers(driver, acceptedOffers, offers);
+        } else {
+
+            LOGGER.info("Declining all offers : registered = {}, " +
+                    "reconciled = {}",
+                    identityManager.isRegistered(),
+                    reconciler.isReconciled());
+            declineOffers(driver, Collections.emptyList(),offers);
         }
     }
 

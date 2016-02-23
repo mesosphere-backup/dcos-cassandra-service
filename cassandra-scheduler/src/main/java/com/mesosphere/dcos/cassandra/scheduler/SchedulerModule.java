@@ -15,7 +15,9 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementP
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraReconciler;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.Reconciler;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
@@ -108,5 +110,6 @@ public class SchedulerModule extends AbstractModule {
         bind(PersistentOfferRequirementProvider.class);
         bind(CassandraTasks.class).asEagerSingleton();
         bind(EventBus.class).asEagerSingleton();
+        bind(Reconciler.class).to(CassandraReconciler.class).asEagerSingleton();
     }
 }
