@@ -20,7 +20,6 @@ public class CassandraDaemonPhase implements Phase {
             LoggerFactory.getLogger(CassandraDaemonPhase.class);
     private List<Block> blocks = null;
     private final int servers;
-    private final int seeds;
     private final EventBus eventBus;
     private final CassandraOfferRequirementProvider offerRequirementProvider;
     private final CassandraTasks cassandraTasks;
@@ -33,7 +32,6 @@ public class CassandraDaemonPhase implements Phase {
             final CassandraTasks cassandraTasks,
             final ExecutorClient client) {
         this.servers = configurationManager.getServers();
-        this.seeds = configurationManager.getSeeds();
         this.offerRequirementProvider = offerRequirementProvider;
         this.eventBus = eventBus;
         this.cassandraTasks = cassandraTasks;
@@ -102,7 +100,7 @@ public class CassandraDaemonPhase implements Phase {
 
     @Override
     public String getName() {
-        return "Update to default config";
+        return "CASSANDRA_DEPLOY";
     }
 
     @Override
