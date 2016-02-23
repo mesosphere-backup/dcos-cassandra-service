@@ -21,14 +21,14 @@ import java.util.stream.Collectors;
 
 @Path("/v1/seeds")
 @Produces(MediaType.APPLICATION_JSON)
-public class Seeds {
+public class SeedsResource {
 
     private final CassandraTasks tasks;
     private final ConfigurationManager configuration;
 
     @Inject
-    public Seeds(final CassandraTasks tasks,
-                 final ConfigurationManager configuration){
+    public SeedsResource(final CassandraTasks tasks,
+                         final ConfigurationManager configuration){
 
         this.tasks = tasks;
         this.configuration = configuration;

@@ -38,14 +38,14 @@ import java.util.stream.Collectors;
 
 @Path("/v1/nodes")
 @Produces(MediaType.APPLICATION_JSON)
-public class TasksResources {
+public class TasksResource {
 
     private final CassandraTasks tasks;
     private final ExecutorClient client;
 
     @Inject
-    public TasksResources(final CassandraTasks tasks,
-                          final ExecutorClient client) {
+    public TasksResource(final CassandraTasks tasks,
+                         final ExecutorClient client) {
 
         this.tasks = tasks;
         this.client = client;

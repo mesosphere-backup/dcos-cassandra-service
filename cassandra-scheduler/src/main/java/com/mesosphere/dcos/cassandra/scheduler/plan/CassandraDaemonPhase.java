@@ -117,7 +117,6 @@ public class CassandraDaemonPhase implements Phase {
                 return false;
             }
         }
-
         return true;
     }
 }

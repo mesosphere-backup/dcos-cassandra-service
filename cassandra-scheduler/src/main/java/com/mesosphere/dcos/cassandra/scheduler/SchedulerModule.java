@@ -14,6 +14,7 @@ import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.setup.Environment;
@@ -94,10 +95,12 @@ public class SchedulerModule extends AbstractModule {
         bindConstant().annotatedWith(
                 Names.named("ConfiguredPlanStrategy")).to(
                 configuration.getPlanStrategy());
+        bind(CassandraPlanManager.class).toInstance(CassandraPlanManager
+                .create());
         bind(ExecutorClient.class).toInstance(ExecutorClient.create(
                 new HttpClientBuilder(environment).using(
                         configuration.getHttpClientConfiguration())
-                        .build("example-http-client"),
+                        .build("executor-http-client"),
                 Executors.newCachedThreadPool()
         ));
         bind(IdentityManager.class).asEagerSingleton();
