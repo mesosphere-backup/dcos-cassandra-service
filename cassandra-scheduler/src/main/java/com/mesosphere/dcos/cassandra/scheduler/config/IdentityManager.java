@@ -30,7 +30,7 @@ public class IdentityManager implements Managed {
                 "The framework property %s has been modified " +
                         "from %s to %s. This changes is not allowed as it " +
                         "changes the identity of the framework.",
-                property, configured, persisted);
+                property, persisted, configured);
     }
 
     private void validate(Identity configured, Identity persisted) {
