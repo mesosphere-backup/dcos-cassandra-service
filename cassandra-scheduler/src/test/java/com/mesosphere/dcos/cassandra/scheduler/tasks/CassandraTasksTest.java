@@ -21,6 +21,7 @@ import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.protobuf.OfferBuilder;
 import org.apache.mesos.protobuf.ResourceBuilder;
+import org.apache.zookeeper.KeeperException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by kowens on 2/8/16.
@@ -196,6 +198,58 @@ public class CassandraTasksTest {
     }
 
     @Test
+    public void updateTaskAndGetTaskByNodeId() throws Exception {
+
+        CassandraTasks tasks = new CassandraTasks(
+                identity,
+                configuration,
+                CassandraTask.JSON_SERIALIZER,
+                persistence);
+
+        tasks.start();
+
+        assertEquals(0, tasks.get().size());
+        CassandraDaemonTask task = tasks.createDaemon();
+        assertEquals(1, tasks.get().size());
+
+        CassandraDaemonTask newTask = task.mutable().setCpus(2.3)
+                .setDiskMb(456).setHostname("host7").build();
+        tasks.update(newTask);
+        assertEquals(1, tasks.get().size());
+
+        CassandraTask getTask = tasks.get(newTask.getId()).get();
+        assertEquals(2.3, getTask.getCpus(), 0.0001);
+        assertEquals(456, getTask.getDiskMb());
+        assertEquals("host7", getTask.getHostname());
+
+        CassandraTask get_task2 = tasks.getCassandraTaskByNodeId(0);
+        assertEquals(getTask, get_task2);
+
+    }
+
+    @Test(expected = KeeperException.NoNodeException.class)
+    public void removeTask() throws Exception {
+
+        CassandraTasks tasks = new CassandraTasks(
+                identity,
+                configuration,
+                CassandraTask.JSON_SERIALIZER,
+                persistence);
+
+        tasks.start();
+
+        assertEquals(0, tasks.get().size());
+        CassandraDaemonTask task = tasks.createDaemon();
+        assertEquals(1, tasks.get().size());
+
+        tasks.remove(task.getId());
+        assertEquals(0, tasks.get().size());
+
+        curator.getData().forPath(path(task.getId()));
+
+    }
+
+    @Test
     public void updateTaskWithOffer() throws Exception {
 
         CassandraTasks tasks = new CassandraTasks(
@@ -244,6 +298,93 @@ public class CassandraTasksTest {
         assertEquals(updated, CassandraTask.JSON_SERIALIZER.deserialize(
                 curator.getData().forPath(path(task.getId()))));
 
+    }
+
+    @Test
+    public void updateTaskWithStatus() throws Exception {
+
+        CassandraTasks tasks = new CassandraTasks(
+                identity,
+                configuration,
+                CassandraTask.JSON_SERIALIZER,
+                persistence);
+
+        tasks.start();
+
+        assertEquals(0, tasks.get().size());
+        CassandraDaemonTask task = tasks.createDaemon();
+        assertEquals(1, tasks.get().size());
+
+        Protos.TaskStatus taskStatus = Protos.TaskStatus.newBuilder()
+                .setTaskId(Protos.TaskID.newBuilder().setValue(task.getId()).build())
+                .setState(Protos.TaskState.TASK_FINISHED)
+                .build();
+        tasks.update(taskStatus);
+        assertEquals(1, tasks.get().size());
+
+        CassandraTask updatedTask = tasks.get(task.getId()).get();
+        assertEquals(Protos.TaskState.TASK_FINISHED, updatedTask.getStatus().getState());
+
+    }
+
+    @Test
+    public void getRunningTasksAndTerminatedTasks() throws Exception {
+
+        CassandraTasks tasks = new CassandraTasks(
+                identity,
+                configuration,
+                CassandraTask.JSON_SERIALIZER,
+                persistence);
+
+        tasks.start();
+
+        assertEquals(0, tasks.get().size());
+        CassandraDaemonTask runningTask1 = tasks.createDaemon();
+        assertEquals(1, tasks.get().size());
+        Protos.TaskStatus taskStatus1 = Protos.TaskStatus.newBuilder()
+                .setTaskId(Protos.TaskID.newBuilder().setValue(runningTask1.getId()).build())
+                .setState(Protos.TaskState.TASK_RUNNING)
+                .build();
+        tasks.update(taskStatus1);
+
+        CassandraDaemonTask runningTask2 = tasks.createDaemon();
+        assertEquals(2, tasks.get().size());
+        Protos.TaskStatus taskStatus2 = Protos.TaskStatus.newBuilder()
+                .setTaskId(Protos.TaskID.newBuilder().setValue(runningTask2.getId()).build())
+                .setState(Protos.TaskState.TASK_RUNNING)
+                .build();
+        tasks.update(taskStatus2);
+
+
+        CassandraDaemonTask terminatedTask1 = tasks.createDaemon();
+        assertEquals(3, tasks.get().size());
+        Protos.TaskStatus taskStatus3 = Protos.TaskStatus.newBuilder()
+                .setTaskId(Protos.TaskID.newBuilder().setValue(terminatedTask1.getId()).build())
+                .setState(Protos.TaskState.TASK_FAILED)
+                .build();
+        tasks.update(taskStatus3);
+
+        CassandraDaemonTask terminatedTask2 = tasks.createDaemon();
+        assertEquals(4, tasks.get().size());
+        Protos.TaskStatus taskStatus4 = Protos.TaskStatus.newBuilder()
+                .setTaskId(Protos.TaskID.newBuilder().setValue(terminatedTask2.getId()).build())
+                .setState(Protos.TaskState.TASK_LOST)
+                .build();
+        tasks.update(taskStatus4);
+
+        CassandraDaemonTask terminatedTask3 = tasks.createDaemon();
+        assertEquals(5, tasks.get().size());
+        Protos.TaskStatus taskStatus5 = Protos.TaskStatus.newBuilder()
+                .setTaskId(Protos.TaskID.newBuilder().setValue(terminatedTask3.getId()).build())
+                .setState(Protos.TaskState.TASK_FINISHED)
+                .build();
+        tasks.update(taskStatus5);
+
+        List<CassandraTask> runningTasks = tasks.getRunningTasks();
+        assertEquals(2, runningTasks.size());
+
+        List<CassandraTask> terminatedTasks = tasks.getTerminatedTasks();
+        assertEquals(3, terminatedTasks.size());
     }
 
     @After
