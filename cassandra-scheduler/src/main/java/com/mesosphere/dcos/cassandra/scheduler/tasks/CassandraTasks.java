@@ -4,6 +4,7 @@ package com.mesosphere.dcos.cassandra.scheduler.tasks;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
@@ -12,7 +13,6 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
@@ -237,6 +237,17 @@ public class CassandraTasks implements Managed {
         return task;
     }
 
+    public boolean needsConfigUpdate(final CassandraDaemonTask daemon) {
+        return !configuration.hasCurrentConfig(daemon);
+    }
+
+    public CassandraDaemonTask updateConfig(
+            final CassandraDaemonTask daemon) throws PersistenceException {
+        CassandraDaemonTask updated = configuration.updateConfig(daemon);
+        update(updated);
+        return updated;
+    }
+
     public Optional<CassandraTask> update(String taskId, Protos.Offer offer)
             throws PersistenceException {
         synchronized (persistent) {
@@ -267,9 +278,15 @@ public class CassandraTasks implements Managed {
                 }
 
                 update(updated);
+                LOGGER.debug("Updated task {}", updated);
+
+            } else {
+                LOGGER.info("Received status update for unrecorded task: " +
+                        "status = {}", status);
             }
         }
     }
+
 
     public void remove(String id) throws PersistenceException {
         synchronized (persistent) {

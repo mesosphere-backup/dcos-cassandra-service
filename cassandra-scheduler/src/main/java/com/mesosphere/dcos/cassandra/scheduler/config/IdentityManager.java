@@ -30,7 +30,7 @@ public class IdentityManager implements Managed {
                 "The framework property %s has been modified " +
                         "from %s to %s. This changes is not allowed as it " +
                         "changes the identity of the framework.",
-                property, configured, persisted);
+                property, persisted, configured);
     }
 
     private void validate(Identity configured, Identity persisted) {
@@ -102,6 +102,8 @@ public class IdentityManager implements Managed {
 
         return identity;
     }
+
+    public boolean isRegistered(){ return identity.getId().isPresent();}
 
     public synchronized void register(String id) throws PersistenceException {
         this.reference.store(identity.register(id));

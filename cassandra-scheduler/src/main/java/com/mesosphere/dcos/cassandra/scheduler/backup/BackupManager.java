@@ -83,7 +83,7 @@ public class BackupManager {
         final int servers = configurationManager.getServers();
         this.backupPlan = new BackupPlan(context, servers, cassandraTasks, eventBus, provider);
         // TODO: Make install strategy pluggable
-        this.planManager = new DefaultPlanManager(new DefaultInstallStrategy(backupPlan));
+        this.planManager = new DefaultPlanManager(backupPlan);
         this.planScheduler = new DefaultPlanScheduler(offerAccepter);
 
         this.backupContext = context;

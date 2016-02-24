@@ -4,6 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
+import org.apache.mesos.scheduler.plan.PlanManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

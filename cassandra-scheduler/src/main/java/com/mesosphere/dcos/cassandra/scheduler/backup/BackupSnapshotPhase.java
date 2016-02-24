@@ -4,9 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.mesos.scheduler.plan.Block;
-import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +24,7 @@ public class BackupSnapshotPhase implements Phase {
     private List<BackupSnapshotBlock> blocks;
     private final CassandraTasks cassandraTasks;
     private ClusterTaskOfferRequirementProvider provider;
+    private PhaseStrategy strategy = new DefaultInstallStrategy(this);
 
     public BackupSnapshotPhase(
             BackupContext backupContext,
@@ -113,5 +112,10 @@ public class BackupSnapshotPhase implements Phase {
         }
 
         return true;
+    }
+
+    @Override
+    public PhaseStrategy getStrategy() {
+        return strategy;
     }
 }

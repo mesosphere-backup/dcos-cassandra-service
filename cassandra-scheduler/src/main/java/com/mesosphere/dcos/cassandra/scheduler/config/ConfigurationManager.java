@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.config;
 
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -59,13 +60,13 @@ public class ConfigurationManager implements Managed {
 
             if (serversOption.isPresent()) {
                 int servers = serversOption.get();
-                if (servers > this.servers) {
+                if (this.servers < servers) {
                     String error = String.format("The number of configured " +
                                     "servers (%d) is less than the current " +
                                     "number of configured servers (%d). Reduce the " +
                                     "number of servers by removing them from the cluster",
-                            servers,
-                            this.servers);
+                            this.servers,
+                            servers);
                     LOGGER.error(error);
                     throw new IllegalStateException(error);
                 }
@@ -74,11 +75,11 @@ public class ConfigurationManager implements Managed {
 
             if (seeds > servers) {
                 String error = String.format("The number of configured " +
-                                "seeds (%d) is less than the current number " +
+                                "seeds (%d) is greater than the current number " +
                                 "of configured servers (%d). Reduce the " +
                                 "number of seeds or increase the number of servers",
-                        servers,
-                        this.servers);
+                        seeds,
+                        servers);
                 LOGGER.error(error);
                 throw new IllegalStateException(error);
             }
@@ -341,6 +342,55 @@ public class ConfigurationManager implements Managed {
                 context.getS3AccessKey(),
                 context.getS3SecretKey(),
                 cassandraConfig.getVolume().getPath() + "/data");
+    }
+
+    public boolean hasCurrentConfig(final CassandraDaemonTask task){
+
+        return task.getExecutor().getCommand().equals(executorConfig
+                .getCommand()) &&
+                Double.compare(task.getExecutor().getCpus(),
+                executorConfig.getCpus()) == 0 &&
+                task.getExecutor().getDiskMb() ==
+                        executorConfig.getDiskMb() &&
+                task.getExecutor().getMemoryMb() ==
+                        executorConfig.getMemoryMb() &&
+                task.getExecutor().getUriStrings().containsAll(
+                       Arrays.asList(
+                               executorConfig.getCassandraLocationString(),
+                               executorConfig.getExecutorLocationString(),
+                               executorConfig.getJreLocationString()
+                       )
+                ) &&
+                task.getExecutor().getHeapMb() == executorConfig.getHeapMb() &&
+                task.getConfig().equals(cassandraConfig);
+
+    }
+
+    public CassandraDaemonTask updateConfig(final CassandraDaemonTask task){
+
+        return CassandraDaemonTask.create(
+                task.getId(),
+                task.getSlaveId(),
+                task.getHostname(),
+                createExecutor(
+                        task.getExecutor().getFrameworkId(),
+                        task.getExecutor().getId()),
+                task.getName(),
+                task.getRole(),
+                task.getPrincipal(),
+                cassandraConfig.getCpus(),
+                cassandraConfig.getMemoryMb(),
+                cassandraConfig.getDiskMb(),
+                cassandraConfig.mutable().setVolume(
+                        task.getConfig().getVolume()).
+                        setApplication(cassandraConfig.getApplication()
+                                .toBuilder().setSeedProvider(
+                                        CassandraApplicationConfig
+                                                .createDcosSeedProvider(
+                                                        seedsUrl))
+                                .build())
+                        .build(),
+                task.getStatus());
     }
 
     @Override

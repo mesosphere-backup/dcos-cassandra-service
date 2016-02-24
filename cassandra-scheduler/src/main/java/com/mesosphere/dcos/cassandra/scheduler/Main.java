@@ -6,6 +6,7 @@ import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
+import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
 import com.mesosphere.dcos.cassandra.scheduler.resources.*;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
@@ -70,13 +71,16 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
         environment.jersey().register(
                 injector.getInstance(IdentityResource.class));
         environment.jersey().register(
-                injector.getInstance(Seeds.class));
+                injector.getInstance(SeedsResource.class));
         environment.jersey().register(
                 injector.getInstance(ConfigurationResource.class));
         environment.jersey().register(
-                injector.getInstance(TasksResources.class));
+                injector.getInstance(TasksResource.class));
         environment.jersey().register(
                 injector.getInstance(BackupResource.class));
+        environment.jersey().register(
+                injector.getInstance(PlanResource.class)
+        );
     }
 
     private void registerManagedObjects(Environment environment, Injector injector) {
@@ -98,6 +102,8 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
                 injector.getInstance(RegisteredCheck.class));
         environment.healthChecks().register(ServersCheck.NAME,
                 injector.getInstance(ServersCheck.class));
+        environment.healthChecks().register(ReconciledCheck.NAME,
+                injector.getInstance(ReconciledCheck.class));
     }
 
 
@@ -111,7 +117,7 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
         LOGGER.info(
                 "------------ Cassandra Configuration ------------");
         LOGGER.info("heap = {}", configuration.getCassandraConfig().getHeap());
-        LOGGER.info("jxm port = {}", configuration.getCassandraConfig()
+        LOGGER.info("jmx port = {}", configuration.getCassandraConfig()
                 .getJmxPort());
         LOGGER.info("location = {}", configuration.getCassandraConfig()
                 .getLocation());
