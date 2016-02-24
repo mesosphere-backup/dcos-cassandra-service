@@ -45,7 +45,6 @@ public class BackupManager {
     private ClusterTaskOfferRequirementProvider provider;
     private PersistentReference<BackupContext> persistentBackupContext;
 
-
     @Inject
     public BackupManager(ConfigurationManager configurationManager,
                          CassandraTasks cassandraTasks,
@@ -101,15 +100,12 @@ public class BackupManager {
 
         LOGGER.info("BackupManager accepted following offers: {}", acceptedOffers);
 
-        // TODO: Figure out when and how to mark backup as complete. statusUpdate?
-
         return acceptedOffers;
     }
 
     public void startBackup(BackupContext context) {
         LOGGER.info("Starting backup with context: {}", context);
 
-        // TODO: Check pre-conditions
         this.offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(cassandraTasks)));
@@ -142,5 +138,9 @@ public class BackupManager {
     public boolean canStartBackup() {
         // If backupContext is null, then we can start backup; otherwise, not.
         return backupContext == null;
+    }
+
+    public BackupPlan getBackupPlan() {
+        return this.backupPlan;
     }
 }

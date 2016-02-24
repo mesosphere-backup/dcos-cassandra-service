@@ -4,12 +4,15 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.backup.BackupPlan;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
+import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.PlanManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/v1/backup")
 public class BackupResource {
@@ -49,7 +52,12 @@ public class BackupResource {
     @Timed
     @Path("/status")
     public Response status() {
-        return Response.ok().build();
+        final BackupPlan backupPlan = this.backupManager.getBackupPlan();
+        return Response.ok(from(backupPlan)).build();
+    }
+
+    public static BackupStatusResponse from(BackupPlan backupPlan) {
+        return new BackupStatusResponse();
     }
 
     public static BackupContext from(StartBackupRequest request) {
