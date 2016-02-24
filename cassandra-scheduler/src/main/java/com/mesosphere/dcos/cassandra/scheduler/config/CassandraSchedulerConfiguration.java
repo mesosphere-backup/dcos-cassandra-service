@@ -25,6 +25,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
     private String planStrategy;
     private CassandraConfigParser cassandraConfig;
     private int apiPort;
+    private Identity identity;
     private MesosConfig mesosConfig =
             MesosConfig.create(
                     "master.mesos:2181",
@@ -38,6 +39,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
                     10000L,
                     Optional.empty(),
                     250L);
+    private String seedsUrl;
 
     @JsonProperty("frameworkVersion")
     public String getVersion() {
@@ -187,25 +189,47 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
+    @JsonProperty("seedsUrl")
+    public String getSeedsUrl() { return seedsUrl == null ? getDefaultSeedsUrl() : seedsUrl; }
+
+    @JsonProperty("seedsUrl")
+    public CassandraSchedulerConfiguration setSeedsUrl(String seedsUrl) {
+        this.seedsUrl = seedsUrl;
+        return this;
+    }
+
     @JsonIgnore
-    public String getSeedsUrl() {
+    private String getDefaultSeedsUrl() {
         return "http://" + name + ".marathon.mesos:" + apiPort + "/v1/seeds";
     }
 
     @JsonIgnore
-    public Identity getIdentity() {
+    private Identity getDefaultIdentity() {
         return Identity.create(
-                name,
-                Optional.empty(),
-                version,
-                "root",
-                name + "_cluster",
-                name + "_role",
-                name + "_principal",
-                Long.valueOf(60 * 60 * 24 * 7),
-                Optional.empty(),
-                true);
+            name,
+            Optional.empty(),
+            version,
+            "root",
+            name + "_cluster",
+            name + "_role",
+            name + "_principal",
+            Long.valueOf(60 * 60 * 24 * 7),
+            Optional.empty(),
+            true);
     }
+
+    @JsonProperty("identity")
+    public Identity getIdentity() {
+        return identity == null ? getDefaultIdentity() : identity;
+    }
+
+    @JsonProperty("identity")
+    public CassandraSchedulerConfiguration setIdentity(Identity identity) {
+        this.identity = identity;
+        return this;
+    }
+
+
     @JsonIgnore
     public CassandraConfig getCassandraConfig(){
 

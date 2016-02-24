@@ -2,18 +2,18 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDeploy;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.PlanFactory;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.Reconciler;
 import io.dropwizard.lifecycle.Managed;
@@ -26,8 +26,8 @@ import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class CassandraScheduler implements Scheduler, Managed {
@@ -240,10 +240,26 @@ public class CassandraScheduler implements Scheduler, Managed {
                 acceptedOfferId -> acceptedOfferId.equals(offer.getId()));
     }
 
-    private void registerFramework() {
-        this.driver = new MesosSchedulerDriver(this,
-                identityManager.get().asInfo(),
+    private void registerFramework() throws IOException {
+        Identity identity = identityManager.get();
+        Optional<ByteString> secretBytes = identity.readSecretBytes();
+        if (secretBytes.isPresent()) {
+            // Authenticated if a non empty secret is provided.
+            Protos.Credential credential = Protos.Credential.newBuilder()
+                .setPrincipal(identity.getPrincipal())
+                .setSecretBytes(secretBytes.get())
+                .build();
+            this.driver = new MesosSchedulerDriver(
+                this,
+                identity.asInfo(),
+                mesosConfig.toZooKeeperUrl(),
+                credential);
+        } else {
+            this.driver = new MesosSchedulerDriver(this,
+                identity.asInfo(),
                 mesosConfig.toZooKeeperUrl());
+
+        }
         LOGGER.info("Starting driver...");
         final Protos.Status startStatus = this.driver.start();
         LOGGER.info("Driver started with status: {}", startStatus);
