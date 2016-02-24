@@ -190,7 +190,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
     }
 
     @JsonProperty("seedsUrl")
-    public String getSeedsUrl() { return seedsUrl == null ? getDefaultSeedsUrl() : seedsUrl; }
+    public String getSeedsUrl() { return seedsUrl; }
 
     @JsonProperty("seedsUrl")
     public CassandraSchedulerConfiguration setSeedsUrl(String seedsUrl) {
@@ -198,30 +198,8 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
-    @JsonIgnore
-    private String getDefaultSeedsUrl() {
-        return "http://" + name + ".marathon.mesos:" + apiPort + "/v1/seeds";
-    }
-
-    @JsonIgnore
-    private Identity getDefaultIdentity() {
-        return Identity.create(
-            name,
-            Optional.empty(),
-            version,
-            "root",
-            name + "_cluster",
-            name + "_role",
-            name + "_principal",
-            Long.valueOf(60 * 60 * 24 * 7),
-            Optional.empty(),
-            true);
-    }
-
     @JsonProperty("identity")
-    public Identity getIdentity() {
-        return identity == null ? getDefaultIdentity() : identity;
-    }
+    public Identity getIdentity() { return identity; }
 
     @JsonProperty("identity")
     public CassandraSchedulerConfiguration setIdentity(Identity identity) {
