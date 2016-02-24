@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.scheduler.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 
 import javax.ws.rs.*;
@@ -29,7 +29,7 @@ public class BackupResource {
     public Response start(StartBackupRequest request) {
         // TODO: Validate backup request
 
-        final BackupContext backupContext = BackupContext.from(request);
+        final BackupContext backupContext = BackupResource.from(request);
 
         backupManager.startBackup(backupContext);
 
@@ -43,5 +43,16 @@ public class BackupResource {
     @Path("/status")
     public Response status() {
         return Response.ok().build();
+    }
+
+    public static BackupContext from(StartBackupRequest request) {
+        final BackupContext backupContext =
+                new BackupContext();
+        backupContext.setName(request.getName());
+        backupContext.setExternalLocation(request.getExternalLocation());
+        backupContext.setS3AccessKey(request.getS3AccessKey());
+        backupContext.setS3SecretKey(request.getS3SecretKey());
+
+        return backupContext;
     }
 }

@@ -1,15 +1,21 @@
 package com.mesosphere.dcos.cassandra.scheduler.config;
 
-import com.google.common.net.InetAddresses;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
@@ -18,8 +24,6 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,11 +35,12 @@ public class ConfigurationManager implements Managed {
             LoggerFactory.getLogger(ConfigurationManager.class);
 
     private final PersistentReference<CassandraConfig> cassandraRef;
-
+    private final PersistentReference<ClusterTaskConfig> clusterTaskRef;
     private final PersistentReference<ExecutorConfig> executorRef;
     private final PersistentReference<Integer> serversRef;
     private final PersistentReference<Integer> seedsRef;
     private volatile CassandraConfig cassandraConfig;
+    private volatile ClusterTaskConfig clusterTaskConfig;
     private volatile ExecutorConfig executorConfig;
     private volatile int servers;
     private volatile int seeds;
@@ -95,6 +100,7 @@ public class ConfigurationManager implements Managed {
     @Inject
     public ConfigurationManager(
             @Named("ConfiguredCassandraConfig") CassandraConfig cassandraConfig,
+            @Named("ConfiguredClusterTaskConfig") ClusterTaskConfig clusterTaskConfig,
             @Named("ConfiguredExecutorConfig") ExecutorConfig executorConfig,
             @Named("ConfiguredServers") int servers,
             @Named("ConfiguredSeeds") int seeds,
@@ -105,10 +111,15 @@ public class ConfigurationManager implements Managed {
             PersistenceFactory persistenceFactory,
             Serializer<CassandraConfig> cassandraConfigSerializer,
             Serializer<ExecutorConfig> executorConfigSerializer,
+            Serializer<ClusterTaskConfig> clusterTaskConfigSerializer,
             Serializer<Integer> intSerializer) {
         this.cassandraRef = persistenceFactory.createReference(
                 "cassandraConfig",
                 cassandraConfigSerializer);
+        this.clusterTaskRef = persistenceFactory.createReference(
+                "clusterTaskConfig",
+                clusterTaskConfigSerializer
+        );
         this.executorRef = persistenceFactory.createReference(
                 "executorConfig",
                 executorConfigSerializer);
@@ -119,6 +130,7 @@ public class ConfigurationManager implements Managed {
                 "seeds",
                 intSerializer);
         this.cassandraConfig = cassandraConfig;
+        this.clusterTaskConfig = clusterTaskConfig;
         this.executorConfig = executorConfig;
         this.servers = servers;
         this.seeds = seeds;
@@ -127,9 +139,9 @@ public class ConfigurationManager implements Managed {
         this.planStrategy = planStrategy;
         this.seedsUrl = seedsUrl;
 
-        try{
+        try {
             reconcileConfiguration();
-        } catch(Throwable throwable){
+        } catch (Throwable throwable) {
             throw new IllegalStateException("Failed to reconcile " +
                     "configuration",
                     throwable);
@@ -244,11 +256,11 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getDiskMb(),
                 cassandraConfig.mutable().setVolume(
                         cassandraConfig.getVolume().withId()).
-                setApplication(cassandraConfig.getApplication()
-                .toBuilder().setSeedProvider(
-                                CassandraApplicationConfig
-                                .createDcosSeedProvider(seedsUrl))
-                        .build())
+                        setApplication(cassandraConfig.getApplication()
+                                .toBuilder().setSeedProvider(
+                                        CassandraApplicationConfig
+                                                .createDcosSeedProvider(seedsUrl))
+                                .build())
                         .build(),
                 CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
                         id,
@@ -258,6 +270,77 @@ public class ConfigurationManager implements Managed {
                         CassandraMode.STARTING)
 
         );
+    }
+
+    public BackupSnapshotTask createBackupSnapshotTask(
+            String frameworkId,
+            String slaveId,
+            CassandraTaskExecutor executor,
+            String hostname,
+            String name,
+            String role,
+            String principal,
+            BackupContext context) {
+        String unique = UUID.randomUUID().toString();
+        String id = name + "_" + unique;
+
+        return BackupSnapshotTask.create(
+                id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                clusterTaskConfig.getCpus(),
+                clusterTaskConfig.getMemoryMb(),
+                clusterTaskConfig.getDiskMb(),
+                BackupSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        slaveId,
+                        name,
+                        Optional.empty()),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                context.getExternalLocation(),
+                context.getS3AccessKey(),
+                context.getS3SecretKey());
+    }
+
+    public BackupUploadTask createBackupUploadTask(
+            String frameworkId,
+            String slaveId,
+            CassandraTaskExecutor executor,
+            String hostname,
+            String name,
+            String role,
+            String principal,
+            BackupContext context) {
+        String unique = UUID.randomUUID().toString();
+        String id = name + "_" + unique;
+
+        return BackupUploadTask.create(
+                id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                clusterTaskConfig.getCpus(),
+                clusterTaskConfig.getMemoryMb(),
+                clusterTaskConfig.getDiskMb(),
+                BackupUploadStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        slaveId,
+                        name,
+                        Optional.empty()),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                context.getExternalLocation(),
+                context.getS3AccessKey(),
+                context.getS3SecretKey(),
+                cassandraConfig.getVolume().getPath() + "/data");
     }
 
     @Override

@@ -16,6 +16,8 @@ import java.util.List;
 import static org.apache.mesos.protobuf.ResourceBuilder.*;
 
 public class BackupUploadTask extends CassandraTask {
+    public static final String NAME_PREFIX = "upload-";
+
     public static class Builder {
 
         private String id;
@@ -28,12 +30,13 @@ public class BackupUploadTask extends CassandraTask {
         private double cpus;
         private int memoryMb;
         private int diskMb;
-        private BackupSnapshotStatus status;
+        private BackupUploadStatus status;
         private List<String> keySpaces;
         private List<String> columnFamilies;
         private String externalLocation;
         private String s3AccessKey;
         private String s3SecretKey;
+        private String localLocation;
 
         private Builder(BackupUploadTask task) {
 
@@ -53,6 +56,7 @@ public class BackupUploadTask extends CassandraTask {
             this.externalLocation = task.externalLocation;
             this.s3AccessKey = task.s3AccessKey;
             this.s3SecretKey = task.s3SecretKey;
+            this.localLocation = task.localLocation;
 
         }
 
@@ -191,11 +195,11 @@ public class BackupUploadTask extends CassandraTask {
             return this;
         }
 
-        public BackupSnapshotStatus getStatus() {
+        public BackupUploadStatus getStatus() {
             return status;
         }
 
-        public Builder setStatus(BackupSnapshotStatus status) {
+        public Builder setStatus(BackupUploadStatus status) {
             this.status = status;
             return this;
         }
@@ -216,7 +220,8 @@ public class BackupUploadTask extends CassandraTask {
                     columnFamilies,
                     externalLocation,
                     s3AccessKey,
-                    s3SecretKey);
+                    s3SecretKey,
+                    localLocation);
         }
     }
 
@@ -235,6 +240,9 @@ public class BackupUploadTask extends CassandraTask {
     @JsonProperty("s3SecretKey")
     private final String s3SecretKey;
 
+    @JsonProperty("localLocation")
+    private final String localLocation;
+
     @JsonCreator
     public static BackupUploadTask create(
             @JsonProperty("id") String id,
@@ -247,12 +255,13 @@ public class BackupUploadTask extends CassandraTask {
             @JsonProperty("cpus") double cpus,
             @JsonProperty("memoryMb") int memoryMb,
             @JsonProperty("diskMb") int diskMb,
-            @JsonProperty("status") BackupSnapshotStatus status,
+            @JsonProperty("status") BackupUploadStatus status,
             @JsonProperty("keySpaces") List<String> keySpaces,
             @JsonProperty("columnFamilies") List<String> columnFamilies,
             @JsonProperty("externalLocation") String externalLocation,
             @JsonProperty("s3AccessKey") String s3AccessKey,
-            @JsonProperty("s3SecretKey") String s3SecretKey) {
+            @JsonProperty("s3SecretKey") String s3SecretKey,
+            @JsonProperty("localLocation") String localLocation) {
         return new BackupUploadTask(id,
                 slaveId,
                 hostname,
@@ -268,7 +277,8 @@ public class BackupUploadTask extends CassandraTask {
                 columnFamilies,
                 externalLocation,
                 s3AccessKey,
-                s3SecretKey);
+                s3SecretKey,
+                localLocation);
     }
 
     protected BackupUploadTask(
@@ -282,13 +292,14 @@ public class BackupUploadTask extends CassandraTask {
             double cpus,
             int memoryMb,
             int diskMb,
-            BackupSnapshotStatus status,
+            BackupUploadStatus status,
             List<String> keySpaces,
             List<String> columnFamilies,
             String externalLocation,
             String s3AccessKey,
-            String s3SecretKey) {
-        super(CassandraTask.TYPE.BACKUP_SNAPSHOT,
+            String s3SecretKey,
+            String localLocation) {
+        super(TYPE.BACKUP_UPLOAD,
                 id,
                 slaveId,
                 hostname,
@@ -306,6 +317,7 @@ public class BackupUploadTask extends CassandraTask {
         this.externalLocation = externalLocation;
         this.s3AccessKey = s3AccessKey;
         this.s3SecretKey = s3SecretKey;
+        this.localLocation = localLocation;
     }
 
     public List<String> getColumnFamilies() {
@@ -328,15 +340,20 @@ public class BackupUploadTask extends CassandraTask {
         return s3SecretKey;
     }
 
+    public String getLocalLocation() {
+        return localLocation;
+    }
+
     @Override
     public CassandraProtos.CassandraTaskData getTaskData() {
         return CassandraProtos.CassandraTaskData.newBuilder()
-                .setType(CassandraProtos.CassandraTaskData.TYPE.BACKUP_SNAPSHOT)
+                .setType(CassandraProtos.CassandraTaskData.TYPE.BACKUP_UPLOAD)
                 .addAllColumnFamilies(columnFamilies)
                 .addAllKeySpaces(keySpaces)
                 .setExternalLocation(externalLocation)
                 .setS3AccessKey(s3AccessKey)
                 .setS3SecretKey(s3SecretKey)
+                .setLocalLocation(localLocation)
                 .build();
     }
 
@@ -352,12 +369,13 @@ public class BackupUploadTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
-                (BackupSnapshotStatus) status,
+                (BackupUploadStatus) status,
                 keySpaces,
                 columnFamilies,
                 externalLocation,
                 s3AccessKey,
-                s3SecretKey);
+                s3SecretKey,
+                localLocation);
     }
 
     @Override
@@ -372,18 +390,18 @@ public class BackupUploadTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
-                ((BackupSnapshotStatus) status).update(state),
+                ((BackupUploadStatus) status).update(state),
                 keySpaces,
                 columnFamilies,
                 externalLocation,
                 s3AccessKey,
-                s3SecretKey);
-
+                s3SecretKey,
+                localLocation);
     }
 
     @Override
     public BackupUploadTask update(CassandraTaskStatus status) {
-        if (status.getType() == CassandraTask.TYPE.BACKUP_SNAPSHOT &&
+        if (status.getType() == CassandraTask.TYPE.BACKUP_UPLOAD &&
                 status.getId().equals(id)) {
 
             return create(id,
@@ -396,12 +414,13 @@ public class BackupUploadTask extends CassandraTask {
                     cpus,
                     memoryMb,
                     diskMb,
-                    (BackupSnapshotStatus) status,
+                    (BackupUploadStatus) status,
                     keySpaces,
                     columnFamilies,
                     externalLocation,
                     s3AccessKey,
-                    s3SecretKey);
+                    s3SecretKey,
+                    localLocation);
         } else {
             return this;
         }
@@ -412,17 +431,14 @@ public class BackupUploadTask extends CassandraTask {
     }
 
     @Override
-    public BackupSnapshotStatus getStatus() {
+    public BackupUploadStatus getStatus() {
 
-        return (BackupSnapshotStatus) status;
+        return (BackupUploadStatus) status;
     }
 
     @Override
     public List<Protos.Resource> getReserveResources() {
-        return Arrays.asList(
-                reservedCpus(cpus, role, principal),
-                reservedMem(memoryMb, role, principal),
-                reservedDisk(diskMb, role, principal));
+        return Collections.emptyList();
     }
 
     @Override
@@ -432,6 +448,9 @@ public class BackupUploadTask extends CassandraTask {
 
     @Override
     public List<Protos.Resource> getLaunchResources() {
-        return getReserveResources();
+        return Arrays.asList(
+                reservedCpus(cpus, role, principal),
+                reservedMem(memoryMb, role, principal),
+                reservedDisk(diskMb, role, principal));
     }
 }

@@ -1,65 +1,53 @@
-package com.mesosphere.dcos.cassandra.scheduler.plan;
+package com.mesosphere.dcos.cassandra.scheduler.backup;
 
 import com.google.common.eventbus.Subscribe;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
+import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class CassandraDaemonBlock implements CassandraBlock {
-
+public class BackupSnapshotBlock implements CassandraBlock {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            CassandraDaemonBlock.class);
+            BackupSnapshotBlock.class);
 
-    private static final boolean isTerminal(Protos.TaskState state) {
-
-        switch (state) {
-            case TASK_STARTING:
-                return false;
-            case TASK_STAGING:
-                return false;
-            case TASK_RUNNING:
-                return false;
-            default:
-                return true;
-        }
+    public static BackupSnapshotBlock create(
+            int id,
+            String taskId,
+            CassandraTasks cassandraTasks,
+            CassandraOfferRequirementProvider provider,
+            BackupContext context) {
+        return new BackupSnapshotBlock(id, taskId, cassandraTasks, provider, context);
     }
 
-    public static final String PREFIX = "node-";
+    public static final String PREFIX = "snapshot-";
 
-    private final int id;
-    private final CassandraTasks cassandraTasks;
-    private final CassandraOfferRequirementProvider provider;
+    private int id;
     private String taskId;
     private Status status;
+    private BackupContext backupContext;
+    private CassandraTasks cassandraTasks;
+    private CassandraOfferRequirementProvider provider;
 
-    public static CassandraDaemonBlock create(
-            int id,
-            String taskId,
-            CassandraOfferRequirementProvider provider,
-            CassandraTasks cassandraTasks) {
-
-        return new CassandraDaemonBlock(id, taskId, provider, cassandraTasks);
-    }
-
-    public CassandraDaemonBlock(
-            int id,
-            String taskId,
-            CassandraOfferRequirementProvider provider,
-            CassandraTasks cassandraTasks) {
-        this.status = Status.Pending;
-        this.cassandraTasks = cassandraTasks;
-        this.taskId = taskId;
+    public BackupSnapshotBlock(int id,
+                               String taskId,
+                               CassandraTasks cassandraTasks,
+                               CassandraOfferRequirementProvider provider,
+                               BackupContext context) {
         this.id = id;
+        this.taskId = taskId;
         this.provider = provider;
+        this.status = Status.Pending;
+        this.backupContext = context;
+        this.cassandraTasks = cassandraTasks;
     }
 
     @Override
@@ -68,25 +56,29 @@ public class CassandraDaemonBlock implements CassandraBlock {
     }
 
     @Override
+    public void setStatus(Status newStatus) {
+        LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        status = newStatus;
+    }
+
+    @Override
     public boolean isPending() {
-        return Status.Pending == status;
+        return Status.Pending == this.status;
     }
 
     @Override
     public boolean isInProgress() {
-        return Status.InProgress == status;
+        return Status.InProgress == this.status;
     }
 
     @Override
     public OfferRequirement start() {
         LOGGER.info("Starting block: {}", getName());
-
-        CassandraDaemonTask task = cassandraTasks.getDaemons().get(taskId);
+        final BackupSnapshotTask task = cassandraTasks.getBackupSnapshotTasks().get(taskId);
 
         // This will work better once reconcilation is implemented
-        if (Protos.TaskState.TASK_RUNNING.equals(task.getStatus().getState())
-                && CassandraMode.NORMAL.equals(task.getStatus().getMode())) {
-            //We are running and normal complete this block
+        if (Protos.TaskState.TASK_FINISHED.equals(task.getStatus().getState())) {
+            // Task is already finished
             LOGGER.info(
                     "Task {} assigned to this block {}, is already in state: {}",
                     task.getId(),
@@ -114,29 +106,25 @@ public class CassandraDaemonBlock implements CassandraBlock {
         try {
             if (!isRelevantStatus(status)) {
                 //ignore what is not my concern
-                LOGGER.debug(
-                        "Irrelevant status id = {}, task = {}, status = {}",
+                LOGGER.debug("Irrelevant status id = {}, task = {}, status = {}",
                         id, taskId, status);
                 return;
-            } else if (isTerminal(status.getState())) {
-                //need to progress with a new task
-                cassandraTasks.remove(status.getTaskId().getValue());
-                taskId = cassandraTasks.createDaemon().getId();
-                LOGGER.info("Reallocating task {} for block {}",
-                        taskId,
-                        id);
             } else {
-                //update the status
                 cassandraTasks.update(status);
-                CassandraDaemonTask task = cassandraTasks.getDaemons().get(
-                        taskId);
-                if (Protos.TaskState.TASK_RUNNING.equals(
-                        task.getStatus().getState())
-                        && CassandraMode.NORMAL.equals(
-                        task.getStatus().getMode())) {
-                    setStatus(Status.Complete);
-                }
 
+                BackupSnapshotTask task = cassandraTasks.getBackupSnapshotTasks()
+                        .get(taskId);
+
+                if (task != null && Protos.TaskState.TASK_FINISHED == task.getStatus().getState()) {
+                    setStatus(Status.Complete);
+                } else if (TaskUtils.isTerminated(status.getState())) {
+                    //need to progress with a new task
+                    cassandraTasks.remove(status.getTaskId().getValue());
+                    taskId = cassandraTasks.createBackupSnapshotTask(this.id, this.backupContext).getId();
+                    LOGGER.info("Reallocating task {} for block {}",
+                            taskId,
+                            id);
+                }
             }
         } catch (Exception ex) {
             LOGGER.error(
@@ -145,9 +133,7 @@ public class CassandraDaemonBlock implements CassandraBlock {
                             taskId,
                             id), ex);
         }
-
     }
-
 
     private boolean isRelevantStatus(Protos.TaskStatus status) {
         return taskId.equals(status.getTaskId().getValue());
@@ -174,16 +160,7 @@ public class CassandraDaemonBlock implements CassandraBlock {
 
     @Override
     public boolean isComplete() {
-        return Status.Complete.equals(status);
-    }
-
-    @Override
-    public void setStatus(Status newStatus) {
-        Status oldStatus = status;
-        status = newStatus;
-        LOGGER.info(getName() +
-                ": changing status from: "
-                + oldStatus + " to: " + status);
+        return Status.Complete == this.status;
     }
 
     @Override

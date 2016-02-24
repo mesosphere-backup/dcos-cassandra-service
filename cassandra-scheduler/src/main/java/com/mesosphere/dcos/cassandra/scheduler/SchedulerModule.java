@@ -6,11 +6,13 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.backup.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
@@ -64,6 +66,8 @@ public class SchedulerModule extends AbstractModule {
         bind(new TypeLiteral<Serializer<CassandraTask>>() {
         })
                 .toInstance(CassandraTask.JSON_SERIALIZER);
+        bind(new TypeLiteral<Serializer<ClusterTaskConfig>>() {
+        }).toInstance(ClusterTaskConfig.JSON_SERIALIZER);
 
         bind(MesosConfig.class).toInstance(configuration.getMesosConfig());
 
@@ -76,7 +80,9 @@ public class SchedulerModule extends AbstractModule {
         bind(CassandraConfig.class).annotatedWith(
                 Names.named("ConfiguredCassandraConfig")).toInstance(
                 configuration.getCassandraConfig());
-
+        bind(ClusterTaskConfig.class).annotatedWith(
+                Names.named("ConfiguredClusterTaskConfig")).toInstance(
+                configuration.getClusterTaskConfig());
         bind(ExecutorConfig.class).annotatedWith(
                 Names.named("ConfiguredExecutorConfig")).toInstance(
                 configuration.getExecutorConfig());
@@ -108,5 +114,6 @@ public class SchedulerModule extends AbstractModule {
         bind(CassandraTasks.class).asEagerSingleton();
         bind(EventBus.class).asEagerSingleton();
         bind(BackupManager.class).asEagerSingleton();
+        bind(ClusterTaskOfferRequirementProvider.class);
     }
 }

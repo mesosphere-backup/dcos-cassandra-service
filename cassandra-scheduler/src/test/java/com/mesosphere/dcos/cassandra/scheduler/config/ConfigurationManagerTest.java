@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
@@ -100,6 +101,7 @@ public class ConfigurationManagerTest {
 
         ConfigurationManager manager = new ConfigurationManager(
                 config.getCassandraConfig(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
@@ -110,6 +112,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 
@@ -146,6 +149,7 @@ public class ConfigurationManagerTest {
 
         ConfigurationManager manager = new ConfigurationManager(
                 config.getCassandraConfig(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
@@ -156,6 +160,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 
@@ -190,6 +195,7 @@ public class ConfigurationManagerTest {
         manager = new ConfigurationManager(
                 config.getCassandraConfig().mutable().setJmxPort(8000)
                         .setCpus(3.0).setMemoryMb(10000).build(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers() + 10,
                 config.getSeeds() + 10,
@@ -200,6 +206,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 
@@ -238,6 +245,7 @@ public class ConfigurationManagerTest {
 
         ConfigurationManager manager = new ConfigurationManager(
                 config.getCassandraConfig(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
@@ -248,6 +256,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 
@@ -289,6 +298,7 @@ public class ConfigurationManagerTest {
 
         manager = new ConfigurationManager(
                 updatedConfig,
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 updatedServers,
                 updatedSeeds,
@@ -299,6 +309,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 
@@ -337,6 +348,7 @@ public class ConfigurationManagerTest {
 
         ConfigurationManager manager = new ConfigurationManager(
                 config.getCassandraConfig(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
@@ -347,6 +359,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 
@@ -381,6 +394,7 @@ public class ConfigurationManagerTest {
 
         manager = new ConfigurationManager(
                 config.getCassandraConfig(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers() - 1,
                 config.getSeeds(),
@@ -391,6 +405,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 
@@ -403,6 +418,7 @@ public class ConfigurationManagerTest {
 
         ConfigurationManager manager = new ConfigurationManager(
                 config.getCassandraConfig(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
@@ -413,6 +429,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 
@@ -447,6 +464,7 @@ public class ConfigurationManagerTest {
 
         manager = new ConfigurationManager(
                 config.getCassandraConfig(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getServers() + 1,
@@ -457,6 +475,7 @@ public class ConfigurationManagerTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 

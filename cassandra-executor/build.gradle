@@ -3,12 +3,15 @@ mainClassName = 'com.mesosphere.dcos.cassandra.executor.Main'
 
 ext {
     junitVer = '4.12'
+    awsVer = '1.10.54'
 }
 
 dependencies {
     compile project(':cassandra-commons')
     compile 'org.apache.cassandra:cassandra-all:2.2.5'
     compile 'org.apache.commons:commons-compress:1.5'
+    compile "com.amazonaws:aws-java-sdk-s3:${awsVer}"
+    compile 'org.xerial.snappy:snappy-java:1.1.2.1'
     // To override the junit compile dependency that cassandra brings in.
     compile "junit:junit:${junitVer}"
     testCompile "junit:junit:${junitVer}"

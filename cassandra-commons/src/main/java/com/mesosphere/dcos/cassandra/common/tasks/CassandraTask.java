@@ -11,6 +11,8 @@ import com.mesosphere.dcos.cassandra.common.serialization.SerializationException
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
@@ -31,10 +33,10 @@ import static org.apache.mesos.offer.ResourceUtils.*;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = CassandraDaemonTask.class,
                 name = "CASSANDRA_DAEMON"),
-        @JsonSubTypes.Type(value = S3RestoreTask.class, name =
-                "S3_RESTORE"),
-        @JsonSubTypes.Type(value = S3BackupTask.class, name =
-                "S3_BACKUP"),
+        @JsonSubTypes.Type(value = BackupSnapshotTask.class, name =
+                "BACKUP_SNAPSHOT"),
+        @JsonSubTypes.Type(value = BackupUploadTask.class, name =
+                "BACKUP_UPLOAD"),
 })
 public abstract class CassandraTask {
 
@@ -136,6 +138,36 @@ public abstract class CassandraTask {
                         data.getExternalLocation(),
                         data.getS3AccessKey(),
                         data.getS3SecretKey()
+                );
+
+            case BACKUP_UPLOAD:
+                return BackupUploadTask.create(
+                        info.getTaskId().getValue(),
+                        info.getSlaveId().getValue(),
+                        data.getAddress(),
+                        CassandraTaskExecutor.parse(info.getExecutor()),
+                        info.getName(),
+                        role,
+                        principal,
+                        getReservedCpu(info.getResourcesList(), role,
+                                principal),
+                        (int) getReservedMem(resources,
+                                role,
+                                principal),
+                        (int) getReservedDisk(resources,
+                                role,
+                                principal),
+                        BackupUploadStatus.create(Protos.TaskState.TASK_STAGING,
+                                info.getTaskId().getValue(),
+                                info.getSlaveId().getValue(),
+                                info.getExecutor().getExecutorId().getValue(),
+                                Optional.empty()),
+                        data.getKeySpacesList(),
+                        data.getColumnFamiliesList(),
+                        data.getExternalLocation(),
+                        data.getS3AccessKey(),
+                        data.getS3SecretKey(),
+                        data.getLocalLocation()
                 );
 
             case RESTORE_DOWNLOAD:

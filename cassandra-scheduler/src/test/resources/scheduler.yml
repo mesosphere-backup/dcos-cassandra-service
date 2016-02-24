@@ -13,6 +13,10 @@ executor:
   jreLocation : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executorLocation : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
   cassandraLocation : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
+clusterTask:
+  cpus: ${CLUSTER_TASK_CPUS:-0.1}
+  memoryMb: ${CLUSTER_TASK_MEMORY_MB:-256}
+  diskMb: ${CLUSTER_TASK_DISK_MB:-0}
 cassandra:
   cpus: ${CASSANDRA_CPUS:-0.5}
   memoryMb: ${CASSANDRA_MEMORY_MB:-4096}

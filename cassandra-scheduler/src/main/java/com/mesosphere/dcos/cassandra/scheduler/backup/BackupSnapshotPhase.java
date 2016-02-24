@@ -14,20 +14,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * During UploadBackupPhase, snapshotted data will be uploaded to external location.
+ * During snapshot phase, data will be snapshotted across all cassandra nodes.
  */
-public class UploadBackupPhase implements Phase {
+public class BackupSnapshotPhase implements Phase {
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(UploadBackupPhase.class);
+            LoggerFactory.getLogger(BackupSnapshotPhase.class);
 
-    private final EventBus eventBus;
-    private final CassandraTasks cassandraTasks;
     private int servers;
-    private List<UploadBackupBlock> blocks;
+    private final EventBus eventBus;
     private BackupContext backupContext;
+    private List<BackupSnapshotBlock> blocks;
+    private final CassandraTasks cassandraTasks;
     private ClusterTaskOfferRequirementProvider provider;
 
-    public UploadBackupPhase(
+    public BackupSnapshotPhase(
             BackupContext backupContext,
             int servers,
             CassandraTasks cassandraTasks,
@@ -41,22 +41,22 @@ public class UploadBackupPhase implements Phase {
         this.blocks = createBlocks();
     }
 
-    private List<UploadBackupBlock> createBlocks() {
-        final List<UploadBackupBlock> newBlocks = new ArrayList<>(servers);
+    private List<BackupSnapshotBlock> createBlocks() {
+        final List<BackupSnapshotBlock> newBlocks = new ArrayList<>(servers);
         final List<String> createdBlocks =
-                new ArrayList<>(cassandraTasks.getBackupUploadTasks().keySet());
+                new ArrayList<>(cassandraTasks.getBackupSnapshotTasks().keySet());
 
         try {
             for (int i = 0; i < servers; i++) {
                 String taskId = (i < createdBlocks.size()) ? createdBlocks.get(i)
-                        : cassandraTasks.createBackupUploadTask(i, backupContext).getId();
-                final UploadBackupBlock block = UploadBackupBlock.create(i, taskId,
+                        : cassandraTasks.createBackupSnapshotTask(i, backupContext).getId();
+                final BackupSnapshotBlock block = BackupSnapshotBlock.create(i, taskId,
                         cassandraTasks, provider, backupContext);
                 newBlocks.add(block);
                 eventBus.register(block);
             }
         } catch (Throwable throwable) {
-            String message = "Failed to create UploadBackupPhase this is a" +
+            String message = "Failed to create BackupSnapshotPhase this is a" +
                     " fatal exception and the program will now exit. Please " +
                     "verify your scheduler configuration and attempt to " +
                     "relaunch the program.";

@@ -16,6 +16,8 @@ import java.util.List;
 import static org.apache.mesos.protobuf.ResourceBuilder.*;
 
 public class BackupSnapshotTask extends CassandraTask {
+    public static final String NAME_PREFIX = "snapshot-";
+
     public static class Builder {
 
         private String id;
@@ -36,7 +38,6 @@ public class BackupSnapshotTask extends CassandraTask {
         private String s3SecretKey;
 
         private Builder(BackupSnapshotTask task) {
-
             this.id = task.id;
             this.slaveId = task.slaveId;
             this.hostname = task.hostname;
@@ -53,7 +54,6 @@ public class BackupSnapshotTask extends CassandraTask {
             this.externalLocation = task.externalLocation;
             this.s3AccessKey = task.s3AccessKey;
             this.s3SecretKey = task.s3SecretKey;
-
         }
 
         public List<String> getColumnFamilies() {
@@ -411,7 +411,9 @@ public class BackupSnapshotTask extends CassandraTask {
         }
     }
 
-    public Builder mutable(){return new Builder(this);}
+    public Builder mutable() {
+        return new Builder(this);
+    }
 
     @Override
     public BackupSnapshotStatus getStatus() {
@@ -421,10 +423,7 @@ public class BackupSnapshotTask extends CassandraTask {
 
     @Override
     public List<Protos.Resource> getReserveResources() {
-        return Arrays.asList(
-                reservedCpus(cpus, role, principal),
-                reservedMem(memoryMb, role, principal),
-                reservedDisk(diskMb, role, principal));
+        return Collections.emptyList();
     }
 
     @Override
@@ -434,6 +433,9 @@ public class BackupSnapshotTask extends CassandraTask {
 
     @Override
     public List<Protos.Resource> getLaunchResources() {
-        return getReserveResources();
+        return Arrays.asList(
+                reservedCpus(cpus, role, principal),
+                reservedMem(memoryMb, role, principal),
+                reservedDisk(diskMb, role, principal));
     }
 }

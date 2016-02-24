@@ -37,7 +37,7 @@ public class CassandraRepairScheduler {
                                                List<Protos.Offer> offers,
                                                CassandraBlock block) {
         List<Protos.OfferID> acceptedOffers = new ArrayList<>();
-        List<Protos.TaskInfo> terminatedTasks = getTerminatedTasks(block);
+        List<Protos.TaskInfo> terminatedTasks = getTasksToRepair(block);
 
         LOGGER.info("Terminated tasks size: {}", terminatedTasks.size());
 
@@ -60,14 +60,14 @@ public class CassandraRepairScheduler {
         return acceptedOffers;
     }
 
-    private List<Protos.TaskInfo> getTerminatedTasks(CassandraBlock block) {
+    private List<Protos.TaskInfo> getTasksToRepair(CassandraBlock block) {
         final List<Protos.TaskInfo> terminatedTasks = new ArrayList<>();
-        final List<CassandraTask> terminatedCassandraTasks = cassandraTasks.getTerminatedTasks();
+        final List<CassandraTask> terminatedCassandraTasks = cassandraTasks.getTasksToRepair();
         terminatedCassandraTasks.stream()
                 .filter(task -> (block == null) ? true :
                         task.getId().equals(block.getTaskId()))
                 .forEach(cassandraTask -> terminatedTasks.add(
-                                cassandraTask.toProto()));
+                        cassandraTask.toProto()));
         return terminatedTasks;
     }
 }

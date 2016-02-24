@@ -74,6 +74,8 @@ message CassandraTaskData{
     optional string s3AccessKey = 9;
 
     optional string s3SecretKey = 10;
+
+    optional string localLocation = 11;
 }
 
 message CassandraStatus{
