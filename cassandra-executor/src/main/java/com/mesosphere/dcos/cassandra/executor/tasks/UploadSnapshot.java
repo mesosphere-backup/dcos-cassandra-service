@@ -27,7 +27,7 @@ public class UploadSnapshot implements Runnable {
         this.cassandraTask = (BackupUploadTask) cassandraTask;
         this.backupStorageDriver = backupStorageDriver;
         backupContext = new BackupContext();
-        backupContext.setName(cassandraTask.getName());
+        backupContext.setName(this.cassandraTask.getBackupName());
         backupContext.setExternalLocation(this.cassandraTask.getExternalLocation());
         backupContext.setS3AccessKey(this.cassandraTask.getS3AccessKey());
         backupContext.setS3SecretKey(this.cassandraTask.getS3SecretKey());

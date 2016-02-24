@@ -31,7 +31,7 @@ public class BackupSnapshot implements Runnable {
             // Send TASK_RUNNING
             sendStatus(driver, Protos.TaskState.TASK_RUNNING, "Started taking snapshot");
 
-            final String snapshotName = this.cassandraTask.getName();
+            final String snapshotName = this.cassandraTask.getBackupName();
             final List<String> nonSystemKeyspaces = probe.getNonSystemKeyspaces();
             LOGGER.info("Started taking snapshot for non system keyspaces: {}",
                     nonSystemKeyspaces);

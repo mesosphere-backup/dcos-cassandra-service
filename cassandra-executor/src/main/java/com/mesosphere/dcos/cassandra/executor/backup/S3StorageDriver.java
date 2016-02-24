@@ -11,7 +11,6 @@ import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
-import org.glassfish.jersey.internal.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xerial.snappy.SnappyOutputStream;
@@ -66,8 +65,8 @@ public class S3StorageDriver implements BackupStorageDriver {
                     LOGGER.info("Skipping directory: {}", snapshotDir.getAbsolutePath());
                     continue;
                 }
-                LOGGER.info("Valid backup directories. Keyspace: {} | ColumnFamily: {} | Snapshot: {}",
-                        keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(), snapshotDir.getAbsolutePath());
+                LOGGER.info("Valid backup directories. Keyspace: {} | ColumnFamily: {} | Snapshot: {} | BackupName: {}",
+                        keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(), snapshotDir.getAbsolutePath(), backupName);
 
                 final Optional<File> snapshotDirectory = getValidSnapshotDirectory(cfDir, snapshotDir, backupName);
                 LOGGER.info("Valid snapshot directory: {}", snapshotDirectory.isPresent());
@@ -125,7 +124,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                             final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
                             final MessageDigest md5Digester = MessageDigest.getInstance("MD5");
                             final byte[] digest = md5Digester.digest(bytes);
-                            final String md5String = Base64.encodeAsString(digest);
+                            final String md5String = Base64.getEncoder().encodeToString(digest);
                             final UploadPartRequest uploadPartRequest = new UploadPartRequest()
                                     .withBucketName(bucketName)
                                     .withKey(fileKey)

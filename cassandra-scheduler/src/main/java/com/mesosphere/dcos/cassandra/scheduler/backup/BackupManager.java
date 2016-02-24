@@ -47,6 +47,9 @@ public class BackupManager {
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
         this.configurationManager = configurationManager;
+
+        // Load BackupManager from state store
+
     }
 
     public List<Protos.OfferID> resourceOffers(SchedulerDriver driver,

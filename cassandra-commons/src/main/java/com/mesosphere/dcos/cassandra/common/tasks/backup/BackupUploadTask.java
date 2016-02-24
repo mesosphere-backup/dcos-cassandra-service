@@ -33,6 +33,7 @@ public class BackupUploadTask extends CassandraTask {
         private BackupUploadStatus status;
         private List<String> keySpaces;
         private List<String> columnFamilies;
+        private String backupName;
         private String externalLocation;
         private String s3AccessKey;
         private String s3SecretKey;
@@ -53,6 +54,7 @@ public class BackupUploadTask extends CassandraTask {
             this.status = task.getStatus();
             this.columnFamilies = task.columnFamilies;
             this.keySpaces = task.keySpaces;
+            this.backupName = task.backupName;
             this.externalLocation = task.externalLocation;
             this.s3AccessKey = task.s3AccessKey;
             this.s3SecretKey = task.s3SecretKey;
@@ -218,6 +220,7 @@ public class BackupUploadTask extends CassandraTask {
                     status,
                     keySpaces,
                     columnFamilies,
+                    backupName,
                     externalLocation,
                     s3AccessKey,
                     s3SecretKey,
@@ -230,6 +233,9 @@ public class BackupUploadTask extends CassandraTask {
 
     @JsonProperty("columnFamilies")
     private final List<String> columnFamilies;
+
+    @JsonProperty("backupName")
+    private final String backupName;
 
     @JsonProperty("externalLocation")
     private final String externalLocation;
@@ -258,6 +264,7 @@ public class BackupUploadTask extends CassandraTask {
             @JsonProperty("status") BackupUploadStatus status,
             @JsonProperty("keySpaces") List<String> keySpaces,
             @JsonProperty("columnFamilies") List<String> columnFamilies,
+            @JsonProperty("backupName") String backupName,
             @JsonProperty("externalLocation") String externalLocation,
             @JsonProperty("s3AccessKey") String s3AccessKey,
             @JsonProperty("s3SecretKey") String s3SecretKey,
@@ -275,6 +282,7 @@ public class BackupUploadTask extends CassandraTask {
                 status,
                 keySpaces,
                 columnFamilies,
+                backupName,
                 externalLocation,
                 s3AccessKey,
                 s3SecretKey,
@@ -295,6 +303,7 @@ public class BackupUploadTask extends CassandraTask {
             BackupUploadStatus status,
             List<String> keySpaces,
             List<String> columnFamilies,
+            String backupName,
             String externalLocation,
             String s3AccessKey,
             String s3SecretKey,
@@ -314,6 +323,7 @@ public class BackupUploadTask extends CassandraTask {
 
         this.keySpaces = ImmutableList.copyOf(keySpaces);
         this.columnFamilies = ImmutableList.copyOf(columnFamilies);
+        this.backupName = backupName;
         this.externalLocation = externalLocation;
         this.s3AccessKey = s3AccessKey;
         this.s3SecretKey = s3SecretKey;
@@ -322,6 +332,10 @@ public class BackupUploadTask extends CassandraTask {
 
     public List<String> getColumnFamilies() {
         return columnFamilies;
+    }
+
+    public String getBackupName() {
+        return backupName;
     }
 
     public String getExternalLocation() {
@@ -350,6 +364,7 @@ public class BackupUploadTask extends CassandraTask {
                 .setType(CassandraProtos.CassandraTaskData.TYPE.BACKUP_UPLOAD)
                 .addAllColumnFamilies(columnFamilies)
                 .addAllKeySpaces(keySpaces)
+                .setBackupName(backupName)
                 .setExternalLocation(externalLocation)
                 .setS3AccessKey(s3AccessKey)
                 .setS3SecretKey(s3SecretKey)
@@ -372,6 +387,7 @@ public class BackupUploadTask extends CassandraTask {
                 (BackupUploadStatus) status,
                 keySpaces,
                 columnFamilies,
+                backupName,
                 externalLocation,
                 s3AccessKey,
                 s3SecretKey,
@@ -393,6 +409,7 @@ public class BackupUploadTask extends CassandraTask {
                 ((BackupUploadStatus) status).update(state),
                 keySpaces,
                 columnFamilies,
+                backupName,
                 externalLocation,
                 s3AccessKey,
                 s3SecretKey,
@@ -417,6 +434,7 @@ public class BackupUploadTask extends CassandraTask {
                     (BackupUploadStatus) status,
                     keySpaces,
                     columnFamilies,
+                    backupName,
                     externalLocation,
                     s3AccessKey,
                     s3SecretKey,

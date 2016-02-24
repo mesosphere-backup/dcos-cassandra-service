@@ -303,6 +303,7 @@ public class ConfigurationManager implements Managed {
                         Optional.empty()),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
+                context.getName(),
                 context.getExternalLocation(),
                 context.getS3AccessKey(),
                 context.getS3SecretKey());
@@ -338,6 +339,7 @@ public class ConfigurationManager implements Managed {
                         Optional.empty()),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
+                context.getName(),
                 context.getExternalLocation(),
                 context.getS3AccessKey(),
                 context.getS3SecretKey(),

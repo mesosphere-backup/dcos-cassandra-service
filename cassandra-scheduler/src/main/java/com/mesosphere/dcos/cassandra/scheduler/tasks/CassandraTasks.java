@@ -278,8 +278,7 @@ public class CassandraTasks implements Managed {
                 }
 
                 update(updated);
-                LOGGER.debug("Updated task {}", updated);
-
+                LOGGER.info("Updated task {}", updated);
             } else {
                 LOGGER.info("Received status update for unrecorded task: " +
                         "status = {}", status);

@@ -135,6 +135,7 @@ public abstract class CassandraTask {
                                 Optional.empty()),
                         data.getKeySpacesList(),
                         data.getColumnFamiliesList(),
+                        data.getBackupName(),
                         data.getExternalLocation(),
                         data.getS3AccessKey(),
                         data.getS3SecretKey()
@@ -164,6 +165,7 @@ public abstract class CassandraTask {
                                 Optional.empty()),
                         data.getKeySpacesList(),
                         data.getColumnFamiliesList(),
+                        data.getBackupName(),
                         data.getExternalLocation(),
                         data.getS3AccessKey(),
                         data.getS3SecretKey(),

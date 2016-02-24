@@ -115,7 +115,7 @@ public class UploadBackupBlock implements CassandraBlock {
                 BackupUploadTask task = cassandraTasks.getBackupUploadTasks()
                         .get(taskId);
 
-                if (task != null && Protos.TaskState.TASK_FINISHED == task.getStatus().getState()) {
+                if (task != null && Protos.TaskState.TASK_FINISHED == status.getState()) {
                     setStatus(Status.Complete);
                 } else if (TaskUtils.isTerminated(status.getState())) {
                     //need to progress with a new task
