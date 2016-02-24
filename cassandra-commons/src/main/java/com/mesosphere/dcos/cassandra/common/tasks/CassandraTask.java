@@ -173,33 +173,7 @@ public abstract class CassandraTask {
                 );
 
             case RESTORE_DOWNLOAD:
-                return S3RestoreTask.create(
-                        info.getTaskId().getValue(),
-                        info.getSlaveId().getValue(),
-                        data.getAddress(),
-                        CassandraTaskExecutor.parse(info.getExecutor()),
-                        info.getName(),
-                        role,
-                        principal,
-                        getReservedCpu(info.getResourcesList(), role,
-                                principal),
-                        (int) getReservedMem(resources,
-                                role,
-                                principal),
-                        (int) getReservedDisk(resources,
-                                role,
-                                principal),
-                        S3RestoreStatus.create(Protos.TaskState.TASK_STAGING,
-                                info.getTaskId().getValue(),
-                                info.getSlaveId().getValue(),
-                                info.getExecutor().getExecutorId().getValue(),
-                                Optional.empty()),
-                        data.getKeySpacesList(),
-                        data.getColumnFamiliesList(),
-                        data.getExternalLocation(),
-                        data.getS3AccessKey(),
-                        data.getS3SecretKey()
-                );
+                return null;
 
             default:
                 return null;

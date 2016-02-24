@@ -23,8 +23,6 @@ import java.util.Optional;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = CassandraDaemonStatus.class,
                 name = "CASSANDRA_DAEMON"),
-        @JsonSubTypes.Type(value = S3RestoreStatus.class, name =
-                "S3_RESTORE"),
         @JsonSubTypes.Type(value = BackupSnapshotStatus.class, name =
                 "BACKUP_SNAPSHOT"),
         @JsonSubTypes.Type(value = BackupUploadStatus.class, name =
@@ -74,15 +72,7 @@ public abstract class CassandraTaskStatus {
                                 Optional.empty());
 
             case RESTORE_DOWNLOAD:
-                return S3BackupStatus.create(
-                        status.getState(),
-                        status.getTaskId().getValue(),
-                        status.getSlaveId().getValue(),
-                        status.getExecutorId().getValue(),
-                        (status.hasMessage()) ?
-                                Optional.of(
-                                        status.getMessage()) :
-                                Optional.empty());
+                return null;
 
             default:
                 return null;

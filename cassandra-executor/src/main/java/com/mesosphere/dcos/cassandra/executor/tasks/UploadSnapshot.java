@@ -40,7 +40,11 @@ public class UploadSnapshot implements Runnable {
             // Send TASK_RUNNING
             sendStatus(driver, Protos.TaskState.TASK_RUNNING, "Started uploading snapshots");
 
+            // Upload snapshots to external location.
             backupStorageDriver.upload(backupContext);
+
+            // Once we have uploaded all existing snapshots, let's clear on-disk snapshots
+            this.probe.clearSnapshot(backupContext.getName());
 
             // Send TASK_FINISHED
             sendStatus(driver, Protos.TaskState.TASK_FINISHED,

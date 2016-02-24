@@ -1,5 +1,12 @@
 package com.mesosphere.dcos.cassandra.common.backup;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
+import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+
+import java.io.IOException;
+
 public class BackupContext {
     private String name;
 
@@ -62,4 +69,31 @@ public class BackupContext {
                 ", s3SecretKey='" + s3SecretKey + '\'' +
                 '}';
     }
+
+    public static final Serializer<BackupContext> JSON_SERIALIZER =
+            new Serializer<BackupContext>() {
+                @Override
+                public byte[] serialize(BackupContext value)
+                        throws SerializationException {
+                    try {
+                        return JsonUtils.MAPPER.writeValueAsBytes(value);
+                    } catch (JsonProcessingException ex) {
+                        throw new SerializationException(
+                                "Error writing BackupContext to JSON",
+                                ex);
+                    }
+                }
+
+                @Override
+                public BackupContext deserialize(byte[] bytes)
+                        throws SerializationException {
+                    try {
+                        return JsonUtils.MAPPER.readValue(bytes,
+                                BackupContext.class);
+                    } catch (IOException ex) {
+                        throw new SerializationException("Error reading " +
+                                "BackupContext form JSON", ex);
+                    }
+                }
+            };
 }

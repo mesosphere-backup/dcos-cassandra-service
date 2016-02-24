@@ -60,7 +60,7 @@ public class CassandraScheduler implements Scheduler, Managed {
             final Reconciler reconciler,
             final ExecutorClient client,
             final EventBus eventBus,
-        final BackupManager backupManager) {
+            final BackupManager backupManager) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
         this.backupManager = backupManager;

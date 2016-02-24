@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
@@ -55,22 +56,28 @@ public class SchedulerModule extends AbstractModule {
                         configuration.getCuratorConfig()));
 
         bind(new TypeLiteral<Serializer<Integer>>() {
-        }).toInstance(
-                IntegerStringSerializer.get());
+        }).toInstance(IntegerStringSerializer.get());
+
         bind(new TypeLiteral<Serializer<Boolean>>() {
-        }).toInstance(
-                BooleanStringSerializer.get());
+        }).toInstance(BooleanStringSerializer.get());
+
         bind(new TypeLiteral<Serializer<Identity>>() {
         }).toInstance(Identity.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<CassandraConfig>>() {
         }).toInstance(CassandraConfig.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<ExecutorConfig>>() {
         }).toInstance(ExecutorConfig.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<CassandraTask>>() {
-        })
-                .toInstance(CassandraTask.JSON_SERIALIZER);
+        }).toInstance(CassandraTask.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<ClusterTaskConfig>>() {
         }).toInstance(ClusterTaskConfig.JSON_SERIALIZER);
+
+        bind(new TypeLiteral<Serializer<BackupContext>>() {
+        }).toInstance(BackupContext.JSON_SERIALIZER);
 
         bind(MesosConfig.class).toInstance(configuration.getMesosConfig());
 

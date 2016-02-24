@@ -1,18 +1,23 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.validator.constraints.NotEmpty;
 
 public class StartBackupRequest {
     @JsonProperty("name")
+    @NotEmpty
     private String name;
 
     @JsonProperty("external-location")
+    @NotEmpty
     private String externalLocation;
 
     @JsonProperty("s3-access-key")
+    @NotEmpty
     private String s3AccessKey;
 
     @JsonProperty("s3-secret-key")
+    @NotEmpty
     private String s3SecretKey;
 
     public String getName() {
