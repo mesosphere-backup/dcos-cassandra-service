@@ -102,11 +102,6 @@ public class ReconciliationPhase implements Phase {
     }
 
     @Override
-    public Block getCurrentBlock() {
-        return block;
-    }
-
-    @Override
     public int getId() {
         return block.getId();
     }
@@ -114,11 +109,6 @@ public class ReconciliationPhase implements Phase {
     @Override
     public String getName() {
         return "RECONCILIATION";
-    }
-
-    @Override
-    public Status getStatus() {
-        return block.getStatus();
     }
 
     @Override

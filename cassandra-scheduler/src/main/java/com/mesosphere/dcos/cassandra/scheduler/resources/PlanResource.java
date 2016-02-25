@@ -47,7 +47,7 @@ public class PlanResource {
     @GET
     @Path("/summary")
     public PlanSummary getSummary(){
-        return PlanSummary.forPlan(manager.getPlan());
+        return PlanSummary.forPlan(manager);
     }
 
     @PUT

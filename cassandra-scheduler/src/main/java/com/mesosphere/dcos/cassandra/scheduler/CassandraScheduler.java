@@ -221,11 +221,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         LOGGER.error("Scheduler driver error: {}", message);
     }
 
-    // Utility methods
-    private PlanStrategy getStrategy(Plan plan) {
-        return new DefaultInstallStrategy(plan);
-    }
-
     private List<Protos.Offer> filterAcceptedOffers(List<Protos.Offer> offers,
                                                     List<Protos.OfferID> acceptedOfferIds) {
         return offers.stream().filter(

@@ -97,19 +97,6 @@ public class CassandraDaemonPhase implements Phase {
         return blocks;
     }
 
-    @Override
-    public Block getCurrentBlock() {
-        Block currentBlock = null;
-        if (!CollectionUtils.isEmpty(blocks)) {
-            for (Block block : blocks) {
-                if (!block.isComplete()) {
-                    currentBlock = block;
-                    break;
-                }
-            }
-        }
-        return currentBlock;
-    }
 
     @Override
     public int getId() {
@@ -121,11 +108,6 @@ public class CassandraDaemonPhase implements Phase {
         return "CASSANDRA_DEPLOY";
     }
 
-    @Override
-    public Status getStatus() {
-        final Block current = getCurrentBlock();
-        return (current != null) ? current.getStatus() : Status.Complete;
-    }
 
     @Override
     public boolean isComplete() {

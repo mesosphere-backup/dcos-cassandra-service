@@ -2,10 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.scheduler.plan.Block;
-import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Plan;
-import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.scheduler.plan.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -87,10 +84,6 @@ public class EmptyPlan implements Plan {
             return Collections.EMPTY_LIST;
         }
 
-        @Override
-        public Block getCurrentBlock() {
-            return EmptyBlock.get();
-        }
 
         @Override
         public int getId() {
@@ -103,13 +96,43 @@ public class EmptyPlan implements Plan {
         }
 
         @Override
-        public Status getStatus() {
-            return Status.Complete;
+        public boolean isComplete() {
+            return true;
+        }
+    }
+
+    public static class EmptyStrategy implements PhaseStrategy {
+
+        private static final EmptyStrategy instance = new EmptyStrategy();
+
+        public static EmptyStrategy get(){
+            return instance;
+        }
+        private final EmptyPhase phase = EmptyPhase.get();
+        @Override
+        public Block getCurrentBlock() {
+            return phase.getBlocks().get(0);
         }
 
         @Override
-        public boolean isComplete() {
-            return true;
+        public void proceed() {
+
+        }
+
+        @Override
+        public void interrupt() {
+
+        }
+
+        @Override
+        public void restart(int blockIndex, boolean force)
+                throws IndexOutOfBoundsException {
+
+        }
+
+        @Override
+        public Phase getPhase() {
+            return phase;
         }
     }
 
@@ -122,16 +145,6 @@ public class EmptyPlan implements Plan {
     @Override
     public List<? extends Phase> getPhases() {
         return Collections.emptyList();
-    }
-
-    @Override
-    public Phase getCurrentPhase() {
-        return EmptyPhase.get();
-    }
-
-    @Override
-    public Status getStatus() {
-        return Status.Complete;
     }
 
     @Override

@@ -58,16 +58,7 @@ public class CassandraDeploy implements Plan {
         return phases;
     }
 
-    @Override
-    public Phase getCurrentPhase() {
-        return (reconciliationPhase.isComplete()) ?
-                daemonPhase : reconciliationPhase;
-    }
 
-    @Override
-    public Status getStatus() {
-        return getCurrentPhase().getStatus();
-    }
 
     @Override
     public boolean isComplete() {
