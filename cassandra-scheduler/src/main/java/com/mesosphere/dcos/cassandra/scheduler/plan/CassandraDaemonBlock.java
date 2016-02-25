@@ -1,6 +1,5 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import com.google.common.eventbus.Subscribe;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
@@ -41,8 +40,8 @@ public class CassandraDaemonBlock implements Block {
     private final CassandraOfferRequirementProvider provider;
     private final ExecutorClient client;
     private final String name;
-    private volatile Status status;
     private boolean terminated = false;
+    private volatile Status status = Status.Pending;
 
     private void terminate(final CassandraDaemonTask task) {
         LOGGER.info("Block {} terminating task {}", getName(), task.getId());
@@ -72,6 +71,71 @@ public class CassandraDaemonBlock implements Block {
         }
     }
 
+    private void updateConfig(final CassandraDaemonTask task){
+        try {
+            CassandraDaemonTask updated =
+                    cassandraTasks.reconfigureDeamon(task);
+            LOGGER.info("Block {} reconfiguring task : id = {}",
+                    getName(),
+                    updated.getId());
+        } catch (PersistenceException ex) {
+            LOGGER.error(String.format("Block %s - Failed to get or " +
+                    "reconfigure task", getName()), ex);
+        }
+    }
+
+    private CassandraDaemonTask getTask() throws PersistenceException {
+        return cassandraTasks.getOrCreateDaemon(name);
+    }
+
+    private boolean isComplete(final CassandraDaemonTask task){
+        return (Protos.TaskState.TASK_RUNNING.equals(
+                task.getStatus().getState())
+                && CassandraMode.NORMAL.equals(
+                task.getStatus().getMode()) &&
+                !cassandraTasks.needsConfigUpdate(task));
+    }
+
+    private boolean isTerminal(final CassandraDaemonTask task){
+        return isTerminal(task.getStatus().getState());
+    }
+
+    private boolean needsConfigUpdate(final CassandraDaemonTask task){
+        return cassandraTasks.needsConfigUpdate(task);
+    }
+
+    private OfferRequirement reconfigureTask( final CassandraDaemonTask task){
+
+        try {
+            return provider.getReplacementOfferRequirement(
+                    cassandraTasks.reconfigureDeamon(task).toProto()
+            );
+        } catch(PersistenceException ex){
+            LOGGER.error(
+                    String.format("Block %s failed to reconfigure task %s,"),
+                    getName(),
+                    task,
+                    ex);
+            return null;
+        }
+    }
+
+    private OfferRequirement replaceTask( final CassandraDaemonTask task){
+
+        try {
+            return provider.getReplacementOfferRequirement(
+                    cassandraTasks.replaceDaemon(task).toProto()
+            );
+        } catch(PersistenceException ex){
+            LOGGER.error(
+                    String.format("Block %s failed to replace task %s,"),
+                    getName(),
+                    task,
+                    ex);
+            return null;
+        }
+    }
+
     public static CassandraDaemonBlock create(
             final int id,
             final String name,
@@ -89,7 +153,6 @@ public class CassandraDaemonBlock implements Block {
             final CassandraOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client) {
-        this.status = Status.Pending;
         this.cassandraTasks = cassandraTasks;
         this.name = name;
         this.id = id;
@@ -104,122 +167,75 @@ public class CassandraDaemonBlock implements Block {
 
     @Override
     public boolean isPending() {
-        return Status.Pending == status;
+        return Status.Pending.equals(getStatus());
     }
 
     @Override
     public boolean isInProgress() {
-        return Status.InProgress == status;
+
+        return Status.InProgress.equals(getStatus());
     }
 
     @Override
     public OfferRequirement start() {
         LOGGER.info("Starting Block = {}", getName());
-        CassandraDaemonTask task;
+        final CassandraDaemonTask task;
 
         try {
-            task = cassandraTasks.getOrCreateDaemon(name);
+            task = getTask();
         } catch (PersistenceException ex) {
-            LOGGER.error(String.format("Block {} - Failed to get or create a " +
+            LOGGER.error(String.format("Block %s - Failed to get or create a " +
                     "task", getName()), ex);
             return null;
         }
 
-        if (cassandraTasks.needsConfigUpdate(task)) {
-            LOGGER.info("Block {} - Task requires configuration update: id = " +
-                            "{}",
+        if(isComplete(task)){
+            LOGGER.info("Block {} - Task complete : id = {}",
+                    getName(),
+                    task.getId());
+            setStatus(Status.Complete);
+            return null;
+        } else if (needsConfigUpdate(task)){
+            LOGGER.info("Block {} - Task requires config update : id = {}" ,
                     getName(),
                     task.getId());
             if (!isTerminal(task.getStatus().getState())) {
                 terminate(task);
                 return null;
-
             } else {
-
-                try {
-                    return provider.getReplacementOfferRequirement(
-                            cassandraTasks.reconfigureDeamon(task).toProto());
-                } catch (PersistenceException ex) {
-
-                    return null;
-                }
+                return reconfigureTask(task);
             }
-        } else if (Protos.TaskState.TASK_RUNNING.equals(task.getStatus()
-                .getState())
-                && CassandraMode.NORMAL.equals(task.getStatus().getMode())) {
-            //We are running and normal complete this block
-            LOGGER.info(
-                    "Task {} assigned to this block {}, is already in state: {}",
-                    task.getId(),
-                    id,
-                    task.getStatus().getState());
-            setStatus(Status.Complete);
-            return null;
-        } else if (task.getSlaveId().isEmpty()) {
-            //we have not yet been assigned a slave id - This means that the
-            //the task has never been launched
-            setStatus(Status.InProgress);
+        } else if(task.getSlaveId().isEmpty()){
+            LOGGER.info("Block {} - Launching new task : id = {}" ,
+                    getName(),
+                    task.getId());
             return provider.getNewOfferRequirement(task.toProto());
-        } else if (isTerminal(task.getStatus().getState())) {
-            try {
-                setStatus(Status.InProgress);
-                return provider.getReplacementOfferRequirement(
-                        cassandraTasks.replaceDaemon(task).toProto());
-
-            } catch(PersistenceException ex){
-                return null;
-            }
+        } else if (isTerminal(task)){
+            LOGGER.info("Block {} - Replacing task : id = {}" ,
+                    getName(),
+                    task.getId());
+            return replaceTask(task);
         } else {
-            setStatus(Status.InProgress);
-            return provider.getReplacementOfferRequirement(task.toProto());
-
+            return null;
         }
     }
 
-    @Subscribe
     @Override
     public void update(Protos.TaskStatus status) {
-        LOGGER.debug("Updating status : id = {}, task = {}, status = {}",
-                id, name, status);
-        if (cassandraTasks.getDaemons().containsKey(name)) {
-            CassandraDaemonTask task = cassandraTasks.getDaemons().get(name);
 
-            try {
-                if (!status.getTaskId().getValue().equalsIgnoreCase(task
-                        .getId())) {
-                    //ignore what is not my concern
-                    LOGGER.debug(
-                            "Irrelevant status id = {}, task = {}, status = {}",
-                            id, name, status);
-                    return;
-                } else {
-                    //update the status
-                    cassandraTasks.update(status);
-                    if (Protos.TaskState.TASK_RUNNING.equals(
-                            task.getStatus().getState())
-                            && CassandraMode.NORMAL.equals(
-                            task.getStatus().getMode()) &&
-                            !cassandraTasks.needsConfigUpdate(task)) {
-                        setStatus(Status.Complete);
-                    }
-
-                }
-            } catch (Exception ex) {
-                LOGGER.error(
-                        String.format(
-                                "Exception for task {} in block {}. Block " +
-                                        "failed to progress",
-                                name,
-                                id), ex);
+        try {
+            cassandraTasks.update(status);
+            final CassandraDaemonTask task = getTask();
+            if(isComplete(task)){
+                setStatus(Status.Complete);
+            } else if (isTerminal(task)){
+                setStatus(Status.Pending);
             }
+        } catch (Exception ex) {
+            LOGGER.error(String.format("Block %s - Failed update status " +
+                    "task : status = %s", getName(),status),
+                    ex);
         }
-
-    }
-
-
-    private boolean isRelevantStatus(Protos.TaskStatus status) {
-        return status.getTaskId().equals(cassandraTasks.get(name).get()
-                .getId());
     }
 
     @Override
@@ -244,11 +260,9 @@ public class CassandraDaemonBlock implements Block {
 
     @Override
     public void setStatus(Status newStatus) {
-        Status oldStatus = status;
+        LOGGER.info("Block {} setting status to {}",
+                getName(),newStatus);
         status = newStatus;
-        LOGGER.info(getName() +
-                ": changing status from: "
-                + oldStatus + " to: " + status);
     }
 
 
@@ -256,7 +270,6 @@ public class CassandraDaemonBlock implements Block {
     public String toString() {
         return "CassandraDaemonBlock{" +
                 "name='" + name + '\'' +
-                ", status=" + status +
                 ", id=" + id +
                 '}';
     }

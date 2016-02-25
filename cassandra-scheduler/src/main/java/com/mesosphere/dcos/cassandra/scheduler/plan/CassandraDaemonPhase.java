@@ -25,20 +25,17 @@ public class CassandraDaemonPhase implements Phase {
     public static final CassandraDaemonPhase create(
             final ConfigurationManager configurationManager,
             final CassandraOfferRequirementProvider offerRequirementProvider,
-            final EventBus eventBus,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client) {
         return new CassandraDaemonPhase(
                 configurationManager,
                 offerRequirementProvider,
-                eventBus,
                 cassandraTasks,
                 client);
     }
 
     private List<Block> blocks = null;
     private final int servers;
-    private final EventBus eventBus;
     private final CassandraOfferRequirementProvider offerRequirementProvider;
     private final CassandraTasks cassandraTasks;
     private final ExecutorClient client;
@@ -46,12 +43,10 @@ public class CassandraDaemonPhase implements Phase {
     public CassandraDaemonPhase(
             final ConfigurationManager configurationManager,
             final CassandraOfferRequirementProvider offerRequirementProvider,
-            final EventBus eventBus,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client) {
         this.servers = configurationManager.getServers();
         this.offerRequirementProvider = offerRequirementProvider;
-        this.eventBus = eventBus;
         this.cassandraTasks = cassandraTasks;
         this.client = client;
         this.blocks = createBlocks();
@@ -76,9 +71,7 @@ public class CassandraDaemonPhase implements Phase {
                                 offerRequirementProvider,
                                 cassandraTasks,
                                 this.client);
-                eventBus.register(daemonBlock);
                 blocks.add(daemonBlock);
-
                 Collections.sort(blocks, (block1, block2) -> {
                     return Integer.compare(block1.getId(), block2.getId());
                 });

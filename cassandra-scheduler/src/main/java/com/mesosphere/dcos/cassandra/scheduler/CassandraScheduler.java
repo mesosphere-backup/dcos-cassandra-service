@@ -80,8 +80,8 @@ public class CassandraScheduler implements Scheduler, Managed {
     @Override
     public void start() throws Exception {
         registerFramework();
+        eventBus.register(planManager);
         eventBus.register(cassandraTasks);
-        eventBus.register(reconciler);
     }
 
     @Override
@@ -104,7 +104,6 @@ public class CassandraScheduler implements Scheduler, Managed {
             planManager.setPlan(CassandraDeploy.create(
                     offerRequirementProvider,
                     configurationManager,
-                    eventBus,
                     cassandraTasks,
                     client,
                     reconciler));

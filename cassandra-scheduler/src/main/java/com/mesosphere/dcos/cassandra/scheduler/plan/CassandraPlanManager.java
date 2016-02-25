@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import com.google.common.eventbus.Subscribe;
 import org.apache.mesos.Protos;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Plan;
@@ -43,6 +44,11 @@ public class CassandraPlanManager implements PlanManager {
 
     @Override
     public void update(Observable observable, Protos.TaskStatus status) {
+        update(status);
+    }
+
+    @Subscribe
+    public void update(Protos.TaskStatus status) {
 
         if (!planIsComplete() &&
                 plan.getCurrentPhase() != null &&

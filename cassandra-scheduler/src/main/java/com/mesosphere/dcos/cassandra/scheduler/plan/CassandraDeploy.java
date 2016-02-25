@@ -20,7 +20,6 @@ public class CassandraDeploy implements Plan {
     public static final CassandraDeploy create(
             final CassandraOfferRequirementProvider offerRequirementProvider,
             final ConfigurationManager configurationManager,
-            final EventBus eventBus,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client,
             final Reconciler reconciler) {
@@ -28,7 +27,6 @@ public class CassandraDeploy implements Plan {
         return new CassandraDeploy(
                 offerRequirementProvider,
                 configurationManager,
-                eventBus,
                 cassandraTasks,
                 client,
         reconciler);
@@ -42,7 +40,6 @@ public class CassandraDeploy implements Plan {
     public CassandraDeploy(
             final CassandraOfferRequirementProvider offerRequirementProvider,
             final ConfigurationManager configurationManager,
-            final EventBus eventBus,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client,
             final Reconciler reconciler) {
@@ -50,7 +47,6 @@ public class CassandraDeploy implements Plan {
         this.daemonPhase = CassandraDaemonPhase.create(
                 configurationManager,
                 this.offerRequirementProvider,
-                eventBus,
                 cassandraTasks,
                 client);
         this.reconciliationPhase = ReconciliationPhase.create(reconciler);
