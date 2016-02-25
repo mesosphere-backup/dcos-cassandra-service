@@ -12,8 +12,6 @@ import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDeploy;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
