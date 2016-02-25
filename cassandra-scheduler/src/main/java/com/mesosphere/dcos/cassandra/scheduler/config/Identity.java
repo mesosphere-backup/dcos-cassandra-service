@@ -4,11 +4,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.mesos.Protos;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
@@ -272,5 +276,13 @@ public class Identity {
     @Override
     public String toString() {
         return JsonUtils.toJsonString(this);
+    }
+
+    public Optional<ByteString> readSecretBytes() throws IOException {
+        if (!secret.isPresent() || secret.get().isEmpty()) {
+            return Optional.empty();
+        }
+        FileInputStream fin = new FileInputStream(new File(secret.get()));
+        return Optional.of(ByteString.copyFrom(IOUtils.toByteArray(fin)));
     }
 }

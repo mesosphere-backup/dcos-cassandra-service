@@ -21,9 +21,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 
 public class ConfigurationManagerTest {
 
@@ -112,6 +115,13 @@ public class ConfigurationManagerTest {
                 ExecutorConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
+
+        assertEquals("http://cassandra.marathon.mesos:8080/v1/seeds", config.getSeedsUrl());
+        assertEquals("cassandra", config.getIdentity().getName());
+        assertEquals("cassandra_role", config.getIdentity().getRole());
+        assertEquals("cassandra_cluster", config.getIdentity().getCluster());
+        assertEquals("cassandra_principal", config.getIdentity().getPrincipal());
+        assertEquals(Optional.empty(), config.getIdentity().getSecret());
 
         manager.start();
 
@@ -279,17 +289,22 @@ public class ConfigurationManagerTest {
 
         manager.stop();
 
-        CassandraConfig updatedConfig =
+        CassandraConfig updatedCassandraConfig =
                 config.getCassandraConfig().mutable().setJmxPort(8000)
                         .setCpus(0.6).setMemoryMb(10000).build();
+
+        ExecutorConfig updatedExecutorConfig = new ExecutorConfig("/command/line",
+                new ArrayList<String>(), 1.2, 345, 678, 901, 17, 19, "/java/home",
+                URI.create("/jre/location"), URI.create("/executor/location"),
+                URI.create("/cassandra/location"));
 
         int updatedServers = config.getServers() + 10;
 
         int updatedSeeds = config.getSeeds() + 5;
 
         manager = new ConfigurationManager(
-                updatedConfig,
-                config.getExecutorConfig(),
+                updatedCassandraConfig,
+                updatedExecutorConfig,
                 updatedServers,
                 updatedSeeds,
                 true,
@@ -305,9 +320,9 @@ public class ConfigurationManagerTest {
         manager.start();
 
 
-        assertEquals(updatedConfig, manager.getCassandraConfig());
+        assertEquals(updatedCassandraConfig, manager.getCassandraConfig());
 
-        assertEquals(config.getExecutorConfig(), manager.getExecutorConfig());
+        assertEquals(updatedExecutorConfig, manager.getExecutorConfig());
 
         assertEquals(updatedServers, manager.getServers());
 
@@ -315,11 +330,11 @@ public class ConfigurationManagerTest {
 
         assertEquals(CassandraConfig.JSON_SERIALIZER.deserialize(
                 curator.getData().forPath(cassandraConfigPath)),
-                updatedConfig);
+                updatedCassandraConfig);
 
         assertEquals(ExecutorConfig.JSON_SERIALIZER.deserialize(
                 curator.getData().forPath(executorConfigPath)),
-                config.getExecutorConfig());
+                updatedExecutorConfig);
 
         assertEquals(IntegerStringSerializer.get().deserialize(
                 curator.getData().forPath(serversPath)).intValue(),
@@ -464,6 +479,123 @@ public class ConfigurationManagerTest {
 
     }
 
+    @Test
+    public void testSetServers() throws Exception {
+
+        ConfigurationManager manager = new ConfigurationManager(
+                config.getCassandraConfig(),
+                config.getExecutorConfig(),
+                config.getServers(),
+                config.getSeeds(),
+                false,
+                "NODE",
+                "INSTALL",
+                config.getSeedsUrl(),
+                persistence,
+                CassandraConfig.JSON_SERIALIZER,
+                ExecutorConfig.JSON_SERIALIZER,
+                IntegerStringSerializer.get()
+        );
+
+        manager.start();
+
+        assertNotSame(17, manager.getServers());
+        manager.setServers(17);
+        assertEquals(17, manager.getServers());
+        assertEquals(17, IntegerStringSerializer.get().deserialize(
+                curator.getData().forPath(serversPath)).intValue());
+
+    }
+
+    @Test
+    public void testSetSeeds() throws Exception {
+
+        ConfigurationManager manager = new ConfigurationManager(
+                config.getCassandraConfig(),
+                config.getExecutorConfig(),
+                config.getServers(),
+                config.getSeeds(),
+                false,
+                "NODE",
+                "INSTALL",
+                config.getSeedsUrl(),
+                persistence,
+                CassandraConfig.JSON_SERIALIZER,
+                ExecutorConfig.JSON_SERIALIZER,
+                IntegerStringSerializer.get()
+        );
+
+        manager.start();
+
+        assertNotSame(29, manager.getSeeds());
+        manager.setSeeds(29);
+        assertEquals(29, manager.getSeeds());
+        assertEquals(29, IntegerStringSerializer.get().deserialize(
+                curator.getData().forPath(seedsPath)).intValue());
+
+    }
+
+    @Test
+    public void testSetCassandraConfig() throws Exception {
+
+        ConfigurationManager manager = new ConfigurationManager(
+                config.getCassandraConfig(),
+                config.getExecutorConfig(),
+                config.getServers(),
+                config.getSeeds(),
+                false,
+                "NODE",
+                "INSTALL",
+                config.getSeedsUrl(),
+                persistence,
+                CassandraConfig.JSON_SERIALIZER,
+                ExecutorConfig.JSON_SERIALIZER,
+                IntegerStringSerializer.get()
+        );
+
+        manager.start();
+
+        CassandraConfig new_config = config.getCassandraConfig().mutable().setJmxPort(13000)
+                .setCpus(2.3).setMemoryMb(1234).build();
+
+        assertNotSame(new_config, manager.getCassandraConfig());
+        manager.setCassandraConfig(new_config);
+        assertEquals(new_config, manager.getCassandraConfig());
+        assertEquals(new_config, CassandraConfig.JSON_SERIALIZER.deserialize(
+                curator.getData().forPath(cassandraConfigPath)));
+
+    }
+
+    @Test
+    public void testSetExecutorConfig() throws Exception {
+
+        ConfigurationManager manager = new ConfigurationManager(
+                config.getCassandraConfig(),
+                config.getExecutorConfig(),
+                config.getServers(),
+                config.getSeeds(),
+                false,
+                "NODE",
+                "INSTALL",
+                config.getSeedsUrl(),
+                persistence,
+                CassandraConfig.JSON_SERIALIZER,
+                ExecutorConfig.JSON_SERIALIZER,
+                IntegerStringSerializer.get()
+        );
+
+        manager.start();
+
+        ExecutorConfig new_config = new ExecutorConfig("/command/line", new ArrayList<String>(), 1.2, 345, 678, 901,
+                17, 19, "/java/home", URI.create("/jre/location"), URI.create("/executor/location"),
+                URI.create("/cassandra/location"));
+
+        assertNotSame(new_config, manager.getExecutorConfig());
+        manager.setExecutorConfig(new_config);
+        assertEquals(new_config, manager.getExecutorConfig());
+        assertEquals(new_config, ExecutorConfig.JSON_SERIALIZER.deserialize(
+                curator.getData().forPath(executorConfigPath)));
+    }
 
     @AfterClass
     public static void afterAll() throws Exception {

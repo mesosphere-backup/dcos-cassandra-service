@@ -6,7 +6,6 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraStatus;
 import org.apache.cassandra.tools.NodeProbe;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
