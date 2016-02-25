@@ -128,13 +128,14 @@ public class CassandraTasksTest {
 
         tasks.start();
 
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 0);
 
 
-        assertEquals(tasks.get(task.getId()).get(),task);
+        assertEquals(tasks.get(task.getName()).get(),task);
 
         assertEquals(CassandraTask.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(path(task.getId()))
+                curator.getData().forPath(path(task.getName()))
         ),task);
     }
 
@@ -149,12 +150,13 @@ public class CassandraTasksTest {
 
         tasks.start();
 
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(
+        CassandraDaemonTask.NAME_PREFIX + 0);
 
-        assertEquals(tasks.get(task.getId()).get(),task);
+        assertEquals(tasks.get(task.getName()).get(),task);
 
         assertEquals(CassandraTask.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(path(task.getId()))
+                curator.getData().forPath(path(task.getName()))
         ),task);
 
         tasks.stop();
@@ -167,9 +169,8 @@ public class CassandraTasksTest {
 
         tasks.start();
 
-        assertEquals(tasks.createDaemon().getName(),"server-1");
 
-        assertEquals(tasks.get(task.getId()).get(),task);
+        assertEquals(tasks.get(CassandraDaemonTask.NAME_PREFIX + 0).get(),task);
     }
 
     @Test
@@ -183,7 +184,7 @@ public class CassandraTasksTest {
 
         tasks.start();
 
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(CassandraDaemonTask.NAME_PREFIX + 0);
 
         assertEquals(CassandraDaemonTask.parse(task.toProto()),task);
     }
@@ -220,7 +221,7 @@ public class CassandraTasksTest {
                 )
         );
 
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(CassandraDaemonTask.NAME_PREFIX + 0);
 
 
         assertEquals(CassandraDaemonTask.parse(task.toProto()),task);
@@ -232,7 +233,7 @@ public class CassandraTasksTest {
         assertEquals(updated.getHostname(),"localhost");
 
         assertEquals(CassandraTask.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(path(task.getId()))
+                curator.getData().forPath(path(task.getName()))
         ),updated);
 
     }

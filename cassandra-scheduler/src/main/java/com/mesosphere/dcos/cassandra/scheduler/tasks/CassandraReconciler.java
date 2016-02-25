@@ -35,9 +35,12 @@ public class CassandraReconciler implements Reconciler {
     @Override
     public void start() {
 
+        LOGGER.info("Starting reconciler");
+
         synchronized (unreconciled) {
             tasks.get().entrySet().stream().forEach(entry -> {
-                unreconciled.put(entry.getKey(),
+                unreconciled.put(
+                        entry.getValue().getId(),
                         entry.getValue().getStatus().toProto());
             });
             reconciled.set(unreconciled.isEmpty());
@@ -60,7 +63,9 @@ public class CassandraReconciler implements Reconciler {
                 } else if (now > lastRequestTime + backOff) {
                     LOGGER.info("Requesting reconciliation : time = {}", now);
                     lastRequestTime = now;
-                    backOff = Math.min(backOff * MULTIPLIER, MAX_BACKOFF_MS);
+                    long newBackoff = backOff * MULTIPLIER;
+                    backOff = Math.min((newBackoff > 0) ? newBackoff : 0,
+                            MAX_BACKOFF_MS);
                     driver.reconcileTasks(unreconciled.values());
                     LOGGER.info("Next reconciliation = {}", now + backOff);
                 } else {
@@ -68,6 +73,8 @@ public class CassandraReconciler implements Reconciler {
                                     "next reconcile time = {}",
                             unreconciled.size(),
                             lastRequestTime + backOff);
+
+                    LOGGER.info("Uncreconcilled tasks = {}", unreconciled);
                 }
             }
         }

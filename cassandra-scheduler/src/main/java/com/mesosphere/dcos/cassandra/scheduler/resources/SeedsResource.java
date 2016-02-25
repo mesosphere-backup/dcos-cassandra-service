@@ -29,16 +29,13 @@ public class SeedsResource {
     @Inject
     public SeedsResource(final CassandraTasks tasks,
                          final ConfigurationManager configuration){
-
         this.tasks = tasks;
         this.configuration = configuration;
-
     }
 
     @GET
     @Counted
     public Map<String,Object> getSeeds() throws UnknownHostException {
-
         final List<CassandraDaemonTask> active = tasks.getDaemons().values()
                 .stream()
                 .filter(daemon -> daemon.getStatus().getMode() ==

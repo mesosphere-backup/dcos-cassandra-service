@@ -39,13 +39,13 @@ public class ConfigurationResource {
     }
 
     @GET
-    @Path("/servers")
+    @Path("/nodes")
     public int getServers() {
         return configuration.getServers();
     }
 
     @GET
-    @Path("/seeds")
+    @Path("/seed-nodes")
     public int getSeeds() {
         return configuration.getSeeds();
     }

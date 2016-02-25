@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
@@ -9,11 +10,8 @@ import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDeploy;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.PlanFactory;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.Reconciler;
 import io.dropwizard.lifecycle.Managed;
@@ -27,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class CassandraScheduler implements Scheduler, Managed {
@@ -109,7 +106,8 @@ public class CassandraScheduler implements Scheduler, Managed {
                     configurationManager,
                     eventBus,
                     cassandraTasks,
-                    client));
+                    client,
+                    reconciler));
             reconciler.start();
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
@@ -130,10 +128,9 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void resourceOffers(SchedulerDriver driver,
                                List<Protos.Offer> offers) {
         logOffers(offers);
-
         reconciler.reconcile(driver);
 
-        if(identityManager.isRegistered() && reconciler.isReconciled()){
+        if (identityManager.isRegistered()) {
 
             List<Protos.OfferID> acceptedOffers = new ArrayList<>();
 
@@ -141,9 +138,9 @@ public class CassandraScheduler implements Scheduler, Managed {
 
             LOGGER.info("Current execution block = {}",
                     (currentBlock != null) ? currentBlock.toString() :
-            "No block");
+                            "No block");
 
-            if(currentBlock == null){
+            if (currentBlock == null) {
                 LOGGER.info("Current plan {} interrupted.",
                         (planManager.isInterrupted()) ? "is" : "is not");
             }
@@ -156,16 +153,16 @@ public class CassandraScheduler implements Scheduler, Managed {
                     repairScheduler.resourceOffers(
                             driver,
                             unacceptedOffers,
-                            (CassandraBlock)currentBlock));
+                    ImmutableSet.of(currentBlock.getName())));
 
             declineOffers(driver, acceptedOffers, offers);
         } else {
 
             LOGGER.info("Declining all offers : registered = {}, " +
-                    "reconciled = {}",
+                            "reconciled = {}",
                     identityManager.isRegistered(),
                     reconciler.isReconciled());
-            declineOffers(driver, Collections.emptyList(),offers);
+            declineOffers(driver, Collections.emptyList(), offers);
         }
     }
 

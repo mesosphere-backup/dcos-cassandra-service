@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.eventbus.EventBus;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -13,11 +14,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CassandraDaemonPhase implements Phase {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CassandraDaemonPhase.class);
+
+    public static final CassandraDaemonPhase create(
+            final ConfigurationManager configurationManager,
+            final CassandraOfferRequirementProvider offerRequirementProvider,
+            final EventBus eventBus,
+            final CassandraTasks cassandraTasks,
+            final ExecutorClient client) {
+        return new CassandraDaemonPhase(
+                configurationManager,
+                offerRequirementProvider,
+                eventBus,
+                cassandraTasks,
+                client);
+    }
+
     private List<Block> blocks = null;
     private final int servers;
     private final EventBus eventBus;
@@ -41,21 +59,29 @@ public class CassandraDaemonPhase implements Phase {
 
     private List<Block> createBlocks() {
         final List<Block> blocks = new ArrayList<>(servers);
-        final List<String> created =
-                new ArrayList<>(cassandraTasks.getDaemons().keySet());
+
+        final List<String> names = new ArrayList<>(servers);
+
+        for(int id = 0; id < servers; ++id){
+            names.add(CassandraDaemonTask.NAME_PREFIX + id);
+        }
+
         //here we will add a block for all tasks we have recorded and create a
         //new block with a newly recorded task for a scale out
         try {
             for (int i = 0; i < servers; i++) {
                 final CassandraDaemonBlock daemonBlock =
                         CassandraDaemonBlock.create(i,
-                                (i < created.size()) ? created.get(i) :
-                                        cassandraTasks.createDaemon().getId(),
+                                names.get(i),
                                 offerRequirementProvider,
                                 cassandraTasks,
                                 this.client);
                 eventBus.register(daemonBlock);
                 blocks.add(daemonBlock);
+
+                Collections.sort(blocks, (block1, block2) -> {
+                    return Integer.compare(block1.getId(), block2.getId());
+                });
             }
         } catch (Throwable throwable) {
 
@@ -89,7 +115,6 @@ public class CassandraDaemonPhase implements Phase {
                 }
             }
         }
-
         return currentBlock;
     }
 
@@ -105,7 +130,8 @@ public class CassandraDaemonPhase implements Phase {
 
     @Override
     public Status getStatus() {
-        return getCurrentBlock().getStatus();
+        final Block current = getCurrentBlock();
+        return (current != null) ? current.getStatus() : Status.Complete;
     }
 
     @Override
