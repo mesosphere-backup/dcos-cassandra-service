@@ -224,7 +224,6 @@ public class ConfigurationManager implements Managed {
 
         String executor = name + "_" + unique + "_executor";
 
-
         return CassandraDaemonTask.create(
                 id,
                 slaveId,
@@ -255,6 +254,20 @@ public class ConfigurationManager implements Managed {
         );
     }
 
+    public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task){
+        String id = task.getName() + "_" + UUID.randomUUID().toString();
+        return task.mutable()
+                .setId(id)
+                .setStatus(
+                CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
+                id,
+                task.getSlaveId(),
+                task.getName(),
+                Optional.empty(),
+                CassandraMode.STARTING)).build();
+
+    }
+
     public boolean hasCurrentConfig(final CassandraDaemonTask task){
 
         return task.getExecutor().getCommand().equals(executorConfig
@@ -279,8 +292,9 @@ public class ConfigurationManager implements Managed {
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task){
 
+        String id = task.getName() + "_" + UUID.randomUUID().toString();
         return CassandraDaemonTask.create(
-                task.getId(),
+                id,
                 task.getSlaveId(),
                 task.getHostname(),
                 createExecutor(
@@ -301,7 +315,17 @@ public class ConfigurationManager implements Managed {
                                                         seedsUrl))
                                 .build())
                         .build(),
-                task.getStatus());
+                CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        task.getSlaveId(),
+                        task.getName(),
+                        Optional.empty(),
+                        CassandraMode.STARTING));
+    }
+
+    public CassandraTask updateId(CassandraTask task){
+        return task.updateId(
+                task.getName() + "_" + UUID.randomUUID().toString());
     }
 
     @Override

@@ -19,7 +19,6 @@ import io.dropwizard.validation.BaseValidator;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
-import org.apache.mesos.protobuf.OfferBuilder;
 import org.apache.mesos.protobuf.ResourceBuilder;
 import org.apache.zookeeper.KeeperException;
 import org.junit.After;
@@ -32,7 +31,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created by kowens on 2/8/16.
@@ -53,7 +51,7 @@ public class CassandraTasksTest {
 
     private static String path;
 
-    private static String path(String id){
+    private static String path(String id) {
 
         return path + "/" + id;
     }
@@ -131,14 +129,15 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(CassandraDaemonTask
+                .NAME_PREFIX + 0);
         assertEquals(1, tasks.get().size());
 
-        assertEquals(task, tasks.get(task.getId()).get());
+        assertEquals(task, tasks.get(task.getName()).get());
 
         assertEquals(task,
                 CassandraTask.JSON_SERIALIZER.deserialize(
-                        curator.getData().forPath(path(task.getId()))));
+                        curator.getData().forPath(path(task.getName()))));
     }
 
     @Test
@@ -153,14 +152,15 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 0);
         assertEquals(1, tasks.get().size());
 
-        assertEquals(task, tasks.get(task.getId()).get());
+        assertEquals(task, tasks.get(task.getName()).get());
 
         assertEquals(task,
                 CassandraTask.JSON_SERIALIZER.deserialize(
-                        curator.getData().forPath(path(task.getId()))));
+                        curator.getData().forPath(path(task.getName()))));
 
         tasks.stop();
 
@@ -173,10 +173,11 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(1, tasks.get().size());
-        assertEquals("server-1", tasks.createDaemon().getName());
+        assertEquals(CassandraDaemonTask.NAME_PREFIX + 1,
+                tasks.createDaemon(CassandraDaemonTask.NAME_PREFIX + 1).getName());
         assertEquals(2, tasks.get().size());
 
-        assertEquals(task, tasks.get(task.getId()).get());
+        assertEquals(task, tasks.get(task.getName()).get());
     }
 
     @Test
@@ -191,14 +192,16 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(CassandraDaemonTask
+                .NAME_PREFIX + 1);
         assertEquals(1, tasks.get().size());
 
         assertEquals(task, CassandraDaemonTask.parse(task.toProto()));
     }
 
-    @Test
-    public void updateTaskAndGetTaskByNodeId() throws Exception {
+
+    @Test(expected = KeeperException.NoNodeException.class)
+    public void removeTaskById() throws Exception {
 
         CassandraTasks tasks = new CassandraTasks(
                 identity,
@@ -209,21 +212,15 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 0
+        );
         assertEquals(1, tasks.get().size());
 
-        CassandraDaemonTask newTask = task.mutable().setCpus(2.3)
-                .setDiskMb(456).setHostname("host7").build();
-        tasks.update(newTask);
-        assertEquals(1, tasks.get().size());
+        tasks.removeById(task.getId());
+        assertEquals(0, tasks.get().size());
 
-        CassandraTask getTask = tasks.get(newTask.getId()).get();
-        assertEquals(2.3, getTask.getCpus(), 0.0001);
-        assertEquals(456, getTask.getDiskMb());
-        assertEquals("host7", getTask.getHostname());
-
-        CassandraTask get_task2 = tasks.getCassandraTaskByNodeId(0);
-        assertEquals(getTask, get_task2);
+        curator.getData().forPath(path(task.getName()));
 
     }
 
@@ -239,13 +236,15 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 0
+        );
         assertEquals(1, tasks.get().size());
 
-        tasks.remove(task.getId());
+        tasks.remove(task.getName());
         assertEquals(0, tasks.get().size());
 
-        curator.getData().forPath(path(task.getId()));
+        curator.getData().forPath(path(task.getName()));
 
     }
 
@@ -282,7 +281,9 @@ public class CassandraTasksTest {
         );
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 0
+        );
         assertEquals(1, tasks.get().size());
 
 
@@ -296,7 +297,7 @@ public class CassandraTasksTest {
         assertEquals("localhost", updated.getHostname());
 
         assertEquals(updated, CassandraTask.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(path(task.getId()))));
+                curator.getData().forPath(path(task.getName()))));
 
     }
 
@@ -312,18 +313,21 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon();
+        CassandraDaemonTask task = tasks.createDaemon( CassandraDaemonTask
+                .NAME_PREFIX + 0);
         assertEquals(1, tasks.get().size());
 
         Protos.TaskStatus taskStatus = Protos.TaskStatus.newBuilder()
-                .setTaskId(Protos.TaskID.newBuilder().setValue(task.getId()).build())
+                .setTaskId(Protos.TaskID.newBuilder().setValue(
+                        task.getId()).build())
                 .setState(Protos.TaskState.TASK_FINISHED)
                 .build();
         tasks.update(taskStatus);
         assertEquals(1, tasks.get().size());
 
-        CassandraTask updatedTask = tasks.get(task.getId()).get();
-        assertEquals(Protos.TaskState.TASK_FINISHED, updatedTask.getStatus().getState());
+        CassandraTask updatedTask = tasks.get(task.getName()).get();
+        assertEquals(Protos.TaskState.TASK_FINISHED,
+                updatedTask.getStatus().getState());
 
     }
 
@@ -339,43 +343,56 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask runningTask1 = tasks.createDaemon();
+        CassandraDaemonTask runningTask1 =
+                tasks.createDaemon( CassandraDaemonTask.NAME_PREFIX + 0);
         assertEquals(1, tasks.get().size());
         Protos.TaskStatus taskStatus1 = Protos.TaskStatus.newBuilder()
-                .setTaskId(Protos.TaskID.newBuilder().setValue(runningTask1.getId()).build())
+                .setTaskId(Protos.TaskID.newBuilder().setValue(
+                        runningTask1.getId()).build())
                 .setState(Protos.TaskState.TASK_RUNNING)
                 .build();
         tasks.update(taskStatus1);
 
-        CassandraDaemonTask runningTask2 = tasks.createDaemon();
+        CassandraDaemonTask runningTask2 = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 1);
         assertEquals(2, tasks.get().size());
         Protos.TaskStatus taskStatus2 = Protos.TaskStatus.newBuilder()
-                .setTaskId(Protos.TaskID.newBuilder().setValue(runningTask2.getId()).build())
+                .setTaskId(Protos.TaskID.newBuilder().setValue(
+                        runningTask2.getId()).build())
                 .setState(Protos.TaskState.TASK_RUNNING)
                 .build();
         tasks.update(taskStatus2);
 
 
-        CassandraDaemonTask terminatedTask1 = tasks.createDaemon();
+        CassandraDaemonTask terminatedTask1 = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 2
+        );
         assertEquals(3, tasks.get().size());
         Protos.TaskStatus taskStatus3 = Protos.TaskStatus.newBuilder()
-                .setTaskId(Protos.TaskID.newBuilder().setValue(terminatedTask1.getId()).build())
+                .setTaskId(Protos.TaskID.newBuilder().setValue(
+                        terminatedTask1.getId()).build())
                 .setState(Protos.TaskState.TASK_FAILED)
                 .build();
         tasks.update(taskStatus3);
 
-        CassandraDaemonTask terminatedTask2 = tasks.createDaemon();
+        CassandraDaemonTask terminatedTask2 = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 3
+        );
         assertEquals(4, tasks.get().size());
         Protos.TaskStatus taskStatus4 = Protos.TaskStatus.newBuilder()
-                .setTaskId(Protos.TaskID.newBuilder().setValue(terminatedTask2.getId()).build())
+                .setTaskId(Protos.TaskID.newBuilder().setValue(
+                        terminatedTask2.getId()).build())
                 .setState(Protos.TaskState.TASK_LOST)
                 .build();
         tasks.update(taskStatus4);
 
-        CassandraDaemonTask terminatedTask3 = tasks.createDaemon();
+        CassandraDaemonTask terminatedTask3 = tasks.createDaemon(
+                CassandraDaemonTask.NAME_PREFIX + 4
+        );
         assertEquals(5, tasks.get().size());
         Protos.TaskStatus taskStatus5 = Protos.TaskStatus.newBuilder()
-                .setTaskId(Protos.TaskID.newBuilder().setValue(terminatedTask3.getId()).build())
+                .setTaskId(Protos.TaskID.newBuilder().setValue(
+                        terminatedTask3.getId()).build())
                 .setState(Protos.TaskState.TASK_FINISHED)
                 .build();
         tasks.update(taskStatus5);

@@ -1,15 +1,16 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.Subscribe;
 import org.apache.mesos.Protos;
-import org.apache.mesos.scheduler.plan.Block;
-import org.apache.mesos.scheduler.plan.Plan;
-import org.apache.mesos.scheduler.plan.PlanManager;
-import org.apache.mesos.scheduler.plan.PlanStrategy;
+import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Observable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 
 public class CassandraPlanManager implements PlanManager {
@@ -19,36 +20,52 @@ public class CassandraPlanManager implements PlanManager {
 
     private volatile Plan plan;
     private final AtomicBoolean interrupted = new AtomicBoolean(false);
+    private volatile List<PhaseStrategy> strategies;
     public static final CassandraPlanManager create(){
         return new CassandraPlanManager();
     }
     public CassandraPlanManager() {
         plan = EmptyPlan.get();
+        strategies = ImmutableList.copyOf(plan.getPhases().stream().map
+                (phase ->
+                CassandraPhaseStrategies.get(phase)).collect(
+                Collectors.toList()));
     }
 
-    @Override
-    public void setStrategy(PlanStrategy strategy) {
-
+    private PhaseStrategy getCurrentStrategy(){
+        for(PhaseStrategy strategy: strategies){
+            if(!strategy.getPhase().isComplete()){
+                return strategy;
+            }
+        }
+        return strategies.get(strategies.size() - 1);
     }
+
 
     @Override
     public Plan getPlan() {
         return plan;
     }
 
-    public void setPlan(final Plan plan){
-        this.plan = plan;
-        LOGGER.info("Set plan : current plan = {}",this.plan);
+    @Override
+    public Phase getCurrentPhase() {
+       return getCurrentStrategy().getPhase();
     }
 
-    @Override
-    public void update(Observable observable, Protos.TaskStatus status) {
+    public void setPlan(final Plan plan){
+        this.plan = plan;
+        strategies = ImmutableList.copyOf(this.plan.getPhases().stream().map
+                (phase ->
+                        CassandraPhaseStrategies.get(phase)).collect(
+                Collectors.toList()));
+        LOGGER.info("Set plan : current plan = {}",this.plan);
+        LOGGER.info("Phase strategies = {}",strategies);
+    }
 
-        if (!planIsComplete() &&
-                plan.getCurrentPhase() != null &&
-                plan.getCurrentPhase().getCurrentBlock() != null) {
-            plan.getCurrentPhase().getCurrentBlock().update(status);
-        }
+
+    @Subscribe
+    public void update(Protos.TaskStatus status) {
+      getCurrentBlock().update(status);
     }
 
     @Override
@@ -59,19 +76,16 @@ public class CassandraPlanManager implements PlanManager {
         } else if(planIsComplete()) {
             LOGGER.debug("Plan is complete");
             return null;
-        } else if(plan.getCurrentPhase() == null){
-            LOGGER.info("Current plan phase null");
-            return null;
         } else {
-            LOGGER.info("Current execution block = {}",
-                    plan.getCurrentPhase().getCurrentBlock());
-            return plan.getCurrentPhase().getCurrentBlock();
+            Block block = getCurrentStrategy().getCurrentBlock();
+            LOGGER.info("Current execution block = {}",block);
+            return block;
         }
     }
 
     @Override
     public boolean planIsComplete() {
-        return false;
+        return getCurrentPhase().isComplete();
     }
 
     @Override
@@ -96,6 +110,16 @@ public class CassandraPlanManager implements PlanManager {
     public void restart(int phaseIndex, int blockIndex, boolean force)
             throws IndexOutOfBoundsException {
 
+    }
+
+    @Override
+    public Status getStatus() {
+        return getCurrentBlock().getStatus();
+    }
+
+    @Override
+    public Status getPhaseStatus(int phaseId) {
+        return getCurrentBlock().getStatus();
     }
 
     @Override

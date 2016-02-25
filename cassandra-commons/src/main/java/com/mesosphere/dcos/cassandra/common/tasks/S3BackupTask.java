@@ -363,6 +363,26 @@ public class S3BackupTask extends CassandraTask {
                 s3AccessKey,
                 s3SecretKey);
     }
+    @Override
+    public S3BackupTask updateId(String id) {
+        return create(id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                cpus,
+                memoryMb,
+                diskMb,
+                ((S3BackupStatus) status),
+                keySpaces,
+                columnFamilies,
+                externalLocation,
+                s3AccessKey,
+                s3SecretKey);
+
+    }
 
     @Override
     public S3BackupTask update(Protos.TaskState state) {

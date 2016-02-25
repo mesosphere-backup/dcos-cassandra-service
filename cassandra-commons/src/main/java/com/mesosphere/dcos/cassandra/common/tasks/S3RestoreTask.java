@@ -393,10 +393,30 @@ public class S3RestoreTask extends CassandraTask {
         }
     }
 
+
+    @Override
+    public S3RestoreTask updateId(String id) {
+        return create(id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                cpus,
+                memoryMb,
+                diskMb,
+                (S3RestoreStatus) status,
+                keySpaces,
+                columnFamilies,
+                externalLocation,
+                s3AccessKey,
+                s3SecretKey);
+
+    }
+
     @Override
     public S3RestoreTask update(Protos.TaskState state) {
-
-
         return create(id,
                 slaveId,
                 hostname,
@@ -418,7 +438,6 @@ public class S3RestoreTask extends CassandraTask {
 
     @Override
     public S3RestoreStatus getStatus() {
-
         return (S3RestoreStatus) status;
     }
 
