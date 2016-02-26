@@ -72,8 +72,8 @@ public abstract class CassandraTask {
         CASSANDRA_DAEMON,
         BACKUP_SNAPSHOT,
         BACKUP_UPLOAD,
-        S3_BACKUP,
-        S3_RESTORE
+        SNAPSHOT_DOWNLOAD,
+        SNAPSHOT_RESTORE
     }
 
     public static CassandraTask parse(Protos.TaskInfo info)
@@ -172,7 +172,10 @@ public abstract class CassandraTask {
                         data.getLocalLocation()
                 );
 
-            case RESTORE_DOWNLOAD:
+            case SNAPSHOT_DOWNLOAD:
+                return null;
+
+            case SNAPSHOT_RESTORE:
                 return null;
 
             default:

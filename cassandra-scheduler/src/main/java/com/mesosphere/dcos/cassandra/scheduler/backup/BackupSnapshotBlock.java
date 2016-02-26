@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class BackupSnapshotBlock implements CassandraBlock {
+public class BackupSnapshotBlock extends AbstractClusterTaskBlock<BackupContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             BackupSnapshotBlock.class);
 
@@ -30,45 +30,12 @@ public class BackupSnapshotBlock implements CassandraBlock {
 
     public static final String PREFIX = "snapshot-";
 
-    private int id;
-    private String taskId;
-    private Status status;
-    private BackupContext backupContext;
-    private CassandraTasks cassandraTasks;
-    private CassandraOfferRequirementProvider provider;
-
     public BackupSnapshotBlock(int id,
                                String taskId,
                                CassandraTasks cassandraTasks,
                                CassandraOfferRequirementProvider provider,
                                BackupContext context) {
-        this.id = id;
-        this.taskId = taskId;
-        this.provider = provider;
-        this.status = Status.Pending;
-        this.backupContext = context;
-        this.cassandraTasks = cassandraTasks;
-    }
-
-    @Override
-    public Status getStatus() {
-        return status;
-    }
-
-    @Override
-    public void setStatus(Status newStatus) {
-        LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
-        status = newStatus;
-    }
-
-    @Override
-    public boolean isPending() {
-        return Status.Pending == this.status;
-    }
-
-    @Override
-    public boolean isInProgress() {
-        return Status.InProgress == this.status;
+        super(id, taskId, cassandraTasks, provider, context);
     }
 
     @Override
@@ -102,25 +69,25 @@ public class BackupSnapshotBlock implements CassandraBlock {
     @Override
     public void update(Protos.TaskStatus status) {
         LOGGER.debug("Updating status : id = {}, task = {}, status = {}",
-                id, taskId, status);
+                super.id, super.taskId, status);
         try {
             if (!isRelevantStatus(status)) {
                 //ignore what is not my concern
                 LOGGER.debug("Irrelevant status id = {}, task = {}, status = {}",
-                        id, taskId, status);
+                        super.id, super.taskId, status);
                 return;
             } else {
-                cassandraTasks.update(status);
+                super.cassandraTasks.update(status);
 
-                BackupSnapshotTask task = cassandraTasks.getBackupSnapshotTasks()
-                        .get(taskId);
+                BackupSnapshotTask task = super.cassandraTasks.getBackupSnapshotTasks()
+                        .get(super.taskId);
 
                 if (task != null && Protos.TaskState.TASK_FINISHED == status.getState()) {
                     setStatus(Status.Complete);
                 } else if (TaskUtils.isTerminated(status.getState())) {
                     //need to progress with a new task
-                    cassandraTasks.remove(status.getTaskId().getValue());
-                    taskId = cassandraTasks.createBackupSnapshotTask(this.id, this.backupContext).getId();
+                    super.cassandraTasks.remove(status.getTaskId().getValue());
+                    super.taskId = cassandraTasks.createBackupSnapshotTask(super.id, super.context).getId();
                     LOGGER.info("Reallocating task {} for block {}",
                             taskId,
                             id);
@@ -135,36 +102,8 @@ public class BackupSnapshotBlock implements CassandraBlock {
         }
     }
 
-    private boolean isRelevantStatus(Protos.TaskStatus status) {
-        return taskId.equals(status.getTaskId().getValue());
-    }
-
-    @Override
-    public List<Protos.TaskID> getUpdateIds() {
-        return null;
-    }
-
-    @Override
-    public int getId() {
-        return id;
-    }
-
-    public String getNodeName() {
-        return PREFIX + id;
-    }
-
     @Override
     public String getName() {
-        return getNodeName();
-    }
-
-    @Override
-    public boolean isComplete() {
-        return Status.Complete == this.status;
-    }
-
-    @Override
-    public String getTaskId() {
-        return taskId;
+        return PREFIX + super.id;
     }
 }

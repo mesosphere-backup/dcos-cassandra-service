@@ -1,9 +1,9 @@
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;
@@ -13,45 +13,40 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class UploadSnapshot implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UploadSnapshot.class);
+public class RestoreSnapshot implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestoreSnapshot.class);
     private NodeProbe probe;
     private ExecutorDriver driver;
-    final BackupContext context;
-    private BackupUploadTask cassandraTask;
+    private RestoreContext context;
+    private RestoreSnapshotTask cassandraTask;
     private BackupStorageDriver backupStorageDriver;
 
-    public UploadSnapshot(ExecutorDriver driver, NodeProbe probe, CassandraTask cassandraTask, BackupStorageDriver backupStorageDriver) {
+    public RestoreSnapshot(ExecutorDriver driver, NodeProbe probe, CassandraTask cassandraTask, BackupStorageDriver backupStorageDriver) {
         this.probe = probe;
         this.driver = driver;
-        this.cassandraTask = (BackupUploadTask) cassandraTask;
         this.backupStorageDriver = backupStorageDriver;
-        context = new BackupContext();
+        this.cassandraTask = (RestoreSnapshotTask) cassandraTask;
+
+        this.context = new RestoreContext();
         context.setName(this.cassandraTask.getBackupName());
-        context.setExternalLocation(this.cassandraTask.getExternalLocation());
         context.setS3AccessKey(this.cassandraTask.getS3AccessKey());
         context.setS3SecretKey(this.cassandraTask.getS3SecretKey());
-        context.setLocalLocation(this.cassandraTask.getLocalLocation());
+        context.setExternalLocation(this.cassandraTask.getExternalLocation());
     }
 
     @Override
     public void run() {
         try {
             // Send TASK_RUNNING
-            sendStatus(driver, Protos.TaskState.TASK_RUNNING, "Started uploading snapshots");
+            sendStatus(driver, Protos.TaskState.TASK_RUNNING, "Started restoring snapshot");
 
-            // Upload snapshots to external location.
-            backupStorageDriver.upload(context);
-
-            // Once we have uploaded all existing snapshots, let's clear on-disk snapshots
-            this.probe.clearSnapshot(context.getName());
+            // TODO: Restore snapshot using sstableloader
 
             // Send TASK_FINISHED
-            sendStatus(driver, Protos.TaskState.TASK_FINISHED,
-                    "Finished uploading snapshots");
+            sendStatus(driver, Protos.TaskState.TASK_FINISHED, "Finished restoring snapshot");
         } catch (Exception e) {
             // Send TASK_FAILED
-            final String errorMessage = "Failed uploading snapshot. Reason: " + e;
+            final String errorMessage = "Failed restoring snapshot. Reason: " + e;
             LOGGER.error(errorMessage);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, errorMessage);
         }

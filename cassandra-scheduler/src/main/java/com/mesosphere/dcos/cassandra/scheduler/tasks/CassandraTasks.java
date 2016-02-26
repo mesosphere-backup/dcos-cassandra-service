@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
@@ -12,6 +13,8 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
@@ -149,6 +152,20 @@ public class CassandraTasks implements Managed {
                         (BackupUploadTask) entry.getValue())));
     }
 
+    public Map<String, DownloadSnapshotTask> getDownloadSnapshotTasks() {
+        return tasks.entrySet().stream().filter(entry -> entry.getValue()
+                .getType() == CassandraTask.TYPE.SNAPSHOT_DOWNLOAD).collect
+                (Collectors.toMap(entry -> entry.getKey(), entry -> (
+                        (DownloadSnapshotTask) entry.getValue())));
+    }
+
+    public Map<String, RestoreSnapshotTask> getRestoreSnapshotTasks() {
+        return tasks.entrySet().stream().filter(entry -> entry.getValue()
+                .getType() == CassandraTask.TYPE.SNAPSHOT_RESTORE).collect
+                (Collectors.toMap(entry -> entry.getKey(), entry -> (
+                        (RestoreSnapshotTask) entry.getValue())));
+    }
+
     public CassandraDaemonTask createDaemon() throws PersistenceException {
         CassandraDaemonTask task = configuration.createDaemon(
                 identity.get().getId().get(),
@@ -210,6 +227,48 @@ public class CassandraTasks implements Managed {
                 identity.getRole(),
                 identity.getPrincipal(),
                 backupContext
+        );
+
+        synchronized (persistent) {
+            update(task);
+        }
+
+        return task;
+    }
+
+    public DownloadSnapshotTask createDownloadSnapshotTask(int num, RestoreContext context) throws PersistenceException {
+        final CassandraTaskExecutor executor = getExecutorFromNodeId(num);
+        final Identity identity = this.identity.get();
+        final DownloadSnapshotTask task = configuration.createDownloadSnapshotTask(
+                identity.getId().get(),
+                "", /* SlaveId */
+                executor,
+                "", /* Hostname */
+                DownloadSnapshotTask.NAME_PREFIX + num,
+                identity.getRole(),
+                identity.getPrincipal(),
+                context
+        );
+
+        synchronized (persistent) {
+            update(task);
+        }
+
+        return task;
+    }
+
+    public RestoreSnapshotTask createRestoreSnapshotTask(int num, RestoreContext context) throws PersistenceException {
+        final CassandraTaskExecutor executor = getExecutorFromNodeId(num);
+        final Identity identity = this.identity.get();
+        final RestoreSnapshotTask task = configuration.createRestoreSnapshotTask(
+                identity.getId().get(),
+                "", /* SlaveId */
+                executor,
+                "", /* Hostname */
+                RestoreSnapshotTask.NAME_PREFIX + num,
+                identity.getRole(),
+                identity.getPrincipal(),
+                context
         );
 
         synchronized (persistent) {

@@ -1,11 +1,10 @@
 package com.mesosphere.dcos.cassandra.scheduler.backup;
 
 import com.google.common.eventbus.Subscribe;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
+import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
@@ -13,35 +12,33 @@ import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
-public class UploadBackupBlock extends AbstractClusterTaskBlock<BackupContext> {
+public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            UploadBackupBlock.class);
+            DownloadSnapshotBlock.class);
 
-    public static UploadBackupBlock create(
+    public static DownloadSnapshotBlock create(
             int id,
             String taskId,
             CassandraTasks cassandraTasks,
             CassandraOfferRequirementProvider provider,
-            BackupContext context) {
-        return new UploadBackupBlock(id, taskId, cassandraTasks, provider, context);
+            RestoreContext context) {
+        return new DownloadSnapshotBlock(id, taskId, cassandraTasks, provider, context);
     }
 
-    public static final String PREFIX = "upload-";
+    public static final String PREFIX = "download-";
 
-    public UploadBackupBlock(int id,
-                             String taskId,
-                             CassandraTasks cassandraTasks,
-                             CassandraOfferRequirementProvider provider,
-                             BackupContext context) {
+    public DownloadSnapshotBlock(int id,
+                                 String taskId,
+                                 CassandraTasks cassandraTasks,
+                                 CassandraOfferRequirementProvider provider,
+                                 RestoreContext context) {
         super(id, taskId, cassandraTasks, provider, context);
     }
 
     @Override
     public OfferRequirement start() {
         LOGGER.info("Starting block: {}", getName());
-        final BackupUploadTask task = cassandraTasks.getBackupUploadTasks().get(taskId);
+        final DownloadSnapshotTask task = cassandraTasks.getDownloadSnapshotTasks().get(taskId);
 
         // This will work better once reconcilation is implemented
         if (Protos.TaskState.TASK_FINISHED.equals(task.getStatus().getState())) {
@@ -61,33 +58,32 @@ public class UploadBackupBlock extends AbstractClusterTaskBlock<BackupContext> {
         } else {
             setStatus(Status.InProgress);
             return provider.getUpdateOfferRequirement(task.toProto());
-
         }
     }
 
     @Subscribe
     @Override
     public void update(Protos.TaskStatus status) {
-        LOGGER.info("Updating status: id = {}, task = {}, status = {}",
-                id, taskId, status);
+        LOGGER.debug("Updating status : id = {}, task = {}, status = {}",
+                super.id, super.taskId, status);
         try {
             if (!isRelevantStatus(status)) {
                 //ignore what is not my concern
-                LOGGER.info("Irrelevant status id = {}, task = {}, status = {}",
-                        id, taskId, status);
+                LOGGER.debug("Irrelevant status id = {}, task = {}, status = {}",
+                        super.id, super.taskId, status);
                 return;
             } else {
-                cassandraTasks.update(status);
+                super.cassandraTasks.update(status);
 
-                BackupUploadTask task = cassandraTasks.getBackupUploadTasks()
-                        .get(taskId);
+                DownloadSnapshotTask task = super.cassandraTasks.getDownloadSnapshotTasks()
+                        .get(super.taskId);
 
                 if (task != null && Protos.TaskState.TASK_FINISHED == status.getState()) {
                     setStatus(Status.Complete);
                 } else if (TaskUtils.isTerminated(status.getState())) {
                     //need to progress with a new task
-                    cassandraTasks.remove(status.getTaskId().getValue());
-                    taskId = cassandraTasks.createBackupUploadTask(this.id, this.context).getId();
+                    super.cassandraTasks.remove(status.getTaskId().getValue());
+                    super.taskId = cassandraTasks.createDownloadSnapshotTask(super.id, super.context).getId();
                     LOGGER.info("Reallocating task {} for block {}",
                             taskId,
                             id);
@@ -104,6 +100,6 @@ public class UploadBackupBlock extends AbstractClusterTaskBlock<BackupContext> {
 
     @Override
     public String getName() {
-        return PREFIX + id;
+        return PREFIX + super.id;
     }
 }

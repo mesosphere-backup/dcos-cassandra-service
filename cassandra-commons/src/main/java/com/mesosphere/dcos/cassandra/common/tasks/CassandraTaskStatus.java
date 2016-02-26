@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 
@@ -21,12 +23,16 @@ import java.util.Optional;
         defaultImpl = CassandraTaskStatus.class,
         visible = true)
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = CassandraDaemonStatus.class,
-                name = "CASSANDRA_DAEMON"),
+        @JsonSubTypes.Type(value = CassandraDaemonStatus.class, name =
+                "CASSANDRA_DAEMON"),
         @JsonSubTypes.Type(value = BackupSnapshotStatus.class, name =
                 "BACKUP_SNAPSHOT"),
         @JsonSubTypes.Type(value = BackupUploadStatus.class, name =
                 "BACKUP_UPLOAD"),
+        @JsonSubTypes.Type(value = DownloadSnapshotStatus.class, name =
+                "SNAPSHOT_DOWNLOAD"),
+        @JsonSubTypes.Type(value = RestoreSnapshotStatus.class, name =
+                "SNAPSHOT_RESTORE"),
 })
 public abstract class CassandraTaskStatus {
 
@@ -71,8 +77,29 @@ public abstract class CassandraTaskStatus {
                                         status.getMessage()) :
                                 Optional.empty());
 
-            case RESTORE_DOWNLOAD:
-                return null;
+            case SNAPSHOT_DOWNLOAD:
+                return DownloadSnapshotStatus.create(
+                        status.getState(),
+                        status.getTaskId().getValue(),
+                        status.getSlaveId().getValue(),
+                        status.getExecutorId().getValue(),
+                        (status.hasMessage()) ?
+                                Optional.of(
+                                        status.getMessage()) :
+                                Optional.empty()
+                );
+
+            case SNAPSHOT_RESTORE:
+                return RestoreSnapshotStatus.create(
+                        status.getState(),
+                        status.getTaskId().getValue(),
+                        status.getSlaveId().getValue(),
+                        status.getExecutorId().getValue(),
+                        (status.hasMessage()) ?
+                                Optional.of(
+                                        status.getMessage()) :
+                                Optional.empty()
+                );
 
             default:
                 return null;

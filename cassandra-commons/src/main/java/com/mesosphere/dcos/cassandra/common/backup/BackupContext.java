@@ -7,7 +7,7 @@ import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
 import java.io.IOException;
 
-public class BackupContext {
+public class BackupContext implements ClusterTaskContext {
     private String name;
 
     private String externalLocation;
@@ -29,7 +29,6 @@ public class BackupContext {
     public String getLocalLocation() {
         return localLocation;
     }
-
 
     public String getS3AccessKey() {
         return s3AccessKey;

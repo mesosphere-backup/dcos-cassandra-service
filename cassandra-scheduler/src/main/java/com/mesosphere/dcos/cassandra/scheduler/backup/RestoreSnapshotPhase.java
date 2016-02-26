@@ -1,10 +1,8 @@
 package com.mesosphere.dcos.cassandra.scheduler.backup;
 
 import com.google.common.eventbus.EventBus;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,37 +10,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * During snapshot phase, data will be snapshotted across all cassandra nodes.
+ * During download snapshot phase, snapshotted data will be downloaded to all the cassandra node from
+ * external location.
  */
-public class BackupSnapshotPhase extends AbstractClusterTaskPhase<BackupSnapshotBlock, BackupContext> {
+public class RestoreSnapshotPhase extends AbstractClusterTaskPhase<RestoreSnapshotBlock, RestoreContext> {
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(BackupSnapshotPhase.class);
+            LoggerFactory.getLogger(RestoreSnapshotPhase.class);
 
-    public BackupSnapshotPhase(
-            BackupContext backupContext,
+    public RestoreSnapshotPhase(
+            RestoreContext context,
             int servers,
             CassandraTasks cassandraTasks,
             EventBus eventBus,
             ClusterTaskOfferRequirementProvider provider) {
-        super(backupContext, servers, cassandraTasks, eventBus, provider);
+        super(context, servers, cassandraTasks, eventBus, provider);
     }
 
-    protected List<BackupSnapshotBlock> createBlocks() {
-        final List<BackupSnapshotBlock> newBlocks = new ArrayList<>(super.servers);
+    protected List<RestoreSnapshotBlock> createBlocks() {
+        final List<RestoreSnapshotBlock> newBlocks = new ArrayList<>(super.servers);
         final List<String> createdBlocks =
-                new ArrayList<>(cassandraTasks.getBackupSnapshotTasks().keySet());
+                new ArrayList<>(cassandraTasks.getRestoreSnapshotTasks().keySet());
 
         try {
             for (int i = 0; i < servers; i++) {
                 String taskId = (i < createdBlocks.size()) ? createdBlocks.get(i)
-                        : cassandraTasks.createBackupSnapshotTask(i, context).getId();
-                final BackupSnapshotBlock block = BackupSnapshotBlock.create(i, taskId,
+                        : cassandraTasks.createRestoreSnapshotTask(i, context).getId();
+                final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(i, taskId,
                         cassandraTasks, provider, context);
                 newBlocks.add(block);
                 eventBus.register(block);
             }
         } catch (Throwable throwable) {
-            String message = "Failed to create BackupSnapshotPhase this is a" +
+            String message = "Failed to create RestoreSnapshotPhase this is a" +
                     " fatal exception and the program will now exit. Please " +
                     "verify your scheduler configuration and attempt to " +
                     "relaunch the program.";

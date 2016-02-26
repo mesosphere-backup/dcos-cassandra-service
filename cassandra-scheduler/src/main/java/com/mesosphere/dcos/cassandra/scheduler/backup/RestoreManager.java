@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.backup;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
@@ -24,122 +24,118 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * BackupManager is responsible for orchestrating cluster-wide backup.
- * It also ensures that only one backup can run an anytime. For each new backup
- * a new BackupPlan is created, which will assist in orchestration.
- */
-public class BackupManager {
+public class RestoreManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            BackupManager.class);
-    public static final String BACKUP_KEY = "backup";
+            RestoreManager.class);
+
+    public static final String RESTORE_KEY = "restore";
 
     private EventBus eventBus;
-    private BackupPlan backupPlan;
+    private RestorePlan plan;
     private PlanManager planManager;
     private PlanScheduler planScheduler;
     private OfferAccepter offerAccepter;
     private CassandraTasks cassandraTasks;
-    private volatile BackupContext backupContext;
+    private volatile RestoreContext context;
     private ConfigurationManager configurationManager;
     private ClusterTaskOfferRequirementProvider provider;
-    private PersistentReference<BackupContext> persistentBackupContext;
+    private PersistentReference<RestoreContext> persistentContext;
 
     @Inject
-    public BackupManager(ConfigurationManager configurationManager,
-                         CassandraTasks cassandraTasks,
-                         EventBus eventBus,
-                         ClusterTaskOfferRequirementProvider provider,
-                         PersistenceFactory persistenceFactory,
-                         final Serializer<BackupContext> serializer) {
+    public RestoreManager(ConfigurationManager configurationManager,
+                          CassandraTasks cassandraTasks,
+                          EventBus eventBus,
+                          ClusterTaskOfferRequirementProvider provider,
+                          PersistenceFactory persistenceFactory,
+                          final Serializer<RestoreContext> serializer) {
         this.eventBus = eventBus;
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
         this.configurationManager = configurationManager;
 
-        // Load BackupManager from state store
-        this.persistentBackupContext = persistenceFactory.createReference(BACKUP_KEY, serializer);
+        // Load RestoreManager from state store
+        this.persistentContext = persistenceFactory.createReference(RESTORE_KEY, serializer);
         try {
-            final Optional<BackupContext> loadedBackupContext = persistentBackupContext.load();
-            if (loadedBackupContext.isPresent()) {
-                this.backupContext = loadedBackupContext.get();
+            final Optional<RestoreContext> loadedContext = persistentContext.load();
+            if (loadedContext.isPresent()) {
+                this.context = loadedContext.get();
             }
             // Recovering from failure
-            if (backupContext != null) {
-                startBackup(backupContext);
+            if (context != null) {
+                startRestore(context);
             }
         } catch (PersistenceException e) {
-            LOGGER.error("Error loading backup context from peristence store. Reason: ", e);
+            LOGGER.error("Error loading restore context from persistence store. Reason: ", e);
             throw new RuntimeException(e);
         }
     }
 
     public List<Protos.OfferID> resourceOffers(SchedulerDriver driver,
                                                List<Protos.Offer> offers) {
-        LOGGER.info("BackupManager got offers: {}", offers.size());
+        LOGGER.info("RestoreManager got offers: {}", offers.size());
 
-        // Check if a backup is in progress or not.
-        if (this.backupContext == null) {
-            LOGGER.info("BackupContext is null, hence no backup is in progress, ignoring offers.");
-            // No backup in progress
+        // Check if a restore is in progress or not.
+        if (this.context == null) {
+            LOGGER.info("RestoreContext is null, hence no restore is in progress, ignoring offers.");
+            // No restore in progress
             return Lists.newArrayList();
         }
 
         if (this.planManager != null) {
             if (this.planManager.planIsComplete()) {
-                this.stopBackup();
+                this.stopRestore();
             }
         }
 
         List<Protos.OfferID> acceptedOffers = new ArrayList<>();
         final Block currentBlock = planManager.getCurrentBlock();
-        LOGGER.info("BackupManager found next block to be scheduled: {}", currentBlock);
+        LOGGER.info("RestoreManager found next block to be scheduled: {}", currentBlock);
         acceptedOffers.addAll(
                 planScheduler.resourceOffers(driver, offers, currentBlock));
 
-        LOGGER.info("BackupManager accepted following offers: {}", acceptedOffers);
+        LOGGER.info("RestoreManager accepted following offers: {}", acceptedOffers);
 
         return acceptedOffers;
     }
 
-    public void startBackup(BackupContext context) {
-        LOGGER.info("Starting backup with context: {}", context);
+    public void startRestore(RestoreContext context) {
+        LOGGER.info("Starting restore with context: {}", context);
 
         this.offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(cassandraTasks)));
         final int servers = configurationManager.getServers();
-        this.backupPlan = new BackupPlan(context, servers, cassandraTasks, eventBus, provider);
+        this.plan = new RestorePlan(context, servers, cassandraTasks, eventBus, provider);
 
         // TODO: Make install strategy pluggable
-        this.planManager = new DefaultPlanManager(backupPlan);
+        this.planManager = new DefaultPlanManager(plan);
         this.planScheduler = new DefaultPlanScheduler(offerAccepter);
 
         try {
-            persistentBackupContext.store(context);
-            this.backupContext = context;
+            persistentContext.store(context);
+            this.context = context;
         } catch (PersistenceException e) {
-            LOGGER.error("Error storing backup context into peristence store. Reason: ", e);
+            LOGGER.error("Error storing restore context into peristence store. Reason: ", e);
             throw new RuntimeException(e);
         }
     }
 
-    public void stopBackup() {
-        LOGGER.info("Stopping backup");
+    public void stopRestore() {
+        LOGGER.info("Stopping restore");
         try {
-            this.persistentBackupContext.delete();
+            this.persistentContext.delete();
         } catch (PersistenceException e) {
-            LOGGER.error("Error deleting backup context from persistence store. Reason: {}", e);
+            LOGGER.error("Error deleting restore context from persistence store. Reason: {}", e);
         }
-        this.backupContext = null;
+        this.context = null;
     }
 
-    public boolean canStartBackup() {
-        // If backupContext is null, then we can start backup; otherwise, not.
-        return backupContext == null;
+    public boolean canStartRestore() {
+        // If restoreContext is null, then we can start restore; otherwise, not.
+        return context == null;
     }
 
-    public BackupPlan getBackupPlan() {
-        return this.backupPlan;
+    public RestorePlan getRestorePlan() {
+        return this.plan;
     }
 }

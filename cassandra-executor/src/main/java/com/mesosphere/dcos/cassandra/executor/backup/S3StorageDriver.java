@@ -10,7 +10,6 @@ import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xerial.snappy.SnappyOutputStream;
@@ -208,6 +207,45 @@ public class S3StorageDriver implements BackupStorageDriver {
 
     @Override
     public void download(RestoreContext ctx) throws IOException {
-        throw new NotImplementedException("download feature is not yet implemented");
+        // Ex: data/<keyspace>/<cf>/snapshots/</snapshot-dir>/<files>
+
+        final String accessKey = ctx.getS3AccessKey();
+        final String secretKey = ctx.getS3SecretKey();
+        // Location of data directory
+        final String localLocation = ctx.getLocalLocation();
+        final String backupName = ctx.getName();
+
+        final AmazonS3URI backupLocationURI = new AmazonS3URI(ctx.getExternalLocation());
+        final String bucketName = backupLocationURI.getBucket();
+
+        String prefixKey = backupLocationURI.getKey() != null ? backupLocationURI.getKey() : "";
+        prefixKey = (prefixKey.length() > 0 && !prefixKey.endsWith("/")) ? prefixKey + "/" : prefixKey;
+        prefixKey += backupName;
+        final String key = prefixKey;
+
+        final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
+        final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
+
+        final List<String> snapshotFileKeys = listSnapshotFiles(amazonS3Client, bucketName, backupName);
+
+        for (String fileKey : snapshotFileKeys) {
+
+        }
+    }
+
+    public List<String> listSnapshotFiles(AmazonS3Client amazonS3Client, String bucketName, String backupName) {
+        List<String> snapshotFiles = new ArrayList<>();
+        ObjectListing objectListing;
+        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+                .withBucketName(bucketName)
+                .withPrefix(backupName);
+        do {
+            objectListing = amazonS3Client.listObjects(listObjectsRequest);
+            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+                snapshotFiles.add(objectSummary.getKey());
+            }
+        } while (objectListing.isTruncated());
+
+        return snapshotFiles;
     }
 }

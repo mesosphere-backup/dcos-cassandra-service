@@ -52,7 +52,8 @@ message CassandraTaskData{
         CASSANDRA_DAEMON = 1;
         BACKUP_SNAPSHOT = 2;
         BACKUP_UPLOAD = 3;
-        RESTORE_DOWNLOAD = 4;
+        SNAPSHOT_DOWNLOAD = 4;
+        SNAPSHOT_RESTORE = 5;
     }
 
     required TYPE type = 1;
