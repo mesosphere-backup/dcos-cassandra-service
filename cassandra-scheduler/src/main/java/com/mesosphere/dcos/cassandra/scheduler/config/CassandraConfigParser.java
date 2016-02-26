@@ -307,7 +307,7 @@ public class CassandraConfigParser {
                 cpus,
                 memoryMb,
                 diskMb,
-                Optional.empty(),
+                "",
                 heap,
                 CassandraConfig.DEFAULT.getLocation(),
                 jmxPort,

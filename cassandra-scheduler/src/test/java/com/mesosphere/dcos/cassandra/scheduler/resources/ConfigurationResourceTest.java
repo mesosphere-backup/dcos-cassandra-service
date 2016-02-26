@@ -110,17 +110,9 @@ public class ConfigurationResourceTest {
 
     @Test
     public void testGetCassandraConfig() throws Exception {
-        String cassandraConfig = resources.client().target("/v1/config/cassandra").request()
-                .get(String.class);
+        CassandraConfig cassandraConfig = resources.client().target("/v1/config/cassandra").request()
+                .get(CassandraConfig.class);
         System.out.println("cassandra config = " + cassandraConfig);
-
-        // The following assert fails:
-        // Expected :{"version":"2.2.5","cpus":0.5,"memoryMb":4096,"diskMb":10240,"replaceIp":null, ...
-        // Actual   :{"version":"2.2.5","cpus":0.5,"memoryMb":4096,"diskMb":10240,"replaceIp":{"present":false},...
-        // because of Jackson's mishandling of Optional values:
-        // https://stackoverflow.com/questions/25693309/using-jackson-objectmapper-with-java-8-optional-values
-        //
-        // Should we change Optional<String> replaceIp to String replaceIp?
         assertEquals(config.getCassandraConfig(), cassandraConfig);
     }
 
