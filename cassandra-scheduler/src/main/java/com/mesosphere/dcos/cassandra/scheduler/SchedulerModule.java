@@ -5,6 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
@@ -14,6 +15,7 @@ import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.backup.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
@@ -79,6 +81,9 @@ public class SchedulerModule extends AbstractModule {
         bind(new TypeLiteral<Serializer<BackupContext>>() {
         }).toInstance(BackupContext.JSON_SERIALIZER);
 
+        bind(new TypeLiteral<Serializer<RestoreContext>>() {
+        }).toInstance(RestoreContext.JSON_SERIALIZER);
+
         bind(MesosConfig.class).toInstance(configuration.getMesosConfig());
 
         bindConstant().annotatedWith(Names.named("SeedsUrl")).to(
@@ -128,5 +133,6 @@ public class SchedulerModule extends AbstractModule {
         bind(BackupManager.class).asEagerSingleton();
         bind(ClusterTaskOfferRequirementProvider.class);
         bind(Reconciler.class).to(CassandraReconciler.class).asEagerSingleton();
+        bind(RestoreManager.class).asEagerSingleton();
     }
 }

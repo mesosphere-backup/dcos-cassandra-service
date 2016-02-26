@@ -334,7 +334,7 @@ public class ConfigurationManager implements Managed {
                 context.getExternalLocation(),
                 context.getS3AccessKey(),
                 context.getS3SecretKey(),
-                cassandraConfig.getVolume().getPath() + "/data");
+                cassandraConfig.getVolume().getPath() + "/data/temp_" + context.getName());
     }
 
     public RestoreSnapshotTask createRestoreSnapshotTask(

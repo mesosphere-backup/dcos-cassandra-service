@@ -4,6 +4,7 @@ import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
+import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;
@@ -25,8 +26,10 @@ public class UploadSnapshot implements Runnable {
         this.probe = probe;
         this.driver = driver;
         this.cassandraTask = (BackupUploadTask) cassandraTask;
+        final int nodeId = TaskUtils.taskIdToNodeId(this.cassandraTask.getId());
         this.backupStorageDriver = backupStorageDriver;
         context = new BackupContext();
+        context.setNodeId(nodeId+"");
         context.setName(this.cassandraTask.getBackupName());
         context.setExternalLocation(this.cassandraTask.getExternalLocation());
         context.setS3AccessKey(this.cassandraTask.getS3AccessKey());

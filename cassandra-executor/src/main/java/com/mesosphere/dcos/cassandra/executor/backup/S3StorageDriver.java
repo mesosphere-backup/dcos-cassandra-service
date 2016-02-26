@@ -12,6 +12,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xerial.snappy.SnappyInputStream;
 import org.xerial.snappy.SnappyOutputStream;
 
 import java.io.*;
@@ -26,7 +27,9 @@ public class S3StorageDriver implements BackupStorageDriver {
     protected final Set<String> SKIP_KEYSPACES = ImmutableSet.of("system");
     protected final Map<String, List<String>> SKIP_COLUMN_FAMILIES = ImmutableMap.of();
 
-    public static final int DEFAULT_PART_SIZE = 4 * 1024 * 1024; // Chunk size set to 4MB
+    public static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
+
+    public static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
     @Override
     public void upload(BackupContext ctx) throws IOException {
@@ -34,6 +37,7 @@ public class S3StorageDriver implements BackupStorageDriver {
         final String secretKey = ctx.getS3SecretKey();
         final String localLocation = ctx.getLocalLocation();
         final String backupName = ctx.getName();
+        final String nodeId = ctx.getNodeId();
 
         final AmazonS3URI backupLocationURI = new AmazonS3URI(ctx.getExternalLocation());
         final String bucketName = backupLocationURI.getBucket();
@@ -41,13 +45,12 @@ public class S3StorageDriver implements BackupStorageDriver {
         String prefixKey = backupLocationURI.getKey() != null ? backupLocationURI.getKey() : "";
         prefixKey = (prefixKey.length() > 0 && !prefixKey.endsWith("/")) ? prefixKey + "/" : prefixKey;
         prefixKey += backupName;
-        final String key = prefixKey;
+        final String key = prefixKey + "/" + nodeId;
 
         final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
         final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
 
         final File dataDirectory = new File(localLocation);
-        final String dataDirAbsolutePath = dataDirectory.getAbsolutePath();
 
         // Ex: data/<keyspace>/<cf>/snapshots/</snapshot-dir>/<files>
         for (File keyspaceDir : dataDirectory.listFiles()) {
@@ -104,7 +107,7 @@ public class S3StorageDriver implements BackupStorageDriver {
 
                     LOGGER.info("Initiating upload for file: {} | bucket: {} | key: {} | uploadId: {}", file.getAbsolutePath(), bucketName, fileKey, uploadResult.getUploadId());
 
-                    final byte[] buffer = new byte[DEFAULT_PART_SIZE];
+                    final byte[] buffer = new byte[DEFAULT_PART_SIZE_UPLOAD];
                     BufferedInputStream inputStream = null;
                     ByteArrayOutputStream baos = null;
                     SnappyOutputStream compress = null;
@@ -211,30 +214,86 @@ public class S3StorageDriver implements BackupStorageDriver {
 
         final String accessKey = ctx.getS3AccessKey();
         final String secretKey = ctx.getS3SecretKey();
-        // Location of data directory
+        // Location of data directory, where the data will be copied.
         final String localLocation = ctx.getLocalLocation();
         final String backupName = ctx.getName();
+        final String nodeId = ctx.getNodeId();
 
         final AmazonS3URI backupLocationURI = new AmazonS3URI(ctx.getExternalLocation());
         final String bucketName = backupLocationURI.getBucket();
 
-        String prefixKey = backupLocationURI.getKey() != null ? backupLocationURI.getKey() : "";
-        prefixKey = (prefixKey.length() > 0 && !prefixKey.endsWith("/")) ? prefixKey + "/" : prefixKey;
-        prefixKey += backupName;
-        final String key = prefixKey;
-
         final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
         final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
 
-        final List<String> snapshotFileKeys = listSnapshotFiles(amazonS3Client, bucketName, backupName);
+        final Map<String, Long> snapshotFileKeys = listSnapshotFiles(amazonS3Client, bucketName, backupName + "/" + nodeId);
 
-        for (String fileKey : snapshotFileKeys) {
+        LOGGER.info("Snapshot files for this node: {}", snapshotFileKeys);
 
+        for (String fileKey : snapshotFileKeys.keySet()) {
+            downloadFile(localLocation, bucketName, amazonS3Client, fileKey, snapshotFileKeys.get(fileKey));
         }
     }
 
-    public List<String> listSnapshotFiles(AmazonS3Client amazonS3Client, String bucketName, String backupName) {
-        List<String> snapshotFiles = new ArrayList<>();
+    private void downloadFile(String localLocation, String bucketName, AmazonS3Client amazonS3Client, String fileKey, Long sizeInBytes) {
+        LOGGER.info("DownloadFile | Local location: {} | Bucket Name: {} | fileKey: {} | Size in bytes: {}",
+                localLocation, bucketName, fileKey, sizeInBytes);
+        InputStream inputStream = null;
+        BufferedOutputStream bos = null;
+        SnappyInputStream is = null;
+        FileOutputStream fileOutputStream = null;
+        try {
+            long position = 0;
+            final String fileLocation = localLocation + File.separator + fileKey;
+            File f = new File(fileLocation);
+
+            // Only create parent directory once, if it doesn't exist.
+            final File parentDir = new File(f.getParent());
+            if (!parentDir.isDirectory()) {
+                final boolean parentDirCreated = parentDir.mkdirs();
+                if (!parentDirCreated) {
+                    LOGGER.error("Error creating parent directory for file: {}. Skipping to next", fileLocation);
+                    return;
+                }
+            }
+
+            fileOutputStream = new FileOutputStream(f, true);
+            while (position <= sizeInBytes) {
+                final byte[] buffer = new byte[DEFAULT_PART_SIZE_DOWNLOAD];
+                final GetObjectRequest rangeObjectRequest = new GetObjectRequest(bucketName, fileKey);
+
+                rangeObjectRequest.setRange(position, DEFAULT_PART_SIZE_DOWNLOAD);
+                final S3Object object = amazonS3Client.getObject(rangeObjectRequest);
+
+                inputStream = object.getObjectContent();
+                is = new SnappyInputStream(new BufferedInputStream(inputStream));
+                bos = new BufferedOutputStream(fileOutputStream, DEFAULT_PART_SIZE_DOWNLOAD);
+                int bytesWritten = 0;
+                try {
+                    int c;
+                    while ((c = is.read(buffer, 0, DEFAULT_PART_SIZE_DOWNLOAD)) != -1) {
+                        bytesWritten += c;
+                        bos.write(buffer, 0, c);
+                    }
+                } finally {
+                    IOUtils.closeQuietly(is);
+                    IOUtils.closeQuietly(bos);
+                }
+
+                // TODO: Think about resumable downloads in future.
+                LOGGER.info("For file: {} wrote: {} bytes out of {} bytes", fileKey, position + bytesWritten, sizeInBytes);
+                position += DEFAULT_PART_SIZE_DOWNLOAD + 1;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error occuring while downloading fileKey: {} from bucket: {}. Reason: ",
+                    fileKey, bucketName, e);
+        } finally {
+            IOUtils.closeQuietly(inputStream);
+            IOUtils.closeQuietly(fileOutputStream);
+        }
+    }
+
+    public Map<String, Long> listSnapshotFiles(AmazonS3Client amazonS3Client, String bucketName, String backupName) {
+        Map<String, Long> snapshotFiles = new HashMap<>();
         ObjectListing objectListing;
         ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                 .withBucketName(bucketName)
@@ -242,7 +301,7 @@ public class S3StorageDriver implements BackupStorageDriver {
         do {
             objectListing = amazonS3Client.listObjects(listObjectsRequest);
             for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-                snapshotFiles.add(objectSummary.getKey());
+                snapshotFiles.put(objectSummary.getKey(), objectSummary.getSize());
             }
         } while (objectListing.isTruncated());
 

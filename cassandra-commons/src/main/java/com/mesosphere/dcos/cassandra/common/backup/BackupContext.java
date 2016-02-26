@@ -8,6 +8,8 @@ import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import java.io.IOException;
 
 public class BackupContext implements ClusterTaskContext {
+    private String nodeId;
+
     private String name;
 
     private String externalLocation;
@@ -58,10 +60,19 @@ public class BackupContext implements ClusterTaskContext {
         this.s3SecretKey = s3SecretKey;
     }
 
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
     @Override
     public String toString() {
         return "BackupContext{" +
-                "name='" + name + '\'' +
+                "nodeId='" + nodeId + '\'' +
+                ", name='" + name + '\'' +
                 ", externalLocation='" + externalLocation + '\'' +
                 ", localLocation='" + localLocation + '\'' +
                 ", s3AccessKey='" + s3AccessKey + '\'' +

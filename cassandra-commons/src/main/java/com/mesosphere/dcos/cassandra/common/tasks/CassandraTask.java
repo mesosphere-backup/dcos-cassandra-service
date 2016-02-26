@@ -9,10 +9,7 @@ import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
@@ -37,6 +34,10 @@ import static org.apache.mesos.offer.ResourceUtils.*;
                 "BACKUP_SNAPSHOT"),
         @JsonSubTypes.Type(value = BackupUploadTask.class, name =
                 "BACKUP_UPLOAD"),
+        @JsonSubTypes.Type(value = DownloadSnapshotTask.class, name =
+                "SNAPSHOT_DOWNLOAD"),
+        @JsonSubTypes.Type(value = RestoreSnapshotTask.class, name =
+                "SNAPSHOT_RESTORE"),
 })
 public abstract class CassandraTask {
 
@@ -173,10 +174,61 @@ public abstract class CassandraTask {
                 );
 
             case SNAPSHOT_DOWNLOAD:
-                return null;
+                return DownloadSnapshotTask.create(
+                        info.getTaskId().getValue(),
+                        info.getSlaveId().getValue(),
+                        data.getAddress(),
+                        CassandraTaskExecutor.parse(info.getExecutor()),
+                        info.getName(),
+                        role,
+                        principal,
+                        getReservedCpu(info.getResourcesList(), role,
+                                principal),
+                        (int) getReservedMem(resources,
+                                role,
+                                principal),
+                        (int) getReservedDisk(resources,
+                                role,
+                                principal),
+                        DownloadSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                                info.getTaskId().getValue(),
+                                info.getSlaveId().getValue(),
+                                info.getExecutor().getExecutorId().getValue(),
+                                Optional.empty()),
+                        data.getBackupName(),
+                        data.getExternalLocation(),
+                        data.getS3AccessKey(),
+                        data.getS3SecretKey(),
+                        data.getLocalLocation()
+                );
 
             case SNAPSHOT_RESTORE:
-                return null;
+                return RestoreSnapshotTask.create(
+                        info.getTaskId().getValue(),
+                        info.getSlaveId().getValue(),
+                        data.getAddress(),
+                        CassandraTaskExecutor.parse(info.getExecutor()),
+                        info.getName(),
+                        role,
+                        principal,
+                        getReservedCpu(info.getResourcesList(), role,
+                                principal),
+                        (int) getReservedMem(resources,
+                                role,
+                                principal),
+                        (int) getReservedDisk(resources,
+                                role,
+                                principal),
+                        RestoreSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                                info.getTaskId().getValue(),
+                                info.getSlaveId().getValue(),
+                                info.getExecutor().getExecutorId().getValue(),
+                                Optional.empty()),
+                        data.getBackupName(),
+                        data.getExternalLocation(),
+                        data.getS3AccessKey(),
+                        data.getS3SecretKey()
+                );
 
             default:
                 return null;

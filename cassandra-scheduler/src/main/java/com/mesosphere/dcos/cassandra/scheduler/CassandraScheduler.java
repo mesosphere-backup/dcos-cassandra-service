@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
@@ -48,6 +49,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final Reconciler reconciler;
     private final EventBus eventBus;
     private final ExecutorClient client;
+    private final RestoreManager restoreManager;
 
     @Inject
     public CassandraScheduler(
@@ -60,10 +62,12 @@ public class CassandraScheduler implements Scheduler, Managed {
             final Reconciler reconciler,
             final ExecutorClient client,
             final EventBus eventBus,
-            final BackupManager backupManager) {
+            final BackupManager backupManager,
+            final RestoreManager restoreManager) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
         this.backupManager = backupManager;
+        this.restoreManager = restoreManager;
         this.cassandraTasks = cassandraTasks;
         this.identityManager = identityManager;
         this.configurationManager = configurationManager;
@@ -78,7 +82,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.client = client;
         this.planManager = planManager;
         this.reconciler = reconciler;
-
     }
 
     @Override
@@ -159,6 +162,7 @@ public class CassandraScheduler implements Scheduler, Managed {
                             driver,
                             unacceptedOffers,
                             (CassandraBlock) currentBlock));
+
             // Schedule backup tasks
             unacceptedOffers = filterAcceptedOffers(offers,
                     acceptedOffers);
@@ -167,6 +171,16 @@ public class CassandraScheduler implements Scheduler, Managed {
                             driver,
                             unacceptedOffers
                     ));
+
+            // Schedule restore tasks
+            unacceptedOffers = filterAcceptedOffers(offers,
+                    acceptedOffers);
+            acceptedOffers.addAll(
+                    restoreManager.resourceOffers(
+                            driver,
+                            unacceptedOffers
+                    ));
+
             declineOffers(driver, acceptedOffers, offers);
         } else {
 

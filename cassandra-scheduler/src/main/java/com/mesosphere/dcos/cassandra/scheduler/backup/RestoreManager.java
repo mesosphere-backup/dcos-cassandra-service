@@ -5,6 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
@@ -19,10 +20,7 @@ import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class RestoreManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -89,9 +87,36 @@ public class RestoreManager {
 
         List<Protos.OfferID> acceptedOffers = new ArrayList<>();
         final Block currentBlock = planManager.getCurrentBlock();
+
+        final int id = currentBlock.getId();
+        final Map<String, CassandraDaemonTask> daemons = cassandraTasks.getDaemons();
+        final String prefix = "server-" + id;
+        CassandraDaemonTask task = null;
+        for (String taskId : daemons.keySet()) {
+            if (taskId.startsWith(prefix)) {
+                task = daemons.get(taskId);
+                break;
+            }
+        }
+        if (task == null) {
+            return acceptedOffers;
+        }
+
         LOGGER.info("RestoreManager found next block to be scheduled: {}", currentBlock);
+
+        // Find the offer from slave on which we the cassandra daemon is running for this block.
+        final String slaveId = task.getSlaveId();
+        List<Protos.Offer> chosenOne = new ArrayList<>(1);
+        for (Protos.Offer offer : offers) {
+            if (offer.getSlaveId().getValue().equals(slaveId)) {
+                LOGGER.info("Found slave on which the cassandra daemon is running: {}", slaveId);
+                chosenOne.add(offer);
+                break;
+            }
+        }
+
         acceptedOffers.addAll(
-                planScheduler.resourceOffers(driver, offers, currentBlock));
+                planScheduler.resourceOffers(driver, chosenOne, currentBlock));
 
         LOGGER.info("RestoreManager accepted following offers: {}", acceptedOffers);
 
@@ -99,7 +124,7 @@ public class RestoreManager {
     }
 
     public void startRestore(RestoreContext context) {
-        LOGGER.info("Starting restore with context: {}", context);
+        LOGGER.info("Starting restore");
 
         this.offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
@@ -112,10 +137,10 @@ public class RestoreManager {
         this.planScheduler = new DefaultPlanScheduler(offerAccepter);
 
         try {
-            persistentContext.store(context);
             this.context = context;
+            persistentContext.store(this.context);
         } catch (PersistenceException e) {
-            LOGGER.error("Error storing restore context into peristence store. Reason: ", e);
+            LOGGER.error("Error storing restore context into persistence store. Reason: ", e);
             throw new RuntimeException(e);
         }
     }

@@ -4,6 +4,7 @@ import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;
@@ -26,7 +27,9 @@ public class DownloadSnapshot implements Runnable {
         this.driver = driver;
         this.backupStorageDriver = backupStorageDriver;
         this.cassandraTask = (DownloadSnapshotTask) cassandraTask;
+        final int nodeId = TaskUtils.taskIdToNodeId(this.cassandraTask.getId());
         this.context = new RestoreContext();
+        context.setNodeId(nodeId + "");
         context.setName(this.cassandraTask.getBackupName());
         context.setExternalLocation(this.cassandraTask.getExternalLocation());
         context.setLocalLocation(this.cassandraTask.getLocalLocation());
@@ -37,6 +40,7 @@ public class DownloadSnapshot implements Runnable {
     @Override
     public void run() {
         try {
+            LOGGER.info("Starting DownloadSnapshot task using context: {}", context);
             // Send TASK_RUNNING
             sendStatus(driver, Protos.TaskState.TASK_RUNNING, "Started downloading snapshot");
 

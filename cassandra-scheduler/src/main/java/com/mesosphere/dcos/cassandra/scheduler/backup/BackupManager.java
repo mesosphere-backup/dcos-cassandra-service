@@ -103,7 +103,7 @@ public class BackupManager {
     }
 
     public void startBackup(BackupContext context) {
-        LOGGER.info("Starting backup with context: {}", context);
+        LOGGER.info("Starting backup");
 
         this.offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
@@ -119,7 +119,7 @@ public class BackupManager {
             persistentBackupContext.store(context);
             this.backupContext = context;
         } catch (PersistenceException e) {
-            LOGGER.error("Error storing backup context into peristence store. Reason: ", e);
+            LOGGER.error("Error storing backup context into persistence store. Reason: ", e);
             throw new RuntimeException(e);
         }
     }
