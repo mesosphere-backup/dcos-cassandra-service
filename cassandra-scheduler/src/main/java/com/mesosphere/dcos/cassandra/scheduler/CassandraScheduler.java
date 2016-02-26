@@ -145,6 +145,7 @@ public class CassandraScheduler implements Scheduler, Managed {
             if (currentBlock == null) {
                 LOGGER.info("Current plan {} interrupted.",
                         (planManager.isInterrupted()) ? "is" : "is not");
+                return;
             }
 
             acceptedOffers.addAll(

@@ -65,7 +65,10 @@ public class CassandraPlanManager implements PlanManager {
 
     @Subscribe
     public void update(Protos.TaskStatus status) {
-      getCurrentBlock().update(status);
+        final Block block = getCurrentBlock();
+        if (block != null) {
+            block.update(status);
+        }
     }
 
     @Override
