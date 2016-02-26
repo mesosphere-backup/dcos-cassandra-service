@@ -20,16 +20,17 @@ public class RestorePlan implements Plan {
                        EventBus eventBus,
                        ClusterTaskOfferRequirementProvider provider) {
         this.downloadSnapshotPhase = new DownloadSnapshotPhase(restoreContext, servers, cassandraTasks, eventBus, provider);
+        this.restoreSnapshotPhase = new RestoreSnapshotPhase(restoreContext, servers, cassandraTasks, eventBus, provider);
     }
 
     @Override
     public List<? extends Phase> getPhases() {
-        return Arrays.asList(downloadSnapshotPhase);
+        return Arrays.asList(downloadSnapshotPhase, restoreSnapshotPhase);
     }
 
     @Override
     public Phase getCurrentPhase() {
-        return downloadSnapshotPhase;
+        return !downloadSnapshotPhase.isComplete() ? downloadSnapshotPhase : restoreSnapshotPhase;
     }
 
     @Override
@@ -39,6 +40,6 @@ public class RestorePlan implements Plan {
 
     @Override
     public boolean isComplete() {
-        return downloadSnapshotPhase.isComplete();
+        return restoreSnapshotPhase.isComplete();
     }
 }

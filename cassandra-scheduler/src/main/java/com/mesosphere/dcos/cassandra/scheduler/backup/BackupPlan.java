@@ -13,14 +13,12 @@ import java.util.List;
 public class BackupPlan implements Plan {
     private BackupSnapshotPhase backupSnapshotPhase;
     private UploadBackupPhase uploadBackupPhase;
-    private BackupContext backupContext;
 
     public BackupPlan(BackupContext backupContext,
                       int servers,
                       CassandraTasks cassandraTasks,
                       EventBus eventBus,
                       ClusterTaskOfferRequirementProvider provider) {
-        this.backupContext = backupContext;
         this.backupSnapshotPhase = new BackupSnapshotPhase(backupContext, servers, cassandraTasks, eventBus, provider);
         this.uploadBackupPhase = new UploadBackupPhase(backupContext, servers, cassandraTasks, eventBus, provider);
     }
