@@ -399,4 +399,17 @@ public class CassandraTasks implements Managed {
     private boolean isRunning(CassandraTask task) {
         return Protos.TaskState.TASK_RUNNING == task.getStatus().getState();
     }
+
+    public Optional<CassandraTask> findCassandraDaemonTaskbyId(int id) {
+        final String prefix = "server-" + id;
+        CassandraTask task = null;
+        for (String taskId : tasks.keySet()) {
+            if (taskId.startsWith(prefix)) {
+                task = tasks.get(taskId);
+                break;
+            }
+        }
+
+        return Optional.of(task);
+    }
 }

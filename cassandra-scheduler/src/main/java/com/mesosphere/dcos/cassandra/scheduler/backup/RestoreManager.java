@@ -5,7 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
@@ -20,7 +20,10 @@ import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 public class RestoreManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -89,23 +92,15 @@ public class RestoreManager {
         final Block currentBlock = planManager.getCurrentBlock();
 
         final int id = currentBlock.getId();
-        final Map<String, CassandraDaemonTask> daemons = cassandraTasks.getDaemons();
-        final String prefix = "server-" + id;
-        CassandraDaemonTask task = null;
-        for (String taskId : daemons.keySet()) {
-            if (taskId.startsWith(prefix)) {
-                task = daemons.get(taskId);
-                break;
-            }
-        }
-        if (task == null) {
+        Optional<CassandraTask> task = cassandraTasks.findCassandraDaemonTaskbyId(id);
+        if (!task.isPresent()) {
             return acceptedOffers;
         }
 
         LOGGER.info("RestoreManager found next block to be scheduled: {}", currentBlock);
 
         // Find the offer from slave on which we the cassandra daemon is running for this block.
-        final String slaveId = task.getSlaveId();
+        final String slaveId = task.get().getSlaveId();
         List<Protos.Offer> chosenOne = new ArrayList<>(1);
         for (Protos.Offer offer : offers) {
             if (offer.getSlaveId().getValue().equals(slaveId)) {
