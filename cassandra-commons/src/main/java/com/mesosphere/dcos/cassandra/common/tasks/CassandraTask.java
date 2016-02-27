@@ -227,7 +227,8 @@ public abstract class CassandraTask {
                         data.getBackupName(),
                         data.getExternalLocation(),
                         data.getS3AccessKey(),
-                        data.getS3SecretKey()
+                        data.getS3SecretKey(),
+                        data.getLocalLocation()
                 );
 
             default:

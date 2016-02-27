@@ -1,20 +1,33 @@
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
+import com.google.common.collect.Lists;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
+import org.apache.cassandra.config.CFMetaData;
+import org.apache.cassandra.io.sstable.SSTableLoader;
 import org.apache.cassandra.tools.NodeProbe;
+import org.apache.cassandra.utils.OutputHandler;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class RestoreSnapshot implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(RestoreSnapshot.class);
+
     private NodeProbe probe;
     private ExecutorDriver driver;
     private RestoreContext context;
@@ -32,6 +45,7 @@ public class RestoreSnapshot implements Runnable {
         context.setS3AccessKey(this.cassandraTask.getS3AccessKey());
         context.setS3SecretKey(this.cassandraTask.getS3SecretKey());
         context.setExternalLocation(this.cassandraTask.getExternalLocation());
+        context.setLocalLocation(this.cassandraTask.getLocalLocation());
     }
 
     @Override
@@ -40,16 +54,55 @@ public class RestoreSnapshot implements Runnable {
             // Send TASK_RUNNING
             sendStatus(driver, Protos.TaskState.TASK_RUNNING, "Started restoring snapshot");
 
-            // TODO: Restore snapshot using sstableloader
+            final String localLocation = context.getLocalLocation();
+            final int nodeId = TaskUtils.taskIdToNodeId(this.cassandraTask.getId());
+            final String keyspaceDirectory = localLocation + File.separator + context.getName() + File.separator + nodeId;
+
+            // TODO: Fix the magic string
+            final String ssTableLoaderBinary = "apache-cassandra-2.2.5/bin/sstableloader";
+
+            final List<String> command = Arrays.asList(ssTableLoaderBinary, "-d", "127.0.0.1", keyspaceDirectory);
+            LOGGER.info("Executing command: {}", command);
+
+            final ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            String stdout = streamToString(process.getInputStream());
+            String stderr = streamToString(process.getErrorStream());
+
+            LOGGER.info("Command exit code: {}", exitCode);
+            LOGGER.info("Command stdout: {}", stdout);
+            LOGGER.info("Command stderr: {}", stderr);
 
             // Send TASK_FINISHED
-            sendStatus(driver, Protos.TaskState.TASK_FINISHED, "Finished restoring snapshot");
+            if (exitCode == 0) {
+                final String message = "Finished restoring snapshot";
+                LOGGER.info(message);
+                sendStatus(driver, Protos.TaskState.TASK_FINISHED, message);
+            } else {
+                final String errMessage = String.format("Error restoring snapshot. Exit code: %s Stdout: %s Stderr: %s", (exitCode + ""), stdout, stderr);
+                LOGGER.error(errMessage);
+                sendStatus(driver, Protos.TaskState.TASK_ERROR, errMessage);
+            }
         } catch (Exception e) {
             // Send TASK_FAILED
             final String errorMessage = "Failed restoring snapshot. Reason: " + e;
             LOGGER.error(errorMessage);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, errorMessage);
         }
+    }
+
+    private static String streamToString(InputStream stream) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        StringBuilder builder = new StringBuilder();
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
+            builder.append(System.getProperty("line.separator"));
+        }
+
+        return builder.toString();
     }
 
     private void sendStatus(ExecutorDriver driver, Protos.TaskState state, String message) {

@@ -368,7 +368,8 @@ public class ConfigurationManager implements Managed {
                 context.getName(),
                 context.getExternalLocation(),
                 context.getS3AccessKey(),
-                context.getS3SecretKey());
+                context.getS3SecretKey(),
+                cassandraConfig.getVolume().getPath() + "/data/temp_" + context.getName());
     }
 
     public BackupUploadTask createBackupUploadTask(

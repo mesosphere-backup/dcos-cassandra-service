@@ -33,6 +33,7 @@ public class RestoreSnapshotTask extends CassandraTask {
         private String externalLocation;
         private String s3AccessKey;
         private String s3SecretKey;
+        private String localLocation;
 
         private Builder(RestoreSnapshotTask task) {
 
@@ -51,6 +52,7 @@ public class RestoreSnapshotTask extends CassandraTask {
             this.externalLocation = task.externalLocation;
             this.s3AccessKey = task.s3AccessKey;
             this.s3SecretKey = task.s3SecretKey;
+            this.localLocation = task.localLocation;
         }
 
         public double getCpus() {
@@ -194,12 +196,16 @@ public class RestoreSnapshotTask extends CassandraTask {
                     backupName,
                     externalLocation,
                     s3AccessKey,
-                    s3SecretKey);
+                    s3SecretKey,
+                    localLocation);
         }
     }
 
     @JsonProperty("backupName")
     private final String backupName;
+
+    @JsonProperty("localLocation")
+    private final String localLocation;
 
     @JsonProperty("externalLocation")
     private final String externalLocation;
@@ -226,7 +232,8 @@ public class RestoreSnapshotTask extends CassandraTask {
             @JsonProperty("backupName") String backupName,
             @JsonProperty("externalLocation") String externalLocation,
             @JsonProperty("s3AccessKey") String s3AccessKey,
-            @JsonProperty("s3SecretKey") String s3SecretKey) {
+            @JsonProperty("s3SecretKey") String s3SecretKey,
+            @JsonProperty("localLocation") String localLocation) {
         return new RestoreSnapshotTask(id,
                 slaveId,
                 hostname,
@@ -241,7 +248,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                 backupName,
                 externalLocation,
                 s3AccessKey,
-                s3SecretKey);
+                s3SecretKey,
+                localLocation);
     }
 
     protected RestoreSnapshotTask(
@@ -259,7 +267,8 @@ public class RestoreSnapshotTask extends CassandraTask {
             String backupName,
             String externalLocation,
             String s3AccessKey,
-            String s3SecretKey) {
+            String s3SecretKey,
+            String localLocation) {
         super(TYPE.SNAPSHOT_RESTORE,
                 id,
                 slaveId,
@@ -277,6 +286,7 @@ public class RestoreSnapshotTask extends CassandraTask {
         this.externalLocation = externalLocation;
         this.s3AccessKey = s3AccessKey;
         this.s3SecretKey = s3SecretKey;
+        this.localLocation = localLocation;
     }
 
     public String getBackupName() {
@@ -295,12 +305,17 @@ public class RestoreSnapshotTask extends CassandraTask {
         return s3SecretKey;
     }
 
+    public String getLocalLocation() {
+        return localLocation;
+    }
+
     @Override
     public CassandraProtos.CassandraTaskData getTaskData() {
         return CassandraProtos.CassandraTaskData.newBuilder()
                 .setType(CassandraProtos.CassandraTaskData.TYPE.SNAPSHOT_RESTORE)
                 .setBackupName(backupName)
                 .setExternalLocation(externalLocation)
+                .setLocalLocation(localLocation)
                 .setS3AccessKey(s3AccessKey)
                 .setS3SecretKey(s3SecretKey)
                 .build();
@@ -322,7 +337,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                 backupName,
                 externalLocation,
                 s3AccessKey,
-                s3SecretKey);
+                s3SecretKey,
+                localLocation);
     }
 
     @Override
@@ -341,7 +357,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                 backupName,
                 externalLocation,
                 s3AccessKey,
-                s3SecretKey);
+                s3SecretKey,
+                localLocation);
     }
 
     @Override
@@ -363,7 +380,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                     backupName,
                     externalLocation,
                     s3AccessKey,
-                    s3SecretKey);
+                    s3SecretKey,
+                    localLocation);
         } else {
             return this;
         }
