@@ -268,6 +268,7 @@ public class CassandraDaemonProcess {
                         .getVolume()
                         .getPath()).toAbsolutePath().toString())
                 .setListenAddress(getListenAddress())
+                .setRpcAddress(getListenAddress())
                 .build().writeDaemonConfiguration(paths.cassandraConfig());
 
         process = createDaemon();
