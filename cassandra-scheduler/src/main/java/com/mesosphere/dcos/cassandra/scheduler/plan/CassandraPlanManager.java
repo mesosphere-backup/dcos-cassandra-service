@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 import org.apache.mesos.Protos;
 import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
@@ -20,15 +21,16 @@ public class CassandraPlanManager implements PlanManager {
 
     private volatile Plan plan;
     private final AtomicBoolean interrupted = new AtomicBoolean(false);
+    private final CassandraPhaseStrategies phaseStrategies;
     private volatile List<PhaseStrategy> strategies;
-    public static final CassandraPlanManager create(){
-        return new CassandraPlanManager();
-    }
-    public CassandraPlanManager() {
-        plan = EmptyPlan.get();
-        strategies = ImmutableList.copyOf(plan.getPhases().stream().map
+    @Inject
+    public CassandraPlanManager(
+            final CassandraPhaseStrategies phaseStrategies) {
+        this. plan = EmptyPlan.get();
+        this.phaseStrategies = phaseStrategies;
+        this.strategies = ImmutableList.copyOf(plan.getPhases().stream().map
                 (phase ->
-                CassandraPhaseStrategies.get(phase)).collect(
+                phaseStrategies.get(phase)).collect(
                 Collectors.toList()));
     }
 
@@ -55,8 +57,7 @@ public class CassandraPlanManager implements PlanManager {
     public void setPlan(final Plan plan){
         this.plan = plan;
         strategies = ImmutableList.copyOf(this.plan.getPhases().stream().map
-                (phase ->
-                        CassandraPhaseStrategies.get(phase)).collect(
+                (phase -> this.phaseStrategies.get(phase)).collect(
                 Collectors.toList()));
         LOGGER.info("Set plan : current plan = {}",this.plan);
         LOGGER.info("Phase strategies = {}",strategies);
@@ -72,14 +73,14 @@ public class CassandraPlanManager implements PlanManager {
     public Block getCurrentBlock() {
         if(interrupted.get()){
             LOGGER.info("Plan is interrupted.");
-            return null;
+            return EmptyPlan.EmptyBlock.get();
         } else if(planIsComplete()) {
             LOGGER.debug("Plan is complete");
-            return null;
+            return EmptyPlan.EmptyBlock.get();
         } else {
             Block block = getCurrentStrategy().getCurrentBlock();
             LOGGER.info("Current execution block = {}",block);
-            return block;
+            return (block != null) ? block : EmptyPlan.EmptyBlock.get();
         }
     }
 
@@ -91,6 +92,7 @@ public class CassandraPlanManager implements PlanManager {
     @Override
     public void proceed() {
         interrupted.set(false);
+        getCurrentStrategy().proceed();
         LOGGER.info("Set interrupt status : interrupted = {}",
                 interrupted.get());
     }
@@ -98,6 +100,7 @@ public class CassandraPlanManager implements PlanManager {
     @Override
     public void interrupt() {
         interrupted.set(true);
+        getCurrentStrategy().interrupt();
         LOGGER.info("Set interrupt status : interrupted = {}",
                 interrupted.get());
     }

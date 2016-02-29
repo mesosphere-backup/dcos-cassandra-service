@@ -102,7 +102,8 @@ public class CassandraDaemonProcess {
                     LOGGER.info("Sent status update = {}", status);
                     open.set(false);
                     closeFuture.complete(CLOSED);
-                    return;
+                    System.exit(0);
+
 
                 } catch (InterruptedException ex) {
 
