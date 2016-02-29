@@ -91,6 +91,12 @@ public class RestoreManager {
         List<Protos.OfferID> acceptedOffers = new ArrayList<>();
         final Block currentBlock = planManager.getCurrentBlock();
 
+        // Nothing to schedule
+        if (currentBlock == null) {
+            LOGGER.info("Nothing to schedule as current block is null: {}", currentBlock);
+            return acceptedOffers;
+        }
+
         final int id = currentBlock.getId();
         Optional<CassandraTask> task = cassandraTasks.findCassandraDaemonTaskbyId(id);
         if (!task.isPresent()) {
