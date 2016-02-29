@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
+import com.mesosphere.dcos.cassandra.common.tasks.Volume;
 
 import java.util.Optional;
 
@@ -311,7 +312,10 @@ public class CassandraConfigParser {
                 heap,
                 CassandraConfig.DEFAULT.getLocation(),
                 jmxPort,
-                CassandraConfig.DEFAULT.getVolume(),
+                Volume.create(
+                        CassandraConfig.DEFAULT.getVolume().getPath(),
+                        volumeSizeMb,
+                        Optional.empty()),
                 getApplicationConfig(name, seedsUrl));
     }
 
@@ -647,7 +651,7 @@ public class CassandraConfigParser {
         return volumeSizeMb;
     }
 
-    public void setVolumeSizeMb(int persistentVolumeSizeMb) {
+    public void setVolumeSizeMb(int volumeSizeMb) {
         this.volumeSizeMb = volumeSizeMb;
     }
 
