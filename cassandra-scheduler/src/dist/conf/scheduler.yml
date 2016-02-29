@@ -17,7 +17,7 @@ cassandra:
   cpus: ${CASSANDRA_CPUS:-0.5}
   memoryMb: ${CASSANDRA_MEMORY_MB:-4096}
   diskMb: ${CASSANRA_DISK_MB:-10240}
-  version: 2.2.5
+  version: ${CASSANDRA_VERSION:-2.2.5}
   heap:
     sizeMb : ${CASSANDRA_HEAP_MB:-2048}
     newMb : ${CASSANDRA_HEAP_MB:-100}
@@ -108,3 +108,4 @@ identity:
   failoverTimeoutS : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
   checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
 seedsUrl: "http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds"
+phaseStrategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}

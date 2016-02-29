@@ -26,6 +26,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
     private CassandraConfigParser cassandraConfig;
     private int apiPort;
     private Identity identity;
+    private String phaseStrategy;
     private MesosConfig mesosConfig =
             MesosConfig.create(
                     "master.mesos:2181",
@@ -106,7 +107,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
     @JsonProperty("cassandra")
     public CassandraSchedulerConfiguration setCassandraConfigParser
             (CassandraConfigParser
-                                                           cassandraConfig) {
+                     cassandraConfig) {
         this.cassandraConfig = cassandraConfig;
         return this;
     }
@@ -190,7 +191,9 @@ public class CassandraSchedulerConfiguration extends Configuration {
     }
 
     @JsonProperty("seedsUrl")
-    public String getSeedsUrl() { return seedsUrl; }
+    public String getSeedsUrl() {
+        return seedsUrl;
+    }
 
     @JsonProperty("seedsUrl")
     public CassandraSchedulerConfiguration setSeedsUrl(String seedsUrl) {
@@ -199,7 +202,9 @@ public class CassandraSchedulerConfiguration extends Configuration {
     }
 
     @JsonProperty("identity")
-    public Identity getIdentity() { return identity; }
+    public Identity getIdentity() {
+        return identity;
+    }
 
     @JsonProperty("identity")
     public CassandraSchedulerConfiguration setIdentity(Identity identity) {
@@ -207,10 +212,22 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
+    @JsonProperty("phaseStrategy")
+    public String getPhaseStrategy() {
+        return phaseStrategy;
+    }
+
+    @JsonProperty("phaseStrategy")
+    public CassandraSchedulerConfiguration setPhaseStrategy(
+            String phaseStrategy) {
+        this.phaseStrategy = phaseStrategy;
+        return this;
+    }
 
     @JsonIgnore
-    public CassandraConfig getCassandraConfig(){
-
-        return cassandraConfig.getCassandraConfig(name,getSeedsUrl());
+    public CassandraConfig getCassandraConfig() {
+        return cassandraConfig.getCassandraConfig(name, getSeedsUrl());
     }
+
+
 }
