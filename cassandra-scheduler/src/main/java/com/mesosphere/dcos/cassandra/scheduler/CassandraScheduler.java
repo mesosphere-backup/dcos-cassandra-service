@@ -69,7 +69,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(cassandraTasks)));
-
         planScheduler = new DefaultPlanScheduler(offerAccepter);
         repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
                 offerAccepter, cassandraTasks);
@@ -155,7 +154,9 @@ public class CassandraScheduler implements Scheduler, Managed {
                     repairScheduler.resourceOffers(
                             driver,
                             unacceptedOffers,
-                    ImmutableSet.of(currentBlock.getName())));
+                            (currentBlock != null) ?
+                                    ImmutableSet.of(currentBlock.getName()):
+                                    Collections.emptySet()));
 
             declineOffers(driver, acceptedOffers, offers);
         } else {
