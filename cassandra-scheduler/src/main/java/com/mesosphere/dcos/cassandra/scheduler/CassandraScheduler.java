@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -11,7 +12,6 @@ import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDeploy;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -69,7 +69,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(cassandraTasks)));
-
         planScheduler = new DefaultPlanScheduler(offerAccepter);
         repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
                 offerAccepter, cassandraTasks);
@@ -83,8 +82,8 @@ public class CassandraScheduler implements Scheduler, Managed {
     @Override
     public void start() throws Exception {
         registerFramework();
+        eventBus.register(planManager);
         eventBus.register(cassandraTasks);
-        eventBus.register(reconciler);
     }
 
     @Override
@@ -107,9 +106,9 @@ public class CassandraScheduler implements Scheduler, Managed {
             planManager.setPlan(CassandraDeploy.create(
                     offerRequirementProvider,
                     configurationManager,
-                    eventBus,
                     cassandraTasks,
-                    client));
+                    client,
+                    reconciler));
             reconciler.start();
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
@@ -130,10 +129,9 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void resourceOffers(SchedulerDriver driver,
                                List<Protos.Offer> offers) {
         logOffers(offers);
-
         reconciler.reconcile(driver);
 
-        if(identityManager.isRegistered() && reconciler.isReconciled()){
+        if (identityManager.isRegistered()) {
 
             List<Protos.OfferID> acceptedOffers = new ArrayList<>();
 
@@ -141,9 +139,9 @@ public class CassandraScheduler implements Scheduler, Managed {
 
             LOGGER.info("Current execution block = {}",
                     (currentBlock != null) ? currentBlock.toString() :
-            "No block");
+                            "No block");
 
-            if(currentBlock == null){
+            if (currentBlock == null) {
                 LOGGER.info("Current plan {} interrupted.",
                         (planManager.isInterrupted()) ? "is" : "is not");
             }
@@ -156,16 +154,18 @@ public class CassandraScheduler implements Scheduler, Managed {
                     repairScheduler.resourceOffers(
                             driver,
                             unacceptedOffers,
-                            (CassandraBlock)currentBlock));
+                            (currentBlock != null) ?
+                                    ImmutableSet.of(currentBlock.getName()):
+                                    Collections.emptySet()));
 
             declineOffers(driver, acceptedOffers, offers);
         } else {
 
             LOGGER.info("Declining all offers : registered = {}, " +
-                    "reconciled = {}",
+                            "reconciled = {}",
                     identityManager.isRegistered(),
                     reconciler.isReconciled());
-            declineOffers(driver, Collections.emptyList(),offers);
+            declineOffers(driver, Collections.emptyList(), offers);
         }
     }
 
@@ -220,11 +220,6 @@ public class CassandraScheduler implements Scheduler, Managed {
     @Override
     public void error(SchedulerDriver driver, String message) {
         LOGGER.error("Scheduler driver error: {}", message);
-    }
-
-    // Utility methods
-    private PlanStrategy getStrategy(Plan plan) {
-        return new DefaultInstallStrategy(plan);
     }
 
     private List<Protos.Offer> filterAcceptedOffers(List<Protos.Offer> offers,

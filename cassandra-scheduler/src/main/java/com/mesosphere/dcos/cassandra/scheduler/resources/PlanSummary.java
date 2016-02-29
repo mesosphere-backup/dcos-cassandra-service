@@ -3,10 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
-import org.apache.mesos.scheduler.plan.Block;
-import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Plan;
-import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.scheduler.plan.*;
 
 import java.util.Collections;
 import java.util.Map;
@@ -32,15 +29,16 @@ public class PlanSummary {
                 currentPhase);
     }
 
-    public static PlanSummary forPlan(final Plan plan){
+    public static PlanSummary forPlan(final PlanManager manager){
 
-       return create(plan.getPhases().size(),
-               plan.getPhases().stream().map(phase -> phase.getBlocks().size
+       return create(manager.getPlan().getPhases().size(),
+               manager.getPlan().getPhases().stream().map(phase -> phase.getBlocks()
+                       .size
                        ()).reduce( 0,
                        (a, b) -> a + b).intValue(),
-                plan.getCurrentPhase().getStatus(),
-                getBlockSummary(plan.getCurrentPhase().getCurrentBlock()),
-                getPhaseSummary(plan.getCurrentPhase())
+                manager.getStatus(),
+                getBlockSummary(manager.getCurrentBlock()),
+                getPhaseSummary(manager.getCurrentPhase())
         );
     }
 
