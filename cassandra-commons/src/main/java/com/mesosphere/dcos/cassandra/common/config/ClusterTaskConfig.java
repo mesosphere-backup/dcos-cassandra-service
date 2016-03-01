@@ -13,7 +13,7 @@ import java.io.IOException;
 public class ClusterTaskConfig {
     public static final ClusterTaskConfig DEFAULT =
             ClusterTaskConfig.create(
-                    0.1,
+                    1,
                     256,
                     0);
 
