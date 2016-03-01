@@ -315,7 +315,7 @@ public class CassandraConfigParser {
                 Volume.create(
                         CassandraConfig.DEFAULT.getVolume().getPath(),
                         volumeSizeMb,
-                        Optional.empty()),
+                        ""),
                 getApplicationConfig(name, seedsUrl));
     }
 
