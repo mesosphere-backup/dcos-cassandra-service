@@ -60,11 +60,6 @@ public class ReconciliationPhase implements Phase {
         }
 
         @Override
-        public List<Protos.TaskID> getUpdateIds() {
-            return Collections.emptyList();
-        }
-
-        @Override
         public int getId() {
             return 0;
         }

@@ -51,11 +51,6 @@ public class EmptyPlan implements Plan {
         }
 
         @Override
-        public List<Protos.TaskID> getUpdateIds() {
-            return Collections.emptyList();
-        }
-
-        @Override
         public int getId() {
             return Integer.MIN_VALUE;
         }

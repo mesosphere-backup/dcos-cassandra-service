@@ -239,11 +239,6 @@ public class CassandraDaemonBlock implements Block {
     }
 
     @Override
-    public List<Protos.TaskID> getUpdateIds() {
-        return null;
-    }
-
-    @Override
     public int getId() {
         return id;
     }
