@@ -102,7 +102,7 @@ public class ConfigurationResourceTest {
 
     @Test
     public void testGetServers() throws Exception {
-        Integer servers = resources.client().target("/v1/config/servers").request()
+        Integer servers = resources.client().target("/v1/config/nodes").request()
                 .get(Integer.class);
         System.out.println("servers = " + servers);
         assertEquals(config.getServers(), servers.intValue());
@@ -126,7 +126,7 @@ public class ConfigurationResourceTest {
 
     @Test
     public void testGetSeeds() throws Exception {
-        Integer seeds = resources.client().target("/v1/config/seeds").request()
+        Integer seeds = resources.client().target("/v1/config/seed-nodes").request()
                 .get(Integer.class);
         System.out.println("seeds = " + seeds);
         assertEquals(config.getSeeds(), seeds.intValue());
