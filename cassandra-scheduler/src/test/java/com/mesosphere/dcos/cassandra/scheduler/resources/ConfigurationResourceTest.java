@@ -4,6 +4,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
@@ -71,6 +72,7 @@ public class ConfigurationResourceTest {
 
         manager = new ConfigurationManager(
                 config.getCassandraConfig(),
+                config.getClusterTaskConfig(),
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
@@ -81,6 +83,7 @@ public class ConfigurationResourceTest {
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
+                ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
         );
 

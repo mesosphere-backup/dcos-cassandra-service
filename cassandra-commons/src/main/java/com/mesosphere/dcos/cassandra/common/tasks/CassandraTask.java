@@ -9,6 +9,7 @@ import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
@@ -30,10 +31,14 @@ import static org.apache.mesos.offer.ResourceUtils.*;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = CassandraDaemonTask.class,
                 name = "CASSANDRA_DAEMON"),
-        @JsonSubTypes.Type(value = S3RestoreTask.class, name =
-                "S3_RESTORE"),
-        @JsonSubTypes.Type(value = S3BackupTask.class, name =
-                "S3_BACKUP"),
+        @JsonSubTypes.Type(value = BackupSnapshotTask.class, name =
+                "BACKUP_SNAPSHOT"),
+        @JsonSubTypes.Type(value = BackupUploadTask.class, name =
+                "BACKUP_UPLOAD"),
+        @JsonSubTypes.Type(value = DownloadSnapshotTask.class, name =
+                "SNAPSHOT_DOWNLOAD"),
+        @JsonSubTypes.Type(value = RestoreSnapshotTask.class, name =
+                "SNAPSHOT_RESTORE"),
 })
 public abstract class CassandraTask {
 
@@ -67,8 +72,10 @@ public abstract class CassandraTask {
 
     public enum TYPE {
         CASSANDRA_DAEMON,
-        S3_BACKUP,
-        S3_RESTORE
+        BACKUP_SNAPSHOT,
+        BACKUP_UPLOAD,
+        SNAPSHOT_DOWNLOAD,
+        SNAPSHOT_RESTORE
     }
 
     public static CassandraTask parse(Protos.TaskInfo info)
@@ -106,8 +113,8 @@ public abstract class CassandraTask {
                                 Optional.empty(),
                                 CassandraMode.STARTING));
 
-            case BACKUP:
-                return S3BackupTask.create(
+            case BACKUP_SNAPSHOT:
+                return BackupSnapshotTask.create(
                         info.getTaskId().getValue(),
                         info.getSlaveId().getValue(),
                         data.getAddress(),
@@ -123,20 +130,21 @@ public abstract class CassandraTask {
                         (int) getReservedDisk(resources,
                                 role,
                                 principal),
-                        S3BackupStatus.create(Protos.TaskState.TASK_STAGING,
+                        BackupSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
                                 info.getTaskId().getValue(),
                                 info.getSlaveId().getValue(),
                                 info.getExecutor().getExecutorId().getValue(),
                                 Optional.empty()),
                         data.getKeySpacesList(),
                         data.getColumnFamiliesList(),
+                        data.getBackupName(),
                         data.getExternalLocation(),
                         data.getS3AccessKey(),
                         data.getS3SecretKey()
                 );
 
-            case RESTORE:
-                return S3RestoreTask.create(
+            case BACKUP_UPLOAD:
+                return BackupUploadTask.create(
                         info.getTaskId().getValue(),
                         info.getSlaveId().getValue(),
                         data.getAddress(),
@@ -152,16 +160,76 @@ public abstract class CassandraTask {
                         (int) getReservedDisk(resources,
                                 role,
                                 principal),
-                        S3RestoreStatus.create(Protos.TaskState.TASK_STAGING,
+                        BackupUploadStatus.create(Protos.TaskState.TASK_STAGING,
                                 info.getTaskId().getValue(),
                                 info.getSlaveId().getValue(),
                                 info.getExecutor().getExecutorId().getValue(),
                                 Optional.empty()),
                         data.getKeySpacesList(),
                         data.getColumnFamiliesList(),
+                        data.getBackupName(),
                         data.getExternalLocation(),
                         data.getS3AccessKey(),
-                        data.getS3SecretKey()
+                        data.getS3SecretKey(),
+                        data.getLocalLocation()
+                );
+
+            case SNAPSHOT_DOWNLOAD:
+                return DownloadSnapshotTask.create(
+                        info.getTaskId().getValue(),
+                        info.getSlaveId().getValue(),
+                        data.getAddress(),
+                        CassandraTaskExecutor.parse(info.getExecutor()),
+                        info.getName(),
+                        role,
+                        principal,
+                        getReservedCpu(info.getResourcesList(), role,
+                                principal),
+                        (int) getReservedMem(resources,
+                                role,
+                                principal),
+                        (int) getReservedDisk(resources,
+                                role,
+                                principal),
+                        DownloadSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                                info.getTaskId().getValue(),
+                                info.getSlaveId().getValue(),
+                                info.getExecutor().getExecutorId().getValue(),
+                                Optional.empty()),
+                        data.getBackupName(),
+                        data.getExternalLocation(),
+                        data.getS3AccessKey(),
+                        data.getS3SecretKey(),
+                        data.getLocalLocation()
+                );
+
+            case SNAPSHOT_RESTORE:
+                return RestoreSnapshotTask.create(
+                        info.getTaskId().getValue(),
+                        info.getSlaveId().getValue(),
+                        data.getAddress(),
+                        CassandraTaskExecutor.parse(info.getExecutor()),
+                        info.getName(),
+                        role,
+                        principal,
+                        getReservedCpu(info.getResourcesList(), role,
+                                principal),
+                        (int) getReservedMem(resources,
+                                role,
+                                principal),
+                        (int) getReservedDisk(resources,
+                                role,
+                                principal),
+                        RestoreSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                                info.getTaskId().getValue(),
+                                info.getSlaveId().getValue(),
+                                info.getExecutor().getExecutorId().getValue(),
+                                Optional.empty()),
+                        data.getBackupName(),
+                        data.getExternalLocation(),
+                        data.getS3AccessKey(),
+                        data.getS3SecretKey(),
+                        data.getLocalLocation()
                 );
 
             default:

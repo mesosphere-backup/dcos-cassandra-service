@@ -152,7 +152,8 @@ public class CassandraDaemonProcess {
 
 
                 CassandraMode current = CassandraMode.valueOf(
-                        probe.getOperationMode());;
+                        probe.getOperationMode());
+                ;
 
                 if (!mode.get().equals(current)) {
                     mode.set(current);
@@ -203,12 +204,12 @@ public class CassandraDaemonProcess {
         String address = System.getenv("LIBPROCESS_IP");
 
         if (address == null || address.isEmpty()) {
-                address = InetAddress.getLocalHost().getHostAddress();
+            address = InetAddress.getLocalHost().getHostAddress();
             LOGGER.info("LIBPROCESS_IP address not found defaulting to " +
                     "localhost");
         }
 
-        LOGGER.info("Cassandra Daemon listen address = {}",address);
+        LOGGER.info("Cassandra Daemon listen address = {}", address);
 
         return address;
     }
@@ -269,6 +270,10 @@ public class CassandraDaemonProcess {
                 1, 1, TimeUnit.SECONDS);
     }
 
+    public NodeProbe getProbe() {
+        return this.probe;
+    }
+
     private Process createDaemon() throws IOException {
 
         final ProcessBuilder builder = new ProcessBuilder(paths.cassandraRun()
@@ -313,7 +318,7 @@ public class CassandraDaemonProcess {
                         "Daemon on port %s", task.getConfig().getJmxPort()));
     }
 
-    public CassandraDaemonTask getTask(){
+    public CassandraDaemonTask getTask() {
         return task;
     }
 
@@ -321,12 +326,14 @@ public class CassandraDaemonProcess {
         return mode.get();
     }
 
-    public CassandraStatus getStatus(){
+    public CassandraStatus getStatus() {
 
         return getCassandraStatus(probe);
     }
 
-    public boolean isOpen() {return open.get();}
+    public boolean isOpen() {
+        return open.get();
+    }
 
     public void shutdown() {
 
@@ -374,12 +381,12 @@ public class CassandraDaemonProcess {
         String keySpace = (keySpaceOption.isPresent()) ?
                 keySpaceOption.get() : null;
 
-        if(columnFamilies.isEmpty()) {
+        if (columnFamilies.isEmpty()) {
             this.probe.forceKeyspaceCleanup(keySpace);
-        } else{
-            String [] families = new String[columnFamilies.size()];
+        } else {
+            String[] families = new String[columnFamilies.size()];
             families = columnFamilies.toArray(families);
-            this.probe.forceKeyspaceCleanup(keySpace,families);
+            this.probe.forceKeyspaceCleanup(keySpace, families);
         }
     }
 

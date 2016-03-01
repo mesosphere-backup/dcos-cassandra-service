@@ -7,9 +7,7 @@ import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.mesos.scheduler.plan.Block;
-import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +37,7 @@ public class CassandraDaemonPhase implements Phase {
     private final CassandraOfferRequirementProvider offerRequirementProvider;
     private final CassandraTasks cassandraTasks;
     private final ExecutorClient client;
+    private final PhaseStrategy strategy = new DefaultInstallStrategy(this);
 
     public CassandraDaemonPhase(
             final ConfigurationManager configurationManager,
@@ -107,7 +106,6 @@ public class CassandraDaemonPhase implements Phase {
     public String getName() {
         return "CASSANDRA_DEPLOY";
     }
-
 
     @Override
     public boolean isComplete() {

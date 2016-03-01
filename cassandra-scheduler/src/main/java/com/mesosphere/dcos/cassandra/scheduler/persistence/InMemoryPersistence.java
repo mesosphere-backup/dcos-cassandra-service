@@ -95,6 +95,11 @@ public class InMemoryPersistence implements PersistenceFactory {
                 }
             }
         }
+
+        @Override
+        public void delete() throws PersistenceException {
+            reference.set(Optional.empty());
+        }
     }
 
     private static class InMemoryMap<T> implements PersistentMap<T> {

@@ -34,7 +34,6 @@ public class CassandraDaemonBlock implements Block {
         }
     }
 
-
     private final int id;
     private final CassandraTasks cassandraTasks;
     private final CassandraOfferRequirementProvider provider;
@@ -242,6 +241,7 @@ public class CassandraDaemonBlock implements Block {
     public int getId() {
         return id;
     }
+
 
     @Override
     public String getName() {

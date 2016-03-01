@@ -33,6 +33,7 @@ public class CassandraRepairScheduler {
         this.offerRequirementProvider = requirementProvider;
     }
 
+
     public List<Protos.OfferID> resourceOffers(final SchedulerDriver driver,
                                                final List<Protos.Offer> offers,
                                                final Set<String> ignore) {
@@ -67,7 +68,7 @@ public class CassandraRepairScheduler {
             final Set<String> ignore) {
 
         List<CassandraTask> terminated =
-                cassandraTasks.getTerminatedTasks().stream()
+                cassandraTasks.getTasksToRepair().stream()
                         .filter(task -> !ignore.contains(task.getName()))
                         .collect(Collectors.toList());
         LOGGER.info("Terminated tasks size: {}", terminated.size());

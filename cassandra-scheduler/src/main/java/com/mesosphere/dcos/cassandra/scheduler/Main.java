@@ -6,10 +6,10 @@ import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfigur
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
-import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
-import com.mesosphere.dcos.cassandra.scheduler.resources.*;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
+import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
+import com.mesosphere.dcos.cassandra.scheduler.resources.*;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
@@ -76,8 +76,11 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
         environment.jersey().register(
                 injector.getInstance(TasksResource.class));
         environment.jersey().register(
-                injector.getInstance(PlanResource.class)
-        );
+                injector.getInstance(BackupResource.class));
+        environment.jersey().register(
+                injector.getInstance(PlanResource.class));
+        environment.jersey().register(
+                injector.getInstance(RestoreResource.class));
     }
 
     private void registerManagedObjects(Environment environment, Injector injector) {

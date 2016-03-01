@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import org.apache.mesos.Protos;
+import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.scheduler.plan.Plan;
+import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +33,7 @@ public class CassandraPlanManager implements PlanManager {
         this.phaseStrategies = phaseStrategies;
         this.strategies = ImmutableList.copyOf(plan.getPhases().stream().map
                 (phase ->
-                phaseStrategies.get(phase)).collect(
+                phaseStrategies.getStrategy(phase)).collect(
                 Collectors.toList()));
     }
 
@@ -57,7 +60,7 @@ public class CassandraPlanManager implements PlanManager {
     public void setPlan(final Plan plan){
         this.plan = plan;
         strategies = ImmutableList.copyOf(this.plan.getPhases().stream().map
-                (phase -> this.phaseStrategies.get(phase)).collect(
+                (phase -> this.phaseStrategies.getStrategy(phase)).collect(
                 Collectors.toList()));
         LOGGER.info("Set plan : current plan = {}",this.plan);
         LOGGER.info("Phase strategies = {}",strategies);

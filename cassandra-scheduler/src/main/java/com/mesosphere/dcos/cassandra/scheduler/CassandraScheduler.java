@@ -5,6 +5,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
+import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
@@ -22,7 +24,9 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.offer.OfferAccepter;
-import org.apache.mesos.scheduler.plan.*;
+import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.scheduler.plan.DefaultPlanScheduler;
+import org.apache.mesos.scheduler.plan.PlanScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,11 +35,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CassandraScheduler implements Scheduler, Managed {
-
     private final static Logger LOGGER = LoggerFactory.getLogger(
             CassandraScheduler.class);
 
     private MesosSchedulerDriver driver;
+    private BackupManager backupManager;
     private final IdentityManager identityManager;
     private final ConfigurationManager configurationManager;
     private final MesosConfig mesosConfig;
@@ -48,6 +52,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final Reconciler reconciler;
     private final EventBus eventBus;
     private final ExecutorClient client;
+    private final RestoreManager restoreManager;
 
     @Inject
     public CassandraScheduler(
@@ -59,9 +64,13 @@ public class CassandraScheduler implements Scheduler, Managed {
             final CassandraTasks cassandraTasks,
             final Reconciler reconciler,
             final ExecutorClient client,
-            final EventBus eventBus) {
+            final EventBus eventBus,
+            final BackupManager backupManager,
+            final RestoreManager restoreManager) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
+        this.backupManager = backupManager;
+        this.restoreManager = restoreManager;
         this.cassandraTasks = cassandraTasks;
         this.identityManager = identityManager;
         this.configurationManager = configurationManager;
@@ -75,8 +84,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.client = client;
         this.planManager = planManager;
         this.reconciler = reconciler;
-
-
     }
 
     @Override
@@ -145,9 +152,10 @@ public class CassandraScheduler implements Scheduler, Managed {
                 LOGGER.info("Current plan {} interrupted.",
                         (planManager.isInterrupted()) ? "is" : "is not");
             }
-
             acceptedOffers.addAll(
                     planScheduler.resourceOffers(driver, offers, currentBlock));
+
+            // Perform any required repairs
             List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(offers,
                     acceptedOffers);
             acceptedOffers.addAll(
@@ -157,6 +165,24 @@ public class CassandraScheduler implements Scheduler, Managed {
                             (currentBlock != null) ?
                                     ImmutableSet.of(currentBlock.getName()):
                                     Collections.emptySet()));
+
+            // Schedule backup tasks
+            unacceptedOffers = filterAcceptedOffers(offers,
+                    acceptedOffers);
+            acceptedOffers.addAll(
+                    backupManager.resourceOffers(
+                            driver,
+                            unacceptedOffers
+                    ));
+
+            // Schedule restore tasks
+            unacceptedOffers = filterAcceptedOffers(offers,
+                    acceptedOffers);
+            acceptedOffers.addAll(
+                    restoreManager.resourceOffers(
+                            driver,
+                            unacceptedOffers
+                    ));
 
             declineOffers(driver, acceptedOffers, offers);
         } else {

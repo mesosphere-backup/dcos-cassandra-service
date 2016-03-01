@@ -133,10 +133,17 @@ public class ZooKeeperPersistence implements PersistenceFactory {
                 throw new PersistenceException("Error creating value" +
                         " - path = " + path, ex);
             }
-
-
         }
 
+        @Override
+        public void delete() throws PersistenceException {
+            try {
+                curator.delete().forPath(path);
+            } catch (Exception e) {
+                throw new PersistenceException("Error deleting value" +
+                " - path = " + path, e);
+            }
+        }
     }
 
     private static class ZooKeeperMap<T> implements PersistentMap<T> {
