@@ -134,7 +134,7 @@ public class CassandraTasks implements Managed {
     public CassandraDaemonTask createDaemon(String name) throws
             PersistenceException {
         CassandraDaemonTask task = configuration.createDaemon(
-                identity.get().getId().get(),
+                identity.get().getId(),
                 "",
                 "",
                 name,

@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 
 public class ConfigurationManagerTest {
 
@@ -121,7 +122,7 @@ public class ConfigurationManagerTest {
         assertEquals("cassandra_role", config.getIdentity().getRole());
         assertEquals("cassandra_cluster", config.getIdentity().getCluster());
         assertEquals("cassandra_principal", config.getIdentity().getPrincipal());
-        assertEquals(Optional.empty(), config.getIdentity().getSecret());
+        assertNull(config.getIdentity().getSecret());
 
         manager.start();
 
