@@ -28,15 +28,6 @@ public class BackupPlan implements Plan {
         return Arrays.asList(backupSnapshotPhase, uploadBackupPhase);
     }
 
-    @Override
-    public Phase getCurrentPhase() {
-        return !backupSnapshotPhase.isComplete() ? backupSnapshotPhase : uploadBackupPhase;
-    }
-
-    @Override
-    public Status getStatus() {
-        return getCurrentPhase().getStatus();
-    }
 
     @Override
     public boolean isComplete() {

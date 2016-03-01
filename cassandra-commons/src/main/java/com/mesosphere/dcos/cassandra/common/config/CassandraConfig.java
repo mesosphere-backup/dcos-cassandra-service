@@ -46,11 +46,11 @@ public class CassandraConfig {
                     0.2,
                     4096,
                     10240,
-                    Optional.empty(),
+                    "",
                     HeapConfig.DEFAULT,
                     Location.DEFAULT,
                     7199,
-                    Volume.create("volume", 9216, Optional.empty()),
+                    Volume.create("volume", 9216, ""),
                     CassandraApplicationConfig.builder().build());
 
 
@@ -64,7 +64,7 @@ public class CassandraConfig {
         private double cpus;
         private int memoryMb;
         private int diskMb;
-        private Optional<String> replaceIp;
+        private String replaceIp;
         private HeapConfig heap;
         private Location location;
         private int jmxPort;
@@ -152,11 +152,11 @@ public class CassandraConfig {
             return this;
         }
 
-        public Optional<String> getReplaceIp() {
+        public String getReplaceIp() {
             return replaceIp;
         }
 
-        public Builder setReplaceIp(Optional<String> replaceIp) {
+        public Builder setReplaceIp(String replaceIp) {
             this.replaceIp = replaceIp;
             return this;
         }
@@ -235,7 +235,7 @@ public class CassandraConfig {
             @JsonProperty("cpus") double cpus,
             @JsonProperty("memoryMb") int memoryMb,
             @JsonProperty("diskMb") int diskMb,
-            @JsonProperty("replaceIp") Optional<String> replaceIp,
+            @JsonProperty("replaceIp") String replaceIp,
             @JsonProperty("heap") HeapConfig heap,
             @JsonProperty("location") Location location,
             @JsonProperty("jmxPort") int jmxPort,
@@ -264,8 +264,7 @@ public class CassandraConfig {
                 config.getCpus(),
                 config.getMemoryMb(),
                 config.getDiskMb(),
-                (config.hasReplaceIp()) ? Optional.of(config.getReplaceIp()) :
-                        Optional.empty(),
+                (config.hasReplaceIp()) ? config.getReplaceIp() : "",
                 HeapConfig.parse(config.getHeap()),
                 Location.parse(config.getLocation()),
                 config.getJmxPort(),
@@ -292,7 +291,7 @@ public class CassandraConfig {
     private final int diskMb;
 
     @JsonProperty("replaceIp")
-    private final Optional<String> replaceIp;
+    private final String replaceIp;
 
     @JsonProperty("heap")
     private final HeapConfig heap;
@@ -313,7 +312,7 @@ public class CassandraConfig {
                            final double cpus,
                            final int memoryMb,
                            final int diskMb,
-                           final Optional<String> replaceIp,
+                           final String replaceIp,
                            final HeapConfig heap,
                            final Location location,
                            final int jmxPort,
@@ -335,7 +334,7 @@ public class CassandraConfig {
         return version;
     }
 
-    public Optional<String> getReplaceIp() {
+    public String getReplaceIp() {
         return replaceIp;
     }
 
@@ -381,12 +380,11 @@ public class CassandraConfig {
                         .setCpus(cpus)
                         .setDiskMb(diskMb)
                         .setMemoryMb(memoryMb)
+                        .setReplaceIp(replaceIp)
                         .setHeap(heap.toProto())
                         .setLocation(location.toProto())
                         .setVolume(volume.toProto())
                         .setApplication(application.toByteString());
-
-        replaceIp.map(builder::setReplaceIp);
 
         return builder.build();
     }

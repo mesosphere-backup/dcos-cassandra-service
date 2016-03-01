@@ -43,7 +43,6 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
         return blocks;
     }
 
-    @Override
     public Block getCurrentBlock() {
         Block currentBlock = null;
         if (!CollectionUtils.isEmpty(blocks)) {
@@ -68,7 +67,6 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
         return this.getClass().getName();
     }
 
-    @Override
     public Status getStatus() {
         return getCurrentBlock().getStatus();
     }
@@ -82,10 +80,5 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
         }
 
         return true;
-    }
-
-    @Override
-    public PhaseStrategy getStrategy() {
-        return strategy;
     }
 }

@@ -342,6 +342,26 @@ public class DownloadSnapshotTask extends CassandraTask {
     }
 
     @Override
+    public CassandraTask updateId(String id) {
+        return create(id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                cpus,
+                memoryMb,
+                diskMb,
+                (DownloadSnapshotStatus) status,
+                backupName,
+                externalLocation,
+                s3AccessKey,
+                s3SecretKey,
+                localLocation);
+    }
+
+    @Override
     public DownloadSnapshotTask update(Protos.TaskState state) {
         return create(id,
                 slaveId,

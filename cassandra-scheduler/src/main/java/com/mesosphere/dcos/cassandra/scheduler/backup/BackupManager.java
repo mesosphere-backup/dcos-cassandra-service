@@ -12,6 +12,7 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
@@ -45,6 +46,7 @@ public class BackupManager {
     private ConfigurationManager configurationManager;
     private ClusterTaskOfferRequirementProvider provider;
     private PersistentReference<BackupContext> persistentBackupContext;
+    private final CassandraPhaseStrategies phaseStrategies;
 
     @Inject
     public BackupManager(ConfigurationManager configurationManager,
@@ -52,11 +54,13 @@ public class BackupManager {
                          EventBus eventBus,
                          ClusterTaskOfferRequirementProvider provider,
                          PersistenceFactory persistenceFactory,
+                         CassandraPhaseStrategies phaseStrategies,
                          final Serializer<BackupContext> serializer) {
         this.eventBus = eventBus;
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
         this.configurationManager = configurationManager;
+        this.phaseStrategies = phaseStrategies;
 
         // Load BackupManager from state store
         this.persistentBackupContext = persistenceFactory.createReference(BACKUP_KEY, serializer);
@@ -138,7 +142,7 @@ public class BackupManager {
         this.backupPlan = new BackupPlan(context, servers, cassandraTasks, eventBus, provider);
 
         // TODO: Make install strategy pluggable
-        this.planManager = new DefaultPlanManager(backupPlan);
+        this.planManager = new DefaultPlanManager(backupPlan,this.phaseStrategies);
         this.planScheduler = new DefaultPlanScheduler(offerAccepter);
 
         try {

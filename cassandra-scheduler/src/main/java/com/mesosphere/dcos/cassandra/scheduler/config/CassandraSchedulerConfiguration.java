@@ -27,6 +27,8 @@ public class CassandraSchedulerConfiguration extends Configuration {
     private CassandraConfigParser cassandraConfig;
     private ClusterTaskConfig clusterTaskConfig;
     private int apiPort;
+    private Identity identity;
+    private String phaseStrategy;
     private MesosConfig mesosConfig =
             MesosConfig.create(
                     "master.mesos:2181",
@@ -40,6 +42,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
                     10000L,
                     Optional.empty(),
                     250L);
+    private String seedsUrl;
 
     @JsonProperty("frameworkVersion")
     public String getVersion() {
@@ -200,29 +203,45 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
-    @JsonIgnore
+    @JsonProperty("seedsUrl")
     public String getSeedsUrl() {
-        return "http://" + name + ".marathon.mesos:" + apiPort + "/v1/seeds";
+        return seedsUrl;
     }
 
-    @JsonIgnore
+    @JsonProperty("seedsUrl")
+    public CassandraSchedulerConfiguration setSeedsUrl(String seedsUrl) {
+        this.seedsUrl = seedsUrl;
+        return this;
+    }
+
+    @JsonProperty("identity")
     public Identity getIdentity() {
-        return Identity.create(
-                name,
-                Optional.empty(),
-                version,
-                "",
-                name + "_cluster",
-                name + "_role",
-                name + "_principal",
-                Long.valueOf(60 * 60 * 24 * 7),
-                Optional.empty(),
-                true);
+        return identity;
+    }
+
+
+    @JsonProperty("identity")
+    public CassandraSchedulerConfiguration setIdentity(Identity identity) {
+        this.identity = identity;
+        return this;
+    }
+
+    @JsonProperty("phaseStrategy")
+    public String getPhaseStrategy() {
+        return phaseStrategy;
+    }
+
+    @JsonProperty("phaseStrategy")
+    public CassandraSchedulerConfiguration setPhaseStrategy(
+            String phaseStrategy) {
+        this.phaseStrategy = phaseStrategy;
+        return this;
     }
 
     @JsonIgnore
     public CassandraConfig getCassandraConfig() {
-
         return cassandraConfig.getCassandraConfig(name, getSeedsUrl());
     }
+
+
 }

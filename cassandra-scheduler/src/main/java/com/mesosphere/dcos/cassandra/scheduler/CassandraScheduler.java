@@ -1,17 +1,19 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDeploy;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -28,6 +30,7 @@ import org.apache.mesos.scheduler.plan.PlanScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,7 +78,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(cassandraTasks)));
-
         planScheduler = new DefaultPlanScheduler(offerAccepter);
         repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
                 offerAccepter, cassandraTasks);
@@ -87,8 +89,8 @@ public class CassandraScheduler implements Scheduler, Managed {
     @Override
     public void start() throws Exception {
         registerFramework();
+        eventBus.register(planManager);
         eventBus.register(cassandraTasks);
-        eventBus.register(reconciler);
     }
 
     @Override
@@ -111,9 +113,9 @@ public class CassandraScheduler implements Scheduler, Managed {
             planManager.setPlan(CassandraDeploy.create(
                     offerRequirementProvider,
                     configurationManager,
-                    eventBus,
                     cassandraTasks,
-                    client));
+                    client,
+                    reconciler));
             reconciler.start();
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
@@ -134,10 +136,9 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void resourceOffers(SchedulerDriver driver,
                                List<Protos.Offer> offers) {
         logOffers(offers);
-
         reconciler.reconcile(driver);
 
-        if(identityManager.isRegistered() && reconciler.isReconciled()){
+        if (identityManager.isRegistered()) {
 
             List<Protos.OfferID> acceptedOffers = new ArrayList<>();
 
@@ -145,9 +146,9 @@ public class CassandraScheduler implements Scheduler, Managed {
 
             LOGGER.info("Current execution block = {}",
                     (currentBlock != null) ? currentBlock.toString() :
-            "No block");
+                            "No block");
 
-            if(currentBlock == null){
+            if (currentBlock == null) {
                 LOGGER.info("Current plan {} interrupted.",
                         (planManager.isInterrupted()) ? "is" : "is not");
             }
@@ -161,7 +162,9 @@ public class CassandraScheduler implements Scheduler, Managed {
                     repairScheduler.resourceOffers(
                             driver,
                             unacceptedOffers,
-                            (CassandraBlock) currentBlock));
+                            (currentBlock != null) ?
+                                    ImmutableSet.of(currentBlock.getName()):
+                                    Collections.emptySet()));
 
             // Schedule backup tasks
             unacceptedOffers = filterAcceptedOffers(offers,
@@ -185,10 +188,10 @@ public class CassandraScheduler implements Scheduler, Managed {
         } else {
 
             LOGGER.info("Declining all offers : registered = {}, " +
-                    "reconciled = {}",
+                            "reconciled = {}",
                     identityManager.isRegistered(),
                     reconciler.isReconciled());
-            declineOffers(driver, Collections.emptyList(),offers);
+            declineOffers(driver, Collections.emptyList(), offers);
         }
     }
 
@@ -258,10 +261,26 @@ public class CassandraScheduler implements Scheduler, Managed {
                 acceptedOfferId -> acceptedOfferId.equals(offer.getId()));
     }
 
-    private void registerFramework() {
-        this.driver = new MesosSchedulerDriver(this,
-                identityManager.get().asInfo(),
+    private void registerFramework() throws IOException {
+        Identity identity = identityManager.get();
+        Optional<ByteString> secretBytes = identity.readSecretBytes();
+        if (secretBytes.isPresent()) {
+            // Authenticated if a non empty secret is provided.
+            Protos.Credential credential = Protos.Credential.newBuilder()
+                .setPrincipal(identity.getPrincipal())
+                .setSecretBytes(secretBytes.get())
+                .build();
+            this.driver = new MesosSchedulerDriver(
+                this,
+                identity.asInfo(),
+                mesosConfig.toZooKeeperUrl(),
+                credential);
+        } else {
+            this.driver = new MesosSchedulerDriver(this,
+                identity.asInfo(),
                 mesosConfig.toZooKeeperUrl());
+
+        }
         LOGGER.info("Starting driver...");
         final Protos.Status startStatus = this.driver.start();
         LOGGER.info("Driver started with status: {}", startStatus);

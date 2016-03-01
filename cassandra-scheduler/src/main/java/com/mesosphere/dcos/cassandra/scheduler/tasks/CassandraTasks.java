@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -37,12 +36,19 @@ import java.util.stream.Collectors;
  */
 public class CassandraTasks implements Managed {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraTasks.class);
+    private static final Set<Protos.TaskState> terminalStates = new HashSet<>(
+            Arrays.asList(
+                    Protos.TaskState.TASK_ERROR,
+                    Protos.TaskState.TASK_FAILED,
+                    Protos.TaskState.TASK_FINISHED,
+                    Protos.TaskState.TASK_KILLED,
+                    Protos.TaskState.TASK_LOST));
 
     private final IdentityManager identity;
     private final ConfigurationManager configuration;
-    private final AtomicLong serverId = new AtomicLong(0);
     private final PersistentMap<CassandraTask> persistent;
     private volatile Map<String, CassandraTask> tasks = Collections.emptyMap();
+    private final Map<String, String> byId = new HashMap<>();
 
     @Inject
     public CassandraTasks(
@@ -69,14 +75,16 @@ public class CassandraTasks implements Managed {
                     builder.put(key, persistent.get(key).get());
                 }
                 tasks = ImmutableMap.copyOf(builder);
+                tasks.forEach((name, task) -> {
+                    byId.put(task.getId(), name);
+                });
                 LOGGER.info("Loaded tasks: {}", tasks);
-                long max = getDaemons().values().stream().map(task -> Integer
-                        .parseInt(
+                long max = getDaemons().values().stream().map(task ->
+                        Integer.parseInt(
                                 task.getName().replace(
                                         CassandraDaemonTask.NAME_PREFIX, "")
                         )).max(Integer::compare).orElse(0);
 
-                serverId.set((tasks.isEmpty()) ? max : max + 1);
             }
         } catch (PersistenceException e) {
             LOGGER.error("Error loading tasks. Reason: {}", e);
@@ -85,31 +93,21 @@ public class CassandraTasks implements Managed {
     }
 
     public void update(CassandraTask task) throws PersistenceException {
-        persistent.put(task.getId(), task);
+        persistent.put(task.getName(), task);
+        if (tasks.containsKey(task.getName())) {
+            byId.remove(tasks.get(task.getName()).getId());
+        }
+        byId.put(task.getId(), task.getName());
         tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
                 tasks.entrySet().stream()
-                        .filter(entry -> !entry.getKey().equals(task.getId()))
+                        .filter(entry -> !entry.getKey().equals(task.getName()))
                         .collect(Collectors.toMap(
                                 entry -> entry.getKey(),
                                 entry -> entry.getValue())))
-                .put(task.getId(), task)
+                .put(task.getName(), task)
                 .build();
     }
 
-    public CassandraTask getCassandraTaskByNodeId(int nodeId) {
-        for (CassandraTask task : tasks.values()) {
-            final String taskId = task.getId();
-            final int id = TaskUtils.taskIdToNodeId(taskId);
-            LOGGER.info("For taskId: {} id is: {}", taskId, id);
-            if (nodeId == id) {
-                LOGGER.info("Found task: {} with nodeId: {}", task, nodeId);
-                return task;
-            }
-        }
-
-        LOGGER.info("Didn't find any task with nodeId: {}", nodeId);
-        return null;
-    }
 
     public void update(Protos.TaskInfo taskInfo) {
         try {
@@ -120,11 +118,14 @@ public class CassandraTasks implements Managed {
         }
     }
 
-    private void removeTask(String taskId) throws PersistenceException {
-        persistent.remove(taskId);
+    private void removeTask(String name) throws PersistenceException {
+        persistent.remove(name);
+        if (tasks.containsKey(name)) {
+            byId.remove(tasks.get(name).getId());
+        }
         tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
                 tasks.entrySet().stream()
-                        .filter(entry -> entry.getKey() != taskId)
+                        .filter(entry -> entry.getKey() != name)
                         .collect(Collectors.toMap(
                                 entry -> entry.getKey(),
                                 entry -> entry.getValue())))
@@ -166,12 +167,13 @@ public class CassandraTasks implements Managed {
                         (RestoreSnapshotTask) entry.getValue())));
     }
 
-    public CassandraDaemonTask createDaemon() throws PersistenceException {
+    public CassandraDaemonTask createDaemon(String name) throws
+            PersistenceException {
         CassandraDaemonTask task = configuration.createDaemon(
                 identity.get().getId().get(),
                 "",
                 "",
-                CassandraDaemonTask.NAME_PREFIX + serverId.getAndIncrement(),
+                name,
                 identity.get().getRole(),
                 identity.get().getPrincipal()
         );
@@ -278,40 +280,58 @@ public class CassandraTasks implements Managed {
         return task;
     }
 
-    public CassandraDaemonTask createDaemon(Protos.Offer offer) throws
+    public CassandraDaemonTask getOrCreateDaemon(String name) throws
             PersistenceException {
-        CassandraDaemonTask task = configuration.createDaemon(
-                identity.get().getId().get(),
-                offer.getSlaveId().getValue(),
-                offer.getHostname(),
-                CassandraDaemonTask.NAME_PREFIX + serverId.getAndIncrement(),
-                identity.get().getRole(),
-                identity.get().getPrincipal()
-        );
-
-        synchronized (persistent) {
-            update(task);
+        if(getDaemons().containsKey(name)){
+            return getDaemons().get(name);
+        } else{
+            return createDaemon(name);
         }
 
-        return task;
     }
 
     public boolean needsConfigUpdate(final CassandraDaemonTask daemon) {
         return !configuration.hasCurrentConfig(daemon);
     }
 
-    public CassandraDaemonTask updateConfig(
+    public CassandraTask replaceTask(CassandraTask task)
+            throws PersistenceException {
+
+        synchronized (persistent){
+            final CassandraDaemonTask updated =
+                    configuration.replaceDaemon((CassandraDaemonTask)task);
+            update(updated);
+            return updated;
+        }
+
+    }
+
+    public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task)
+            throws PersistenceException{
+        synchronized (persistent){
+            final CassandraDaemonTask updated =
+                    configuration.replaceDaemon(task);
+            update(updated);
+            return updated;
+        }
+    }
+
+    public CassandraDaemonTask reconfigureDeamon(
             final CassandraDaemonTask daemon) throws PersistenceException {
-        CassandraDaemonTask updated = configuration.updateConfig(daemon);
-        update(updated);
-        return updated;
+        synchronized (persistent) {
+            final CassandraDaemonTask updated = configuration.updateConfig(
+                    daemon);
+            update(updated);
+            return updated;
+        }
     }
 
     public Optional<CassandraTask> update(String taskId, Protos.Offer offer)
             throws PersistenceException {
         synchronized (persistent) {
-            if (tasks.containsKey(taskId)) {
-                CassandraTask updated = tasks.get(taskId).update(offer);
+            if (byId.containsKey(taskId)) {
+                CassandraTask updated = tasks.get(byId.get(taskId)).update(
+                        offer);
                 update(updated);
                 return Optional.of(updated);
             } else {
@@ -323,16 +343,16 @@ public class CassandraTasks implements Managed {
     @Subscribe
     public void update(Protos.TaskStatus status) throws IOException {
         synchronized (persistent) {
-            if (tasks.containsKey(status.getTaskId().getValue())) {
+            if (byId.containsKey(status.getTaskId().getValue())) {
                 CassandraTask updated;
 
                 if (status.hasData()) {
                     updated = tasks.get(
-                            status.getTaskId().getValue()).update(
+                            byId.get(status.getTaskId().getValue())).update(
                             CassandraTaskStatus.parse(status));
                 } else {
                     updated = tasks.get(
-                            status.getTaskId().getValue()).update(
+                            byId.get(status.getTaskId().getValue())).update(
                             status.getState());
                 }
 
@@ -345,15 +365,22 @@ public class CassandraTasks implements Managed {
         }
     }
 
-
-    public void remove(String id) throws PersistenceException {
+    public void remove(String name) throws PersistenceException {
         synchronized (persistent) {
-            if (tasks.containsKey(id)) removeTask(id);
+            if (tasks.containsKey(name)) removeTask(name);
         }
     }
 
-    public Optional<CassandraTask> get(String id) {
-        return Optional.ofNullable(tasks.get(id));
+    public void removeById(String id) throws PersistenceException {
+        synchronized (persistent) {
+            if (byId.containsKey(id)) {
+                removeTask(byId.get(id));
+            }
+        }
+    }
+
+    public Optional<CassandraTask> get(String name) {
+        return Optional.ofNullable(tasks.get(name));
     }
 
     public Map<String, CassandraTask> get() {
@@ -401,7 +428,7 @@ public class CassandraTasks implements Managed {
     }
 
     public Optional<CassandraTask> findCassandraDaemonTaskbyId(int id) {
-        final String prefix = "server-" + id;
+        final String prefix = CassandraDaemonTask.NAME_PREFIX + id;
         CassandraTask task = null;
         for (String taskId : tasks.keySet()) {
             if (taskId.startsWith(prefix)) {

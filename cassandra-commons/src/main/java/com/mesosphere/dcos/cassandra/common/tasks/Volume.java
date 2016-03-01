@@ -17,13 +17,13 @@ public class Volume {
     @JsonProperty("sizeMb")
     private final int sizeMb;
     @JsonProperty("id")
-    private final Optional<String> id;
+    private final String id;
 
     @JsonCreator
     public static Volume create(
             @JsonProperty("path") final String path,
             @JsonProperty("sizeMb") final int sizeMb,
-            @JsonProperty("id") final Optional<String> id
+            @JsonProperty("id") final String id
     ) {
         return new Volume(path, sizeMb, id);
     }
@@ -31,13 +31,11 @@ public class Volume {
     public static Volume parse(CassandraProtos.Volume volume) {
         return create(volume.getPath(),
                 volume.getSizeMb(),
-                (volume.hasId()) ?
-                        Optional.of(volume.getId()) :
-                        Optional.empty());
+                volume.hasId() ? volume.getId() : "");
     }
 
 
-    public Volume(String path, int sizeMb, Optional<String> id) {
+    public Volume(String path, int sizeMb, String id) {
         this.path = path;
         this.sizeMb = sizeMb;
         this.id = id;
@@ -51,12 +49,12 @@ public class Volume {
         return sizeMb;
     }
 
-    public Optional<String> getId() {
+    public String getId() {
         return id;
     }
 
     public Volume withId(String id) {
-        return create(path, sizeMb, Optional.of(id));
+        return create(path, sizeMb, id);
     }
 
     public Volume withId() {
@@ -75,8 +73,8 @@ public class Volume {
                 .setDisk(Protos.Resource.DiskInfo.newBuilder()
                         .setPersistence(Protos.Resource.DiskInfo.Persistence
                                 .newBuilder().setId(
-                                        id.orElse(
-                                                UUID.randomUUID().toString())))
+                                        (id == null || id.isEmpty()) ?
+                                                UUID.randomUUID().toString() : id))
                         .setVolume(Protos.Volume.newBuilder()
                                 .setContainerPath(path)
                                 .setMode(Protos.Volume.Mode.RW
@@ -88,9 +86,9 @@ public class Volume {
         CassandraProtos.Volume.Builder builder =
                 CassandraProtos.Volume
                         .newBuilder()
+                        .setId(id)
                         .setPath(path)
                         .setSizeMb(sizeMb);
-        id.map(builder::setId);
         return builder.build();
     }
 

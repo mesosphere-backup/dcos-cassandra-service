@@ -23,10 +23,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.glassfish.jersey.server.ManagedAsync;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
@@ -43,34 +40,34 @@ public class TasksResource {
     private final CassandraTasks tasks;
     private final ExecutorClient client;
 
+
     @Inject
     public TasksResource(final CassandraTasks tasks,
                          final ExecutorClient client) {
-
         this.tasks = tasks;
         this.client = client;
-
     }
 
     @GET
     @Path("/list")
-    public List<DaemonInfo> list() {
-        return tasks.getDaemons().values().stream().map(DaemonInfo::create)
-                .collect(Collectors.toList());
+    public List<String> list() {
+        return new ArrayList<>(tasks.getDaemons().keySet());
     }
 
     @GET
-    @Path("/status/{id}")
+    @Path("/{name}/status")
     @ManagedAsync
     public void getStatus(
-            @PathParam("id") final String id,
+            @PathParam("name") final String name,
             @Suspended final AsyncResponse response) {
-        Optional<CassandraTask> taskOption = tasks.get(id);
+
+        Optional<CassandraDaemonTask> taskOption =
+                Optional.ofNullable(tasks.getDaemons().get(name));
         if (!taskOption.isPresent()) {
             response.resume(
                     Response.status(Response.Status.NOT_FOUND));
         } else {
-            CassandraDaemonTask task = (CassandraDaemonTask) taskOption.get();
+            CassandraDaemonTask task = taskOption.get();
             client.status(task.getHostname(), task.getExecutor().getApiPort()
             ).whenCompleteAsync((status, error) -> {
                 if (status != null) {
@@ -80,6 +77,32 @@ public class TasksResource {
                 }
             });
         }
+    }
 
+    @GET
+    @Path("/{name}/info")
+    public DaemonInfo getInfo(@PathParam("name") final String name){
+
+        Optional<CassandraDaemonTask> taskOption =
+                Optional.ofNullable(tasks.getDaemons().get(name));
+        if(taskOption.isPresent()){
+            return DaemonInfo.create(taskOption.get());
+        }else {
+            throw new NotFoundException();
+        }
+    }
+
+    @PUT
+    @Path("/restart")
+    public void restart(@QueryParam("node") final String name){
+        Optional<CassandraDaemonTask> taskOption =
+                Optional.ofNullable(tasks.getDaemons().get(name));
+        if(taskOption.isPresent()){
+            CassandraDaemonTask task = taskOption.get();
+            client.shutdown(task.getHostname(),
+                    task.getExecutor().getApiPort());
+        }else {
+            throw new NotFoundException();
+        }
     }
 }

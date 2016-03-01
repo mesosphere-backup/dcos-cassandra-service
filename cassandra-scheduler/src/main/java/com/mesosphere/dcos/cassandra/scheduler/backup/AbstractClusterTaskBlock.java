@@ -68,11 +68,6 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     }
 
     @Override
-    public List<Protos.TaskID> getUpdateIds() {
-        return null;
-    }
-
-    @Override
     public int getId() {
         return id;
     }

@@ -21,7 +21,6 @@ public class IdentityResource {
 
     @Inject
     public IdentityResource(final IdentityManager manager){
-
         this.manager = manager;
     }
 

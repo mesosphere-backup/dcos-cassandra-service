@@ -395,6 +395,28 @@ public class BackupUploadTask extends CassandraTask {
     }
 
     @Override
+    public CassandraTask updateId(String id) {
+        return create(id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                cpus,
+                memoryMb,
+                diskMb,
+                (BackupUploadStatus) status,
+                keySpaces,
+                columnFamilies,
+                backupName,
+                externalLocation,
+                s3AccessKey,
+                s3SecretKey,
+                localLocation);
+    }
+
+    @Override
     public BackupUploadTask update(Protos.TaskState state) {
         return create(id,
                 slaveId,

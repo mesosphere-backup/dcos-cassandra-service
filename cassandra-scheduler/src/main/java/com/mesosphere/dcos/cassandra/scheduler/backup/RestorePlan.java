@@ -29,16 +29,6 @@ public class RestorePlan implements Plan {
     }
 
     @Override
-    public Phase getCurrentPhase() {
-        return !downloadSnapshotPhase.isComplete() ? downloadSnapshotPhase : restoreSnapshotPhase;
-    }
-
-    @Override
-    public Status getStatus() {
-        return getCurrentPhase().getStatus();
-    }
-
-    @Override
     public boolean isComplete() {
         return restoreSnapshotPhase.isComplete();
     }

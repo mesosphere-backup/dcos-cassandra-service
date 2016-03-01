@@ -102,3 +102,13 @@ server:
   adminConnectors:
     - type: http
       port: ${ADMIN_PORT:-8081}
+identity:
+  name : ${FRAMEWORK_NAME:-"cassandra"}
+  version : ${FRAMEWORK_VERSION:-"0.1.0"}
+  user : ${FRAMEWORK_USER:-"root"}
+  cluster : "${FRAMEWORK_NAME:-cassandra}_cluster"
+  role : "${FRAMEWORK_NAME:-cassandra}_role"
+  principal : "${FRAMEWORK_NAME:-cassandra}_principal"
+  failoverTimeoutS : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
+  checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
+seedsUrl: "http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds"

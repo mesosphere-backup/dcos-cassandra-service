@@ -10,7 +10,6 @@ import java.io.IOException;
 
 public class CassandraStatus {
 
-
     @JsonProperty("mode")
     final CassandraMode mode;
     @JsonProperty("joined")

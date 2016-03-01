@@ -380,6 +380,27 @@ public class BackupSnapshotTask extends CassandraTask {
     }
 
     @Override
+    public BackupSnapshotTask updateId(String id) {
+        return create(id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                cpus,
+                memoryMb,
+                diskMb,
+                (BackupSnapshotStatus) status,
+                keySpaces,
+                columnFamilies,
+                backupName,
+                externalLocation,
+                s3AccessKey,
+                s3SecretKey);
+    }
+
+    @Override
     public BackupSnapshotTask update(Protos.TaskState state) {
         return create(id,
                 slaveId,
@@ -437,7 +458,9 @@ public class BackupSnapshotTask extends CassandraTask {
     public BackupSnapshotStatus getStatus() {
 
         return (BackupSnapshotStatus) status;
+
     }
+
 
     @Override
     public List<Protos.Resource> getReserveResources() {

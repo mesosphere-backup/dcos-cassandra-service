@@ -202,6 +202,17 @@ public class ConfigurationManager implements Managed {
         }
     }
 
+    public CassandraTaskExecutor updateExecutor(
+            CassandraTask task,
+            String newId) {
+
+        return hasCurrentExecutorConfig(task.getExecutor()) ?
+                task.getExecutor() :
+                createExecutor(task.getExecutor().getFrameworkId(),
+                        newId + "_executor");
+
+    }
+
     public CassandraTaskExecutor createExecutor(String frameworkId,
                                                 String id) {
 
@@ -235,7 +246,6 @@ public class ConfigurationManager implements Managed {
         String id = name + "_" + unique;
 
         String executor = name + "_" + unique + "_executor";
-
 
         return CassandraDaemonTask.create(
                 id,
@@ -409,37 +419,59 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getVolume().getPath() + "/data");
     }
 
-    public boolean hasCurrentConfig(final CassandraDaemonTask task) {
+    public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {
+        String id = task.getName() + "_" + UUID.randomUUID().toString();
+        return task.mutable()
+                .setId(id)
+                .setStatus(
+                        CassandraDaemonStatus.create(
+                                Protos.TaskState.TASK_STAGING,
+                                id,
+                                task.getSlaveId(),
+                                task.getName(),
+                                Optional.empty(),
+                                CassandraMode.STARTING)).build();
 
-        return task.getExecutor().getCommand().equals(executorConfig
+    }
+
+    public boolean hasCurrentExecutorConfig(
+            final CassandraTaskExecutor executor) {
+       return executor.getCommand().equals(executorConfig
                 .getCommand()) &&
-                Double.compare(task.getExecutor().getCpus(),
+                Double.compare(executor.getCpus(),
                         executorConfig.getCpus()) == 0 &&
-                task.getExecutor().getDiskMb() ==
+                executor.getDiskMb() == executorConfig.getDiskMb() &&
+                Double.compare(executor.getCpus(),
+                        executorConfig.getCpus()) == 0 &&
+               executor.getDiskMb() ==
                         executorConfig.getDiskMb() &&
-                task.getExecutor().getMemoryMb() ==
+               executor.getMemoryMb() ==
                         executorConfig.getMemoryMb() &&
-                task.getExecutor().getUriStrings().containsAll(
+               executor.getUriStrings().containsAll(
                         Arrays.asList(
                                 executorConfig.getCassandraLocationString(),
                                 executorConfig.getExecutorLocationString(),
                                 executorConfig.getJreLocationString()
                         )
                 ) &&
-                task.getExecutor().getHeapMb() == executorConfig.getHeapMb() &&
+               executor.getHeapMb() == executorConfig.getHeapMb();
+    }
+
+    public boolean hasCurrentConfig(final CassandraDaemonTask task) {
+
+        return  hasCurrentExecutorConfig(task.getExecutor()) &&
                 task.getConfig().equals(cassandraConfig);
 
     }
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) {
 
+        String id = task.getName() + "_" + UUID.randomUUID().toString();
         return CassandraDaemonTask.create(
-                task.getId(),
+                id,
                 task.getSlaveId(),
                 task.getHostname(),
-                createExecutor(
-                        task.getExecutor().getFrameworkId(),
-                        task.getExecutor().getId()),
+                updateExecutor(task,id),
                 task.getName(),
                 task.getRole(),
                 task.getPrincipal(),
@@ -455,7 +487,17 @@ public class ConfigurationManager implements Managed {
                                                         seedsUrl))
                                 .build())
                         .build(),
-                task.getStatus());
+                CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        task.getSlaveId(),
+                        task.getName(),
+                        Optional.empty(),
+                        CassandraMode.STARTING));
+    }
+
+    public CassandraTask updateId(CassandraTask task) {
+        return task.updateId(
+                task.getName() + "_" + UUID.randomUUID().toString());
     }
 
     @Override

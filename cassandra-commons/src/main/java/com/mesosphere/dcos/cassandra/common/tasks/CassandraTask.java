@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.apache.mesos.offer.ResourceUtils.*;
 
@@ -236,6 +237,10 @@ public abstract class CassandraTask {
         }
     }
 
+    public static String uniqueId(){
+        return UUID.randomUUID().toString();
+    }
+
     protected final TYPE type;
     protected final String id;
     protected final String slaveId;
@@ -351,6 +356,9 @@ public abstract class CassandraTask {
 
     @JsonIgnore
     public abstract CassandraTask update(Protos.Offer offer);
+
+    @JsonIgnore
+    public abstract CassandraTask updateId(String id);
 
     @JsonIgnore
     public abstract CassandraProtos.CassandraTaskData getTaskData();

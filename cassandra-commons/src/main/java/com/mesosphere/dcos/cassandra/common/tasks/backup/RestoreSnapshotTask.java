@@ -342,6 +342,26 @@ public class RestoreSnapshotTask extends CassandraTask {
     }
 
     @Override
+    public CassandraTask updateId(String id) {
+        return create(id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                cpus,
+                memoryMb,
+                diskMb,
+                ((RestoreSnapshotStatus) status),
+                backupName,
+                externalLocation,
+                s3AccessKey,
+                s3SecretKey,
+                localLocation);
+    }
+
+    @Override
     public RestoreSnapshotTask update(Protos.TaskState state) {
         return create(id,
                 slaveId,
