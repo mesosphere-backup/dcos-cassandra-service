@@ -87,9 +87,54 @@ Configure the number of seed node in a given Cassandra cluster. The default coun
 
 ## Handling Errors
 
+## Backup
+
+Cassandra framework supports taking complete snapshot of the ring and uploading the artifacts to S3. To initiate the backup, the user needs to do following:
+
+First, create the request payload, for example in a file `backup.json`:
+```
+{
+"name":"<backup-name>",
+"external-location":"s3://<bucket-name>",
+"s3-access-key":"<s3-access-key>",
+"s3-secret-key":"<s3-secret-key>"
+}
+```
+
+Then submit the request payload via `PUT` request to `/v1/backup/start`
+```
+curl -X PUT -H 'Content-Type: application/json' -d @backup.json http://cassandra.marathon.mesos:9000/v1/backup/start
+{"status":"started", message:""}
+```
+
+## Restore
+
+Cassandra framework supports restore of snapshots on a new Cassandra ring. To restore a snapshot, use needs to do following:
+
+First, bring up a new instance of Cassandra cluster, with the same number of nodes as the cluster whose snapshot backup we are trying to restore.
+Next, create the request payload, for example in a file `restore.json`:
+```
+{
+"name":"<backup-name-to-restore>",
+"external-location":"s3://<bucket-name-where-backups-are-stored>",
+"s3-access-key":"<s3-access-key>",
+"s3-secret-key":"<s3-secret-key>"
+}
+```
+
+Next, submit the request payload via `PUT` request to `/v1/restore/start`
+```
+curl -X PUT -H 'Content-Type: application/json' -d @restore.json http://cassandra.marathon.mesos:9000/v1/restore/start
+{"status":"started", message:""}
+```
+
 ## APIs
 
 ## Limitations
+
+### Backup and Restore
+1. Cassandra framework current takes a ring-wide snapshot serially in a rolling fashion to minimize the impact on the running cassandra cluster, as taking snapshot on a live-cluster can be a CPU intensive operation.
+2. Cassandra framework also uploads and downloads backups serially in a rolling fashion to minimize the impact on link capacity. This limitation can be addressed in future, as we make DCOS and frameworks more topology aware.
 
 ## Extras - Demo with sample data
 1. Install cassandra using:
