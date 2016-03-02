@@ -26,15 +26,15 @@ public class UploadBackupPhase extends AbstractClusterTaskPhase<UploadBackupBloc
             int servers,
             CassandraTasks cassandraTasks,
             EventBus eventBus,
-            ClusterTaskOfferRequirementProvider provider) {
-        super(context, servers, cassandraTasks, eventBus, provider);
+            ClusterTaskOfferRequirementProvider provider,
+            int id) {
+        super(context, servers, cassandraTasks, eventBus, provider, id);
     }
 
     protected List<UploadBackupBlock> createBlocks() {
         final List<UploadBackupBlock> newBlocks = new ArrayList<>(servers);
         final List<String> createdBlocks =
                 new ArrayList<>(cassandraTasks.getBackupUploadTasks().keySet());
-
         try {
             for (int i = 0; i < servers; i++) {
                 String taskId = null;

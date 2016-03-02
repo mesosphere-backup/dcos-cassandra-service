@@ -26,8 +26,9 @@ public class DownloadSnapshotPhase extends AbstractClusterTaskPhase<DownloadSnap
             int servers,
             CassandraTasks cassandraTasks,
             EventBus eventBus,
-            ClusterTaskOfferRequirementProvider provider) {
-        super(context, servers, cassandraTasks, eventBus, provider);
+            ClusterTaskOfferRequirementProvider provider,
+            int id) {
+        super(context, servers, cassandraTasks, eventBus, provider, id);
     }
 
     protected List<DownloadSnapshotBlock> createBlocks() {

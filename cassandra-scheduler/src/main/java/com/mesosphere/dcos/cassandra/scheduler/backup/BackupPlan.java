@@ -19,8 +19,8 @@ public class BackupPlan implements Plan {
                       CassandraTasks cassandraTasks,
                       EventBus eventBus,
                       ClusterTaskOfferRequirementProvider provider) {
-        this.backupSnapshotPhase = new BackupSnapshotPhase(backupContext, servers, cassandraTasks, eventBus, provider);
-        this.uploadBackupPhase = new UploadBackupPhase(backupContext, servers, cassandraTasks, eventBus, provider);
+        this.backupSnapshotPhase = new BackupSnapshotPhase(backupContext, servers, cassandraTasks, eventBus, provider, 0);
+        this.uploadBackupPhase = new UploadBackupPhase(backupContext, servers, cassandraTasks, eventBus, provider, 1);
     }
 
     @Override

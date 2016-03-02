@@ -26,8 +26,9 @@ public class BackupSnapshotPhase extends AbstractClusterTaskPhase<BackupSnapshot
             int servers,
             CassandraTasks cassandraTasks,
             EventBus eventBus,
-            ClusterTaskOfferRequirementProvider provider) {
-        super(backupContext, servers, cassandraTasks, eventBus, provider);
+            ClusterTaskOfferRequirementProvider provider,
+            int id) {
+        super(backupContext, servers, cassandraTasks, eventBus, provider, id);
     }
 
     protected List<BackupSnapshotBlock> createBlocks() {

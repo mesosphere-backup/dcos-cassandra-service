@@ -25,8 +25,9 @@ public class RestoreSnapshotPhase extends AbstractClusterTaskPhase<RestoreSnapsh
             int servers,
             CassandraTasks cassandraTasks,
             EventBus eventBus,
-            ClusterTaskOfferRequirementProvider provider) {
-        super(context, servers, cassandraTasks, eventBus, provider);
+            ClusterTaskOfferRequirementProvider provider,
+            int id) {
+        super(context, servers, cassandraTasks, eventBus, provider, id);
     }
 
     protected List<RestoreSnapshotBlock> createBlocks() {

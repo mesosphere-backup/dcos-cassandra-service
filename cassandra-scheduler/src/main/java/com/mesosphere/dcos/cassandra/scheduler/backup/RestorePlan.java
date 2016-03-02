@@ -19,8 +19,8 @@ public class RestorePlan implements Plan {
                        CassandraTasks cassandraTasks,
                        EventBus eventBus,
                        ClusterTaskOfferRequirementProvider provider) {
-        this.downloadSnapshotPhase = new DownloadSnapshotPhase(restoreContext, servers, cassandraTasks, eventBus, provider);
-        this.restoreSnapshotPhase = new RestoreSnapshotPhase(restoreContext, servers, cassandraTasks, eventBus, provider);
+        this.downloadSnapshotPhase = new DownloadSnapshotPhase(restoreContext, servers, cassandraTasks, eventBus, provider, 0);
+        this.restoreSnapshotPhase = new RestoreSnapshotPhase(restoreContext, servers, cassandraTasks, eventBus, provider, 1);
     }
 
     @Override
