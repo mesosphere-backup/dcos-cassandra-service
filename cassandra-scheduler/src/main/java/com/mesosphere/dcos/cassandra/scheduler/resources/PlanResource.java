@@ -19,7 +19,6 @@ public class PlanResource {
     }
 
     private static COMMAND getCommand(String id){
-
         switch(id.trim().toLowerCase()){
             case "interrupt": return COMMAND.INTERRUPT;
             case "proceed" : return COMMAND.PROCEED;

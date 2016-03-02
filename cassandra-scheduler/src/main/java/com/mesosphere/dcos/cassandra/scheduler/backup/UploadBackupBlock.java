@@ -12,8 +12,6 @@ import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 public class UploadBackupBlock extends AbstractClusterTaskBlock<BackupContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             UploadBackupBlock.class);
@@ -40,7 +38,7 @@ public class UploadBackupBlock extends AbstractClusterTaskBlock<BackupContext> {
     @Override
     public OfferRequirement start() {
         LOGGER.info("Starting block: {}", getName());
-        final BackupUploadTask task = cassandraTasks.getBackupUploadTasks().get(taskId);
+        final BackupUploadTask task = cassandraTasks.getBackupUploadTasks().get(getName());
 
         // This will work better once reconcilation is implemented
         if (Protos.TaskState.TASK_FINISHED.equals(task.getStatus().getState())) {
@@ -79,13 +77,13 @@ public class UploadBackupBlock extends AbstractClusterTaskBlock<BackupContext> {
                 cassandraTasks.update(status);
 
                 BackupUploadTask task = cassandraTasks.getBackupUploadTasks()
-                        .get(taskId);
+                        .get(getName());
 
                 if (task != null && Protos.TaskState.TASK_FINISHED == status.getState()) {
                     setStatus(Status.Complete);
                 } else if (TaskUtils.isTerminated(status.getState())) {
                     //need to progress with a new task
-                    cassandraTasks.remove(status.getTaskId().getValue());
+                    cassandraTasks.remove(getName());
                     taskId = cassandraTasks.createBackupUploadTask(this.id, this.context).getId();
                     LOGGER.info("Reallocating task {} for block {}",
                             taskId,

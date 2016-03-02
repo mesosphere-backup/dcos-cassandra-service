@@ -47,7 +47,10 @@ public class CassandraTasks implements Managed {
     private final IdentityManager identity;
     private final ConfigurationManager configuration;
     private final PersistentMap<CassandraTask> persistent;
+
+    // Maps Task Name -> Task, where task name can be PREFIX-id
     private volatile Map<String, CassandraTask> tasks = Collections.emptyMap();
+    // Maps TaskId -> Task Name
     private final Map<String, String> byId = new HashMap<>();
 
     @Inject
@@ -185,24 +188,30 @@ public class CassandraTasks implements Managed {
         return task;
     }
 
-    private CassandraTaskExecutor getExecutorFromNodeId(int num) {
+    private Optional<CassandraTaskExecutor> getExecutorFromNodeId(int num) {
         // Get the executorInfo from store
-        final Optional<String> taskId = tasks.keySet().stream().filter(entry -> TaskUtils.taskIdToNodeId(entry) == num).findFirst();
+        final Optional<String> taskId = tasks.keySet().stream().filter(entry -> TaskUtils.taskNameToNodeId(entry) == num).findFirst();
         if (!taskId.isPresent()) {
-            return null;
+            return Optional.empty();
         }
 
         final CassandraTask cassandraTask = tasks.get(taskId.get());
-        return cassandraTask.getExecutor();
+        return Optional.ofNullable(cassandraTask.getExecutor());
     }
 
     public BackupSnapshotTask createBackupSnapshotTask(int num, BackupContext backupContext) throws PersistenceException {
-        final CassandraTaskExecutor executor = getExecutorFromNodeId(num);
+        final Optional<CassandraTaskExecutor> executor = getExecutorFromNodeId(num);
+
+        if (!executor.isPresent()) {
+            LOGGER.error("Cannot find executor associated with node id: {}", num);
+            return null;
+        }
+
         final Identity identity = this.identity.get();
         final BackupSnapshotTask task = configuration.createBackupSnapshotTask(
                 identity.getId().get(),
                 "", /* SlaveId */
-                executor,
+                executor.get(),
                 "", /* Hostname */
                 BackupSnapshotTask.NAME_PREFIX + num,
                 identity.getRole(),
@@ -218,12 +227,18 @@ public class CassandraTasks implements Managed {
     }
 
     public BackupUploadTask createBackupUploadTask(int num, BackupContext backupContext) throws PersistenceException {
-        final CassandraTaskExecutor executor = getExecutorFromNodeId(num);
+        final Optional<CassandraTaskExecutor> executor = getExecutorFromNodeId(num);
+
+        if (!executor.isPresent()) {
+            LOGGER.error("Cannot find executor associated with node id: {}", num);
+            return null;
+        }
+
         final Identity identity = this.identity.get();
         final BackupUploadTask task = configuration.createBackupUploadTask(
                 identity.getId().get(),
                 "", /* SlaveId */
-                executor,
+                executor.get(),
                 "", /* Hostname */
                 BackupUploadTask.NAME_PREFIX + num,
                 identity.getRole(),
@@ -239,12 +254,17 @@ public class CassandraTasks implements Managed {
     }
 
     public DownloadSnapshotTask createDownloadSnapshotTask(int num, RestoreContext context) throws PersistenceException {
-        final CassandraTaskExecutor executor = getExecutorFromNodeId(num);
+        final Optional<CassandraTaskExecutor> executor = getExecutorFromNodeId(num);
+
+        if (!executor.isPresent()) {
+            LOGGER.error("Cannot find executor associated with node id: {}", num);
+            return null;
+        }
         final Identity identity = this.identity.get();
         final DownloadSnapshotTask task = configuration.createDownloadSnapshotTask(
                 identity.getId().get(),
                 "", /* SlaveId */
-                executor,
+                executor.get(),
                 "", /* Hostname */
                 DownloadSnapshotTask.NAME_PREFIX + num,
                 identity.getRole(),
@@ -260,12 +280,17 @@ public class CassandraTasks implements Managed {
     }
 
     public RestoreSnapshotTask createRestoreSnapshotTask(int num, RestoreContext context) throws PersistenceException {
-        final CassandraTaskExecutor executor = getExecutorFromNodeId(num);
+        final Optional<CassandraTaskExecutor> executor = getExecutorFromNodeId(num);
+
+        if (!executor.isPresent()) {
+            LOGGER.error("Cannot find executor associated with node id: {}", num);
+            return null;
+        }
         final Identity identity = this.identity.get();
         final RestoreSnapshotTask task = configuration.createRestoreSnapshotTask(
                 identity.getId().get(),
                 "", /* SlaveId */
-                executor,
+                executor.get(),
                 "", /* Hostname */
                 RestoreSnapshotTask.NAME_PREFIX + num,
                 identity.getRole(),

@@ -21,6 +21,11 @@ public class TaskUtils {
         return Integer.parseInt(taskId.substring(start + 1, end));
     }
 
+    public static int taskNameToNodeId(String taskId) {
+        final int start = taskId.indexOf("-");
+        return Integer.parseInt(taskId.substring(start + 1));
+    }
+
     public static String getPersistenceId(Protos.TaskInfo taskInfo) {
         for (Protos.Resource resource : taskInfo.getResourcesList()) {
             if (resource.getName().equals("disk")) {

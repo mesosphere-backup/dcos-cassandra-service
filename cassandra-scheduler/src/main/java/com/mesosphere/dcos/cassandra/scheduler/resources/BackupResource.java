@@ -5,14 +5,10 @@ import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupPlan;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
-import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.PlanManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
 @Path("/v1/backup")
 public class BackupResource {
@@ -22,11 +18,11 @@ public class BackupResource {
     private final static String STATUS_ALREADY_RUNNING = "already_running";
     private final static String MESSAGE_ALREADY_RUNNING = "An existing backup is already in progress";
 
-    private BackupManager backupManager;
+    private BackupManager manager;
 
     @Inject
-    public BackupResource(BackupManager backupManager) {
-        this.backupManager = backupManager;
+    public BackupResource(BackupManager manager) {
+        this.manager = manager;
     }
 
     @PUT
@@ -35,9 +31,9 @@ public class BackupResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response start(StartBackupRequest request) {
-        if (backupManager.canStartBackup()) {
-            final BackupContext backupContext = BackupResource.from(request);
-            backupManager.startBackup(backupContext);
+        if (manager.canStartBackup()) {
+            final BackupContext backupContext = from(request);
+            manager.startBackup(backupContext);
             final StartBackupResponse response = new StartBackupResponse(STATUS_STARTED, MESSAGE_STARTED);
             return Response.ok(response).build();
         } else {
@@ -52,22 +48,18 @@ public class BackupResource {
     @Timed
     @Path("/status")
     public Response status() {
-        final BackupPlan backupPlan = this.backupManager.getBackupPlan();
-        return Response.ok(from(backupPlan)).build();
-    }
-
-    public static BackupStatusResponse from(BackupPlan backupPlan) {
-        return new BackupStatusResponse();
+        final BackupPlan plan = this.manager.getBackupPlan();
+        return Response.ok(PlanInfo.forPlan(plan)).build();
     }
 
     public static BackupContext from(StartBackupRequest request) {
-        final BackupContext backupContext =
+        final BackupContext context =
                 new BackupContext();
-        backupContext.setName(request.getName());
-        backupContext.setExternalLocation(request.getExternalLocation());
-        backupContext.setS3AccessKey(request.getS3AccessKey());
-        backupContext.setS3SecretKey(request.getS3SecretKey());
+        context.setName(request.getName());
+        context.setExternalLocation(request.getExternalLocation());
+        context.setS3AccessKey(request.getS3AccessKey());
+        context.setS3SecretKey(request.getS3SecretKey());
 
-        return backupContext;
+        return context;
     }
 }
