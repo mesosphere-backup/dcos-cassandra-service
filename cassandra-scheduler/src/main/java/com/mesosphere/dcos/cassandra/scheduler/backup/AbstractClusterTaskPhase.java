@@ -14,6 +14,7 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractClusterTaskPhase.class);
 
+    protected int id;
     protected int servers;
     protected final EventBus eventBus;
     protected C context;
@@ -27,7 +28,9 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
             int servers,
             CassandraTasks cassandraTasks,
             EventBus eventBus,
-            ClusterTaskOfferRequirementProvider provider) {
+            ClusterTaskOfferRequirementProvider provider,
+            int id) {
+        this.id = id;
         this.servers = servers;
         this.eventBus = eventBus;
         this.provider = provider;
@@ -64,7 +67,7 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
 
     @Override
     public String getName() {
-        return this.getClass().getName();
+        return this.getClass().getSimpleName();
     }
 
     public Status getStatus() {

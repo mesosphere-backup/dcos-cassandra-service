@@ -38,7 +38,7 @@ public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreConte
     @Override
     public OfferRequirement start() {
         LOGGER.info("Starting block: {}", getName());
-        final DownloadSnapshotTask task = cassandraTasks.getDownloadSnapshotTasks().get(taskId);
+        final DownloadSnapshotTask task = cassandraTasks.getDownloadSnapshotTasks().get(getName());
 
         // This will work better once reconcilation is implemented
         if (Protos.TaskState.TASK_FINISHED.equals(task.getStatus().getState())) {
@@ -76,13 +76,13 @@ public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreConte
                 super.cassandraTasks.update(status);
 
                 DownloadSnapshotTask task = super.cassandraTasks.getDownloadSnapshotTasks()
-                        .get(super.taskId);
+                        .get(getName());
 
                 if (task != null && Protos.TaskState.TASK_FINISHED == status.getState()) {
                     setStatus(Status.Complete);
                 } else if (TaskUtils.isTerminated(status.getState())) {
                     //need to progress with a new task
-                    super.cassandraTasks.remove(status.getTaskId().getValue());
+                    super.cassandraTasks.remove(getName());
                     super.taskId = cassandraTasks.createDownloadSnapshotTask(super.id, super.context).getId();
                     LOGGER.info("Reallocating task {} for block {}",
                             taskId,

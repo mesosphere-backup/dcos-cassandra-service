@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.scheduler.plan.Plan;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -21,6 +22,9 @@ public class PlanInfo {
     }
 
     public static PlanInfo forPlan(final Plan plan){
+        if (plan == null) {
+            return new PlanInfo(Arrays.asList());
+        }
         return create(plan.getPhases().stream()
                 .map(PhaseInfo::forPhase)
                 .collect(Collectors.toList()));

@@ -3,12 +3,11 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.scheduler.backup.BackupPlan;
 import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
+import com.mesosphere.dcos.cassandra.scheduler.backup.RestorePlan;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -44,6 +43,15 @@ public class RestoreResource {
                     entity(new StartRestoreResponse(STATUS_ALREADY_RUNNING, MESSAGE_ALREADY_RUNNING))
                     .build();
         }
+    }
+
+    @GET
+    @Timed
+    @Path("/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response status() {
+        final RestorePlan plan = this.manager.getRestorePlan();
+        return Response.ok(PlanInfo.forPlan(plan)).build();
     }
 
     public static RestoreContext from(StartRestoreRequest request) {

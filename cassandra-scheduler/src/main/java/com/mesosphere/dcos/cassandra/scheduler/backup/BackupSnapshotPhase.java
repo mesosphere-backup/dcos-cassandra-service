@@ -2,14 +2,17 @@ package com.mesosphere.dcos.cassandra.scheduler.backup;
 
 import com.google.common.eventbus.EventBus;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * During snapshot phase, data will be snapshotted across all cassandra nodes.
@@ -23,8 +26,9 @@ public class BackupSnapshotPhase extends AbstractClusterTaskPhase<BackupSnapshot
             int servers,
             CassandraTasks cassandraTasks,
             EventBus eventBus,
-            ClusterTaskOfferRequirementProvider provider) {
-        super(backupContext, servers, cassandraTasks, eventBus, provider);
+            ClusterTaskOfferRequirementProvider provider,
+            int id) {
+        super(backupContext, servers, cassandraTasks, eventBus, provider, id);
     }
 
     protected List<BackupSnapshotBlock> createBlocks() {
@@ -34,8 +38,20 @@ public class BackupSnapshotPhase extends AbstractClusterTaskPhase<BackupSnapshot
 
         try {
             for (int i = 0; i < servers; i++) {
-                String taskId = (i < createdBlocks.size()) ? createdBlocks.get(i)
-                        : cassandraTasks.createBackupSnapshotTask(i, context).getId();
+                String taskId = null;
+                // Do we have an existing id ?
+                if (i < createdBlocks.size()) {
+                    final Optional<CassandraTask> cassandraTask = cassandraTasks.get(createdBlocks.get(i));
+                    if (cassandraTask.isPresent()) {
+                        taskId = cassandraTask.get().getId();
+                    }
+                }
+
+                // If not, create a new one!
+                if (StringUtils.isBlank(taskId)) {
+                    taskId = cassandraTasks.createBackupSnapshotTask(i, context).getId();
+                }
+
                 final BackupSnapshotBlock block = BackupSnapshotBlock.create(i, taskId,
                         cassandraTasks, provider, context);
                 newBlocks.add(block);

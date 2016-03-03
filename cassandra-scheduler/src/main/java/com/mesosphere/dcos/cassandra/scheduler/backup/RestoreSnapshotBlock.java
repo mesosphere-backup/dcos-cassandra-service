@@ -1,9 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.backup;
 
 import com.google.common.eventbus.Subscribe;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
@@ -13,8 +11,6 @@ import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<RestoreContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -42,7 +38,7 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<RestoreContex
     @Override
     public OfferRequirement start() {
         LOGGER.info("Starting block: {}", getName());
-        final RestoreSnapshotTask task = cassandraTasks.getRestoreSnapshotTasks().get(taskId);
+        final RestoreSnapshotTask task = cassandraTasks.getRestoreSnapshotTasks().get(getName());
 
         // This will work better once reconcilation is implemented
         if (Protos.TaskState.TASK_FINISHED.equals(task.getStatus().getState())) {
@@ -80,13 +76,13 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<RestoreContex
                 cassandraTasks.update(status);
 
                 RestoreSnapshotTask task = cassandraTasks.getRestoreSnapshotTasks()
-                        .get(taskId);
+                        .get(getName());
 
                 if (task != null && Protos.TaskState.TASK_FINISHED == status.getState()) {
                     setStatus(Status.Complete);
                 } else if (TaskUtils.isTerminated(status.getState())) {
                     //need to progress with a new task
-                    cassandraTasks.remove(status.getTaskId().getValue());
+                    cassandraTasks.remove(getName());
                     taskId = cassandraTasks.createRestoreSnapshotTask(this.id, this.context).getId();
                     LOGGER.info("Reallocating task {} for block {}",
                             taskId,
