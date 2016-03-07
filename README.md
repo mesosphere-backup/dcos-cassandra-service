@@ -91,6 +91,22 @@ Configure the number of seed node in a given Cassandra cluster. The default coun
 
 Cassandra framework supports taking complete snapshot of the ring and uploading the artifacts to S3. To initiate the backup, the user needs to do following:
 
+### CLI
+
+Invoke backup using DCOS CLI:
+
+```
+dcos cassandra --framework-name=<framework-name> backup start --name=<backup-name> --external_location=s3://<bucket-name> --s3_access_key=<s3-access-key> --s3_secret_key=<s3-secret-key>
+```
+
+To check status of the backup:
+
+```
+dcos cassandra --framework-name=thecluster backup status
+```
+
+### API
+
 First, create the request payload, for example in a file `backup.json`:
 ```
 {
@@ -107,9 +123,30 @@ curl -X PUT -H 'Content-Type: application/json' -d @backup.json http://cassandra
 {"status":"started", message:""}
 ```
 
+To check status of the backup:
+```
+curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
+```
+
 ## Restore
 
 Cassandra framework supports restore of snapshots on a new Cassandra ring. To restore a snapshot, use needs to do following:
+
+### CLI
+
+Invoke backup using DCOS CLI:
+
+```
+dcos cassandra --framework-name=<framework-name> restore start --name=<backup-name> --external_location=s3://<bucket-name> --s3_access_key=<s3-access-key> --s3_secret_key=<s3-secret-key>
+```
+
+To check status of the restore:
+
+```
+dcos cassandra --framework-name=thecluster restore status
+```
+
+### API
 
 First, bring up a new instance of Cassandra cluster, with the same number of nodes as the cluster whose snapshot backup we are trying to restore.
 Next, create the request payload, for example in a file `restore.json`:
@@ -126,6 +163,11 @@ Next, submit the request payload via `PUT` request to `/v1/restore/start`
 ```
 curl -X PUT -H 'Content-Type: application/json' -d @restore.json http://cassandra.marathon.mesos:9000/v1/restore/start
 {"status":"started", message:""}
+```
+
+To check status of the restore:
+```
+curl -X GET http://cassandra.marathon.mesos:9000/v1/restore/status
 ```
 
 ## APIs
