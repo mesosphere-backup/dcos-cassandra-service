@@ -18,6 +18,7 @@ import io.dropwizard.java8.Java8Bundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.mesos.scheduler.plan.api.StageResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +79,7 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
         environment.jersey().register(
                 injector.getInstance(BackupResource.class));
         environment.jersey().register(
-                injector.getInstance(PlanResource.class));
+                injector.getInstance(StageResource.class));
         environment.jersey().register(
                 injector.getInstance(RestoreResource.class));
     }

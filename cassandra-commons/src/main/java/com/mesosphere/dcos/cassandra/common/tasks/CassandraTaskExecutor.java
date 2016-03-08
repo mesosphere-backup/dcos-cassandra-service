@@ -229,7 +229,7 @@ public class CassandraTaskExecutor {
                 (int) getReservedMem(resources,
                         role,
                         principal),
-                (int) getReservedDisk(resources,
+                (int) getTotalReservedDisk(resources,
                         role,
                         principal),
                 Integer.parseInt(env.get("JVM_OPTS")

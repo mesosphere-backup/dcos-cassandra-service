@@ -1,20 +1,19 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import com.google.common.eventbus.EventBus;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.Reconciler;
-import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Plan;
-import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.scheduler.plan.ReconciliationPhase;
+import org.apache.mesos.scheduler.plan.Stage;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-public class CassandraDeploy implements Plan {
+public class CassandraDeploy implements Stage {
 
 
     public static final CassandraDeploy create(
@@ -29,7 +28,7 @@ public class CassandraDeploy implements Plan {
                 configurationManager,
                 cassandraTasks,
                 client,
-        reconciler);
+                reconciler);
     }
 
     private final CassandraDaemonPhase daemonPhase;
@@ -50,7 +49,7 @@ public class CassandraDeploy implements Plan {
                 cassandraTasks,
                 client);
         this.reconciliationPhase = ReconciliationPhase.create(reconciler);
-        this.phases = Arrays.asList(reconciliationPhase,daemonPhase);
+        this.phases = Arrays.asList(reconciliationPhase, daemonPhase);
     }
 
     @Override
@@ -58,6 +57,10 @@ public class CassandraDeploy implements Plan {
         return phases;
     }
 
+    @Override
+    public List<String> getErrors() {
+        return Collections.emptyList();
+    }
 
 
     @Override

@@ -3,9 +3,9 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
-import com.mesosphere.dcos.cassandra.scheduler.backup.BackupPlan;
 import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
-import com.mesosphere.dcos.cassandra.scheduler.backup.RestorePlan;
+import org.apache.mesos.scheduler.plan.StageManager;
+import org.apache.mesos.scheduler.plan.api.StageInfo;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -35,12 +35,14 @@ public class RestoreResource {
         if (manager.canStartRestore()) {
             final RestoreContext context = from(request);
             manager.startRestore(context);
-            final StartRestoreResponse response = new StartRestoreResponse(STATUS_STARTED, MESSAGE_STARTED);
+            final StartRestoreResponse response = new StartRestoreResponse(
+                    STATUS_STARTED, MESSAGE_STARTED);
             return Response.ok(response).build();
         } else {
             // Send error back
             return Response.status(502).
-                    entity(new StartRestoreResponse(STATUS_ALREADY_RUNNING, MESSAGE_ALREADY_RUNNING))
+                    entity(new StartRestoreResponse(STATUS_ALREADY_RUNNING,
+                            MESSAGE_ALREADY_RUNNING))
                     .build();
         }
     }
@@ -50,8 +52,12 @@ public class RestoreResource {
     @Path("/status")
     @Produces(MediaType.APPLICATION_JSON)
     public Response status() {
-        final RestorePlan plan = this.manager.getRestorePlan();
-        return Response.ok(PlanInfo.forPlan(plan)).build();
+        StageManager stageManager = manager.getStageManager();
+        return (stageManager != null) ?
+                Response.ok(
+                        StageInfo.forStage(
+                                manager.getStageManager())).build() :
+                Response.status(Response.Status.NOT_FOUND).build();
     }
 
     public static RestoreContext from(StartRestoreRequest request) {

@@ -1,17 +1,25 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
-import com.mesosphere.dcos.cassandra.scheduler.backup.BackupPlan;
+import org.apache.mesos.scheduler.plan.StageManager;
+import org.apache.mesos.scheduler.plan.api.StageInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/v1/backup")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class BackupResource {
+    private static final Logger LOGGER = LoggerFactory.getLogger
+            (BackupResource.class);
     private final static String STATUS_STARTED = "started";
     private final static String MESSAGE_STARTED = "Started complete backup";
 
@@ -28,18 +36,30 @@ public class BackupResource {
     @PUT
     @Timed
     @Path("/start")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
     public Response start(StartBackupRequest request) {
-        if (manager.canStartBackup()) {
-            final BackupContext backupContext = from(request);
-            manager.startBackup(backupContext);
-            final StartBackupResponse response = new StartBackupResponse(STATUS_STARTED, MESSAGE_STARTED);
-            return Response.ok(response).build();
-        } else {
-            // Send error back
-            return Response.status(502).
-                    entity(new StartBackupResponse(STATUS_ALREADY_RUNNING, MESSAGE_ALREADY_RUNNING))
+        LOGGER.info("Processing start backup request = {}", request);
+        try {
+            if (manager.canStartBackup()) {
+                final BackupContext backupContext = from(request);
+                manager.startBackup(backupContext);
+                final StartBackupResponse response = new StartBackupResponse(
+                        STATUS_STARTED, MESSAGE_STARTED);
+                LOGGER.info("Backup response = {}",response);
+                return Response.ok(response).build();
+            } else {
+                // Send error back
+                LOGGER.warn("Backup already in progress: request = {}",request);
+                return Response.status(502).
+                        entity(new StartBackupResponse(STATUS_ALREADY_RUNNING,
+                                MESSAGE_ALREADY_RUNNING))
+                        .build();
+            }
+        } catch (Throwable t) {
+            LOGGER.error(
+                    String.format("Error creating backup: request = %s",
+                            request), t);
+            return Response.status(500).entity(
+                    ImmutableMap.of("error", t.getMessage()))
                     .build();
         }
     }
@@ -48,8 +68,12 @@ public class BackupResource {
     @Timed
     @Path("/status")
     public Response status() {
-        final BackupPlan plan = this.manager.getBackupPlan();
-        return Response.ok(PlanInfo.forPlan(plan)).build();
+        StageManager stageManager = manager.getStageManager();
+        return (stageManager != null) ?
+                Response.ok(
+                        StageInfo.forStage(
+                                manager.getStageManager())).build() :
+                Response.status(Response.Status.NOT_FOUND).build();
     }
 
     public static BackupContext from(StartBackupRequest request) {

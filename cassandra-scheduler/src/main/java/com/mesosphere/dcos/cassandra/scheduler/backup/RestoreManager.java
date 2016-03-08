@@ -5,6 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
@@ -32,10 +33,9 @@ public class RestoreManager {
 
     public static final String RESTORE_KEY = "restore";
 
-    private EventBus eventBus;
-    private RestorePlan plan;
-    private PlanManager planManager;
-    private PlanScheduler planScheduler;
+    private RestoreStage stage;
+    private StageManager stageManager;
+    private StageScheduler stageScheduler;
     private OfferAccepter offerAccepter;
     private CassandraTasks cassandraTasks;
     private volatile RestoreContext context;
@@ -44,15 +44,17 @@ public class RestoreManager {
     private PersistentReference<RestoreContext> persistentContext;
     private final CassandraPhaseStrategies phaseStrategies;
 
+    private Block getCurrentBlock(){
+        return (stageManager == null) ? null : stageManager.getCurrentBlock();
+    }
+
     @Inject
     public RestoreManager(ConfigurationManager configurationManager,
                           CassandraTasks cassandraTasks,
-                          EventBus eventBus,
                           ClusterTaskOfferRequirementProvider provider,
                           PersistenceFactory persistenceFactory,
                           CassandraPhaseStrategies phaseStrategies,
                           final Serializer<RestoreContext> serializer) {
-        this.eventBus = eventBus;
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
         this.configurationManager = configurationManager;
@@ -86,14 +88,14 @@ public class RestoreManager {
             return Lists.newArrayList();
         }
 
-        if (this.planManager != null) {
-            if (this.planManager.planIsComplete()) {
+        if (this.stageManager != null) {
+            if (this.stageManager.isComplete()) {
                 this.stopRestore();
             }
         }
 
         List<Protos.OfferID> acceptedOffers = new ArrayList<>();
-        final Block currentBlock = planManager.getCurrentBlock();
+        final Block currentBlock = stageManager.getCurrentBlock();
 
         // Nothing to schedule
         if (currentBlock == null) {
@@ -101,27 +103,32 @@ public class RestoreManager {
             return acceptedOffers;
         }
 
-        final int id = currentBlock.getId();
-        Optional<CassandraTask> task = cassandraTasks.findCassandraDaemonTaskbyId(id);
-        if (!task.isPresent()) {
+
+        final String daemon =
+                ((AbstractClusterTaskBlock)currentBlock).getDaemon();
+        final CassandraDaemonTask task = cassandraTasks.getDaemons().get
+                (daemon);
+        if(daemon == null){
             return acceptedOffers;
         }
 
         LOGGER.info("RestoreManager found next block to be scheduled: {}", currentBlock);
 
         // Find the offer from slave on which we the cassandra daemon is running for this block.
-        final String slaveId = task.get().getSlaveId();
+        final String slaveId = task.getSlaveId();
         List<Protos.Offer> chosenOne = new ArrayList<>(1);
         for (Protos.Offer offer : offers) {
             if (offer.getSlaveId().getValue().equals(slaveId)) {
-                LOGGER.info("Found slave on which the cassandra daemon is running: {}", slaveId);
+                LOGGER.info(
+                        "Found slave on which the cassandra daemon is running: {}",
+                        slaveId);
                 chosenOne.add(offer);
                 break;
             }
         }
 
         acceptedOffers.addAll(
-                planScheduler.resourceOffers(driver, chosenOne, currentBlock));
+                stageScheduler.resourceOffers(driver, chosenOne, currentBlock));
 
         LOGGER.info("RestoreManager accepted following offers: {}", acceptedOffers);
 
@@ -135,11 +142,11 @@ public class RestoreManager {
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(cassandraTasks)));
         final int servers = configurationManager.getServers();
-        this.plan = new RestorePlan(context, servers, cassandraTasks, eventBus, provider);
+        this.stage = new RestoreStage(context, cassandraTasks, provider);
 
         // TODO: Make install strategy pluggable
-        this.planManager = new DefaultPlanManager(plan,phaseStrategies);
-        this.planScheduler = new DefaultPlanScheduler(offerAccepter);
+        this.stageManager = new DefaultStageManager(stage,phaseStrategies);
+        this.stageScheduler = new DefaultStageScheduler(offerAccepter);
 
         try {
             this.context = context;
@@ -147,6 +154,13 @@ public class RestoreManager {
         } catch (PersistenceException e) {
             LOGGER.error("Error storing restore context into persistence store. Reason: ", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    public void update(Protos.TaskStatus status){
+        Block block = getCurrentBlock();
+        if(block != null){
+            block.update(status);
         }
     }
 
@@ -165,7 +179,9 @@ public class RestoreManager {
         return context == null;
     }
 
-    public RestorePlan getRestorePlan() {
-        return this.plan;
+    public RestoreStage getRestoreStage() {
+        return this.stage;
     }
+
+    public StageManager getStageManager() {return this.stageManager;}
 }

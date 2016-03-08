@@ -21,12 +21,15 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementP
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraReconciler;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.Reconciler;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.setup.Environment;
+import org.apache.mesos.reconciliation.DefaultReconciler;
+import org.apache.mesos.reconciliation.Reconciler;
+import org.apache.mesos.scheduler.plan.DefaultStageManager;
+import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
+import org.apache.mesos.scheduler.plan.StageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,8 +125,10 @@ public class SchedulerModule extends AbstractModule {
                 Names.named("ConfiguredPhaseStrategy")).to(
                 configuration.getPhaseStrategy()
         );
-        bind(CassandraPhaseStrategies.class).asEagerSingleton();
-        bind(CassandraPlanManager.class).asEagerSingleton();
+        bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
+                .asEagerSingleton();
+        bind(StageManager.class).to(CassandraStageManager.class)
+                .asEagerSingleton();
         bind(ExecutorClient.class).toInstance(ExecutorClient.create(
                 new HttpClientBuilder(environment).using(
                         configuration.getHttpClientConfiguration())
@@ -137,7 +142,7 @@ public class SchedulerModule extends AbstractModule {
         bind(EventBus.class).asEagerSingleton();
         bind(BackupManager.class).asEagerSingleton();
         bind(ClusterTaskOfferRequirementProvider.class);
-        bind(Reconciler.class).to(CassandraReconciler.class).asEagerSingleton();
+        bind(Reconciler.class).to(DefaultReconciler.class).asEagerSingleton();
         bind(RestoreManager.class).asEagerSingleton();
     }
 }

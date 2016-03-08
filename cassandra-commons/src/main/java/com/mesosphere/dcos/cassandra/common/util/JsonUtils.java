@@ -11,6 +11,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
  */
 public class JsonUtils {
 
+    private JsonUtils(){}
+
     public static final ObjectMapper YAML_MAPPER = new ObjectMapper(
             new YAMLFactory()).registerModule(new GuavaModule())
             .registerModule(new Jdk8Module());
