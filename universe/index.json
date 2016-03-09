@@ -1,0 +1,19 @@
+{
+  "packages":[
+    {
+      "currentVersion":"stub-universe",
+      "description":"Apache Cassandra running on Apache Mesos",
+      "framework":true,
+      "name":"cassandra",
+      "tags":[
+        "data",
+        "database",
+        "nosql"
+      ],
+      "versions":{
+        "stub-universe":"0"
+      }
+    }
+  ],
+  "version":"2.0.0-rc1"
+}
