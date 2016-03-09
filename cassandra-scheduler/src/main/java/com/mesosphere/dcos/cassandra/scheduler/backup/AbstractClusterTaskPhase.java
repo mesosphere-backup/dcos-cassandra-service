@@ -1,38 +1,31 @@
 package com.mesosphere.dcos.cassandra.scheduler.backup;
 
-import com.google.common.eventbus.EventBus;
 import com.mesosphere.dcos.cassandra.common.backup.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.mesos.scheduler.plan.*;
+import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.UUID;
 
 public abstract class AbstractClusterTaskPhase<B extends Block, C extends ClusterTaskContext> implements Phase {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractClusterTaskPhase.class);
 
-    protected int id;
-    protected int servers;
-    protected final EventBus eventBus;
-    protected C context;
-    protected List<B> blocks;
+    protected final UUID id = UUID.randomUUID();
+    protected final C context;
+    protected final List<B> blocks;
     protected final CassandraTasks cassandraTasks;
-    protected ClusterTaskOfferRequirementProvider provider;
-    protected PhaseStrategy strategy = new DefaultInstallStrategy(this);
+    protected final ClusterTaskOfferRequirementProvider provider;
 
     public AbstractClusterTaskPhase(
             C context,
-            int servers,
             CassandraTasks cassandraTasks,
-            EventBus eventBus,
-            ClusterTaskOfferRequirementProvider provider,
-            int id) {
-        this.id = id;
-        this.servers = servers;
-        this.eventBus = eventBus;
+            ClusterTaskOfferRequirementProvider provider) {
         this.provider = provider;
         this.context = context;
         this.cassandraTasks = cassandraTasks;
@@ -61,8 +54,8 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
     }
 
     @Override
-    public int getId() {
-        return 0;
+    public UUID getId() {
+        return id;
     }
 
     @Override
@@ -83,5 +76,24 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
         }
 
         return true;
+    }
+
+    @Override
+    public Block getBlock(UUID id) {
+        for (Block block : getBlocks()) {
+            if (block.getId().equals(id)) {
+                return block;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Block getBlock(int index) {
+        List<? extends Block> blocks = getBlocks();
+        if (index < blocks.size()) {
+            return blocks.get(index);
+        }
+        return null;
     }
 }

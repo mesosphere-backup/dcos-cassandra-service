@@ -277,31 +277,25 @@ public class ConfigurationManager implements Managed {
     }
 
     public BackupSnapshotTask createBackupSnapshotTask(
-            String frameworkId,
-            String slaveId,
-            CassandraTaskExecutor executor,
-            String hostname,
-            String name,
-            String role,
-            String principal,
+            CassandraDaemonTask daemon,
             BackupContext context) {
-        String unique = UUID.randomUUID().toString();
-        String id = name + "_" + unique;
+        String name = BackupSnapshotTask.nameForDaemon(daemon);
+        String id = name + "_" + UUID.randomUUID().toString();
 
         return BackupSnapshotTask.create(
                 id,
-                slaveId,
-                hostname,
-                executor,
+                daemon.getSlaveId(),
+                daemon.getHostname(),
+                daemon.getExecutor(),
                 name,
-                role,
-                principal,
+                daemon.getRole(),
+                daemon.getPrincipal(),
                 clusterTaskConfig.getCpus(),
                 clusterTaskConfig.getMemoryMb(),
                 clusterTaskConfig.getDiskMb(),
                 BackupSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
                         id,
-                        slaveId,
+                        daemon.getSlaveId(),
                         name,
                         Optional.empty()),
                 Lists.newArrayList(),
@@ -313,101 +307,85 @@ public class ConfigurationManager implements Managed {
     }
 
     public DownloadSnapshotTask createDownloadSnapshotTask(
-            String frameworkId,
-            String slaveId,
-            CassandraTaskExecutor executor,
-            String hostname,
-            String name,
-            String role,
-            String principal,
+            CassandraDaemonTask daemon,
             RestoreContext context) {
-        String unique = UUID.randomUUID().toString();
-        String id = name + "_" + unique;
+        String name = DownloadSnapshotTask.nameForDaemon(daemon);
+        String id = name + "_" + UUID.randomUUID().toString();
 
         return DownloadSnapshotTask.create(
                 id,
-                slaveId,
-                hostname,
-                executor,
+                daemon.getSlaveId(),
+                daemon.getHostname(),
+                daemon.getExecutor(),
                 name,
-                role,
-                principal,
+                daemon.getRole(),
+                daemon.getPrincipal(),
                 clusterTaskConfig.getCpus(),
                 clusterTaskConfig.getMemoryMb(),
                 clusterTaskConfig.getDiskMb(),
                 DownloadSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
                         id,
-                        slaveId,
+                        daemon.getSlaveId(),
                         name,
                         Optional.empty()),
                 context.getName(),
                 context.getExternalLocation(),
                 context.getS3AccessKey(),
                 context.getS3SecretKey(),
-                cassandraConfig.getVolume().getPath() + "/data/temp_" + context.getName());
+                cassandraConfig.getVolume().getPath() +
+                        "/data/temp_" + context.getName());
     }
 
     public RestoreSnapshotTask createRestoreSnapshotTask(
-            String frameworkId,
-            String slaveId,
-            CassandraTaskExecutor executor,
-            String hostname,
-            String name,
-            String role,
-            String principal,
+            CassandraDaemonTask daemon,
             RestoreContext context) {
-        String unique = UUID.randomUUID().toString();
-        String id = name + "_" + unique;
+        String name = RestoreSnapshotTask.nameForDaemon(daemon);
+        String id = name + "_" + UUID.randomUUID().toString();
 
         return RestoreSnapshotTask.create(
                 id,
-                slaveId,
-                hostname,
-                executor,
+                daemon.getSlaveId(),
+                daemon.getHostname(),
+                daemon.getExecutor(),
                 name,
-                role,
-                principal,
+                daemon.getRole(),
+                daemon.getPrincipal(),
                 clusterTaskConfig.getCpus(),
                 clusterTaskConfig.getMemoryMb(),
                 clusterTaskConfig.getDiskMb(),
                 RestoreSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
                         id,
-                        slaveId,
+                        daemon.getSlaveId(),
                         name,
                         Optional.empty()),
                 context.getName(),
                 context.getExternalLocation(),
                 context.getS3AccessKey(),
                 context.getS3SecretKey(),
-                cassandraConfig.getVolume().getPath() + "/data/temp_" + context.getName());
+                cassandraConfig.getVolume().getPath() +
+                        "/data/temp_" + context.getName());
     }
 
     public BackupUploadTask createBackupUploadTask(
-            String frameworkId,
-            String slaveId,
-            CassandraTaskExecutor executor,
-            String hostname,
-            String name,
-            String role,
-            String principal,
+            CassandraDaemonTask daemon,
             BackupContext context) {
-        String unique = UUID.randomUUID().toString();
-        String id = name + "_" + unique;
+        String name = BackupUploadTask.nameForDaemon(daemon);
+        String id = name + "_" + UUID.randomUUID().toString();
 
         return BackupUploadTask.create(
                 id,
-                slaveId,
-                hostname,
-                executor,
+                daemon.getSlaveId(),
+                daemon.getHostname(),
+                daemon.getExecutor(),
                 name,
-                role,
-                principal,
+                daemon.getRole(),
+                daemon.getPrincipal(),
                 clusterTaskConfig.getCpus(),
                 clusterTaskConfig.getMemoryMb(),
                 clusterTaskConfig.getDiskMb(),
                 BackupUploadStatus.create(Protos.TaskState.TASK_STAGING,
                         id,
-                        slaveId,
+                        daemon.getSlaveId(),
                         name,
                         Optional.empty()),
                 Lists.newArrayList(),

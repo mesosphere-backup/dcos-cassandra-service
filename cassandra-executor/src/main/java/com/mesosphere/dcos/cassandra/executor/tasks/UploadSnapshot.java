@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.executor.tasks;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
@@ -61,7 +62,7 @@ public class UploadSnapshot implements Runnable {
     }
 
     private void sendStatus(ExecutorDriver driver, Protos.TaskState state, String message) {
-        Protos.TaskStatus status = BackupSnapshotStatus.create(
+        Protos.TaskStatus status = BackupUploadStatus.create(
                 state,
                 cassandraTask.getId(),
                 cassandraTask.getSlaveId(),

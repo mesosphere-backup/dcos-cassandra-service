@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.UUID;
 
 public class CassandraDaemonBlock implements Block {
 
@@ -34,7 +35,7 @@ public class CassandraDaemonBlock implements Block {
         }
     }
 
-    private final int id;
+    private final UUID id = UUID.randomUUID();
     private final CassandraTasks cassandraTasks;
     private final CassandraOfferRequirementProvider provider;
     private final ExecutorClient client;
@@ -136,25 +137,25 @@ public class CassandraDaemonBlock implements Block {
     }
 
     public static CassandraDaemonBlock create(
-            final int id,
             final String name,
             final CassandraOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client) {
 
-        return new CassandraDaemonBlock(id, name, provider, cassandraTasks,
+        return new CassandraDaemonBlock(
+                name,
+                provider,
+                cassandraTasks,
                 client);
     }
 
     public CassandraDaemonBlock(
-            int id,
-            String name,
+            final String name,
             final CassandraOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client) {
         this.cassandraTasks = cassandraTasks;
         this.name = name;
-        this.id = id;
         this.provider = provider;
         this.client = client;
     }
@@ -238,8 +239,13 @@ public class CassandraDaemonBlock implements Block {
     }
 
     @Override
-    public int getId() {
+    public UUID getId() {
         return id;
+    }
+
+    @Override
+    public String getMessage() {
+        return null;
     }
 
 

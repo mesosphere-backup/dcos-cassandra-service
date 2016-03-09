@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
@@ -17,6 +18,13 @@ import static org.apache.mesos.protobuf.ResourceBuilder.*;
 
 public class BackupSnapshotTask extends CassandraTask {
     public static final String NAME_PREFIX = "snapshot-";
+
+    public static final String nameForDaemon(final String daemonName){
+        return NAME_PREFIX + daemonName;
+    }
+    public static final String nameForDaemon(final CassandraDaemonTask daemon){
+        return nameForDaemon(daemon.getName());
+    }
 
     public static class Builder {
 

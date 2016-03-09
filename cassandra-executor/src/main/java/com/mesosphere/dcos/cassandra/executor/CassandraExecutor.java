@@ -25,7 +25,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 
 public class CassandraExecutor implements Executor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraExecutor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(
+            CassandraExecutor.class);
 
     private ExecutorDriver driver;
     private volatile CassandraDaemonProcess cassandra;
@@ -33,7 +34,8 @@ public class CassandraExecutor implements Executor {
     private final ExecutorService clusterJobExecutorService;
 
     @Inject
-    public CassandraExecutor(final ScheduledExecutorService executor, final ExecutorService clusterJobExecutorService) {
+    public CassandraExecutor(final ScheduledExecutorService executor,
+                             final ExecutorService clusterJobExecutorService) {
         this.executor = executor;
         this.clusterJobExecutorService = clusterJobExecutorService;
     }
@@ -95,50 +97,64 @@ public class CassandraExecutor implements Executor {
                     break;
 
                 case BACKUP_SNAPSHOT:
-                    LOGGER.info("Launching task: {}", cassandraTask.getType().name());
+                    LOGGER.info("Launching task: {}",
+                            cassandraTask.getType().name());
                     // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
-                        final BackupSnapshot backupSnapshot = new BackupSnapshot(driver, probe, cassandraTask);
+                        final BackupSnapshot backupSnapshot = new BackupSnapshot(
+                                driver, probe, cassandraTask);
                         clusterJobExecutorService.submit(backupSnapshot);
                     }
                     break;
 
                 case BACKUP_UPLOAD:
-                    LOGGER.info("Launching task: {}", cassandraTask.getType().name());
+                    LOGGER.info("Launching task: {}",
+                            cassandraTask.getType().name());
                     // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
                         final BackupStorageDriver backupStorageDriver = new S3StorageDriver();
-                        final UploadSnapshot uploadSnapshot = new UploadSnapshot(driver, probe, cassandraTask, backupStorageDriver);
+                        final UploadSnapshot uploadSnapshot = new UploadSnapshot(
+                                driver,
+                                probe,
+                                cassandraTask, backupStorageDriver);
                         clusterJobExecutorService.submit(uploadSnapshot);
                     }
                     break;
 
                 case SNAPSHOT_DOWNLOAD:
-                    LOGGER.info("Launching task: {}", cassandraTask.getType().name());
+                    LOGGER.info("Launching task: {}",
+                            cassandraTask.getType().name());
                     // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
                         final BackupStorageDriver backupStorageDriver = new S3StorageDriver();
-                        final DownloadSnapshot downloadSnapshot = new DownloadSnapshot(driver, probe, cassandraTask, backupStorageDriver);
+                        final DownloadSnapshot downloadSnapshot = new DownloadSnapshot(
+                                driver, probe, cassandraTask,
+                                backupStorageDriver);
                         clusterJobExecutorService.submit(downloadSnapshot);
                     }
                     break;
 
                 case SNAPSHOT_RESTORE:
-                    LOGGER.info("Launching task: {}", cassandraTask.getType().name());
+                    LOGGER.info("Launching task: {}",
+                            cassandraTask.getType().name());
                     // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
                         final BackupStorageDriver backupStorageDriver = new S3StorageDriver();
-                        final RestoreSnapshot restoreSnapshot = new RestoreSnapshot(driver, probe, cassandraTask, backupStorageDriver);
+                        final RestoreSnapshot restoreSnapshot = new RestoreSnapshot(
+                                driver, probe, cassandraTask,
+                                backupStorageDriver);
                         clusterJobExecutorService.submit(restoreSnapshot);
                     }
                     break;
 
                 default:
-                    throw new NotImplementedException("Unsupported task type: {}", cassandraTask.getType().name());
+                    throw new NotImplementedException(
+                            "Unsupported task type: {}",
+                            cassandraTask.getType().name());
             }
 
         } catch (Throwable t) {

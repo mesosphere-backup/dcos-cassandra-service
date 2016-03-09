@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.executor.tasks;
 import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
@@ -127,7 +128,8 @@ public class RestoreSnapshot implements Runnable {
     }
 
     private void sendStatus(ExecutorDriver driver, Protos.TaskState state, String message) {
-        Protos.TaskStatus status = BackupSnapshotStatus.create(
+
+        Protos.TaskStatus status = RestoreSnapshotStatus.create(
                 state,
                 cassandraTask.getId(),
                 cassandraTask.getSlaveId(),

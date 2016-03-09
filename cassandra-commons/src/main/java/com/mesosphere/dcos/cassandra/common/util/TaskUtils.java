@@ -15,29 +15,17 @@ public class TaskUtils {
             Protos.TaskState.TASK_KILLED,
             Protos.TaskState.TASK_LOST));
 
+    private TaskUtils(){}
+
     public static int taskIdToNodeId(String taskId) {
-        final int start = taskId.indexOf("-");
-        final int end = taskId.indexOf("_");
-        return Integer.parseInt(taskId.substring(start + 1, end));
+        final String prefix = taskId.substring(0, taskId.indexOf('_'));
+        final String idString = prefix.substring(prefix.lastIndexOf('-') + 1);
+        return Integer.parseInt(idString);
     }
 
     public static int taskNameToNodeId(String taskId) {
-        final int start = taskId.indexOf("-");
+        final int start = taskId.lastIndexOf("-");
         return Integer.parseInt(taskId.substring(start + 1));
-    }
-
-    public static String getPersistenceId(Protos.TaskInfo taskInfo) {
-        for (Protos.Resource resource : taskInfo.getResourcesList()) {
-            if (resource.getName().equals("disk")) {
-                Protos.Resource.DiskInfo diskInfo = resource.getDisk();
-                if (diskInfo != null) {
-                    Protos.Resource.DiskInfo.Persistence persistence = diskInfo.getPersistence();
-                    return persistence.getId();
-                }
-            }
-        }
-
-        return null;
     }
 
     public static boolean isTerminated(Protos.TaskState state) {
