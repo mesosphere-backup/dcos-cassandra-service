@@ -1,72 +1,58 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
+import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraBlock;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlan;
-import com.mesosphere.dcos.cassandra.scheduler.plan.PlanFactory;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDeploy;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.Reconciler;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.offer.OfferAccepter;
-import org.apache.mesos.scheduler.plan.*;
+import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.scheduler.plan.DefaultPlanScheduler;
+import org.apache.mesos.scheduler.plan.PlanScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CassandraScheduler implements Scheduler, Managed {
-
     private final static Logger LOGGER = LoggerFactory.getLogger(
             CassandraScheduler.class);
 
     private MesosSchedulerDriver driver;
+    private BackupManager backupManager;
     private final IdentityManager identityManager;
     private final ConfigurationManager configurationManager;
     private final MesosConfig mesosConfig;
-    private PlanManager planManager;
-    private PlanScheduler planScheduler;
-    private CassandraRepairScheduler repairScheduler;
-    private OfferAccepter offerAccepter;
+    private final CassandraPlanManager planManager;
+    private final PlanScheduler planScheduler;
+    private final CassandraRepairScheduler repairScheduler;
+    private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraTasks cassandraTasks;
+    private final Reconciler reconciler;
     private final EventBus eventBus;
     private final ExecutorClient client;
-    private final AtomicBoolean registered = new AtomicBoolean(false);
-
-    private void init(){
-        final CassandraPlan plan = PlanFactory.getPlan(
-                offerRequirementProvider,
-                configurationManager,
-                eventBus,
-                cassandraTasks,
-                client);
-
-        offerAccepter = new OfferAccepter(Arrays.asList(
-                new LogOperationRecorder(),
-                new PersistentOperationRecorder(cassandraTasks)));
-        planManager = new DefaultPlanManager(getStrategy(plan));
-        planScheduler = new DefaultPlanScheduler(offerAccepter);
-        repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
-                offerAccepter, cassandraTasks);
-        registered.set(true);
-    }
+    private final RestoreManager restoreManager;
 
     @Inject
     public CassandraScheduler(
@@ -74,23 +60,36 @@ public class CassandraScheduler implements Scheduler, Managed {
             final IdentityManager identityManager,
             final MesosConfig mesosConfig,
             final PersistentOfferRequirementProvider offerRequirementProvider,
+            final CassandraPlanManager planManager,
             final CassandraTasks cassandraTasks,
+            final Reconciler reconciler,
             final ExecutorClient client,
-            final EventBus eventBus) {
+            final EventBus eventBus,
+            final BackupManager backupManager,
+            final RestoreManager restoreManager) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
+        this.backupManager = backupManager;
+        this.restoreManager = restoreManager;
         this.cassandraTasks = cassandraTasks;
         this.identityManager = identityManager;
         this.configurationManager = configurationManager;
         this.offerRequirementProvider = offerRequirementProvider;
+        offerAccepter = new OfferAccepter(Arrays.asList(
+                new LogOperationRecorder(),
+                new PersistentOperationRecorder(cassandraTasks)));
+        planScheduler = new DefaultPlanScheduler(offerAccepter);
+        repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
+                offerAccepter, cassandraTasks);
         this.client = client;
-
-
+        this.planManager = planManager;
+        this.reconciler = reconciler;
     }
 
     @Override
     public void start() throws Exception {
         registerFramework();
+        eventBus.register(planManager);
         eventBus.register(cassandraTasks);
     }
 
@@ -108,48 +107,91 @@ public class CassandraScheduler implements Scheduler, Managed {
                            Protos.FrameworkID frameworkId,
                            Protos.MasterInfo masterInfo) {
         final String frameworkIdValue = frameworkId.getValue();
-        LOGGER.info("Framework registered! ID = {}", frameworkIdValue);
+        LOGGER.info("Framework registered : id = {}", frameworkIdValue);
         try {
             identityManager.register(frameworkIdValue);
-        } catch (PersistenceException e) {
-            LOGGER.error("Error storing framework id: {}", e);
-            throw new RuntimeException("Error storing framework id", e);
+            planManager.setPlan(CassandraDeploy.create(
+                    offerRequirementProvider,
+                    configurationManager,
+                    cassandraTasks,
+                    client,
+                    reconciler));
+            reconciler.start();
+        } catch (Throwable t) {
+            String error = "An error occurred when registering " +
+                    "the framework and initializing the execution plan.";
+            LOGGER.error(error, t);
+            throw new RuntimeException(error, t);
         }
-        init();
-
-        // TODO: Perform reconciliation
     }
 
     @Override
     public void reregistered(SchedulerDriver driver,
                              Protos.MasterInfo masterInfo) {
         LOGGER.info("Re-registered with master: {}", masterInfo);
-        // TODO: Perform reconciliation
+        reconciler.start();
     }
 
     @Override
     public void resourceOffers(SchedulerDriver driver,
                                List<Protos.Offer> offers) {
         logOffers(offers);
-        // TODO: Add logic for handling tasks ops
-        // TODO: Wait for reconciliation to finish
+        reconciler.reconcile(driver);
 
-        if (registered.get()) {
+        if (identityManager.isRegistered()) {
 
             List<Protos.OfferID> acceptedOffers = new ArrayList<>();
+
             final Block currentBlock = planManager.getCurrentBlock();
 
+            LOGGER.info("Current execution block = {}",
+                    (currentBlock != null) ? currentBlock.toString() :
+                            "No block");
+
+            if (currentBlock == null) {
+                LOGGER.info("Current plan {} interrupted.",
+                        (planManager.isInterrupted()) ? "is" : "is not");
+            }
             acceptedOffers.addAll(
                     planScheduler.resourceOffers(driver, offers, currentBlock));
+
+            // Perform any required repairs
             List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(offers,
                     acceptedOffers);
             acceptedOffers.addAll(
                     repairScheduler.resourceOffers(
                             driver,
                             unacceptedOffers,
-                            (CassandraBlock)currentBlock));
+                            (currentBlock != null) ?
+                                    ImmutableSet.of(currentBlock.getName()):
+                                    Collections.emptySet()));
+
+            // Schedule backup tasks
+            unacceptedOffers = filterAcceptedOffers(offers,
+                    acceptedOffers);
+            acceptedOffers.addAll(
+                    backupManager.resourceOffers(
+                            driver,
+                            unacceptedOffers
+                    ));
+
+            // Schedule restore tasks
+            unacceptedOffers = filterAcceptedOffers(offers,
+                    acceptedOffers);
+            acceptedOffers.addAll(
+                    restoreManager.resourceOffers(
+                            driver,
+                            unacceptedOffers
+                    ));
 
             declineOffers(driver, acceptedOffers, offers);
+        } else {
+
+            LOGGER.info("Declining all offers : registered = {}, " +
+                            "reconciled = {}",
+                    identityManager.isRegistered(),
+                    reconciler.isReconciled());
+            declineOffers(driver, Collections.emptyList(), offers);
         }
     }
 
@@ -206,11 +248,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         LOGGER.error("Scheduler driver error: {}", message);
     }
 
-    // Utility methods
-    private PlanStrategy getStrategy(Plan plan) {
-        return new DefaultInstallStrategy(plan);
-    }
-
     private List<Protos.Offer> filterAcceptedOffers(List<Protos.Offer> offers,
                                                     List<Protos.OfferID> acceptedOfferIds) {
         return offers.stream().filter(
@@ -224,10 +261,26 @@ public class CassandraScheduler implements Scheduler, Managed {
                 acceptedOfferId -> acceptedOfferId.equals(offer.getId()));
     }
 
-    private void registerFramework() {
-        this.driver = new MesosSchedulerDriver(this,
-                identityManager.get().asInfo(),
+    private void registerFramework() throws IOException {
+        Identity identity = identityManager.get();
+        Optional<ByteString> secretBytes = identity.readSecretBytes();
+        if (secretBytes.isPresent()) {
+            // Authenticated if a non empty secret is provided.
+            Protos.Credential credential = Protos.Credential.newBuilder()
+                .setPrincipal(identity.getPrincipal())
+                .setSecretBytes(secretBytes.get())
+                .build();
+            this.driver = new MesosSchedulerDriver(
+                this,
+                identity.asInfo(),
+                mesosConfig.toZooKeeperUrl(),
+                credential);
+        } else {
+            this.driver = new MesosSchedulerDriver(this,
+                identity.asInfo(),
                 mesosConfig.toZooKeeperUrl());
+
+        }
         LOGGER.info("Starting driver...");
         final Protos.Status startStatus = this.driver.start();
         LOGGER.info("Driver started with status: {}", startStatus);

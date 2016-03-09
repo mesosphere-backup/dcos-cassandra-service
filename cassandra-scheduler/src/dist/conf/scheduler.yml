@@ -13,11 +13,15 @@ executor:
   jreLocation : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executorLocation : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
   cassandraLocation : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
+clusterTask:
+  cpus: ${CLUSTER_TASK_CPUS:-1}
+  memoryMb: ${CLUSTER_TASK_MEMORY_MB:-256}
+  diskMb: ${CLUSTER_TASK_DISK_MB:-0}
 cassandra:
   cpus: ${CASSANDRA_CPUS:-0.5}
   memoryMb: ${CASSANDRA_MEMORY_MB:-4096}
   diskMb: ${CASSANRA_DISK_MB:-10240}
-  version: 2.2.5
+  version: ${CASSANDRA_VERSION:-2.2.5}
   heap:
     sizeMb : ${CASSANDRA_HEAP_MB:-2048}
     newMb : ${CASSANDRA_HEAP_MB:-100}
@@ -98,3 +102,14 @@ server:
   adminConnectors:
     - type: http
       port: ${ADMIN_PORT:-8081}
+identity:
+  name : ${FRAMEWORK_NAME:-"cassandra"}
+  version : ${FRAMEWORK_VERSION:-"0.1.0"}
+  user : ${FRAMEWORK_USER:-"root"}
+  cluster : "${FRAMEWORK_NAME:-cassandra}_cluster"
+  role : "${FRAMEWORK_NAME:-cassandra}_role"
+  principal : "${FRAMEWORK_NAME:-cassandra}_principal"
+  failoverTimeoutS : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
+  checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
+seedsUrl: "http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds"
+phaseStrategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}

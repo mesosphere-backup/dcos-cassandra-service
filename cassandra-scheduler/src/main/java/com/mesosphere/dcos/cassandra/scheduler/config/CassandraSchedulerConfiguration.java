@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.config;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import io.dropwizard.Configuration;
 import io.dropwizard.client.HttpClientConfiguration;
 import org.slf4j.Logger;
@@ -24,7 +25,10 @@ public class CassandraSchedulerConfiguration extends Configuration {
     private String placementStrategy;
     private String planStrategy;
     private CassandraConfigParser cassandraConfig;
+    private ClusterTaskConfig clusterTaskConfig;
     private int apiPort;
+    private Identity identity;
+    private String phaseStrategy;
     private MesosConfig mesosConfig =
             MesosConfig.create(
                     "master.mesos:2181",
@@ -38,6 +42,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
                     10000L,
                     Optional.empty(),
                     250L);
+    private String seedsUrl;
 
     @JsonProperty("frameworkVersion")
     public String getVersion() {
@@ -104,7 +109,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
     @JsonProperty("cassandra")
     public CassandraSchedulerConfiguration setCassandraConfigParser
             (CassandraConfigParser
-                                                           cassandraConfig) {
+                     cassandraConfig) {
         this.cassandraConfig = cassandraConfig;
         return this;
     }
@@ -117,6 +122,17 @@ public class CassandraSchedulerConfiguration extends Configuration {
     @JsonProperty("executor")
     public CassandraSchedulerConfiguration setExecutorConfig(ExecutorConfig executorConfig) {
         this.executorConfig = executorConfig;
+        return this;
+    }
+
+    @JsonProperty("clusterTask")
+    public ClusterTaskConfig getClusterTaskConfig() {
+        return clusterTaskConfig;
+    }
+
+    @JsonProperty("clusterTask")
+    public CassandraSchedulerConfiguration setClusterTaskConfig(ClusterTaskConfig clusterTaskConfig) {
+        this.clusterTaskConfig = clusterTaskConfig;
         return this;
     }
 
@@ -187,28 +203,45 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
-    @JsonIgnore
+    @JsonProperty("seedsUrl")
     public String getSeedsUrl() {
-        return "http://" + name + ".marathon.mesos:" + apiPort + "/v1/seeds";
+        return seedsUrl;
     }
 
-    @JsonIgnore
+    @JsonProperty("seedsUrl")
+    public CassandraSchedulerConfiguration setSeedsUrl(String seedsUrl) {
+        this.seedsUrl = seedsUrl;
+        return this;
+    }
+
+    @JsonProperty("identity")
     public Identity getIdentity() {
-        return Identity.create(
-                name,
-                Optional.empty(),
-                version,
-                "root",
-                name + "_cluster",
-                name + "_role",
-                name + "_principal",
-                Long.valueOf(60 * 60 * 24 * 7),
-                Optional.empty(),
-                true);
+        return identity;
     }
-    @JsonIgnore
-    public CassandraConfig getCassandraConfig(){
 
-        return cassandraConfig.getCassandraConfig(name,getSeedsUrl());
+
+    @JsonProperty("identity")
+    public CassandraSchedulerConfiguration setIdentity(Identity identity) {
+        this.identity = identity;
+        return this;
     }
+
+    @JsonProperty("phaseStrategy")
+    public String getPhaseStrategy() {
+        return phaseStrategy;
+    }
+
+    @JsonProperty("phaseStrategy")
+    public CassandraSchedulerConfiguration setPhaseStrategy(
+            String phaseStrategy) {
+        this.phaseStrategy = phaseStrategy;
+        return this;
+    }
+
+    @JsonIgnore
+    public CassandraConfig getCassandraConfig() {
+        return cassandraConfig.getCassandraConfig(name, getSeedsUrl());
+    }
+
+
 }

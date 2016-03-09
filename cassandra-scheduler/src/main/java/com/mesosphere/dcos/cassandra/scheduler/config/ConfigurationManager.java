@@ -1,11 +1,17 @@
 package com.mesosphere.dcos.cassandra.scheduler.config;
 
+
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
@@ -25,11 +31,12 @@ public class ConfigurationManager implements Managed {
             LoggerFactory.getLogger(ConfigurationManager.class);
 
     private final PersistentReference<CassandraConfig> cassandraRef;
-
+    private final PersistentReference<ClusterTaskConfig> clusterTaskRef;
     private final PersistentReference<ExecutorConfig> executorRef;
     private final PersistentReference<Integer> serversRef;
     private final PersistentReference<Integer> seedsRef;
     private volatile CassandraConfig cassandraConfig;
+    private volatile ClusterTaskConfig clusterTaskConfig;
     private volatile ExecutorConfig executorConfig;
     private volatile int servers;
     private volatile int seeds;
@@ -48,13 +55,13 @@ public class ConfigurationManager implements Managed {
 
             if (serversOption.isPresent()) {
                 int servers = serversOption.get();
-                if (servers > this.servers) {
+                if (this.servers < servers) {
                     String error = String.format("The number of configured " +
                                     "servers (%d) is less than the current " +
                                     "number of configured servers (%d). Reduce the " +
                                     "number of servers by removing them from the cluster",
-                            servers,
-                            this.servers);
+                            this.servers,
+                            servers);
                     LOGGER.error(error);
                     throw new IllegalStateException(error);
                 }
@@ -63,11 +70,11 @@ public class ConfigurationManager implements Managed {
 
             if (seeds > servers) {
                 String error = String.format("The number of configured " +
-                                "seeds (%d) is less than the current number " +
+                                "seeds (%d) is greater than the current number " +
                                 "of configured servers (%d). Reduce the " +
                                 "number of seeds or increase the number of servers",
-                        servers,
-                        this.servers);
+                        seeds,
+                        servers);
                 LOGGER.error(error);
                 throw new IllegalStateException(error);
             }
@@ -89,6 +96,7 @@ public class ConfigurationManager implements Managed {
     @Inject
     public ConfigurationManager(
             @Named("ConfiguredCassandraConfig") CassandraConfig cassandraConfig,
+            @Named("ConfiguredClusterTaskConfig") ClusterTaskConfig clusterTaskConfig,
             @Named("ConfiguredExecutorConfig") ExecutorConfig executorConfig,
             @Named("ConfiguredServers") int servers,
             @Named("ConfiguredSeeds") int seeds,
@@ -99,10 +107,15 @@ public class ConfigurationManager implements Managed {
             PersistenceFactory persistenceFactory,
             Serializer<CassandraConfig> cassandraConfigSerializer,
             Serializer<ExecutorConfig> executorConfigSerializer,
+            Serializer<ClusterTaskConfig> clusterTaskConfigSerializer,
             Serializer<Integer> intSerializer) {
         this.cassandraRef = persistenceFactory.createReference(
                 "cassandraConfig",
                 cassandraConfigSerializer);
+        this.clusterTaskRef = persistenceFactory.createReference(
+                "clusterTaskConfig",
+                clusterTaskConfigSerializer
+        );
         this.executorRef = persistenceFactory.createReference(
                 "executorConfig",
                 executorConfigSerializer);
@@ -113,6 +126,7 @@ public class ConfigurationManager implements Managed {
                 "seeds",
                 intSerializer);
         this.cassandraConfig = cassandraConfig;
+        this.clusterTaskConfig = clusterTaskConfig;
         this.executorConfig = executorConfig;
         this.servers = servers;
         this.seeds = seeds;
@@ -131,12 +145,10 @@ public class ConfigurationManager implements Managed {
     }
 
     public CassandraConfig getCassandraConfig() {
-
         return cassandraConfig;
     }
 
     public ExecutorConfig getExecutorConfig() {
-
         return executorConfig;
     }
 
@@ -190,6 +202,17 @@ public class ConfigurationManager implements Managed {
         }
     }
 
+    public CassandraTaskExecutor updateExecutor(
+            CassandraTask task,
+            String newId) {
+
+        return hasCurrentExecutorConfig(task.getExecutor()) ?
+                task.getExecutor() :
+                createExecutor(task.getExecutor().getFrameworkId(),
+                        newId + "_executor");
+
+    }
+
     public CassandraTaskExecutor createExecutor(String frameworkId,
                                                 String id) {
 
@@ -224,7 +247,6 @@ public class ConfigurationManager implements Managed {
 
         String executor = name + "_" + unique + "_executor";
 
-
         return CassandraDaemonTask.create(
                 id,
                 slaveId,
@@ -241,8 +263,7 @@ public class ConfigurationManager implements Managed {
                         setApplication(cassandraConfig.getApplication()
                                 .toBuilder().setSeedProvider(
                                         CassandraApplicationConfig
-                                                .createDcosSeedProvider(
-                                                        seedsUrl))
+                                                .createDcosSeedProvider(seedsUrl))
                                 .build())
                         .build(),
                 CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
@@ -255,37 +276,202 @@ public class ConfigurationManager implements Managed {
         );
     }
 
-    public boolean hasCurrentConfig(final CassandraDaemonTask task){
+    public BackupSnapshotTask createBackupSnapshotTask(
+            String frameworkId,
+            String slaveId,
+            CassandraTaskExecutor executor,
+            String hostname,
+            String name,
+            String role,
+            String principal,
+            BackupContext context) {
+        String unique = UUID.randomUUID().toString();
+        String id = name + "_" + unique;
 
-        return task.getExecutor().getCommand().equals(executorConfig
+        return BackupSnapshotTask.create(
+                id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                clusterTaskConfig.getCpus(),
+                clusterTaskConfig.getMemoryMb(),
+                clusterTaskConfig.getDiskMb(),
+                BackupSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        slaveId,
+                        name,
+                        Optional.empty()),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getS3AccessKey(),
+                context.getS3SecretKey());
+    }
+
+    public DownloadSnapshotTask createDownloadSnapshotTask(
+            String frameworkId,
+            String slaveId,
+            CassandraTaskExecutor executor,
+            String hostname,
+            String name,
+            String role,
+            String principal,
+            RestoreContext context) {
+        String unique = UUID.randomUUID().toString();
+        String id = name + "_" + unique;
+
+        return DownloadSnapshotTask.create(
+                id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                clusterTaskConfig.getCpus(),
+                clusterTaskConfig.getMemoryMb(),
+                clusterTaskConfig.getDiskMb(),
+                DownloadSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        slaveId,
+                        name,
+                        Optional.empty()),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getS3AccessKey(),
+                context.getS3SecretKey(),
+                cassandraConfig.getVolume().getPath() + "/data/temp_" + context.getName());
+    }
+
+    public RestoreSnapshotTask createRestoreSnapshotTask(
+            String frameworkId,
+            String slaveId,
+            CassandraTaskExecutor executor,
+            String hostname,
+            String name,
+            String role,
+            String principal,
+            RestoreContext context) {
+        String unique = UUID.randomUUID().toString();
+        String id = name + "_" + unique;
+
+        return RestoreSnapshotTask.create(
+                id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                clusterTaskConfig.getCpus(),
+                clusterTaskConfig.getMemoryMb(),
+                clusterTaskConfig.getDiskMb(),
+                RestoreSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        slaveId,
+                        name,
+                        Optional.empty()),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getS3AccessKey(),
+                context.getS3SecretKey(),
+                cassandraConfig.getVolume().getPath() + "/data/temp_" + context.getName());
+    }
+
+    public BackupUploadTask createBackupUploadTask(
+            String frameworkId,
+            String slaveId,
+            CassandraTaskExecutor executor,
+            String hostname,
+            String name,
+            String role,
+            String principal,
+            BackupContext context) {
+        String unique = UUID.randomUUID().toString();
+        String id = name + "_" + unique;
+
+        return BackupUploadTask.create(
+                id,
+                slaveId,
+                hostname,
+                executor,
+                name,
+                role,
+                principal,
+                clusterTaskConfig.getCpus(),
+                clusterTaskConfig.getMemoryMb(),
+                clusterTaskConfig.getDiskMb(),
+                BackupUploadStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        slaveId,
+                        name,
+                        Optional.empty()),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getS3AccessKey(),
+                context.getS3SecretKey(),
+                cassandraConfig.getVolume().getPath() + "/data");
+    }
+
+    public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {
+        String id = task.getName() + "_" + UUID.randomUUID().toString();
+        return task.mutable()
+                .setId(id)
+                .setStatus(
+                        CassandraDaemonStatus.create(
+                                Protos.TaskState.TASK_STAGING,
+                                id,
+                                task.getSlaveId(),
+                                task.getName(),
+                                Optional.empty(),
+                                CassandraMode.STARTING)).build();
+
+    }
+
+    public boolean hasCurrentExecutorConfig(
+            final CassandraTaskExecutor executor) {
+       return executor.getCommand().equals(executorConfig
                 .getCommand()) &&
-                Double.compare(task.getExecutor().getCpus(),
-                executorConfig.getCpus()) == 0 &&
-                task.getExecutor().getDiskMb() ==
+                Double.compare(executor.getCpus(),
+                        executorConfig.getCpus()) == 0 &&
+                executor.getDiskMb() == executorConfig.getDiskMb() &&
+                Double.compare(executor.getCpus(),
+                        executorConfig.getCpus()) == 0 &&
+               executor.getDiskMb() ==
                         executorConfig.getDiskMb() &&
-                task.getExecutor().getMemoryMb() ==
+               executor.getMemoryMb() ==
                         executorConfig.getMemoryMb() &&
-                task.getExecutor().getUriStrings().containsAll(
-                       Arrays.asList(
-                               executorConfig.getCassandraLocationString(),
-                               executorConfig.getExecutorLocationString(),
-                               executorConfig.getJreLocationString()
-                       )
+               executor.getUriStrings().containsAll(
+                        Arrays.asList(
+                                executorConfig.getCassandraLocationString(),
+                                executorConfig.getExecutorLocationString(),
+                                executorConfig.getJreLocationString()
+                        )
                 ) &&
-                task.getExecutor().getHeapMb() == executorConfig.getHeapMb() &&
+               executor.getHeapMb() == executorConfig.getHeapMb();
+    }
+
+    public boolean hasCurrentConfig(final CassandraDaemonTask task) {
+
+        return  hasCurrentExecutorConfig(task.getExecutor()) &&
                 task.getConfig().equals(cassandraConfig);
 
     }
 
-    public CassandraDaemonTask updateConfig(final CassandraDaemonTask task){
+    public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) {
 
+        String id = task.getName() + "_" + UUID.randomUUID().toString();
         return CassandraDaemonTask.create(
-                task.getId(),
+                id,
                 task.getSlaveId(),
                 task.getHostname(),
-                createExecutor(
-                        task.getExecutor().getFrameworkId(),
-                        task.getExecutor().getId()),
+                updateExecutor(task,id),
                 task.getName(),
                 task.getRole(),
                 task.getPrincipal(),
@@ -301,7 +487,17 @@ public class ConfigurationManager implements Managed {
                                                         seedsUrl))
                                 .build())
                         .build(),
-                task.getStatus());
+                CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        task.getSlaveId(),
+                        task.getName(),
+                        Optional.empty(),
+                        CassandraMode.STARTING));
+    }
+
+    public CassandraTask updateId(CassandraTask task) {
+        return task.updateId(
+                task.getName() + "_" + UUID.randomUUID().toString());
     }
 
     @Override

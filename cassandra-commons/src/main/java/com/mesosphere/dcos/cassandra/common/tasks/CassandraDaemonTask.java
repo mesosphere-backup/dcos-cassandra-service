@@ -21,25 +21,15 @@ public class CassandraDaemonTask extends CassandraTask {
 
         private String id;
         private String slaveId;
-
         private String hostname;
-
         private CassandraTaskExecutor executor;
-
         private String name;
-
         private String role;
-
         private String principal;
-
         private double cpus;
-
         private int memoryMb;
-
         private int diskMb;
-
         private CassandraDaemonStatus status;
-
         private CassandraConfig config;
 
         private Builder(CassandraDaemonTask task) {
@@ -185,8 +175,7 @@ public class CassandraDaemonTask extends CassandraTask {
         }
     }
 
-    public static final String NAME_PREFIX = "server-";
-
+    public static final String NAME_PREFIX = "node-";
 
     @JsonCreator
     public static CassandraDaemonTask create(
@@ -328,6 +317,23 @@ public class CassandraDaemonTask extends CassandraTask {
                 id,
                 offer.getSlaveId().getValue(),
                 offer.getHostname(),
+                executor,
+                name,
+                role,
+                principal,
+                cpus,
+                memoryMb,
+                diskMb,
+                config,
+                (CassandraDaemonStatus) status);
+    }
+
+    @Override
+    public CassandraDaemonTask updateId(String id){
+        return create(
+                id,
+                slaveId,
+                hostname,
                 executor,
                 name,
                 role,

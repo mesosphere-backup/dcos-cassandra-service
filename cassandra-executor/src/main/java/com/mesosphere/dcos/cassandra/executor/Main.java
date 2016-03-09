@@ -64,9 +64,5 @@ public class Main extends Application<CassandraExecutorConfiguration> {
 
         environment.lifecycle().manage(
                 injector.getInstance(ExecutorDriverDispatcher.class));
-
-
-
-
     }
 }

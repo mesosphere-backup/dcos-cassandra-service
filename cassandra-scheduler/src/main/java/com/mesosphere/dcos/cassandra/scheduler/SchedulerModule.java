@@ -4,17 +4,27 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.backup.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraReconciler;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.Reconciler;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
@@ -38,6 +48,7 @@ public class SchedulerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(Environment.class).toInstance(this.environment);
 
         bind(CassandraSchedulerConfiguration.class).toInstance(
                 this.configuration);
@@ -48,20 +59,31 @@ public class SchedulerModule extends AbstractModule {
                         configuration.getCuratorConfig()));
 
         bind(new TypeLiteral<Serializer<Integer>>() {
-        }).toInstance(
-                IntegerStringSerializer.get());
+        }).toInstance(IntegerStringSerializer.get());
+
         bind(new TypeLiteral<Serializer<Boolean>>() {
-        }).toInstance(
-                BooleanStringSerializer.get());
+        }).toInstance(BooleanStringSerializer.get());
+
         bind(new TypeLiteral<Serializer<Identity>>() {
         }).toInstance(Identity.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<CassandraConfig>>() {
         }).toInstance(CassandraConfig.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<ExecutorConfig>>() {
         }).toInstance(ExecutorConfig.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<CassandraTask>>() {
-        })
-                .toInstance(CassandraTask.JSON_SERIALIZER);
+        }).toInstance(CassandraTask.JSON_SERIALIZER);
+
+        bind(new TypeLiteral<Serializer<ClusterTaskConfig>>() {
+        }).toInstance(ClusterTaskConfig.JSON_SERIALIZER);
+
+        bind(new TypeLiteral<Serializer<BackupContext>>() {
+        }).toInstance(BackupContext.JSON_SERIALIZER);
+
+        bind(new TypeLiteral<Serializer<RestoreContext>>() {
+        }).toInstance(RestoreContext.JSON_SERIALIZER);
 
         bind(MesosConfig.class).toInstance(configuration.getMesosConfig());
 
@@ -74,7 +96,9 @@ public class SchedulerModule extends AbstractModule {
         bind(CassandraConfig.class).annotatedWith(
                 Names.named("ConfiguredCassandraConfig")).toInstance(
                 configuration.getCassandraConfig());
-
+        bind(ClusterTaskConfig.class).annotatedWith(
+                Names.named("ConfiguredClusterTaskConfig")).toInstance(
+                configuration.getClusterTaskConfig());
         bind(ExecutorConfig.class).annotatedWith(
                 Names.named("ConfiguredExecutorConfig")).toInstance(
                 configuration.getExecutorConfig());
@@ -94,10 +118,16 @@ public class SchedulerModule extends AbstractModule {
         bindConstant().annotatedWith(
                 Names.named("ConfiguredPlanStrategy")).to(
                 configuration.getPlanStrategy());
+        bindConstant().annotatedWith(
+                Names.named("ConfiguredPhaseStrategy")).to(
+                configuration.getPhaseStrategy()
+        );
+        bind(CassandraPhaseStrategies.class).asEagerSingleton();
+        bind(CassandraPlanManager.class).asEagerSingleton();
         bind(ExecutorClient.class).toInstance(ExecutorClient.create(
                 new HttpClientBuilder(environment).using(
                         configuration.getHttpClientConfiguration())
-                        .build("example-http-client"),
+                        .build("executor-http-client"),
                 Executors.newCachedThreadPool()
         ));
         bind(IdentityManager.class).asEagerSingleton();
@@ -105,5 +135,9 @@ public class SchedulerModule extends AbstractModule {
         bind(PersistentOfferRequirementProvider.class);
         bind(CassandraTasks.class).asEagerSingleton();
         bind(EventBus.class).asEagerSingleton();
+        bind(BackupManager.class).asEagerSingleton();
+        bind(ClusterTaskOfferRequirementProvider.class);
+        bind(Reconciler.class).to(CassandraReconciler.class).asEagerSingleton();
+        bind(RestoreManager.class).asEagerSingleton();
     }
 }

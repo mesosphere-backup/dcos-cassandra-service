@@ -50,8 +50,10 @@ message CassandraTaskData{
 
     enum TYPE{
         CASSANDRA_DAEMON = 1;
-        BACKUP = 2;
-        RESTORE = 3;
+        BACKUP_SNAPSHOT = 2;
+        BACKUP_UPLOAD = 3;
+        SNAPSHOT_DOWNLOAD = 4;
+        SNAPSHOT_RESTORE = 5;
     }
 
     required TYPE type = 1;
@@ -73,6 +75,8 @@ message CassandraTaskData{
     optional string s3AccessKey = 9;
 
     optional string s3SecretKey = 10;
+
+    optional string localLocation = 11;
 }
 
 message CassandraStatus{
