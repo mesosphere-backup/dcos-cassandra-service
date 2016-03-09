@@ -56,14 +56,14 @@ public class Identity {
     @JsonCreator
     public static final Identity create(
             @JsonProperty("name") final String name,
-            @JsonProperty("id") final Optional<String> id,
+            @JsonProperty("id") final String id,
             @JsonProperty("version") final String version,
             @JsonProperty("user") final String user,
             @JsonProperty("cluster") final String cluster,
             @JsonProperty("role") final String role,
             @JsonProperty("principal") final String principal,
             @JsonProperty("failoverTimeoutS") final Long failoverTimeoutS,
-            @JsonProperty("secret") final Optional<String> secret,
+            @JsonProperty("secret") final String secret,
             @JsonProperty("checkpoint") final boolean checkpoint) {
 
         return create(
@@ -82,14 +82,14 @@ public class Identity {
 
     public static final Identity create(
             final String name,
-            final Optional<String> id,
+            final String id,
             final String version,
             final String user,
             final String cluster,
             final String role,
             final String principal,
             final Duration failoverTimeout,
-            final Optional<String> secret,
+            final String secret,
             final boolean checkpoint) {
         return new Identity(
                 name,
@@ -108,7 +108,7 @@ public class Identity {
     @JsonProperty("name")
     private final String name;
     @JsonProperty("id")
-    private final Optional<String> id;
+    private final String id;
     @JsonProperty("version")
     private final String version;
     @JsonProperty("cluster")
@@ -122,19 +122,19 @@ public class Identity {
     @JsonIgnore
     private final Duration failoverTimeout;
     @JsonProperty("secret")
-    private final Optional<String> secret;
+    private final String secret;
     @JsonProperty("checkpoint")
     private final boolean checkpoint;
 
     public Identity(String name,
-                    Optional<String> id,
+                    String id,
                     String version,
                     String user,
                     String cluster,
                     String role,
                     String principal,
                     Duration failoverTimeout,
-                    Optional<String> secret, boolean checkpoint) {
+                    String secret, boolean checkpoint) {
         this.name = name;
         this.id = id;
         this.version = version;
@@ -152,7 +152,7 @@ public class Identity {
         return name;
     }
 
-    public Optional<String> getId() {
+    public String getId() {
         return id;
     }
 
@@ -189,14 +189,14 @@ public class Identity {
         return checkpoint;
     }
 
-    public Optional<String> getSecret() {
+    public String getSecret() {
         return secret;
     }
 
     public Identity register(final String id) {
         return create(
                 name,
-                Optional.of(id),
+                id,
                 version,
                 user,
                 cluster,
@@ -210,17 +210,14 @@ public class Identity {
     public Protos.FrameworkInfo asInfo() {
         Protos.FrameworkInfo.Builder builder = Protos.FrameworkInfo.newBuilder()
                 .setName(name)
+                .setId(Protos.FrameworkID
+                        .newBuilder()
+                        .setValue(id))
                 .setPrincipal(principal)
                 .setRole(role)
                 .setUser(user)
                 .setCheckpoint(checkpoint)
                 .setFailoverTimeout(failoverTimeout.getSeconds());
-
-
-        id.map(id -> builder.setId(
-                Protos.FrameworkID
-                        .newBuilder()
-                        .setValue(id)));
 
         return builder.build();
     }
@@ -279,10 +276,10 @@ public class Identity {
     }
 
     public Optional<ByteString> readSecretBytes() throws IOException {
-        if (!secret.isPresent() || secret.get().isEmpty()) {
+        if (secret == null || secret.isEmpty()) {
             return Optional.empty();
         }
-        FileInputStream fin = new FileInputStream(new File(secret.get()));
+        FileInputStream fin = new FileInputStream(new File(secret));
         return Optional.of(ByteString.copyFrom(IOUtils.toByteArray(fin)));
     }
 }

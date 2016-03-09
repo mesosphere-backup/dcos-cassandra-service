@@ -103,7 +103,7 @@ public class IdentityManager implements Managed {
         return identity;
     }
 
-    public boolean isRegistered(){ return identity.getId().isPresent();}
+    public boolean isRegistered(){ return !identity.getId().isEmpty();}
 
     public synchronized void register(String id) throws PersistenceException {
         this.reference.store(identity.register(id));
@@ -125,8 +125,8 @@ public class IdentityManager implements Managed {
             LOGGER.info("Retrieved persisted identity = {}", persisted);
             validate(identity, persisted);
 
-            if (persisted.getId().isPresent()) {
-                identity = identity.register(persisted.getId().get());
+            if (!persisted.getId().isEmpty()) {
+                identity = identity.register(persisted.getId());
             }
         }
 
