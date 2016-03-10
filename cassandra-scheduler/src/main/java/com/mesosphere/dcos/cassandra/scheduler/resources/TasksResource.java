@@ -21,6 +21,8 @@ import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import org.apache.mesos.Protos;
+import org.apache.mesos.protobuf.TaskUtil;
 import org.glassfish.jersey.server.ManagedAsync;
 
 import javax.ws.rs.*;
@@ -31,6 +33,7 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Path("/v1/nodes")
 @Produces(MediaType.APPLICATION_JSON)
@@ -121,5 +124,37 @@ public class TasksResource {
         } else {
             throw new NotFoundException();
         }
+    }
+
+    @GET
+    @Path("connect/native")
+    public List<String> nativeConnection(){
+        return tasks.getDaemons().values().stream()
+                .filter(daemonTask ->
+                        Protos.TaskState.TASK_RUNNING.equals(
+                                daemonTask.getStatus().getState()))
+                .map(daemonTask ->
+                        daemonTask.getHostname() +
+                                ":" +
+                                daemonTask.getConfig()
+                                        .getApplication()
+                        .getNativeTransportPort())
+                .collect(Collectors.toList());
+    }
+
+    @GET
+    @Path("connect/rpc")
+    public List<String> rpcConnection(){
+        return tasks.getDaemons().values().stream()
+                .filter(daemonTask ->
+                        Protos.TaskState.TASK_RUNNING.equals(
+                                daemonTask.getStatus().getState()))
+                .map(daemonTask ->
+                        daemonTask.getHostname() +
+                                ":" +
+                                daemonTask.getConfig()
+                                        .getApplication()
+                                        .getRpcPort())
+                .collect(Collectors.toList());
     }
 }
