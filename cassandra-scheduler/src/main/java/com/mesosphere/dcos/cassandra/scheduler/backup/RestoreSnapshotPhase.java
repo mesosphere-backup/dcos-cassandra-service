@@ -1,6 +1,8 @@
 package com.mesosphere.dcos.cassandra.scheduler.backup;
 
-import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

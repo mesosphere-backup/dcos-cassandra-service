@@ -89,9 +89,7 @@ cassandra:
   windowsTimerInterval : ${CASSANDRA_WINDOWS_TIMER_INTERVAL:-1}
 nodes: ${NODES:-3}
 seedNodes: ${SEED_NODES:-2}
-updateConfig: ${UPDATE_CONFIG:-false}
 placementStrategy: ${PLACEMENT_STRATEGY:-NODE}
-planStrategy: ${PLAN_STRATEGY:-INSTALL}
 apiPort : ${API_PORT:-8080}
 server:
   adminContextPath: /

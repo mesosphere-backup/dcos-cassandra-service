@@ -1,8 +1,9 @@
-package com.mesosphere.dcos.cassandra.common.backup;
+package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
 import java.io.IOException;

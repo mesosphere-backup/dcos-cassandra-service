@@ -3,10 +3,8 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
-import org.apache.mesos.scheduler.plan.StageManager;
-import org.apache.mesos.scheduler.plan.api.StageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

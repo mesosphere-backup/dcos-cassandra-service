@@ -4,8 +4,8 @@ package com.mesosphere.dcos.cassandra.scheduler.tasks;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
@@ -35,13 +35,6 @@ import java.util.stream.Collectors;
 public class CassandraTasks implements Managed {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraTasks.class);
-    private static final Set<Protos.TaskState> terminalStates = new HashSet<>(
-            Arrays.asList(
-                    Protos.TaskState.TASK_ERROR,
-                    Protos.TaskState.TASK_FAILED,
-                    Protos.TaskState.TASK_FINISHED,
-                    Protos.TaskState.TASK_KILLED,
-                    Protos.TaskState.TASK_LOST));
 
     private final IdentityManager identity;
     private final ConfigurationManager configuration;
@@ -413,16 +406,6 @@ public class CassandraTasks implements Managed {
 
         return terminatedTasks;
     }
-
-    public List<CassandraTask> getTasksToRepair() {
-        List<CassandraTask> terminatedTasks = tasks
-                .values().stream()
-                .filter(task -> TaskUtils.needsRecheduling(task))
-                .collect(Collectors.toList());
-
-        return terminatedTasks;
-    }
-
 
     public List<CassandraTask> getRunningTasks() {
         final List<CassandraTask> runningTasks = tasks.values().stream()

@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Stage;
 
@@ -13,11 +14,14 @@ public class CassandraStage implements Stage {
 
 
     public static final CassandraStage create(
+            final ConfigurationManager configuration,
             final DeploymentManager deployment,
             final BackupManager backup,
             final RestoreManager restore) {
 
-        return new CassandraStage(deployment,
+        return new CassandraStage(
+                configuration,
+                deployment,
                 backup,
                 restore
         );
@@ -26,12 +30,15 @@ public class CassandraStage implements Stage {
     private final DeploymentManager deployment;
     private final BackupManager backup;
     private final RestoreManager restore;
+    private final ConfigurationManager configuration;
 
     public CassandraStage(
+            final ConfigurationManager configuration,
             final DeploymentManager deployment,
             final BackupManager backup,
             final RestoreManager restore) {
 
+        this.configuration = configuration;
         this.deployment = deployment;
         this.backup = backup;
         this.restore = restore;
@@ -39,7 +46,6 @@ public class CassandraStage implements Stage {
 
     @Override
     public List<? extends Phase> getPhases() {
-
         return ImmutableList.<Phase>builder()
                 .addAll(deployment.getPhases())
                 .addAll(backup.getPhases())
@@ -49,7 +55,10 @@ public class CassandraStage implements Stage {
 
     @Override
     public List<String> getErrors() {
-        return Collections.emptyList();
+        return ImmutableList.<String>builder()
+                .addAll(configuration.getErrors())
+                .addAll(deployment.getErrors())
+                .build();
     }
 
 

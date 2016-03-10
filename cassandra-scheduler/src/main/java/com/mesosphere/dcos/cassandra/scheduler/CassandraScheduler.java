@@ -112,6 +112,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         try {
             identityManager.register(frameworkIdValue);
             stageManager.setStage(CassandraStage.create(
+                    configurationManager,
                     DeploymentManager.create(
                             offerRequirementProvider,
                             configurationManager,

@@ -21,7 +21,6 @@ public class CassandraSchedulerConfiguration extends Configuration {
     private String version;
     private int servers;
     private int seeds;
-    private boolean updateConfig;
     private String placementStrategy;
     private String planStrategy;
     private CassandraConfigParser cassandraConfig;
@@ -158,18 +157,6 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
-    @JsonProperty("updateConfig")
-    public boolean updateConfig() {
-        return updateConfig;
-    }
-
-    @JsonProperty("updateConfig")
-    public CassandraSchedulerConfiguration updateConfig(
-            boolean updateConfig) {
-        this.updateConfig = updateConfig;
-        return this;
-    }
-
     @JsonProperty("placementStrategy")
     public String getPlacementStrategy() {
         return placementStrategy;
@@ -181,16 +168,6 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
-    @JsonProperty("planStrategy")
-    public String getPlanStrategy() {
-        return planStrategy;
-    }
-
-    @JsonProperty("planStrategy")
-    public CassandraSchedulerConfiguration setPlanStrategy(String planStrategy) {
-        this.planStrategy = planStrategy;
-        return this;
-    }
 
     @JsonProperty("apiPort")
     public int getApiPort() {

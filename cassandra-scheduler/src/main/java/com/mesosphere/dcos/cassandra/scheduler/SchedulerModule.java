@@ -4,8 +4,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
@@ -14,7 +14,7 @@ import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerialize
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
-import com.mesosphere.dcos.cassandra.scheduler.backup.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
@@ -27,7 +27,6 @@ import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.setup.Environment;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.scheduler.plan.DefaultStageManager;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.StageManager;
 import org.slf4j.Logger;
@@ -112,15 +111,8 @@ public class SchedulerModule extends AbstractModule {
                 Names.named("ConfiguredSeeds")).to(
                 configuration.getSeeds());
         bindConstant().annotatedWith(
-                Names.named("ConfiguredUpdateConfig")).to(
-                configuration.updateConfig());
-        bindConstant().annotatedWith(
                 Names.named("ConfiguredPlacementStrategy")).to(
                 configuration.getPlacementStrategy());
-
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredPlanStrategy")).to(
-                configuration.getPlanStrategy());
         bindConstant().annotatedWith(
                 Names.named("ConfiguredPhaseStrategy")).to(
                 configuration.getPhaseStrategy()
