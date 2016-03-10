@@ -1,4 +1,4 @@
-package com.mesosphere.dcos.cassandra.scheduler.backup;
+package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;

@@ -274,10 +274,25 @@ public class CassandraDaemonProcess {
         return this.probe;
     }
 
+    private String getReplaceIp() throws UnknownHostException {
+        if(task.getConfig().getReplaceIp().trim().isEmpty()){
+            return "";
+        } else {
+            InetAddress address =
+                    InetAddress.getByName(
+                    task.getConfig().getReplaceIp());
+            return "-Dcassandra.replace_address=" + address.getHostAddress();
+        }
+    }
+
     private Process createDaemon() throws IOException {
 
-        final ProcessBuilder builder = new ProcessBuilder(paths.cassandraRun()
-                .toString(), "-f")
+        final ProcessBuilder builder = new ProcessBuilder(
+                paths.cassandraRun()
+                .toString(),
+                getReplaceIp(),
+                "-f"
+               )
                 .directory(new File(System.getProperty("user.dir")))
                 .redirectOutput(new File("cassandra-stdout.log"))
                 .redirectError(new File("cassandra-stderr.log"));

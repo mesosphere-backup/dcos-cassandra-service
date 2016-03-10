@@ -1,13 +1,12 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.collect.ImmutableList;
-import com.mesosphere.dcos.cassandra.scheduler.backup.BackupManager;
-import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Stage;
 
-import java.util.Collections;
 import java.util.List;
 
 public class CassandraStage implements Stage {

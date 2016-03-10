@@ -22,14 +22,17 @@ public class DownloadSnapshot implements Runnable {
     private DownloadSnapshotTask cassandraTask;
     private BackupStorageDriver backupStorageDriver;
 
-    public DownloadSnapshot(ExecutorDriver driver, NodeProbe probe, CassandraTask cassandraTask, BackupStorageDriver backupStorageDriver) {
+    public DownloadSnapshot(ExecutorDriver driver,
+                            NodeProbe probe,
+                            CassandraTask cassandraTask,
+                            String nodeId,
+                            BackupStorageDriver backupStorageDriver) {
         this.probe = probe;
         this.driver = driver;
         this.backupStorageDriver = backupStorageDriver;
         this.cassandraTask = (DownloadSnapshotTask) cassandraTask;
-        final int nodeId = TaskUtils.taskIdToNodeId(this.cassandraTask.getId());
         this.context = new RestoreContext();
-        context.setNodeId(nodeId + "");
+        context.setNodeId(nodeId);
         context.setName(this.cassandraTask.getBackupName());
         context.setExternalLocation(this.cassandraTask.getExternalLocation());
         context.setLocalLocation(this.cassandraTask.getLocalLocation());

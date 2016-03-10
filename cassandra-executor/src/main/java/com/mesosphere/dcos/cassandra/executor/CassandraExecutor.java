@@ -30,8 +30,14 @@ public class CassandraExecutor implements Executor {
 
     private ExecutorDriver driver;
     private volatile CassandraDaemonProcess cassandra;
+    private String nodeId = null;
     private final ScheduledExecutorService executor;
     private final ExecutorService clusterJobExecutorService;
+
+    private String getNodeId(String executorName){
+        int end = executorName.indexOf("_");
+        return executorName.substring(0,end);
+    }
 
     @Inject
     public CassandraExecutor(final ScheduledExecutorService executor,
@@ -47,6 +53,7 @@ public class CassandraExecutor implements Executor {
                            Protos.FrameworkInfo frameworkInfo,
                            Protos.SlaveInfo slaveInfo) {
         this.driver = driver;
+        this.nodeId = getNodeId(executorInfo.getName());
     }
 
     @Override
@@ -118,7 +125,9 @@ public class CassandraExecutor implements Executor {
                         final UploadSnapshot uploadSnapshot = new UploadSnapshot(
                                 driver,
                                 probe,
-                                cassandraTask, backupStorageDriver);
+                                cassandraTask,
+                                nodeId,
+                                backupStorageDriver);
                         clusterJobExecutorService.submit(uploadSnapshot);
                     }
                     break;
@@ -131,7 +140,10 @@ public class CassandraExecutor implements Executor {
                         final NodeProbe probe = cassandra.getProbe();
                         final BackupStorageDriver backupStorageDriver = new S3StorageDriver();
                         final DownloadSnapshot downloadSnapshot = new DownloadSnapshot(
-                                driver, probe, cassandraTask,
+                                driver,
+                                probe,
+                                cassandraTask,
+                                nodeId,
                                 backupStorageDriver);
                         clusterJobExecutorService.submit(downloadSnapshot);
                     }
@@ -143,10 +155,9 @@ public class CassandraExecutor implements Executor {
                     // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
-                        final BackupStorageDriver backupStorageDriver = new S3StorageDriver();
                         final RestoreSnapshot restoreSnapshot = new RestoreSnapshot(
                                 driver, probe, cassandraTask,
-                                backupStorageDriver);
+                                nodeId);
                         clusterJobExecutorService.submit(restoreSnapshot);
                     }
                     break;

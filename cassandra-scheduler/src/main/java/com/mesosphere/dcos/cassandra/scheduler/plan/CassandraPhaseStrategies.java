@@ -2,10 +2,10 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.mesosphere.dcos.cassandra.scheduler.backup.BackupSnapshotPhase;
-import com.mesosphere.dcos.cassandra.scheduler.backup.DownloadSnapshotPhase;
-import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreSnapshotPhase;
-import com.mesosphere.dcos.cassandra.scheduler.backup.UploadBackupPhase;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupSnapshotPhase;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.DownloadSnapshotPhase;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreSnapshotPhase;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.UploadBackupPhase;
 import org.apache.mesos.scheduler.plan.*;
 
 public class CassandraPhaseStrategies implements PhaseStrategyFactory{
