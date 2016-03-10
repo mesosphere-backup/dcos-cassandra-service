@@ -1,18 +1,15 @@
 package com.mesosphere.dcos.cassandra.scheduler.backup;
 
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
@@ -21,10 +18,7 @@ import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * BackupManager is responsible for orchestrating cluster-wide backup.
@@ -36,32 +30,21 @@ public class BackupManager {
             BackupManager.class);
     public static final String BACKUP_KEY = "backup";
 
-    private BackupStage backupStage;
-    private StageManager stageManager;
-    private StageScheduler stageScheduler;
-    private OfferAccepter offerAccepter;
-    private CassandraTasks cassandraTasks;
-    private volatile BackupContext backupContext;
-    private ConfigurationManager configurationManager;
-    private ClusterTaskOfferRequirementProvider provider;
-    private PersistentReference<BackupContext> persistentBackupContext;
-    private final CassandraPhaseStrategies phaseStrategies;
-
-    private Block getCurrentBlock(){
-        return (stageManager == null) ? null : stageManager.getCurrentBlock();
-    }
+    private final CassandraTasks cassandraTasks;
+    private final ClusterTaskOfferRequirementProvider provider;
+    private final PersistentReference<BackupContext> persistentBackupContext;
+    private volatile BackupSnapshotPhase backup = null;
+    private volatile UploadBackupPhase upload = null;
+    private volatile BackupContext backupContext = null;
 
     @Inject
-    public BackupManager(ConfigurationManager configurationManager,
-                         CassandraTasks cassandraTasks,
-                         ClusterTaskOfferRequirementProvider provider,
-                         PersistenceFactory persistenceFactory,
-                         CassandraPhaseStrategies phaseStrategies,
-                         final Serializer<BackupContext> serializer) {
+    public BackupManager(
+            CassandraTasks cassandraTasks,
+            ClusterTaskOfferRequirementProvider provider,
+            PersistenceFactory persistenceFactory,
+            final Serializer<BackupContext> serializer) {
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
-        this.configurationManager = configurationManager;
-        this.phaseStrategies = phaseStrategies;
 
         // Load BackupManager from state store
         this.persistentBackupContext = persistenceFactory.createReference(
@@ -69,12 +52,13 @@ public class BackupManager {
         try {
             final Optional<BackupContext> loadedBackupContext = persistentBackupContext.load();
             if (loadedBackupContext.isPresent()) {
-                this.backupContext = loadedBackupContext.get();
+                BackupContext backupContext = loadedBackupContext.get();
+                // Recovering from failure
+                if (backupContext != null) {
+                    startBackup(backupContext);
+                }
             }
-            // Recovering from failure
-            if (backupContext != null) {
-                startBackup(backupContext);
-            }
+
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error loading backup context from peristence store. Reason: ",
@@ -83,89 +67,30 @@ public class BackupManager {
         }
     }
 
-    public List<Protos.OfferID> resourceOffers(SchedulerDriver driver,
-                                               List<Protos.Offer> offers) {
-        LOGGER.info("BackupManager got offers: {}", offers.size());
-
-        // Check if a backup is in progress or not.
-        if (this.backupContext == null) {
-            LOGGER.info(
-                    "BackupContext is null, hence no backup is in progress, ignoring offers.");
-            // No backup in progress
-            return Lists.newArrayList();
-        }
-
-        if (this.stageManager != null) {
-            if (this.stageManager.isComplete()) {
-                this.stopBackup();
-            }
-        }
-
-        List<Protos.OfferID> acceptedOffers = new ArrayList<>();
-        final Block currentBlock = stageManager.getCurrentBlock();
-
-        // Nothing to schedule
-        if (currentBlock == null) {
-            LOGGER.info("Nothing to schedule as current block is null: {}",
-                    currentBlock);
-            return acceptedOffers;
-        }
-
-        LOGGER.info("BackupManager found next block to be scheduled: {}",
-                currentBlock);
-
-        final String daemon =
-                ((AbstractClusterTaskBlock)currentBlock).getDaemon();
-        final CassandraDaemonTask task = cassandraTasks.getDaemons().get
-                (daemon);
-        if(daemon == null){
-            return acceptedOffers;
-        }
-
-        // Find the offer from slave on which we the cassandra daemon is running for this block.
-        final String slaveId = task.getSlaveId();
-        List<Protos.Offer> chosenOne = new ArrayList<>(1);
-        for (Protos.Offer offer : offers) {
-            if (offer.getSlaveId().getValue().equals(slaveId)) {
-                LOGGER.info(
-                        "Found slave on which the cassandra daemon is running: {}",
-                        slaveId);
-                chosenOne.add(offer);
-                break;
-            }
-        }
-
-        acceptedOffers.addAll(
-                stageScheduler.resourceOffers(driver, chosenOne, currentBlock));
-
-        LOGGER.info("BackupManager accepted following offers: {}",
-                acceptedOffers);
-
-        return acceptedOffers;
-    }
 
     public void startBackup(BackupContext context) {
         LOGGER.info("Starting backup");
 
-        this.offerAccepter = new OfferAccepter(Arrays.asList(
-                new LogOperationRecorder(),
-                new PersistentOperationRecorder(cassandraTasks)));
+        if(canStartBackup()) {
+            try {
+                persistentBackupContext.store(context);
+                this.backup = new BackupSnapshotPhase(
+                        context,
+                        cassandraTasks,
+                        provider);
+                this.upload = new UploadBackupPhase(
+                        context,
+                        cassandraTasks,
+                        provider);
+                backupContext = context;
+            } catch (PersistenceException e) {
+                LOGGER.error(
+                        "Error storing backup context into persistence store. Reason: ",
+                        e);
 
-        backupStage = new BackupStage(context, cassandraTasks, provider);
-        stageManager = new DefaultStageManager(backupStage, phaseStrategies);
-        stageScheduler = new DefaultStageScheduler(offerAccepter);
-
-        try {
-            persistentBackupContext.store(context);
-            this.backupContext = context;
-        } catch (PersistenceException e) {
-            LOGGER.error(
-                    "Error storing backup context into persistence store. Reason: ",
-                    e);
-            throw new RuntimeException(e);
+            }
         }
     }
-
     public void stopBackup() {
         LOGGER.info("Stopping backup");
         try {
@@ -180,19 +105,32 @@ public class BackupManager {
 
     public boolean canStartBackup() {
         // If backupContext is null, then we can start backup; otherwise, not.
+        return backupContext == null || isComplete();
+    }
+
+    public boolean canStartRestore() {
+        // If restoreContext is null, then we can start restore; otherwise, not.
         return backupContext == null;
     }
 
-    public void update(Protos.TaskStatus status){
-        Block block = getCurrentBlock();
-        if(block != null){
-            block.update(status);
+    public boolean inProgress(){
+
+        return (backupContext != null && !isComplete());
+    }
+
+    public boolean isComplete() {
+
+        return (backupContext != null &&
+                backup != null && backup.isComplete() &&
+                upload != null && upload.isComplete());
+    }
+
+    public List<Phase> getPhases(){
+        if(backupContext == null){
+            return Collections.emptyList();
+        } else {
+            return Arrays.asList(backup, upload);
         }
     }
 
-    public BackupStage getBackupStage() {
-        return this.backupStage;
-    }
-
-    public StageManager getStageManager() {return this.stageManager;}
 }

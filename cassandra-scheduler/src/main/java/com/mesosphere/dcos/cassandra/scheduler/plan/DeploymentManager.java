@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
@@ -7,64 +8,52 @@ import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
-import org.apache.mesos.scheduler.plan.Stage;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-public class CassandraDeploy implements Stage {
+public class DeploymentManager {
 
-
-    public static final CassandraDeploy create(
-            final CassandraOfferRequirementProvider offerRequirementProvider,
+    public static final DeploymentManager create(
+            final CassandraOfferRequirementProvider provider,
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client,
-            final Reconciler reconciler) {
-
-        return new CassandraDeploy(
-                offerRequirementProvider,
+            final Reconciler reconciler){
+        return new DeploymentManager(provider,
                 configurationManager,
                 cassandraTasks,
                 client,
                 reconciler);
     }
 
-    private final CassandraDaemonPhase daemonPhase;
-    private final CassandraOfferRequirementProvider offerRequirementProvider;
-    private final ReconciliationPhase reconciliationPhase;
-    private final List<Phase> phases;
+    private final ReconciliationPhase reconciliation;
+    private final CassandraDaemonPhase deploy;
 
-    public CassandraDeploy(
-            final CassandraOfferRequirementProvider offerRequirementProvider,
+    public DeploymentManager(
+            final CassandraOfferRequirementProvider provider,
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client,
             final Reconciler reconciler) {
-        this.offerRequirementProvider = offerRequirementProvider;
-        this.daemonPhase = CassandraDaemonPhase.create(
+        this.deploy = CassandraDaemonPhase.create(
                 configurationManager,
-                this.offerRequirementProvider,
                 cassandraTasks,
+                provider,
                 client);
-        this.reconciliationPhase = ReconciliationPhase.create(reconciler);
-        this.phases = Arrays.asList(reconciliationPhase, daemonPhase);
+        this.reconciliation = ReconciliationPhase.create(reconciler);
     }
 
-    @Override
     public List<? extends Phase> getPhases() {
-        return phases;
+
+        return Arrays.asList(reconciliation, deploy);
     }
 
-    @Override
     public List<String> getErrors() {
-        return Collections.emptyList();
+        return deploy.getErrors();
     }
 
-
-    @Override
     public boolean isComplete() {
-        return daemonPhase.isComplete();
+        return deploy.isComplete();
     }
 }

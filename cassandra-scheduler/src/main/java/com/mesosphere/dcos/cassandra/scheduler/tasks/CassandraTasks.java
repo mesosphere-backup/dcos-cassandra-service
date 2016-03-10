@@ -94,7 +94,7 @@ public class CassandraTasks implements Managed {
         }
     }
 
-    public void update(CassandraTask task) throws PersistenceException {
+    private void update(CassandraTask task) throws PersistenceException {
         persistent.put(task.getName(), task);
         if (tasks.containsKey(task.getName())) {
             byId.remove(tasks.get(task.getName()).getId());
@@ -114,7 +114,9 @@ public class CassandraTasks implements Managed {
     public void update(Protos.TaskInfo taskInfo) {
         try {
             final CassandraTask task = CassandraTask.parse(taskInfo);
-            update(task);
+            synchronized (persistent) {
+                update(task);
+            }
         } catch (Exception e) {
             LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
         }
@@ -127,7 +129,7 @@ public class CassandraTasks implements Managed {
         }
         tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
                 tasks.entrySet().stream()
-                        .filter(entry -> entry.getKey() != name)
+                        .filter(entry -> !entry.getKey().equals(name))
                         .collect(Collectors.toMap(
                                 entry -> entry.getKey(),
                                 entry -> entry.getValue())))
@@ -374,6 +376,8 @@ public class CassandraTasks implements Managed {
             } else {
                 LOGGER.info("Received status update for unrecorded task: " +
                         "status = {}", status);
+                LOGGER.info("Tasks = {}",tasks);
+                LOGGER.info("Ids = {}",byId);
             }
         }
     }

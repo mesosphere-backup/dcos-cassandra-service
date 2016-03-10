@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,21 +33,9 @@ public class ClusterTaskPlacementStrategy implements PlacementStrategy {
     public List<Protos.SlaveID> getAgentsToColocate(Protos.TaskInfo taskInfo) {
         List<Protos.SlaveID> agentsToColocate = new ArrayList<>();
         // Colocate this task with the corresponding Cassandra node task
-        final Optional<Protos.TaskInfo> matchingNodeTask = getMatchingNodeTask(
-                taskInfo);
-        if (matchingNodeTask.isPresent()) {
-            agentsToColocate.add(matchingNodeTask.get().getSlaveId());
-        }
+        Arrays.asList(taskInfo.getSlaveId());
         LOGGER.info("Colocating task: {} with agent: {}",
                 taskInfo.getTaskId().getValue(), agentsToColocate);
         return agentsToColocate;
-    }
-
-    private Optional<Protos.TaskInfo> getMatchingNodeTask(Protos.TaskInfo thisTaskInfo) {
-        final int nodeId = TaskUtils.taskIdToNodeId(thisTaskInfo.getTaskId().getValue());
-        final Optional<CassandraDaemonTask> first = cassandraTasks.getDaemons().values().stream()
-                .filter(task -> nodeId == TaskUtils.taskIdToNodeId(task.getId())).findFirst();
-
-        return Optional.of(first.isPresent() ? first.get().toProto() : null);
     }
 }

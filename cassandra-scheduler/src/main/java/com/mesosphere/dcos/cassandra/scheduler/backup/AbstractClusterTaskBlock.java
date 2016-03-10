@@ -93,6 +93,15 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
         this.status = Status.Pending;
         this.context = context;
         this.cassandraTasks = cassandraTasks;
+        Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
+        if(taskOption.isPresent()){
+            CassandraTask task = taskOption.get();
+            if (Protos.TaskState.TASK_FINISHED.equals(
+                    task.getStatus().getState()
+            )) {
+                setStatus(Status.Complete);
+            }
+        }
     }
 
     public abstract String getName();
@@ -115,7 +124,6 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                 } else if (TaskUtils.isTerminated(task.getStatus().getState())) {
                     //need to progress with a new task
                     cassandraTasks.remove(getName());
-                    getOrCreateTask(context);
                     LOGGER.info("Reallocating task {} for block {}",
                             getName(),
                             id);

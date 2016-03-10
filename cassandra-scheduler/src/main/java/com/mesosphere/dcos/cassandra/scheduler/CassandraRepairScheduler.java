@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -68,7 +69,9 @@ public class CassandraRepairScheduler {
             final Set<String> ignore) {
 
         List<CassandraTask> terminated =
-                cassandraTasks.getTasksToRepair().stream()
+                cassandraTasks.getDaemons().values().stream()
+                        .filter(task -> TaskUtils.isTerminated(task.getStatus
+                                ().getState()))
                         .filter(task -> !ignore.contains(task.getName()))
                         .collect(Collectors.toList());
         LOGGER.info("Terminated tasks size: {}", terminated.size());

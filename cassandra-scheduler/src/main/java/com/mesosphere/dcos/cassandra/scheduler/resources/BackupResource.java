@@ -64,18 +64,6 @@ public class BackupResource {
         }
     }
 
-    @GET
-    @Timed
-    @Path("/status")
-    public Response status() {
-        StageManager stageManager = manager.getStageManager();
-        return (stageManager != null) ?
-                Response.ok(
-                        StageInfo.forStage(
-                                manager.getStageManager())).build() :
-                Response.status(Response.Status.NOT_FOUND).build();
-    }
-
     public static BackupContext from(StartBackupRequest request) {
         final BackupContext context =
                 new BackupContext();

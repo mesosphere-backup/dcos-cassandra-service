@@ -47,19 +47,6 @@ public class RestoreResource {
         }
     }
 
-    @GET
-    @Timed
-    @Path("/status")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response status() {
-        StageManager stageManager = manager.getStageManager();
-        return (stageManager != null) ?
-                Response.ok(
-                        StageInfo.forStage(
-                                manager.getStageManager())).build() :
-                Response.status(Response.Status.NOT_FOUND).build();
-    }
-
     public static RestoreContext from(StartRestoreRequest request) {
         final RestoreContext context =
                 new RestoreContext();

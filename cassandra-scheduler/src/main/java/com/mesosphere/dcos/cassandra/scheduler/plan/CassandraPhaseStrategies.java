@@ -8,15 +8,12 @@ import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreSnapshotPhase;
 import com.mesosphere.dcos.cassandra.scheduler.backup.UploadBackupPhase;
 import org.apache.mesos.scheduler.plan.*;
 
-/**
- * Created by kowens on 2/25/16.
- */
 public class CassandraPhaseStrategies implements PhaseStrategyFactory{
 
     private final Class<?> phaseStrategy;
     @Inject
     public CassandraPhaseStrategies(
-            @Named("ConfiguredPhaseStrategy")String phaseStrategy) {
+            @Named("ConfiguredPhaseStrategy") final String phaseStrategy) {
         try {
             this.phaseStrategy =
                     this.getClass().getClassLoader().loadClass(phaseStrategy);

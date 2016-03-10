@@ -14,7 +14,8 @@ import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDeploy;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStage;
+import com.mesosphere.dcos.cassandra.scheduler.plan.DeploymentManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.MesosSchedulerDriver;
@@ -39,7 +40,6 @@ public class CassandraScheduler implements Scheduler, Managed {
             CassandraScheduler.class);
 
     private MesosSchedulerDriver driver;
-    private BackupManager backupManager;
     private final IdentityManager identityManager;
     private final ConfigurationManager configurationManager;
     private final MesosConfig mesosConfig;
@@ -52,7 +52,8 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final Reconciler reconciler;
     private final EventBus eventBus;
     private final ExecutorClient client;
-    private final RestoreManager restoreManager;
+    private final BackupManager backup;
+    private final RestoreManager restore;
 
     @Inject
     public CassandraScheduler(
@@ -65,12 +66,10 @@ public class CassandraScheduler implements Scheduler, Managed {
             final Reconciler reconciler,
             final ExecutorClient client,
             final EventBus eventBus,
-            final BackupManager backupManager,
-            final RestoreManager restoreManager) {
+            final BackupManager backup,
+            final RestoreManager restore) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
-        this.backupManager = backupManager;
-        this.restoreManager = restoreManager;
         this.cassandraTasks = cassandraTasks;
         this.identityManager = identityManager;
         this.configurationManager = configurationManager;
@@ -84,6 +83,8 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.client = client;
         this.stageManager = stageManager;
         this.reconciler = reconciler;
+        this.backup = backup;
+        this.restore = restore;
     }
 
     @Override
@@ -110,12 +111,16 @@ public class CassandraScheduler implements Scheduler, Managed {
         LOGGER.info("Framework registered : id = {}", frameworkIdValue);
         try {
             identityManager.register(frameworkIdValue);
-            stageManager.setStage(CassandraDeploy.create(
-                    offerRequirementProvider,
-                    configurationManager,
-                    cassandraTasks,
-                    client,
-                    reconciler));
+            stageManager.setStage(CassandraStage.create(
+                    DeploymentManager.create(
+                            offerRequirementProvider,
+                            configurationManager,
+                            cassandraTasks,
+                            client,
+                            reconciler
+                    ),
+                    backup,
+                    restore));
             reconciler.start(cassandraTasks.get().values().stream().map(
                     task -> task.getStatus().toProto()
             ).collect(Collectors.toList()));
@@ -170,24 +175,6 @@ public class CassandraScheduler implements Scheduler, Managed {
                                     ImmutableSet.of(currentBlock.getName()) :
                                     Collections.emptySet()));
 
-            // Schedule backup tasks
-            unacceptedOffers = filterAcceptedOffers(offers,
-                    acceptedOffers);
-            acceptedOffers.addAll(
-                    backupManager.resourceOffers(
-                            driver,
-                            unacceptedOffers
-                    ));
-
-            // Schedule restore tasks
-            unacceptedOffers = filterAcceptedOffers(offers,
-                    acceptedOffers);
-            acceptedOffers.addAll(
-                    restoreManager.resourceOffers(
-                            driver,
-                            unacceptedOffers
-                    ));
-
             declineOffers(driver, acceptedOffers, offers);
         } else {
 
@@ -219,20 +206,10 @@ public class CassandraScheduler implements Scheduler, Managed {
         } catch (Exception ex) {
             LOGGER.error("Error updating Tasks with status", ex);
         }
-        try{
+        try {
             stageManager.update(status);
-        } catch(Exception ex){
-            LOGGER.error("Error updating Stage Manager with status",ex);
-        }
-        try{
-            backupManager.update(status);
-        } catch(Exception ex){
-            LOGGER.error("Error updating Backup Manager with status",ex);
-        }
-        try{
-            restoreManager.update(status);
-        } catch(Exception ex){
-            LOGGER.error("Error updating Restore Manager with status",ex);
+        } catch (Exception ex) {
+            LOGGER.error("Error updating Stage Manager with status", ex);
         }
 
     }
