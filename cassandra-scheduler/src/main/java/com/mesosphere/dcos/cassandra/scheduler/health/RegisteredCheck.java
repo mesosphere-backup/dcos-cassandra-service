@@ -17,9 +17,9 @@ public class RegisteredCheck extends HealthCheck {
     }
 
     protected Result check() throws Exception {
-        Optional<String> id = manager.get().getId();
-        if (id.isPresent()) {
-            return Result.healthy("Framework registered with id = " + id.get());
+        String id = manager.get().getId();
+        if (!id.isEmpty()) {
+            return Result.healthy("Framework registered with id = " + id);
         }
         return Result.unhealthy("Framework is not yet registered");
     }
