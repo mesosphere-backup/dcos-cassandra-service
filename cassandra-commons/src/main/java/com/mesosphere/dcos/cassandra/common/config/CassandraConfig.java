@@ -225,7 +225,7 @@ public class CassandraConfig {
             };
 
 
-    public Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 

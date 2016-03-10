@@ -242,7 +242,8 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getCpus(),
                 cassandraConfig.getMemoryMb(),
                 cassandraConfig.getDiskMb(),
-                cassandraConfig.mutable().setVolume(
+                cassandraConfig.mutable()
+                        .setVolume(
                         cassandraConfig.getVolume().withId()).
                         setApplication(cassandraConfig.getApplication()
                                 .toBuilder().setSeedProvider(
@@ -259,6 +260,34 @@ public class ConfigurationManager implements Managed {
                         CassandraMode.STARTING)
 
         );
+    }
+
+    public CassandraDaemonTask moveDaemon(CassandraDaemonTask daemonTask) {
+
+        return CassandraDaemonTask.create(
+                daemonTask.getId(),
+                "",
+                "",
+                daemonTask.getExecutor(),
+                daemonTask.getName(),
+                daemonTask.getRole(),
+                daemonTask.getPrincipal(),
+                cassandraConfig.getCpus(),
+                cassandraConfig.getMemoryMb(),
+                cassandraConfig.getDiskMb(),
+                cassandraConfig.mutable().setReplaceIp(daemonTask.getHostname())
+                        .setVolume(
+                                cassandraConfig.getVolume().withId()).
+                        setApplication(cassandraConfig.getApplication()
+                                .toBuilder().setSeedProvider(
+                                        CassandraApplicationConfig
+                                                .createDcosSeedProvider(
+                                                        seedsUrl))
+                                .build())
+                        .build(),
+              daemonTask.getStatus());
+
+
     }
 
     public BackupSnapshotTask createBackupSnapshotTask(
@@ -441,9 +470,9 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getCpus(),
                 cassandraConfig.getMemoryMb(),
                 cassandraConfig.getDiskMb(),
-                cassandraConfig.mutable().setVolume(
-                        task.getConfig().getVolume()).
-                        setApplication(cassandraConfig.getApplication()
+                cassandraConfig.mutable()
+                        .setVolume(task.getConfig().getVolume())
+                        .setApplication(cassandraConfig.getApplication()
                                 .toBuilder().setSeedProvider(
                                         CassandraApplicationConfig
                                                 .createDcosSeedProvider(

@@ -19,7 +19,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.glassfish.jersey.server.ManagedAsync;
 
@@ -31,7 +31,6 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Path("/v1/nodes")
 @Produces(MediaType.APPLICATION_JSON)
@@ -81,27 +80,45 @@ public class TasksResource {
 
     @GET
     @Path("/{name}/info")
-    public DaemonInfo getInfo(@PathParam("name") final String name){
+    public DaemonInfo getInfo(@PathParam("name") final String name) {
 
         Optional<CassandraDaemonTask> taskOption =
                 Optional.ofNullable(tasks.getDaemons().get(name));
-        if(taskOption.isPresent()){
+        if (taskOption.isPresent()) {
             return DaemonInfo.create(taskOption.get());
-        }else {
+        } else {
             throw new NotFoundException();
         }
     }
 
     @PUT
     @Path("/restart")
-    public void restart(@QueryParam("node") final String name){
+    public void restart(@QueryParam("node") final String name) {
         Optional<CassandraDaemonTask> taskOption =
                 Optional.ofNullable(tasks.getDaemons().get(name));
-        if(taskOption.isPresent()){
+        if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
             client.shutdown(task.getHostname(),
                     task.getExecutor().getApiPort());
-        }else {
+        } else {
+            throw new NotFoundException();
+        }
+    }
+
+    @PUT
+    @Path("/replace")
+    public void replace(@QueryParam("node") final String name)
+            throws Exception {
+        Optional<CassandraDaemonTask> taskOption =
+                Optional.ofNullable(tasks.getDaemons().get(name));
+        if (taskOption.isPresent()) {
+            CassandraDaemonTask task = taskOption.get();
+            tasks.moveDaemon(task);
+            if (!TaskUtils.isTerminated(task.getStatus().getState())) {
+                client.shutdown(task.getHostname(),
+                        task.getExecutor().getApiPort());
+            }
+        } else {
             throw new NotFoundException();
         }
     }
