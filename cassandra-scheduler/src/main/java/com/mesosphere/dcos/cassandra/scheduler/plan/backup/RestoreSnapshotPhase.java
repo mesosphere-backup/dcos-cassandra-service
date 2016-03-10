@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.AbstractClusterTaskPhase;
+import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,5 +37,10 @@ public class RestoreSnapshotPhase extends AbstractClusterTaskPhase<RestoreSnapsh
                 provider,
                 context
         )).collect(Collectors.toList());
+    }
+
+    @Override
+    public String getName() {
+        return "Restore";
     }
 }

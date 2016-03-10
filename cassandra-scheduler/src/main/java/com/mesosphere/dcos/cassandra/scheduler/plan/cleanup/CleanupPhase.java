@@ -1,36 +1,36 @@
-package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
+package com.mesosphere.dcos.cassandra.scheduler.plan.cleanup;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * During UploadBackupPhase, snapshotted data will be uploaded to external location.
- */
-public class UploadBackupPhase extends AbstractClusterTaskPhase<UploadBackupBlock, BackupContext> {
+public class CleanupPhase extends AbstractClusterTaskPhase<CleanupBlock,
+        CleanupContext> {
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(UploadBackupPhase.class);
+            LoggerFactory.getLogger(CleanupPhase.class);
 
-    public UploadBackupPhase(
-            BackupContext context,
+    public CleanupPhase(
+            CleanupContext context,
             CassandraTasks cassandraTasks,
             ClusterTaskOfferRequirementProvider provider) {
         super(context, cassandraTasks, provider);
     }
 
-    protected List<UploadBackupBlock> createBlocks() {
+    protected List<CleanupBlock> createBlocks() {
+        final Set<String> nodes = new HashSet<>(context.getNodes());
         final List<String> daemons =
                 new ArrayList<>(cassandraTasks.getDaemons().keySet());
         Collections.sort(daemons);
-        return daemons.stream().map(daemon -> UploadBackupBlock.create(
+        return daemons.stream().filter(
+                deamon -> nodes.contains(deamon)
+        ).map(daemon -> CleanupBlock.create(
                 daemon,
                 cassandraTasks,
                 provider,
@@ -39,7 +39,5 @@ public class UploadBackupPhase extends AbstractClusterTaskPhase<UploadBackupBloc
     }
 
     @Override
-    public String getName() {
-        return "Upload";
-    }
+    public String getName() {return "Cleanup";}
 }

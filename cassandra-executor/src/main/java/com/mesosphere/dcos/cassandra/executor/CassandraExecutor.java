@@ -5,12 +5,10 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import com.mesosphere.dcos.cassandra.executor.backup.S3StorageDriver;
-import com.mesosphere.dcos.cassandra.executor.tasks.BackupSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.DownloadSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.RestoreSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.UploadSnapshot;
+import com.mesosphere.dcos.cassandra.executor.tasks.*;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.mesos.Executor;
@@ -159,6 +157,15 @@ public class CassandraExecutor implements Executor {
                                 driver, probe, cassandraTask,
                                 nodeId);
                         clusterJobExecutorService.submit(restoreSnapshot);
+                    }
+                    break;
+
+                case CLEANUP:
+                    if (cassandra != null && cassandra.isOpen()) {
+                        final NodeProbe probe = cassandra.getProbe();
+                        final Cleanup cleanup = new Cleanup(
+                                driver, probe, (CleanupTask)cassandraTask);
+                        clusterJobExecutorService.submit(cleanup);
                     }
                     break;
 

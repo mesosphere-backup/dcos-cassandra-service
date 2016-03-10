@@ -251,7 +251,7 @@ public class CassandraDaemonBlock implements Block {
 
     @Override
     public String getMessage() {
-        return null;
+        return "Deploying Cassandra node " + getName();
     }
 
 

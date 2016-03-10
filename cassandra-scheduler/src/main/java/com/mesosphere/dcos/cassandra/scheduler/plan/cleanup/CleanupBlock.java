@@ -1,9 +1,10 @@
-package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
+package com.mesosphere.dcos.cassandra.scheduler.plan.cleanup;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
@@ -14,29 +15,29 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class BackupSnapshotBlock extends AbstractClusterTaskBlock<BackupContext> {
+public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            BackupSnapshotBlock.class);
+            CleanupBlock.class);
 
-    public static BackupSnapshotBlock create(
-            final String daemon,
-            final CassandraTasks cassandraTasks,
-            final CassandraOfferRequirementProvider provider,
-            final BackupContext context) {
-        return new BackupSnapshotBlock(daemon, cassandraTasks, provider,
-                context);
+    public static CleanupBlock create(
+            String daemon,
+            CassandraTasks cassandraTasks,
+            CassandraOfferRequirementProvider provider,
+            CleanupContext context) {
+        return new CleanupBlock(daemon, cassandraTasks, provider, context);
     }
 
-    public BackupSnapshotBlock(
-            final String daemon,
-            final CassandraTasks cassandraTasks,
-            final CassandraOfferRequirementProvider provider,
-            final BackupContext context) {
+    public CleanupBlock(
+            String daemon,
+            CassandraTasks cassandraTasks,
+            CassandraOfferRequirementProvider provider,
+            CleanupContext context) {
         super(daemon, cassandraTasks, provider, context);
     }
 
+
     @Override
-    protected Optional<CassandraTask> getOrCreateTask(BackupContext context)
+    protected Optional<CassandraTask> getOrCreateTask(CleanupContext context)
             throws PersistenceException {
         CassandraDaemonTask daemonTask =
                 cassandraTasks.getDaemons().get(daemon);
@@ -45,13 +46,13 @@ public class BackupSnapshotBlock extends AbstractClusterTaskBlock<BackupContext>
             setStatus(Status.Complete);
             return Optional.empty();
         }
-        return Optional.of(cassandraTasks.getOrCreateBackupSnapshot(
+        return Optional.of(cassandraTasks.getOrCreateCleanup(
                 daemonTask,
                 context));
     }
 
     @Override
     public String getName() {
-        return BackupSnapshotTask.nameForDaemon(daemon);
+        return CleanupTask.nameForDaemon(daemon);
     }
 }

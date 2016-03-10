@@ -54,6 +54,7 @@ message CassandraTaskData{
         BACKUP_UPLOAD = 3;
         SNAPSHOT_DOWNLOAD = 4;
         SNAPSHOT_RESTORE = 5;
+        CLEANUP = 6;
     }
 
     required TYPE type = 1;

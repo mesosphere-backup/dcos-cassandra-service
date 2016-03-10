@@ -10,6 +10,8 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
@@ -39,6 +41,8 @@ import static org.apache.mesos.offer.ResourceUtils.*;
                 "SNAPSHOT_DOWNLOAD"),
         @JsonSubTypes.Type(value = RestoreSnapshotTask.class, name =
                 "SNAPSHOT_RESTORE"),
+        @JsonSubTypes.Type(value = CleanupTask.class, name =
+                "CLEANUP"),
 })
 public abstract class CassandraTask {
 
@@ -75,7 +79,8 @@ public abstract class CassandraTask {
         BACKUP_SNAPSHOT,
         BACKUP_UPLOAD,
         SNAPSHOT_DOWNLOAD,
-        SNAPSHOT_RESTORE
+        SNAPSHOT_RESTORE,
+        CLEANUP
     }
 
     public static CassandraTask parse(Protos.TaskInfo info)
@@ -230,6 +235,32 @@ public abstract class CassandraTask {
                         data.getS3AccessKey(),
                         data.getS3SecretKey(),
                         data.getLocalLocation()
+                );
+
+            case CLEANUP:
+                return CleanupTask.create(
+                        info.getTaskId().getValue(),
+                        info.getSlaveId().getValue(),
+                        data.getAddress(),
+                        CassandraTaskExecutor.parse(info.getExecutor()),
+                        info.getName(),
+                        role,
+                        principal,
+                        getReservedCpu(info.getResourcesList(), role,
+                                principal),
+                        (int) getReservedMem(resources,
+                                role,
+                                principal),
+                        (int) getTotalReservedDisk(resources,
+                                role,
+                                principal),
+                        CleanupStatus.create(Protos.TaskState.TASK_STAGING,
+                                info.getTaskId().getValue(),
+                                info.getSlaveId().getValue(),
+                                info.getExecutor().getExecutorId().getValue(),
+                                Optional.empty()),
+                        data.getKeySpacesList(),
+                        data.getColumnFamiliesList()
                 );
 
             default:
