@@ -43,12 +43,14 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
     public void initialize(Bootstrap<CassandraSchedulerConfiguration> bootstrap) {
         super.initialize(bootstrap);
 
+        StrSubstitutor strSubstitutor = new StrSubstitutor(new EnvironmentVariableLookup(false));
+        strSubstitutor.setEnableSubstitutionInVariables(true);
+
         bootstrap.addBundle(new Java8Bundle());
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(
                         bootstrap.getConfigurationSourceProvider(),
-                        new StrSubstitutor(
-                                new EnvironmentVariableLookup(false))));
+                        strSubstitutor));
     }
 
     @Override
