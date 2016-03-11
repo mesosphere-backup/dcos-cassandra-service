@@ -68,7 +68,7 @@ public class ConfigurationManagerTest {
         config = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false)),
+                        new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
         Identity initial = config.getIdentity();
@@ -123,7 +123,7 @@ public class ConfigurationManagerTest {
         assertEquals("cassandra_role", config.getIdentity().getRole());
         assertEquals("cassandra_cluster", config.getIdentity().getCluster());
         assertEquals("cassandra_principal", config.getIdentity().getPrincipal());
-        assertNull(config.getIdentity().getSecret());
+        assertEquals("", config.getIdentity().getSecret());
 
         manager.start();
 
