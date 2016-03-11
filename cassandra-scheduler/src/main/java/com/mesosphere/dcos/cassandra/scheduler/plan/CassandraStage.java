@@ -73,7 +73,7 @@ public class CassandraStage implements Stage {
         return deployment.isComplete() &&
                 (backup.inProgress()) ? backup.isComplete() : true &&
                 (restore.inProgress()) ? restore.isComplete() : true &&
-                (restore.inProgress()) ? restore.isComplete() : true;
+                (cleanup.inProgress()) ? cleanup.isComplete() : true;
 
     }
 }

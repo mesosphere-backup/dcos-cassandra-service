@@ -70,6 +70,7 @@ public class CleanupManager {
                 persistent.store(context);
                 this.phase = new CleanupPhase(context, cassandraTasks,
                         provider);
+                this.context = context;
             } catch (PersistenceException e) {
                 LOGGER.error(
                         "Error storing cleanup context into persistence store" +
