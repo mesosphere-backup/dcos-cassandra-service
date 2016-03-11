@@ -1,11 +1,10 @@
-package com.mesosphere.dcos.cassandra.scheduler.backup;
+package com.mesosphere.dcos.cassandra.scheduler.tasks;
 
-import com.mesosphere.dcos.cassandra.common.backup.ClusterTaskContext;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
@@ -93,6 +92,15 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
         this.status = Status.Pending;
         this.context = context;
         this.cassandraTasks = cassandraTasks;
+        Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
+        if(taskOption.isPresent()){
+            CassandraTask task = taskOption.get();
+            if (Protos.TaskState.TASK_FINISHED.equals(
+                    task.getStatus().getState()
+            )) {
+                setStatus(Status.Complete);
+            }
+        }
     }
 
     public abstract String getName();
@@ -115,7 +123,6 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                 } else if (TaskUtils.isTerminated(task.getStatus().getState())) {
                     //need to progress with a new task
                     cassandraTasks.remove(getName());
-                    getOrCreateTask(context);
                     LOGGER.info("Reallocating task {} for block {}",
                             getName(),
                             id);

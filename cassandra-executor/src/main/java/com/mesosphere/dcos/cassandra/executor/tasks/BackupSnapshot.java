@@ -37,6 +37,7 @@ public class BackupSnapshot implements Runnable {
             for (String keyspace : nonSystemKeyspaces) {
                 LOGGER.info("Taking snapshot for keyspace: {}", keyspace);
                 probe.takeSnapshot(snapshotName, null, keyspace);
+
             }
 
             // Send TASK_FINISHED

@@ -225,7 +225,7 @@ public class CassandraConfig {
             };
 
 
-    public Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
@@ -322,7 +322,7 @@ public class CassandraConfig {
         this.cpus = cpus;
         this.memoryMb = memoryMb;
         this.diskMb = diskMb;
-        this.replaceIp = replaceIp;
+        this.replaceIp = (replaceIp != null) ? replaceIp : "";
         this.heap = heap;
         this.location = location;
         this.jmxPort = jmxPort;

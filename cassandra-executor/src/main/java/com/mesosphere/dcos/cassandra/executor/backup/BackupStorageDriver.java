@@ -1,7 +1,7 @@
 package com.mesosphere.dcos.cassandra.executor.backup;
 
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 
 import java.io.IOException;
 

@@ -4,16 +4,11 @@ package com.mesosphere.dcos.cassandra.scheduler.tasks;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
@@ -35,13 +30,6 @@ import java.util.stream.Collectors;
 public class CassandraTasks implements Managed {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraTasks.class);
-    private static final Set<Protos.TaskState> terminalStates = new HashSet<>(
-            Arrays.asList(
-                    Protos.TaskState.TASK_ERROR,
-                    Protos.TaskState.TASK_FAILED,
-                    Protos.TaskState.TASK_FINISHED,
-                    Protos.TaskState.TASK_KILLED,
-                    Protos.TaskState.TASK_LOST));
 
     private final IdentityManager identity;
     private final ConfigurationManager configuration;
@@ -94,7 +82,7 @@ public class CassandraTasks implements Managed {
         }
     }
 
-    public void update(CassandraTask task) throws PersistenceException {
+    private void update(CassandraTask task) throws PersistenceException {
         persistent.put(task.getName(), task);
         if (tasks.containsKey(task.getName())) {
             byId.remove(tasks.get(task.getName()).getId());
@@ -114,7 +102,9 @@ public class CassandraTasks implements Managed {
     public void update(Protos.TaskInfo taskInfo) {
         try {
             final CassandraTask task = CassandraTask.parse(taskInfo);
-            update(task);
+            synchronized (persistent) {
+                update(task);
+            }
         } catch (Exception e) {
             LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
         }
@@ -127,7 +117,7 @@ public class CassandraTasks implements Managed {
         }
         tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
                 tasks.entrySet().stream()
-                        .filter(entry -> entry.getKey() != name)
+                        .filter(entry -> !entry.getKey().equals(name))
                         .collect(Collectors.toMap(
                                 entry -> entry.getKey(),
                                 entry -> entry.getValue())))
@@ -185,6 +175,16 @@ public class CassandraTasks implements Managed {
         }
 
         return task;
+    }
+
+    public CassandraDaemonTask moveDaemon(
+            CassandraDaemonTask daemon
+    ) throws  PersistenceException {
+        CassandraDaemonTask updated = configuration.moveDaemon(daemon);
+        synchronized (persistent) {
+            update(updated);
+        }
+        return updated;
     }
 
 
@@ -254,11 +254,11 @@ public class CassandraTasks implements Managed {
             BackupContext context) throws PersistenceException {
 
         String name = BackupSnapshotTask.nameForDaemon(daemon);
-        Map<String,BackupSnapshotTask> snapshots = getBackupSnapshotTasks();
-        if(snapshots.containsKey(name)){
+        Map<String, BackupSnapshotTask> snapshots = getBackupSnapshotTasks();
+        if (snapshots.containsKey(name)) {
             return snapshots.get(name);
         } else {
-            return createBackupSnapshotTask(daemon,context);
+            return createBackupSnapshotTask(daemon, context);
         }
 
     }
@@ -268,11 +268,11 @@ public class CassandraTasks implements Managed {
             BackupContext context) throws PersistenceException {
 
         String name = BackupUploadTask.nameForDaemon(daemon);
-        Map<String,BackupUploadTask> uploads = getBackupUploadTasks();
-        if(uploads.containsKey(name)){
+        Map<String, BackupUploadTask> uploads = getBackupUploadTasks();
+        if (uploads.containsKey(name)) {
             return uploads.get(name);
         } else {
-            return createBackupUploadTask(daemon,context);
+            return createBackupUploadTask(daemon, context);
         }
 
     }
@@ -282,11 +282,11 @@ public class CassandraTasks implements Managed {
             RestoreContext context) throws PersistenceException {
 
         String name = DownloadSnapshotTask.nameForDaemon(daemon);
-        Map<String,DownloadSnapshotTask> snapshots = getDownloadSnapshotTasks();
-        if(snapshots.containsKey(name)){
+        Map<String, DownloadSnapshotTask> snapshots = getDownloadSnapshotTasks();
+        if (snapshots.containsKey(name)) {
             return snapshots.get(name);
         } else {
-            return createDownloadSnapshotTask(daemon,context);
+            return createDownloadSnapshotTask(daemon, context);
         }
     }
 
@@ -295,11 +295,11 @@ public class CassandraTasks implements Managed {
             RestoreContext context) throws PersistenceException {
 
         String name = RestoreSnapshotTask.nameForDaemon(daemon);
-        Map<String,RestoreSnapshotTask> snapshots = getRestoreSnapshotTasks();
-        if(snapshots.containsKey(name)){
+        Map<String, RestoreSnapshotTask> snapshots = getRestoreSnapshotTasks();
+        if (snapshots.containsKey(name)) {
             return snapshots.get(name);
         } else {
-            return createRestoreSnapshotTask(daemon,context);
+            return createRestoreSnapshotTask(daemon, context);
         }
     }
 
@@ -374,6 +374,8 @@ public class CassandraTasks implements Managed {
             } else {
                 LOGGER.info("Received status update for unrecorded task: " +
                         "status = {}", status);
+                LOGGER.info("Tasks = {}", tasks);
+                LOGGER.info("Ids = {}", byId);
             }
         }
     }
@@ -410,20 +412,11 @@ public class CassandraTasks implements Managed {
         return terminatedTasks;
     }
 
-    public List<CassandraTask> getTasksToRepair() {
-        List<CassandraTask> terminatedTasks = tasks
-                .values().stream()
-                .filter(task -> TaskUtils.needsRecheduling(task))
-                .collect(Collectors.toList());
-
-        return terminatedTasks;
-    }
-
-
     public List<CassandraTask> getRunningTasks() {
-        final List<CassandraTask> runningTasks = tasks.values().stream()
-                .filter(task -> isRunning(task)).collect(Collectors.toList());
-        return runningTasks;
+        return tasks.values().stream()
+                .filter(task -> isRunning(task)).collect(
+                        Collectors.toList());
+
     }
 
     @Override

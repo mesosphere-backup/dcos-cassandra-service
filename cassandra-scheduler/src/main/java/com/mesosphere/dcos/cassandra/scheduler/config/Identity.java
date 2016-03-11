@@ -136,7 +136,7 @@ public class Identity {
                     Duration failoverTimeout,
                     String secret, boolean checkpoint) {
         this.name = name;
-        this.id = id;
+        this.id = (id != null) ? id : "";
         this.version = version;
         this.user = user;
         this.cluster = cluster;

@@ -1,11 +1,12 @@
-package com.mesosphere.dcos.cassandra.scheduler.backup;
+package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.AbstractClusterTaskBlock;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
@@ -13,26 +14,26 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class UploadBackupBlock extends AbstractClusterTaskBlock<BackupContext> {
+public class BackupSnapshotBlock extends AbstractClusterTaskBlock<BackupContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            UploadBackupBlock.class);
+            BackupSnapshotBlock.class);
 
-    public static UploadBackupBlock create(
-            String daemon,
-            CassandraTasks cassandraTasks,
-            CassandraOfferRequirementProvider provider,
-            BackupContext context) {
-        return new UploadBackupBlock(daemon, cassandraTasks, provider, context);
+    public static BackupSnapshotBlock create(
+            final String daemon,
+            final CassandraTasks cassandraTasks,
+            final CassandraOfferRequirementProvider provider,
+            final BackupContext context) {
+        return new BackupSnapshotBlock(daemon, cassandraTasks, provider,
+                context);
     }
 
-    public UploadBackupBlock(
-            String daemon,
-            CassandraTasks cassandraTasks,
-            CassandraOfferRequirementProvider provider,
-            BackupContext context) {
+    public BackupSnapshotBlock(
+            final String daemon,
+            final CassandraTasks cassandraTasks,
+            final CassandraOfferRequirementProvider provider,
+            final BackupContext context) {
         super(daemon, cassandraTasks, provider, context);
     }
-
 
     @Override
     protected Optional<CassandraTask> getOrCreateTask(BackupContext context)
@@ -44,13 +45,13 @@ public class UploadBackupBlock extends AbstractClusterTaskBlock<BackupContext> {
             setStatus(Status.Complete);
             return Optional.empty();
         }
-        return Optional.of(cassandraTasks.getOrCreateBackupUpload(
+        return Optional.of(cassandraTasks.getOrCreateBackupSnapshot(
                 daemonTask,
                 context));
     }
 
     @Override
     public String getName() {
-        return BackupUploadTask.nameForDaemon(daemon);
+        return BackupSnapshotTask.nameForDaemon(daemon);
     }
 }

@@ -1,8 +1,7 @@
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
@@ -30,16 +29,19 @@ public class RestoreSnapshot implements Runnable {
     private ExecutorDriver driver;
     private RestoreContext context;
     private RestoreSnapshotTask cassandraTask;
-    private BackupStorageDriver backupStorageDriver;
 
-    public RestoreSnapshot(ExecutorDriver driver, NodeProbe probe, CassandraTask cassandraTask, BackupStorageDriver backupStorageDriver) {
+    public RestoreSnapshot(
+            ExecutorDriver driver,
+            NodeProbe probe,
+            CassandraTask cassandraTask,
+            String nodeId) {
         this.probe = probe;
         this.driver = driver;
-        this.backupStorageDriver = backupStorageDriver;
         this.cassandraTask = (RestoreSnapshotTask) cassandraTask;
 
         this.context = new RestoreContext();
         context.setName(this.cassandraTask.getBackupName());
+        context.setNodeId(nodeId);
         context.setS3AccessKey(this.cassandraTask.getS3AccessKey());
         context.setS3SecretKey(this.cassandraTask.getS3SecretKey());
         context.setExternalLocation(this.cassandraTask.getExternalLocation());
@@ -52,8 +54,8 @@ public class RestoreSnapshot implements Runnable {
             // Send TASK_RUNNING
             sendStatus(driver, Protos.TaskState.TASK_RUNNING, "Started restoring snapshot");
             final String localLocation = context.getLocalLocation();
-            final int nodeId = TaskUtils.taskIdToNodeId(this.cassandraTask.getId());
-            final String keyspaceDirectory = localLocation + File.separator + context.getName() + File.separator + nodeId;
+            final String keyspaceDirectory = localLocation + File.separator +
+                    context.getName() + File.separator + context.getNodeId();
 
             // TODO: Fix the magic string
             final String ssTableLoaderBinary = "apache-cassandra-2.2.5/bin/sstableloader";

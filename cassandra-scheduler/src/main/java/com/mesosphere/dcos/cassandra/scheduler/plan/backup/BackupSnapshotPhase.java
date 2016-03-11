@@ -1,12 +1,9 @@
-package com.mesosphere.dcos.cassandra.scheduler.backup;
+package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
-import com.google.common.eventbus.EventBus;
-import com.mesosphere.dcos.cassandra.common.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.mesos.scheduler.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

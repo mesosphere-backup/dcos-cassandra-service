@@ -5,6 +5,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraStatus;
+import com.mesosphere.dcos.cassandra.executor.metrics.MetricsConfig;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -223,6 +224,7 @@ public class CassandraDaemonProcess {
     private final NodeProbe probe;
     private final CompletableFuture<Object> closeFuture =
             new CompletableFuture<>();
+    private boolean metricsEnabled = MetricsConfig.metricsEnabled();
 
     public CassandraDaemonProcess(final CassandraDaemonTask task,
                                   final ScheduledExecutorService executor,
@@ -243,6 +245,11 @@ public class CassandraDaemonProcess {
                 .setListenAddress(getListenAddress())
                 .setRpcAddress(getListenAddress())
                 .build().writeDaemonConfiguration(paths.cassandraConfig());
+
+        if(metricsEnabled) {
+            metricsEnabled = MetricsConfig.writeMetricsConfig(
+                    paths.cassandraConfig());
+        }
 
         process = createDaemon();
         executor.submit(
@@ -274,10 +281,25 @@ public class CassandraDaemonProcess {
         return this.probe;
     }
 
+    private String getReplaceIp() throws UnknownHostException {
+        if(task.getConfig().getReplaceIp().trim().isEmpty()){
+            return "";
+        } else {
+            InetAddress address =
+                    InetAddress.getByName(
+                    task.getConfig().getReplaceIp());
+            return "-Dcassandra.replace_address=" + address.getHostAddress();
+        }
+    }
+
     private Process createDaemon() throws IOException {
 
-        final ProcessBuilder builder = new ProcessBuilder(paths.cassandraRun()
-                .toString(), "-f")
+        final ProcessBuilder builder = new ProcessBuilder(
+                paths.cassandraRun()
+                .toString(),
+                getReplaceIp(),
+                "-f"
+               )
                 .directory(new File(System.getProperty("user.dir")))
                 .redirectOutput(new File("cassandra-stdout.log"))
                 .redirectError(new File("cassandra-stderr.log"));
@@ -286,6 +308,9 @@ public class CassandraDaemonProcess {
         builder.environment().put(
                 "JMX_PORT",
                 Integer.toString(task.getConfig().getJmxPort()));
+        if(metricsEnabled){
+            MetricsConfig.setEnv(builder.environment());
+        }
         return builder.start();
     }
 

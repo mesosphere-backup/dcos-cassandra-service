@@ -1,7 +1,7 @@
-package com.mesosphere.dcos.cassandra.scheduler.backup;
+package com.mesosphere.dcos.cassandra.scheduler.tasks;
 
-import com.mesosphere.dcos.cassandra.common.backup.ClusterTaskContext;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
+import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;

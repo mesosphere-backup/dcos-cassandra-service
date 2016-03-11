@@ -2,10 +2,8 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.backup.RestoreContext;
-import com.mesosphere.dcos.cassandra.scheduler.backup.RestoreManager;
-import org.apache.mesos.scheduler.plan.StageManager;
-import org.apache.mesos.scheduler.plan.api.StageInfo;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -45,19 +43,6 @@ public class RestoreResource {
                             MESSAGE_ALREADY_RUNNING))
                     .build();
         }
-    }
-
-    @GET
-    @Timed
-    @Path("/status")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response status() {
-        StageManager stageManager = manager.getStageManager();
-        return (stageManager != null) ?
-                Response.ok(
-                        StageInfo.forStage(
-                                manager.getStageManager())).build() :
-                Response.status(Response.Status.NOT_FOUND).build();
     }
 
     public static RestoreContext from(StartRestoreRequest request) {

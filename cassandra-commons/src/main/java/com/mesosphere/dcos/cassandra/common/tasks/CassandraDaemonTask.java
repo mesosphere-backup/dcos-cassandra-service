@@ -212,6 +212,14 @@ public class CassandraDaemonTask extends CassandraTask {
     @JsonProperty("config")
     private final CassandraConfig config;
 
+    private final CassandraConfig updateConfig(CassandraDaemonStatus status) {
+        if (Protos.TaskState.TASK_RUNNING.equals(status.getState())) {
+            return config.mutable().setReplaceIp("").build();
+        } else {
+            return config;
+        }
+    }
+
     protected CassandraDaemonTask(String id,
                                   String slaveId,
                                   String hostname,
@@ -275,7 +283,7 @@ public class CassandraDaemonTask extends CassandraTask {
                     cpus,
                     memoryMb,
                     diskMb,
-                    config,
+                    updateConfig((CassandraDaemonStatus) status),
                     (CassandraDaemonStatus) status);
         }
         return this;
@@ -329,7 +337,7 @@ public class CassandraDaemonTask extends CassandraTask {
     }
 
     @Override
-    public CassandraDaemonTask updateId(String id){
+    public CassandraDaemonTask updateId(String id) {
         return create(
                 id,
                 slaveId,

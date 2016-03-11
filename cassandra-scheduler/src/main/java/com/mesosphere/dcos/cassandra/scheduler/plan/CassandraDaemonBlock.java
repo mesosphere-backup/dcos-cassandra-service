@@ -121,7 +121,6 @@ public class CassandraDaemonBlock implements Block {
     }
 
     private OfferRequirement replaceTask( final CassandraDaemonTask task){
-
         try {
             return provider.getReplacementOfferRequirement(
                     cassandraTasks.replaceDaemon(task).toProto()
@@ -158,6 +157,13 @@ public class CassandraDaemonBlock implements Block {
         this.name = name;
         this.provider = provider;
         this.client = client;
+
+        if(cassandraTasks.getDaemons().containsKey(name)){
+            CassandraDaemonTask task = cassandraTasks.getDaemons().get(name);
+            if(!needsConfigUpdate(task) && isComplete(task)){
+                status = Status.Complete;
+            }
+        }
     }
 
     @Override

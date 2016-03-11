@@ -1,11 +1,11 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.DefaultPhase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +19,15 @@ public class CassandraDaemonPhase extends DefaultPhase {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CassandraDaemonPhase.class);
 
-    private static List<CassandraDaemonBlock> createBlocks(
+    private static void createBlocks(
             final ConfigurationManager configurationManager,
-            final CassandraOfferRequirementProvider offerRequirementProvider,
             final CassandraTasks cassandraTasks,
-            final ExecutorClient client) {
+            final CassandraOfferRequirementProvider provider,
+            final ExecutorClient client,
+            final List<CassandraDaemonBlock> blocks,
+            final List<String> errors) {
 
         final int servers = configurationManager.getServers();
-
-        final List<CassandraDaemonBlock> blocks = new ArrayList<>(servers);
 
         final List<String> names = new ArrayList<>(servers);
 
@@ -44,44 +44,53 @@ public class CassandraDaemonPhase extends DefaultPhase {
                 final CassandraDaemonBlock daemonBlock =
                         CassandraDaemonBlock.create(
                                 names.get(i),
-                                offerRequirementProvider,
+                                provider,
                                 cassandraTasks,
                                 client);
                 blocks.add(daemonBlock);
             }
         } catch (Throwable throwable) {
-
-            String message = "Failed to create CassandraDaemonPhase this is a" +
-                    " fatal exception and the program will now exit. Please " +
-                    "verify your scheduler configuration and attempt to " +
-                    "relaunch the program.";
-
-            LOGGER.error(message, throwable);
-
-            throw new IllegalStateException(message, throwable);
+            LOGGER.error("Error creating CassandraDaemonBlock", throwable);
+            errors.add(String.format(
+                    "Error creating CassandraDaemonBlock : message = %s",
+                    throwable.getMessage()));
 
         }
-
-        return blocks;
     }
+
+    private final List<String> errors;
 
     public static final CassandraDaemonPhase create(
             final ConfigurationManager configurationManager,
-            final CassandraOfferRequirementProvider offerRequirementProvider,
             final CassandraTasks cassandraTasks,
+            final CassandraOfferRequirementProvider provider,
             final ExecutorClient client) {
-        return new CassandraDaemonPhase(
-                createBlocks(
-                        configurationManager,
-                        offerRequirementProvider,
-                        cassandraTasks,
-                        client
-                ));
+
+        final List<CassandraDaemonBlock> blocks =
+                new ArrayList<>();
+
+        final List<String> errors = new ArrayList<>();
+        createBlocks(
+                configurationManager,
+                cassandraTasks,
+                provider,
+                client,
+                blocks,
+                errors
+        );
+        return new CassandraDaemonPhase(blocks, errors);
     }
 
 
-    public CassandraDaemonPhase( final List<CassandraDaemonBlock> blocks) {
-        super(UUID.randomUUID(), "CassandraDeamonPhase", blocks);
+    public CassandraDaemonPhase(
+            final List<CassandraDaemonBlock> blocks,
+            final List<String> errors) {
+        super(UUID.randomUUID(), "CassandraDaemonPhase", blocks);
+        this.errors = errors;
+    }
+
+    public List<String> getErrors() {
+        return ImmutableList.copyOf(errors);
     }
 
 }

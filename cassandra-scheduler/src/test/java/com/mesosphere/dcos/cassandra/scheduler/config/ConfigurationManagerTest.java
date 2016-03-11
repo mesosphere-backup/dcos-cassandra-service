@@ -109,9 +109,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
-                false,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -155,101 +153,6 @@ public class ConfigurationManagerTest {
 
     }
 
-    @Test
-    public void usePersistedWhenUpdateConfigIsFalse() throws Exception {
-
-        ConfigurationManager manager = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                false,
-                "NODE",
-                "INSTALL",
-                config.getSeedsUrl(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
-
-        manager.start();
-
-        assertEquals(config.getCassandraConfig(), manager.getCassandraConfig());
-
-        assertEquals(config.getExecutorConfig(), manager.getExecutorConfig());
-
-        assertEquals(config.getServers(), manager.getServers());
-
-        assertEquals(config.getSeeds(), manager.getSeeds());
-
-        assertEquals(CassandraConfig.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(cassandraConfigPath)),
-                config.getCassandraConfig());
-
-        assertEquals(ExecutorConfig.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(executorConfigPath)),
-                config.getExecutorConfig());
-
-        assertEquals(IntegerStringSerializer.get().deserialize(
-                curator.getData().forPath(serversPath)).intValue(),
-                config.getServers());
-
-        assertEquals(IntegerStringSerializer.get().deserialize(
-                curator.getData().forPath(seedsPath)).intValue(),
-                config.getSeeds());
-
-        manager.stop();
-
-        manager = new ConfigurationManager(
-                config.getCassandraConfig().mutable().setJmxPort(8000)
-                        .setCpus(3.0).setMemoryMb(10000).build(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers() + 10,
-                config.getSeeds() + 10,
-                false,
-                "NODE",
-                "INSTALL",
-                config.getSeedsUrl(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
-
-        manager.start();
-
-
-        assertEquals(config.getCassandraConfig(), manager.getCassandraConfig());
-
-        assertEquals(config.getExecutorConfig(), manager.getExecutorConfig());
-
-        assertEquals(config.getServers(), manager.getServers());
-
-        assertEquals(config.getSeeds(), manager.getSeeds());
-
-        assertEquals(CassandraConfig.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(cassandraConfigPath)),
-                config.getCassandraConfig());
-
-        assertEquals(ExecutorConfig.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(executorConfigPath)),
-                config.getExecutorConfig());
-
-        assertEquals(IntegerStringSerializer.get().deserialize(
-                curator.getData().forPath(serversPath)).intValue(),
-                config.getServers());
-
-        assertEquals(IntegerStringSerializer.get().deserialize(
-                curator.getData().forPath(seedsPath)).intValue(),
-                config.getSeeds());
-
-
-    }
 
     @Test
     public void applyConfigUpdate() throws Exception {
@@ -260,9 +163,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
-                false,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -318,9 +219,7 @@ public class ConfigurationManagerTest {
                 updatedExecutorConfig,
                 updatedServers,
                 updatedSeeds,
-                true,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -359,7 +258,6 @@ public class ConfigurationManagerTest {
 
     }
 
-    @Test(expected = IllegalStateException.class)
     public void failOnBadServersCount() throws Exception {
 
         ConfigurationManager manager = new ConfigurationManager(
@@ -368,9 +266,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
-                false,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -414,9 +310,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers() - 1,
                 config.getSeeds(),
-                true,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -427,9 +321,11 @@ public class ConfigurationManagerTest {
 
         manager.start();
 
+        assertEquals(manager.getErrors().size(),1);
+
     }
 
-    @Test(expected = IllegalStateException.class)
+
     public void failOnBadSeedsCount() throws Exception {
 
         ConfigurationManager manager = new ConfigurationManager(
@@ -438,9 +334,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
-                false,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -484,9 +378,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getServers() + 1,
-                true,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -496,6 +388,7 @@ public class ConfigurationManagerTest {
         );
 
         manager.start();
+        assertEquals(manager.getErrors().size(),1);
 
     }
 
@@ -508,9 +401,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
-                false,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -538,9 +429,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
-                false,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -568,9 +457,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
-                false,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
@@ -601,9 +488,7 @@ public class ConfigurationManagerTest {
                 config.getExecutorConfig(),
                 config.getServers(),
                 config.getSeeds(),
-                false,
                 "NODE",
-                "INSTALL",
                 config.getSeedsUrl(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
