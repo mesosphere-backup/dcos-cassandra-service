@@ -13,6 +13,9 @@ import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
@@ -409,6 +412,33 @@ public class ConfigurationManager implements Managed {
                 context.getS3AccessKey(),
                 context.getS3SecretKey(),
                 cassandraConfig.getVolume().getPath() + "/data");
+    }
+
+    public CleanupTask createCleanupTask(
+            CassandraDaemonTask daemon,
+            CleanupContext context) {
+        String name = CleanupTask.nameForDaemon(daemon);
+        String id = name + "_" + UUID.randomUUID().toString();
+
+        return CleanupTask.create(
+                id,
+                daemon.getSlaveId(),
+                daemon.getHostname(),
+                daemon.getExecutor(),
+                name,
+                daemon.getRole(),
+                daemon.getPrincipal(),
+                clusterTaskConfig.getCpus(),
+                clusterTaskConfig.getMemoryMb(),
+                clusterTaskConfig.getDiskMb(),
+                CleanupStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        daemon.getSlaveId(),
+                        name,
+                        Optional.empty()),
+                context.getKeySpaces(),
+                context.getColumnFamilies()
+                );
     }
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {

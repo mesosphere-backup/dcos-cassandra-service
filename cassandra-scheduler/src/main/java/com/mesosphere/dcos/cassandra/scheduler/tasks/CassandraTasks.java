@@ -9,6 +9,8 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
@@ -159,6 +161,13 @@ public class CassandraTasks implements Managed {
                         (RestoreSnapshotTask) entry.getValue())));
     }
 
+    public Map<String, CleanupTask> getCleanupTasks() {
+        return tasks.entrySet().stream().filter(entry -> entry.getValue()
+                .getType() == CassandraTask.TYPE.CLEANUP).collect
+                (Collectors.toMap(entry -> entry.getKey(), entry -> (
+                        (CleanupTask) entry.getValue())));
+    }
+
     public CassandraDaemonTask createDaemon(String name) throws
             PersistenceException {
         CassandraDaemonTask task = configuration.createDaemon(
@@ -239,6 +248,18 @@ public class CassandraTasks implements Managed {
         return task;
     }
 
+    public CleanupTask createCleanupTask(
+            CassandraDaemonTask daemon,
+            CleanupContext context) throws PersistenceException {
+        CleanupTask task = configuration.createCleanupTask(
+                daemon,
+                context);
+        synchronized (persistent) {
+            update(task);
+        }
+        return task;
+    }
+
     public CassandraDaemonTask getOrCreateDaemon(String name) throws
             PersistenceException {
         if (getDaemons().containsKey(name)) {
@@ -300,6 +321,19 @@ public class CassandraTasks implements Managed {
             return snapshots.get(name);
         } else {
             return createRestoreSnapshotTask(daemon, context);
+        }
+    }
+
+    public CleanupTask getOrCreateCleanup(
+            CassandraDaemonTask daemon,
+            CleanupContext context) throws PersistenceException {
+
+        String name = RestoreSnapshotTask.nameForDaemon(daemon);
+        Map<String, CleanupTask> cleanups = getCleanupTasks();
+        if (cleanups.containsKey(name)) {
+            return cleanups.get(name);
+        } else {
+            return createCleanupTask(daemon, context);
         }
     }
 

@@ -8,7 +8,10 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -18,16 +21,14 @@ import javax.ws.rs.core.Response;
 public class BackupResource {
     private static final Logger LOGGER = LoggerFactory.getLogger
             (BackupResource.class);
-    private final static String STATUS_STARTED = "started";
-    private final static String MESSAGE_STARTED = "Started complete backup";
 
     private final static String STATUS_ALREADY_RUNNING = "already_running";
     private final static String MESSAGE_ALREADY_RUNNING = "An existing backup is already in progress";
 
-    private BackupManager manager;
+    private final BackupManager manager;
 
     @Inject
-    public BackupResource(BackupManager manager) {
+    public BackupResource(final BackupManager manager) {
         this.manager = manager;
     }
 
@@ -40,16 +41,16 @@ public class BackupResource {
             if (manager.canStartBackup()) {
                 final BackupContext backupContext = from(request);
                 manager.startBackup(backupContext);
-                final StartBackupResponse response = new StartBackupResponse(
-                        STATUS_STARTED, MESSAGE_STARTED);
-                LOGGER.info("Backup response = {}",response);
-                return Response.ok(response).build();
+                LOGGER.info("Backup started : context = {}",backupContext);
+                return Response.accepted().build();
             } else {
                 // Send error back
-                LOGGER.warn("Backup already in progress: request = {}",request);
-                return Response.status(502).
-                        entity(new StartBackupResponse(STATUS_ALREADY_RUNNING,
-                                MESSAGE_ALREADY_RUNNING))
+                LOGGER.warn("Backup already in progress: request = {}",
+                        request);
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
+                                ErrorResponse.fromString(
+                                        "Backup already in progress."))
                         .build();
             }
         } catch (Throwable t) {
@@ -57,7 +58,7 @@ public class BackupResource {
                     String.format("Error creating backup: request = %s",
                             request), t);
             return Response.status(500).entity(
-                    ImmutableMap.of("error", t.getMessage()))
+                    ErrorResponse.fromThrowable(t))
                     .build();
         }
     }
