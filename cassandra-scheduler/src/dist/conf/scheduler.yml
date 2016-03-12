@@ -110,7 +110,7 @@ identity:
   secret: ${FRAMEWORK_SECRET_FILE:-""}
   failoverTimeoutS : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
   checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
-seedsUrl: "${$SEEDS_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
+seedsUrl: "${SEEDS_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
 phaseStrategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
 mesos:
   servers: ${MESOS_SERVERS:-"master.mesos:2181"}
