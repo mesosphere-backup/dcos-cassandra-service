@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.common.util;
 
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import org.apache.mesos.Protos;
 
 import java.util.Arrays;
@@ -20,6 +21,11 @@ public class TaskUtils {
 
     public static boolean isTerminated(Protos.TaskState state) {
         return TERMINAL_STATES.contains(state);
+    }
+
+    public static boolean isTerminal(CassandraTask task){
+
+        return isTerminated(task.getStatus().getState());
     }
 
 }

@@ -74,7 +74,7 @@ public class CassandraDaemonProcess {
 
                     process.waitFor();
                     int exitCode = process.exitValue();
-                    LOGGER.info("Cassandra Daemon terminated exit value = {}",
+                    LOGGER.info("Cassandra Daemon terminated: exit code = {}",
                             exitCode);
                     Protos.TaskState state;
                     String message;
@@ -100,7 +100,7 @@ public class CassandraDaemonProcess {
                             Optional.of(message),
                             task.getStatus().getMode());
                     driver.sendStatusUpdate(status.toProto());
-                    LOGGER.info("Sent status update = {}", status);
+                    LOGGER.info("Sent status update: status = {}", status);
                     open.set(false);
                     closeFuture.complete(CLOSED);
                     System.exit(0);
@@ -169,7 +169,7 @@ public class CassandraDaemonProcess {
                                     current
                             );
                     driver.sendStatusUpdate(daemonStatus.toProto());
-                    LOGGER.info("Sent status update = {} ", daemonStatus);
+                    LOGGER.debug("Sent status update = {} ", daemonStatus);
                 }
             }
         }
@@ -206,11 +206,12 @@ public class CassandraDaemonProcess {
 
         if (address == null || address.isEmpty()) {
             address = InetAddress.getLocalHost().getHostAddress();
-            LOGGER.info("LIBPROCESS_IP address not found defaulting to " +
+            LOGGER.warn("LIBPROCESS_IP address not found defaulting to " +
                     "localhost");
         }
 
-        LOGGER.info("Cassandra Daemon listen address = {}", address);
+        LOGGER.info("Retrieved Cassandra Daemon listen address: address = {}",
+                address);
 
         return address;
     }
@@ -267,7 +268,7 @@ public class CassandraDaemonProcess {
                         Optional.empty(),
                         current);
         driver.sendStatusUpdate(daemonStatus.toProto());
-        LOGGER.info("Sent status update = {} ", daemonStatus);
+        LOGGER.debug("Sent status update = {} ", daemonStatus);
         executor.scheduleAtFixedRate(
                 ModeReporter.create(task,
                         probe,
@@ -288,6 +289,7 @@ public class CassandraDaemonProcess {
             InetAddress address =
                     InetAddress.getByName(
                     task.getConfig().getReplaceIp());
+            LOGGER.info("Replacing node: address = {}",address);
             return "-Dcassandra.replace_address=" + address.getHostAddress();
         }
     }
@@ -323,7 +325,7 @@ public class CassandraDaemonProcess {
                 nodeProbe = new NodeProbe("127.0.0.1",
                         task.getConfig().getJmxPort());
                 LOGGER.info("Node probe is successfully connected to the " +
-                                "Cassandra Daemon on port {}",
+                                "Cassandra Daemon: port {}",
                         task.getConfig().getJmxPort());
                 return nodeProbe;
             } catch (Exception ex) {
@@ -340,7 +342,7 @@ public class CassandraDaemonProcess {
 
         throw new IllegalStateException(
                 String.format("Failed to connect to Cassandra " +
-                        "Daemon on port %s", task.getConfig().getJmxPort()));
+                        "Daemon: port = %s", task.getConfig().getJmxPort()));
     }
 
     public CassandraDaemonTask getTask() {
