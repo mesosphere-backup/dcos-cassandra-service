@@ -13,7 +13,6 @@ import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.UUID;
 
 public class CassandraDaemonBlock implements Block {
@@ -71,7 +70,7 @@ public class CassandraDaemonBlock implements Block {
         }
     }
 
-    private void updateConfig(final CassandraDaemonTask task){
+    private void updateConfig(final CassandraDaemonTask task) {
         try {
             CassandraDaemonTask updated =
                     cassandraTasks.reconfigureDeamon(task);
@@ -88,7 +87,7 @@ public class CassandraDaemonBlock implements Block {
         return cassandraTasks.getOrCreateDaemon(name);
     }
 
-    private boolean isComplete(final CassandraDaemonTask task){
+    private boolean isComplete(final CassandraDaemonTask task) {
         return (Protos.TaskState.TASK_RUNNING.equals(
                 task.getStatus().getState())
                 && CassandraMode.NORMAL.equals(
@@ -96,21 +95,21 @@ public class CassandraDaemonBlock implements Block {
                 !cassandraTasks.needsConfigUpdate(task));
     }
 
-    private boolean isTerminal(final CassandraDaemonTask task){
+    private boolean isTerminal(final CassandraDaemonTask task) {
         return isTerminal(task.getStatus().getState());
     }
 
-    private boolean needsConfigUpdate(final CassandraDaemonTask task){
+    private boolean needsConfigUpdate(final CassandraDaemonTask task) {
         return cassandraTasks.needsConfigUpdate(task);
     }
 
-    private OfferRequirement reconfigureTask( final CassandraDaemonTask task){
+    private OfferRequirement reconfigureTask(final CassandraDaemonTask task) {
 
         try {
             return provider.getReplacementOfferRequirement(
                     cassandraTasks.reconfigureDeamon(task).toProto()
             );
-        } catch(PersistenceException ex){
+        } catch (PersistenceException ex) {
             LOGGER.error(
                     String.format("Block %s failed to reconfigure task %s,"),
                     getName(),
@@ -120,12 +119,12 @@ public class CassandraDaemonBlock implements Block {
         }
     }
 
-    private OfferRequirement replaceTask( final CassandraDaemonTask task){
+    private OfferRequirement replaceTask(final CassandraDaemonTask task) {
         try {
             return provider.getReplacementOfferRequirement(
                     cassandraTasks.replaceDaemon(task).toProto()
             );
-        } catch(PersistenceException ex){
+        } catch (PersistenceException ex) {
             LOGGER.error(
                     String.format("Block %s failed to replace task %s,"),
                     getName(),
@@ -158,9 +157,9 @@ public class CassandraDaemonBlock implements Block {
         this.provider = provider;
         this.client = client;
 
-        if(cassandraTasks.getDaemons().containsKey(name)){
+        if (cassandraTasks.getDaemons().containsKey(name)) {
             CassandraDaemonTask task = cassandraTasks.getDaemons().get(name);
-            if(!needsConfigUpdate(task) && isComplete(task)){
+            if (!needsConfigUpdate(task) && isComplete(task)) {
                 status = Status.Complete;
             }
         }
@@ -195,14 +194,14 @@ public class CassandraDaemonBlock implements Block {
             return null;
         }
 
-        if(isComplete(task)){
+        if (isComplete(task)) {
             LOGGER.info("Block {} - Task complete : id = {}",
                     getName(),
                     task.getId());
             setStatus(Status.Complete);
             return null;
-        } else if (needsConfigUpdate(task)){
-            LOGGER.info("Block {} - Task requires config update : id = {}" ,
+        } else if (needsConfigUpdate(task)) {
+            LOGGER.info("Block {} - Task requires config update : id = {}",
                     getName(),
                     task.getId());
             if (!isTerminal(task.getStatus().getState())) {
@@ -211,13 +210,13 @@ public class CassandraDaemonBlock implements Block {
             } else {
                 return reconfigureTask(task);
             }
-        } else if(task.getSlaveId().isEmpty()){
-            LOGGER.info("Block {} - Launching new task : id = {}" ,
+        } else if (task.getSlaveId().isEmpty()) {
+            LOGGER.info("Block {} - Launching new task : id = {}",
                     getName(),
                     task.getId());
             return provider.getNewOfferRequirement(task.toProto());
-        } else if (isTerminal(task)){
-            LOGGER.info("Block {} - Replacing task : id = {}" ,
+        } else if (isTerminal(task)) {
+            LOGGER.info("Block {} - Replacing task : id = {}",
                     getName(),
                     task.getId());
             return replaceTask(task);
@@ -232,14 +231,14 @@ public class CassandraDaemonBlock implements Block {
         try {
             cassandraTasks.update(status);
             final CassandraDaemonTask task = getTask();
-            if(isComplete(task)){
+            if (isComplete(task)) {
                 setStatus(Status.Complete);
-            } else if (isTerminal(task)){
+            } else if (isTerminal(task)) {
                 setStatus(Status.Pending);
             }
         } catch (Exception ex) {
             LOGGER.error(String.format("Block %s - Failed update status " +
-                    "task : status = %s", getName(),status),
+                            "task : status = %s", getName(), status),
                     ex);
         }
     }
@@ -268,7 +267,7 @@ public class CassandraDaemonBlock implements Block {
     @Override
     public void setStatus(Status newStatus) {
         LOGGER.info("Block {} setting status to {}",
-                getName(),newStatus);
+                getName(), newStatus);
         status = newStatus;
     }
 

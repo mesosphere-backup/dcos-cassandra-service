@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
@@ -247,7 +245,7 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getDiskMb(),
                 cassandraConfig.mutable()
                         .setVolume(
-                        cassandraConfig.getVolume().withId()).
+                                cassandraConfig.getVolume().withId()).
                         setApplication(cassandraConfig.getApplication()
                                 .toBuilder().setSeedProvider(
                                         CassandraApplicationConfig
@@ -288,7 +286,7 @@ public class ConfigurationManager implements Managed {
                                                         seedsUrl))
                                 .build())
                         .build(),
-              daemonTask.getStatus());
+                daemonTask.getStatus());
 
 
     }
@@ -438,7 +436,7 @@ public class ConfigurationManager implements Managed {
                         Optional.empty()),
                 context.getKeySpaces(),
                 context.getColumnFamilies()
-                );
+        );
     }
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {

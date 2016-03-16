@@ -27,7 +27,7 @@ import java.util.Objects;
 
 public class DaemonInfo {
 
-    public static DaemonInfo create(final CassandraDaemonTask task){
+    public static DaemonInfo create(final CassandraDaemonTask task) {
         return new DaemonInfo(task);
     }
 
@@ -44,7 +44,7 @@ public class DaemonInfo {
     @JsonProperty("operatingMode")
     private final CassandraMode mode;
 
-    public DaemonInfo(final CassandraDaemonTask task){
+    public DaemonInfo(final CassandraDaemonTask task) {
         name = task.getName();
         id = task.getId();
         hostname = task.getHostname();
@@ -97,7 +97,7 @@ public class DaemonInfo {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return JsonUtils.toJsonString(this);
     }
 }

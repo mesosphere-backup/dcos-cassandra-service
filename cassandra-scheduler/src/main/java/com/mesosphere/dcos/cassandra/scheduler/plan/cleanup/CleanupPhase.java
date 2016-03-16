@@ -39,5 +39,7 @@ public class CleanupPhase extends AbstractClusterTaskPhase<CleanupBlock,
     }
 
     @Override
-    public String getName() {return "Cleanup";}
+    public String getName() {
+        return "Cleanup";
+    }
 }

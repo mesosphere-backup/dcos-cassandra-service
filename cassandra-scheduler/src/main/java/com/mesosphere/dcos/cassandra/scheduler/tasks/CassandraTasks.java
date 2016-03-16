@@ -188,7 +188,7 @@ public class CassandraTasks implements Managed {
 
     public CassandraDaemonTask moveDaemon(
             CassandraDaemonTask daemon
-    ) throws  PersistenceException {
+    ) throws PersistenceException {
         CassandraDaemonTask updated = configuration.moveDaemon(daemon);
         synchronized (persistent) {
             update(updated);

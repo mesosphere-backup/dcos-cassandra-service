@@ -10,21 +10,24 @@ import java.util.Objects;
 public class ErrorResponse {
 
     @JsonCreator
-    public static ErrorResponse fromString(final String message){
+    public static ErrorResponse fromString(final String message) {
         return new ErrorResponse(message);
     }
 
-    public static  ErrorResponse fromThrowable(final Throwable throwable){
+    public static ErrorResponse fromThrowable(final Throwable throwable) {
         return fromString(throwable.getMessage());
     }
+
     @JsonProperty("message")
     private final String message;
 
-    public ErrorResponse(final String message){
+    public ErrorResponse(final String message) {
         this.message = message;
     }
 
-    public String getMessage() { return message; }
+    public String getMessage() {
+        return message;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -40,5 +43,7 @@ public class ErrorResponse {
     }
 
     @Override
-    public String toString() {return JsonUtils.toJsonString(this);}
+    public String toString() {
+        return JsonUtils.toJsonString(this);
+    }
 }

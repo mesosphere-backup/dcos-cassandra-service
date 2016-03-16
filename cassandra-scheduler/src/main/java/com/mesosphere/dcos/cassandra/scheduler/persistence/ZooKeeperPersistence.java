@@ -32,7 +32,7 @@ public class ZooKeeperPersistence implements PersistenceFactory {
     }
 
     private static class ZooKeeperReference<T> implements
-                                               PersistentReference<T> {
+            PersistentReference<T> {
 
         private final CuratorFramework curator;
         private final String path;
@@ -141,7 +141,7 @@ public class ZooKeeperPersistence implements PersistenceFactory {
                 curator.delete().forPath(path);
             } catch (Exception e) {
                 throw new PersistenceException("Error deleting value" +
-                " - path = " + path, e);
+                        " - path = " + path, e);
             }
         }
     }
@@ -289,7 +289,7 @@ public class ZooKeeperPersistence implements PersistenceFactory {
         }
     }
 
-    public CuratorFramework getCurator(){
+    public CuratorFramework getCurator() {
         return curator;
     }
 

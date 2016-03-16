@@ -1,6 +1,11 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import org.apache.mesos.scheduler.plan.Block;import org.apache.mesos.scheduler.plan.Phase;import org.apache.mesos.scheduler.plan.PhaseStrategy;import org.apache.mesos.scheduler.plan.Status;import java.util.UUID;
+import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.scheduler.plan.PhaseStrategy;
+import org.apache.mesos.scheduler.plan.Status;
+
+import java.util.UUID;
 
 /**
  * A strategy that does nothing.

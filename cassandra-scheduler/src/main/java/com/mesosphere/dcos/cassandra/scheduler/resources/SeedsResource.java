@@ -28,33 +28,33 @@ public class SeedsResource {
 
     @Inject
     public SeedsResource(final CassandraTasks tasks,
-                         final ConfigurationManager configuration){
+                         final ConfigurationManager configuration) {
         this.tasks = tasks;
         this.configuration = configuration;
     }
 
     @GET
     @Counted
-    public Map<String,Object> getSeeds() throws UnknownHostException {
+    public Map<String, Object> getSeeds() throws UnknownHostException {
         final List<CassandraDaemonTask> active = tasks.getDaemons().values()
                 .stream()
                 .filter(daemon -> daemon.getStatus().getMode() ==
                         CassandraMode.NORMAL &&
-                daemon.getHostname().isEmpty() == false).collect(Collectors
+                        daemon.getHostname().isEmpty() == false).collect(Collectors
                         .toList());
 
         final int seedCount = configuration.getSeeds();
         final List<String> seeds = new ArrayList<>(active.size());
 
-        for(int seed = 0; seed < seedCount && seed < active.size(); ++seed){
+        for (int seed = 0; seed < seedCount && seed < active.size(); ++seed) {
 
             seeds.add(InetAddress.getByName(active.get(seed).getHostname())
                     .getHostAddress());
         }
 
-        Map<String,Object> response = new HashMap<>();
-        response.put("isSeed",(seeds.size() < seedCount) ? true : false);
-        response.put("seeds",seeds);
+        Map<String, Object> response = new HashMap<>();
+        response.put("isSeed", (seeds.size() < seedCount) ? true : false);
+        response.put("seeds", seeds);
 
         return response;
 

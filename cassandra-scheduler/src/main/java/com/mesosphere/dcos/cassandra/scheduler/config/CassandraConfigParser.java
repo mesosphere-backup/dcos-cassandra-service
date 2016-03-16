@@ -7,8 +7,6 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.Volume;
 
-import java.util.Optional;
-
 import static com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig.*;
 
 public class CassandraConfigParser {

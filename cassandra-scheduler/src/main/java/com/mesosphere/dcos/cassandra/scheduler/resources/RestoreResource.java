@@ -7,7 +7,10 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -29,7 +32,7 @@ public class RestoreResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response start(StartRestoreRequest request) {
-        LOGGER.info("Processing restore request: request = {}",request);
+        LOGGER.info("Processing restore request: request = {}", request);
         try {
             if (manager.canStartRestore()) {
                 final RestoreContext context = from(request);
@@ -43,7 +46,7 @@ public class RestoreResource {
                                 "Restore already in progress."))
                         .build();
             }
-        } catch(Throwable throwable){
+        } catch (Throwable throwable) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(ErrorResponse.fromThrowable(throwable))
                     .build();

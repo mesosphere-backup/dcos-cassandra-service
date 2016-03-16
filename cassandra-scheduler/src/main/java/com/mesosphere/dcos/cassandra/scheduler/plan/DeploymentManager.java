@@ -19,7 +19,7 @@ public class DeploymentManager {
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final ExecutorClient client,
-            final Reconciler reconciler){
+            final Reconciler reconciler) {
         return new DeploymentManager(provider,
                 configurationManager,
                 cassandraTasks,

@@ -1,9 +1,9 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
@@ -52,6 +52,6 @@ public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreConte
 
     @Override
     public String getName() {
-         return DownloadSnapshotTask.nameForDaemon(daemon);
+        return DownloadSnapshotTask.nameForDaemon(daemon);
     }
 }

@@ -1,7 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
@@ -94,7 +94,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
         this.context = context;
         this.cassandraTasks = cassandraTasks;
         Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
-        if(taskOption.isPresent()){
+        if (taskOption.isPresent()) {
             CassandraTask task = taskOption.get();
             if (Protos.TaskState.TASK_FINISHED.equals(
                     task.getStatus().getState()
@@ -120,7 +120,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                         task.getStatus().getState()
                 )) {
                     setStatus(Status.Complete);
-                    LOGGER.info("Block {} task finished",getName());
+                    LOGGER.info("Block {} task finished", getName());
                 } else if (TaskUtils.isTerminated(task.getStatus().getState())) {
                     //need to progress with a new task
                     cassandraTasks.remove(getName());

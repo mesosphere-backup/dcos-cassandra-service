@@ -4,8 +4,6 @@ package com.mesosphere.dcos.cassandra.scheduler.config;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -36,7 +34,6 @@ public class IdentityManagerTest {
 
     private static Identity initial;
 
-   
 
     @BeforeClass
     public static void beforeAll() throws Exception {
@@ -50,7 +47,7 @@ public class IdentityManagerTest {
                         CassandraSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(new GuavaModule())
-                        .registerModule(new Jdk8Module()),
+                                .registerModule(new Jdk8Module()),
                         "dw");
 
         CassandraSchedulerConfiguration config = factory.build(

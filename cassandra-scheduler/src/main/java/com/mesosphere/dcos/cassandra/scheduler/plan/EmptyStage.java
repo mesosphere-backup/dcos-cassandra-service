@@ -1,6 +1,9 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import org.apache.mesos.scheduler.plan.Phase;import org.apache.mesos.scheduler.plan.Stage;import java.util.Collections;
+import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.scheduler.plan.Stage;
+
+import java.util.Collections;
 import java.util.List;
 
 /**

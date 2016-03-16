@@ -105,7 +105,7 @@ public class CuratorFrameworkConfig {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return JsonUtils.toJsonString(this);
     }
 }
