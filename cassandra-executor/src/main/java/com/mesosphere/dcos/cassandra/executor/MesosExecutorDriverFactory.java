@@ -7,7 +7,7 @@ import org.apache.mesos.MesosExecutorDriver;
 /**
  * Created by kowens on 2/17/16.
  */
-public class MesosExecutorDriverFactory implements ExecutorDriverFactory{
+public class MesosExecutorDriverFactory implements ExecutorDriverFactory {
 
     @Override
     public ExecutorDriver getDriver(Executor executor) {

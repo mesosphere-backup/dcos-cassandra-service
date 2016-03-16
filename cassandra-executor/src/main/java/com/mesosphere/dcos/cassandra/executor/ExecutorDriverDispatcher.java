@@ -1,7 +1,6 @@
 package com.mesosphere.dcos.cassandra.executor;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
@@ -11,11 +10,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 
-public class ExecutorDriverDispatcher implements Runnable, Managed{
+public class ExecutorDriverDispatcher implements Runnable, Managed {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ExecutorDriverDispatcher.class);
 
-    private static final int exitCode(final Protos.Status status){
+    private static final int exitCode(final Protos.Status status) {
         return (status == Protos.Status.DRIVER_ABORTED ||
                 status == Protos.Status.DRIVER_NOT_STARTED) ?
                 -1 : 0;
@@ -37,7 +36,7 @@ public class ExecutorDriverDispatcher implements Runnable, Managed{
 
         LOGGER.info("Starting driver execution");
         Protos.Status status = driver.run();
-        LOGGER.info("Driver execution complete status = {}",status);
+        LOGGER.info("Driver execution complete status = {}", status);
         driver.stop();
         System.exit(exitCode(status));
     }

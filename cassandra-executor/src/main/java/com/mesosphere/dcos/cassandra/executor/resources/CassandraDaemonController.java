@@ -36,11 +36,11 @@ public class CassandraDaemonController {
     @Inject
     public CassandraDaemonController(Executor executor) {
 
-        LOGGER.info("Setting executor to {}",executor);
+        LOGGER.info("Setting executor to {}", executor);
 
         this.executor = (CassandraExecutor) executor;
 
-        LOGGER.info("Set executor to {}",this.executor);
+        LOGGER.info("Set executor to {}", this.executor);
     }
 
     @GET
@@ -61,7 +61,7 @@ public class CassandraDaemonController {
 
     @DELETE
     @Counted
-    public void shutdown(){
+    public void shutdown() {
 
         getDaemon().shutdown();
     }

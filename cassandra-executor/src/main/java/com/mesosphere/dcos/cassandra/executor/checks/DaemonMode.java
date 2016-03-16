@@ -18,7 +18,7 @@ public class DaemonMode extends HealthCheck {
     public static final String NAME = "daemonMode";
 
     @Inject
-    public DaemonMode(final CassandraExecutor executor){
+    public DaemonMode(final CassandraExecutor executor) {
         this.executor = executor;
     }
 
@@ -28,7 +28,7 @@ public class DaemonMode extends HealthCheck {
         Optional<CassandraDaemonProcess> daemon =
                 executor.getCassandraDaemon();
 
-        if(daemon.isPresent()){
+        if (daemon.isPresent()) {
             return (daemon.get().getMode() == CassandraMode.NORMAL) ?
                     Result.healthy() : Result.unhealthy("Cassandra Daemon " +
                     "mode is " + daemon.get().getMode());

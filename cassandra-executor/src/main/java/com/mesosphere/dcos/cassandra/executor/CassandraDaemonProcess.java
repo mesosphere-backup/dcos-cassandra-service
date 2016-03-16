@@ -246,7 +246,7 @@ public class CassandraDaemonProcess {
                 .setRpcAddress(getListenAddress())
                 .build().writeDaemonConfiguration(paths.cassandraConfig());
 
-        if(metricsEnabled) {
+        if (metricsEnabled) {
             metricsEnabled = MetricsConfig.writeMetricsConfig(
                     paths.cassandraConfig());
         }
@@ -282,12 +282,12 @@ public class CassandraDaemonProcess {
     }
 
     private String getReplaceIp() throws UnknownHostException {
-        if(task.getConfig().getReplaceIp().trim().isEmpty()){
+        if (task.getConfig().getReplaceIp().trim().isEmpty()) {
             return "";
         } else {
             InetAddress address =
                     InetAddress.getByName(
-                    task.getConfig().getReplaceIp());
+                            task.getConfig().getReplaceIp());
             return "-Dcassandra.replace_address=" + address.getHostAddress();
         }
     }
@@ -296,10 +296,10 @@ public class CassandraDaemonProcess {
 
         final ProcessBuilder builder = new ProcessBuilder(
                 paths.cassandraRun()
-                .toString(),
+                        .toString(),
                 getReplaceIp(),
                 "-f"
-               )
+        )
                 .directory(new File(System.getProperty("user.dir")))
                 .redirectOutput(new File("cassandra-stdout.log"))
                 .redirectError(new File("cassandra-stderr.log"));
@@ -308,7 +308,7 @@ public class CassandraDaemonProcess {
         builder.environment().put(
                 "JMX_PORT",
                 Integer.toString(task.getConfig().getJmxPort()));
-        if(metricsEnabled){
+        if (metricsEnabled) {
             MetricsConfig.setEnv(builder.environment());
         }
         return builder.start();
@@ -427,7 +427,7 @@ public class CassandraDaemonProcess {
     public void upgradeTables()
             throws InterruptedException, ExecutionException, IOException {
 
-        this.probe.upgradeSSTables(null,true);
+        this.probe.upgradeSSTables(null, true);
     }
 
 

@@ -32,9 +32,9 @@ public class CassandraExecutor implements Executor {
     private final ScheduledExecutorService executor;
     private final ExecutorService clusterJobExecutorService;
 
-    private String getNodeId(String executorName){
+    private String getNodeId(String executorName) {
         int end = executorName.indexOf("_");
-        return executorName.substring(0,end);
+        return executorName.substring(0, end);
     }
 
     @Inject
@@ -164,7 +164,7 @@ public class CassandraExecutor implements Executor {
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
                         final Cleanup cleanup = new Cleanup(
-                                driver, probe, (CleanupTask)cassandraTask);
+                                driver, probe, (CleanupTask) cassandraTask);
                         clusterJobExecutorService.submit(cleanup);
                     }
                     break;

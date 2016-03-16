@@ -11,40 +11,40 @@ public class CassandraPaths {
 
     private final Path root;
 
-    public static CassandraPaths create(final String version){
+    public static CassandraPaths create(final String version) {
         return new CassandraPaths(version);
     }
 
-    public CassandraPaths(final String version){
+    public CassandraPaths(final String version) {
         root = Paths.get("apache-cassandra-" + version);
     }
 
-    public Path conf(){
+    public Path conf() {
         return root.resolve("conf");
     }
 
-    public Path bin(){
+    public Path bin() {
         return root.resolve("bin");
     }
 
-    public Path lib(){
+    public Path lib() {
 
         return root.resolve("lib");
     }
 
-    public Path tools(){
+    public Path tools() {
         return root.resolve("tools");
     }
 
-    public Path cassandraConfig(){
+    public Path cassandraConfig() {
         return conf().resolve(CassandraApplicationConfig.DEFAULT_FILE_NAME);
     }
 
-    public Path cassandraLocation(){
+    public Path cassandraLocation() {
         return conf().resolve(Location.DEFAULT_FILE);
     }
 
-    public Path cassandraRun(){
+    public Path cassandraRun() {
 
         return bin().resolve("cassandra");
     }

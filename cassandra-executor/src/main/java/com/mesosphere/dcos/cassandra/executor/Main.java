@@ -13,7 +13,6 @@ import io.dropwizard.java8.Java8Bundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.apache.mesos.MesosExecutorDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
