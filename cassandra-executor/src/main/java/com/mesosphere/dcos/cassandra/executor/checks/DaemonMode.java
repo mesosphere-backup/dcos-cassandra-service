@@ -8,9 +8,6 @@ import com.mesosphere.dcos.cassandra.executor.CassandraExecutor;
 
 import java.util.Optional;
 
-/**
- * Created by kowens on 2/10/16.
- */
 public class DaemonMode extends HealthCheck {
 
     private final CassandraExecutor executor;
