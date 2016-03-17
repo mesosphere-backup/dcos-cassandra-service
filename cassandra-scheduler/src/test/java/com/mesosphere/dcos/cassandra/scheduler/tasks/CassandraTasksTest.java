@@ -77,7 +77,7 @@ public class CassandraTasksTest {
         config = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false)),
+                        new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
         Identity initial = config.getIdentity();

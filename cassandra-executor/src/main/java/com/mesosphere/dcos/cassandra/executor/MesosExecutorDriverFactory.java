@@ -4,9 +4,6 @@ import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
 
-/**
- * Created by kowens on 2/17/16.
- */
 public class MesosExecutorDriverFactory implements ExecutorDriverFactory {
 
     @Override

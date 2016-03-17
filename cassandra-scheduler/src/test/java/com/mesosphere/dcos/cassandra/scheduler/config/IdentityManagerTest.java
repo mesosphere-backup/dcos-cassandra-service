@@ -53,7 +53,7 @@ public class IdentityManagerTest {
         CassandraSchedulerConfiguration config = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false)),
+                        new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
         initial = config.getIdentity();

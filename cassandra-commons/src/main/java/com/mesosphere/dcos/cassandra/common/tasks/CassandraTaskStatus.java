@@ -39,6 +39,31 @@ import java.util.Optional;
 })
 public abstract class CassandraTaskStatus {
 
+    public static boolean isTerminated(final Protos.TaskState state){
+        switch (state) {
+            case TASK_STARTING:
+            case TASK_STAGING:
+            case TASK_RUNNING:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    public static boolean isRunning(final Protos.TaskState state){
+        return Protos.TaskState.TASK_RUNNING.equals(state);
+    }
+
+    public static boolean isLaunching(final Protos.TaskState state){
+        switch (state) {
+            case TASK_STARTING:
+            case TASK_STAGING:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     public static CassandraTaskStatus parse(Protos.TaskStatus status)
             throws IOException {
         CassandraProtos.CassandraTaskStatusData data =
@@ -196,6 +221,21 @@ public abstract class CassandraTaskStatus {
 
         return builder.build();
 
+    }
+
+    @JsonIgnore
+    public boolean isRunning(){
+        return isRunning(state);
+    }
+
+    @JsonIgnore
+    public boolean isTerminated(){
+        return isTerminated(state);
+    }
+
+    @JsonIgnore
+    public boolean isLaunching(){
+        return isLaunching(state);
     }
 
     @Override

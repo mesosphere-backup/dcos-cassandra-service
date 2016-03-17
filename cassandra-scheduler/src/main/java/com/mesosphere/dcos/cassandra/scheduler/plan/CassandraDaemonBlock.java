@@ -20,20 +20,6 @@ public class CassandraDaemonBlock implements Block {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraDaemonBlock.class);
 
-    private static final boolean isTerminal(Protos.TaskState state) {
-
-        switch (state) {
-            case TASK_STARTING:
-                return false;
-            case TASK_STAGING:
-                return false;
-            case TASK_RUNNING:
-                return false;
-            default:
-                return true;
-        }
-    }
-
     private final UUID id = UUID.randomUUID();
     private final CassandraTasks cassandraTasks;
     private final CassandraOfferRequirementProvider provider;
@@ -93,10 +79,6 @@ public class CassandraDaemonBlock implements Block {
                 && CassandraMode.NORMAL.equals(
                 task.getStatus().getMode()) &&
                 !cassandraTasks.needsConfigUpdate(task));
-    }
-
-    private boolean isTerminal(final CassandraDaemonTask task) {
-        return isTerminal(task.getStatus().getState());
     }
 
     private boolean needsConfigUpdate(final CassandraDaemonTask task) {
@@ -204,7 +186,7 @@ public class CassandraDaemonBlock implements Block {
             LOGGER.info("Block {} - Task requires config update : id = {}",
                     getName(),
                     task.getId());
-            if (!isTerminal(task.getStatus().getState())) {
+            if (!task.isTerminated()) {
                 terminate(task);
                 return null;
             } else {
@@ -215,8 +197,8 @@ public class CassandraDaemonBlock implements Block {
                     getName(),
                     task.getId());
             return provider.getNewOfferRequirement(task.toProto());
-        } else if (isTerminal(task)) {
-            LOGGER.info("Block {} - Replacing task : id = {}",
+        } else if (task.isTerminated() || task.isLaunching()) {
+            LOGGER.info("Block {} - Replacing task : id = {}" ,
                     getName(),
                     task.getId());
             return replaceTask(task);
@@ -233,7 +215,7 @@ public class CassandraDaemonBlock implements Block {
             final CassandraDaemonTask task = getTask();
             if (isComplete(task)) {
                 setStatus(Status.Complete);
-            } else if (isTerminal(task)) {
+            } else if (task.isTerminated()) {
                 setStatus(Status.Pending);
             }
         } catch (Exception ex) {

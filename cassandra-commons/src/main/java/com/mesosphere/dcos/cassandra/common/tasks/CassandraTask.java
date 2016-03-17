@@ -15,6 +15,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.task.TaskUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -383,6 +384,21 @@ public abstract class CassandraTask {
                 .addAllResources(getLaunchResources())
                 .setExecutor(executor.toExecutorInfo(role, principal))
                 .build();
+    }
+
+    @JsonIgnore
+    public boolean isTerminated(){
+        return status.isTerminated();
+    }
+
+    @JsonIgnore
+    public boolean isRunning(){
+        return status.isRunning();
+    }
+
+    @JsonIgnore
+    public boolean isLaunching(){
+        return status.isLaunching();
     }
 
     @JsonIgnore

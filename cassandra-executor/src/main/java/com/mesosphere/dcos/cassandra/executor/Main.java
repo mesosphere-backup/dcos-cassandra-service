@@ -60,7 +60,6 @@ public class Main extends Application<CassandraExecutorConfiguration> {
                 injector.getInstance(DaemonMode.class));
         environment.jersey().register(
                 injector.getInstance(CassandraDaemonController.class));
-
         environment.lifecycle().manage(
                 injector.getInstance(ExecutorDriverDispatcher.class));
     }

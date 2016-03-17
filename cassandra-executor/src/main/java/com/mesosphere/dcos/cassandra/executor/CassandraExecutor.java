@@ -26,7 +26,6 @@ public class CassandraExecutor implements Executor {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraExecutor.class);
 
-    private ExecutorDriver driver;
     private volatile CassandraDaemonProcess cassandra;
     private String nodeId = null;
     private final ScheduledExecutorService executor;
@@ -50,14 +49,12 @@ public class CassandraExecutor implements Executor {
                            Protos.ExecutorInfo executorInfo,
                            Protos.FrameworkInfo frameworkInfo,
                            Protos.SlaveInfo slaveInfo) {
-        this.driver = driver;
         this.nodeId = getNodeId(executorInfo.getName());
     }
 
     @Override
     public void reregistered(ExecutorDriver driver,
                              Protos.SlaveInfo slaveInfo) {
-        this.driver = driver;
     }
 
     @Override
@@ -87,7 +84,8 @@ public class CassandraExecutor implements Executor {
 
                         driver.sendStatusUpdate(daemonStatus);
 
-                        LOGGER.error("CassandraDaemon task failed status = {}",
+                        LOGGER.error("Cassandra Daemon is already running " +
+                                        "status = {}",
                                 daemonStatus);
                     } else {
                         cassandra = CassandraDaemonProcess.create(
@@ -96,15 +94,12 @@ public class CassandraExecutor implements Executor {
                                 driver
                         );
 
-                        LOGGER.info("Starting CassandraDaemon task = {}",
+                        LOGGER.info("Starting Cassandra Daemon: task = {}",
                                 cassandraTask);
                     }
                     break;
 
                 case BACKUP_SNAPSHOT:
-                    LOGGER.info("Launching task: {}",
-                            cassandraTask.getType().name());
-                    // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
                         final BackupSnapshot backupSnapshot = new BackupSnapshot(
@@ -114,9 +109,6 @@ public class CassandraExecutor implements Executor {
                     break;
 
                 case BACKUP_UPLOAD:
-                    LOGGER.info("Launching task: {}",
-                            cassandraTask.getType().name());
-                    // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
                         final BackupStorageDriver backupStorageDriver = new S3StorageDriver();
@@ -131,31 +123,30 @@ public class CassandraExecutor implements Executor {
                     break;
 
                 case SNAPSHOT_DOWNLOAD:
-                    LOGGER.info("Launching task: {}",
-                            cassandraTask.getType().name());
-                    // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
-                        final BackupStorageDriver backupStorageDriver = new S3StorageDriver();
-                        final DownloadSnapshot downloadSnapshot = new DownloadSnapshot(
-                                driver,
-                                probe,
-                                cassandraTask,
-                                nodeId,
-                                backupStorageDriver);
+                        final BackupStorageDriver backupStorageDriver =
+                                new S3StorageDriver();
+                        final DownloadSnapshot downloadSnapshot =
+                                new DownloadSnapshot(
+                                        driver,
+                                        probe,
+                                        cassandraTask,
+                                        nodeId,
+                                        backupStorageDriver);
                         clusterJobExecutorService.submit(downloadSnapshot);
                     }
                     break;
 
                 case SNAPSHOT_RESTORE:
-                    LOGGER.info("Launching task: {}",
-                            cassandraTask.getType().name());
-                    // Ensure that the Cassandra process is running.
                     if (cassandra != null && cassandra.isOpen()) {
                         final NodeProbe probe = cassandra.getProbe();
-                        final RestoreSnapshot restoreSnapshot = new RestoreSnapshot(
-                                driver, probe, cassandraTask,
-                                nodeId);
+                        final RestoreSnapshot restoreSnapshot =
+                                new RestoreSnapshot(
+                                        driver,
+                                        probe,
+                                        cassandraTask,
+                                        nodeId);
                         clusterJobExecutorService.submit(restoreSnapshot);
                     }
                     break;
@@ -170,6 +161,8 @@ public class CassandraExecutor implements Executor {
                     break;
 
                 default:
+                    LOGGER.error("Unhandled task: type = {}",
+                            cassandraTask.getType().name());
                     throw new NotImplementedException(
                             "Unsupported task type: {}",
                             cassandraTask.getType().name());
@@ -216,10 +209,9 @@ public class CassandraExecutor implements Executor {
     public void shutdown(ExecutorDriver driver) {
         LOGGER.info("Shutting down now");
         if (cassandra != null && cassandra.isOpen()) {
-            LOGGER.info("Disconnected Killing CassandraDaemon");
+            LOGGER.info("Disconnected - Killing Cassandra Daemon");
             cassandra.kill();
         }
-
         executor.shutdownNow();
     }
 

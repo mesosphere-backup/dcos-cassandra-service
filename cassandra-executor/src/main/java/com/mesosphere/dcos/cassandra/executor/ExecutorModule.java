@@ -8,9 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-/**
- * Created by kowens on 2/10/16.
- */
 public class ExecutorModule extends AbstractModule {
 
     final CassandraExecutorConfiguration configuration;
