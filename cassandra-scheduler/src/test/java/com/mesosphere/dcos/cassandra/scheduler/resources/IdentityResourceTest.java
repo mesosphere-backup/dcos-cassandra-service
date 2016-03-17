@@ -3,9 +3,10 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
-import com.mesosphere.dcos.cassandra.scheduler.config.*;
+import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
+import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
+import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -56,7 +57,7 @@ public class IdentityResourceTest {
         config = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false)),
+                        new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
         Identity initial = config.getIdentity();

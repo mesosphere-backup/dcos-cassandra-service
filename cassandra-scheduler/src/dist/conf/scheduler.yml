@@ -118,10 +118,21 @@ identity:
   name : ${FRAMEWORK_NAME:-"cassandra"}
   version : ${FRAMEWORK_VERSION:-"0.1.0"}
   user : ${FRAMEWORK_USER:-"root"}
-  cluster : "${FRAMEWORK_NAME:-cassandra}_cluster"
-  role : "${FRAMEWORK_NAME:-cassandra}_role"
-  principal : "${FRAMEWORK_NAME:-cassandra}_principal"
+  cluster : "${FRAMEWORK_CLUSTER:-${FRAMEWORK_NAME:-cassandra}_cluster}"
+  role : "${FRAMEWORK_ROLE:-${FRAMEWORK_NAME:-cassandra}_role}"
+  principal : "${FRAMEWORK_PRINCIPAL:-${FRAMEWORK_NAME:-cassandra}_principal}"
+  secret: ${FRAMEWORK_SECRET_FILE:-""}
   failoverTimeoutS : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
   checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
-seedsUrl: "http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds"
+seedsUrl: "${SEEDS_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
 phaseStrategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
+mesos:
+  servers: ${MESOS_SERVERS:-"master.mesos:2181"}
+  path: ${MESOS_PATH:-"/mesos"}
+  timeoutMs: ${MESOS_TIMEOUT_MS:-10000}
+zookeeper:
+  servers: ${ZOOKEEPER_SERVERS:-"master.mesos:2181"}
+  sessionTimeoutMs: 10000
+  connectionTimeoutMs: 10000
+  operationTimeoutMs: 10000
+  backoffMs: 10000
