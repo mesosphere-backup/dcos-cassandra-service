@@ -12,10 +12,11 @@ import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.task.TaskUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,6 +45,8 @@ import static org.apache.mesos.offer.ResourceUtils.*;
                 "SNAPSHOT_RESTORE"),
         @JsonSubTypes.Type(value = CleanupTask.class, name =
                 "CLEANUP"),
+        @JsonSubTypes.Type(value = RepairTask.class, name =
+                "REPAIR"),
 })
 public abstract class CassandraTask {
 
@@ -81,7 +84,8 @@ public abstract class CassandraTask {
         BACKUP_UPLOAD,
         SNAPSHOT_DOWNLOAD,
         SNAPSHOT_RESTORE,
-        CLEANUP
+        CLEANUP,
+        REPAIR
     }
 
     public static CassandraTask parse(Protos.TaskInfo info)
@@ -264,6 +268,31 @@ public abstract class CassandraTask {
                         data.getColumnFamiliesList()
                 );
 
+            case REPAIR:
+                return RepairTask.create(
+                        info.getTaskId().getValue(),
+                        info.getSlaveId().getValue(),
+                        data.getAddress(),
+                        CassandraTaskExecutor.parse(info.getExecutor()),
+                        info.getName(),
+                        role,
+                        principal,
+                        getReservedCpu(info.getResourcesList(), role,
+                                principal),
+                        (int) getReservedMem(resources,
+                                role,
+                                principal),
+                        (int) getTotalReservedDisk(resources,
+                                role,
+                                principal),
+                        RepairStatus.create(Protos.TaskState.TASK_STAGING,
+                                info.getTaskId().getValue(),
+                                info.getSlaveId().getValue(),
+                                info.getExecutor().getExecutorId().getValue(),
+                                Optional.empty()),
+                        data.getKeySpacesList(),
+                        data.getColumnFamiliesList()
+                );
             default:
                 return null;
         }
