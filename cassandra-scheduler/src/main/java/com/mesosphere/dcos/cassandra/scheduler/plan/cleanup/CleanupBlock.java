@@ -55,4 +55,12 @@ public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
     public String getName() {
         return CleanupTask.nameForDaemon(daemon);
     }
+
+    @Override
+    public String toString() {
+        return "CleanupBlock{" +
+                "name='" + getName() + '\'' +
+                ", id=" + id +
+                '}';
+    }
 }

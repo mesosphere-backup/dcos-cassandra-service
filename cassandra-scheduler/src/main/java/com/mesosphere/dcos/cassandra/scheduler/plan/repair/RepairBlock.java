@@ -55,4 +55,12 @@ public class RepairBlock extends AbstractClusterTaskBlock<RepairContext> {
     public String getName() {
         return RepairTask.nameForDaemon(daemon);
     }
+
+    @Override
+    public String toString() {
+        return "RepairBlock{" +
+                "name='" + getName() + '\'' +
+                ", id=" + id +
+                '}';
+    }
 }

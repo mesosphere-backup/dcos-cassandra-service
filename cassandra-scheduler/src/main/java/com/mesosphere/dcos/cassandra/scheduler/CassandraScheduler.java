@@ -17,6 +17,7 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStage;
 import com.mesosphere.dcos.cassandra.scheduler.plan.DeploymentManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.MesosSchedulerDriver;
@@ -56,6 +57,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final BackupManager backup;
     private final RestoreManager restore;
     private final CleanupManager cleanup;
+    private final RepairManager repair;
 
     @Inject
     public CassandraScheduler(
@@ -70,7 +72,8 @@ public class CassandraScheduler implements Scheduler, Managed {
             final EventBus eventBus,
             final BackupManager backup,
             final RestoreManager restore,
-            final CleanupManager cleanup) {
+            final CleanupManager cleanup,
+            final RepairManager repair) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
         this.cassandraTasks = cassandraTasks;
@@ -89,6 +92,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.backup = backup;
         this.restore = restore;
         this.cleanup = cleanup;
+        this.repair = repair;
     }
 
     @Override
@@ -126,7 +130,8 @@ public class CassandraScheduler implements Scheduler, Managed {
                     ),
                     backup,
                     restore,
-                    cleanup));
+                    cleanup,
+                    repair));
             reconciler.start(cassandraTasks.get().values().stream().map(
                     task -> task.getStatus().toProto()
             ).collect(Collectors.toList()));

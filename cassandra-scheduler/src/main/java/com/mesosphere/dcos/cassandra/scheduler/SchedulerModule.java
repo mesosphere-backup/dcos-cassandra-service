@@ -14,6 +14,7 @@ import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerialize
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
@@ -24,6 +25,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.setup.Environment;
@@ -85,10 +87,15 @@ public class SchedulerModule extends AbstractModule {
 
         bind(new TypeLiteral<Serializer<BackupContext>>() {
         }).toInstance(BackupContext.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<RestoreContext>>() {
         }).toInstance(RestoreContext.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<CleanupContext>>() {
         }).toInstance(CleanupContext.JSON_SERIALIZER);
+
+        bind(new TypeLiteral<Serializer<RepairContext>>() {
+        }).toInstance(RepairContext.JSON_SERIALIZER);
 
         bind(MesosConfig.class).toInstance(configuration.getMesosConfig());
 
@@ -140,5 +147,6 @@ public class SchedulerModule extends AbstractModule {
         bind(Reconciler.class).to(DefaultReconciler.class).asEagerSingleton();
         bind(RestoreManager.class).asEagerSingleton();
         bind(CleanupManager.class).asEagerSingleton();
+        bind(RepairManager.class).asEagerSingleton();
     }
 }

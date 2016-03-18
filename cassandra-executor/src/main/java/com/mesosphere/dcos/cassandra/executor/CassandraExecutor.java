@@ -6,6 +6,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import com.mesosphere.dcos.cassandra.executor.backup.S3StorageDriver;
 import com.mesosphere.dcos.cassandra.executor.tasks.*;
@@ -157,6 +158,15 @@ public class CassandraExecutor implements Executor {
                         final Cleanup cleanup = new Cleanup(
                                 driver, probe, (CleanupTask) cassandraTask);
                         clusterJobExecutorService.submit(cleanup);
+                    }
+                    break;
+
+                case REPAIR:
+                    if (cassandra != null && cassandra.isOpen()) {
+                        final NodeProbe probe = cassandra.getProbe();
+                        final Repair repair = new Repair(
+                                driver, probe, (RepairTask) cassandraTask);
+                        clusterJobExecutorService.submit(repair);
                     }
                     break;
 

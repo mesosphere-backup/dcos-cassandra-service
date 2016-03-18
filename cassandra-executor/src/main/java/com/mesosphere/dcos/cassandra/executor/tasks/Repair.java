@@ -2,6 +2,8 @@ package com.mesosphere.dcos.cassandra.executor.tasks;
 
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import org.apache.cassandra.repair.RepairParallelism;
+import org.apache.cassandra.repair.messages.RepairOption;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -9,10 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 
 public class Repair implements Runnable {
@@ -47,11 +47,34 @@ public class Repair implements Runnable {
         }
     }
 
+    private void repairKeyspace(String keyspace, String[] columnFamilies) throws Exception {
+        LOGGER.info("Starting repair : keySpace = {}, columnFamilies = {}",
+                keyspace, Arrays.asList(columnFamilies));
+
+        Map<String, String> options = new HashMap<>();
+        options.put(RepairOption.PRIMARY_RANGE_KEY, "true");
+        options.put(RepairOption.COLUMNFAMILIES_KEY, String.join(",", columnFamilies));
+        options.put(RepairOption.PARALLELISM_KEY, RepairParallelism.SEQUENTIAL.getName());
+        options.put(RepairOption.INCREMENTAL_KEY, "false");
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(baos);
+
+        probe.repairAsync(out, keyspace, options);
+
+        LOGGER.info("Repair output = {}", baos.toString("UTF8"));
+        LOGGER.info("Completed repair : keySpace = {}, columnFamilies = {}",
+                keyspace, Arrays.asList(columnFamilies));
+
+        sendStatus(driver, Protos.TaskState.TASK_RUNNING,
+                String.format("Completed repair : keySpace = %s, columnFamilies = %s",
+                        keyspace, Arrays.asList(columnFamilies)));
+    }
+
     @Override
     public void run() {
         try {
             // Send TASK_RUNNING
-
             final List<String> keySpaces = getKeySpaces();
             final String [] columnFamilies = getColumnFamilies();
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
@@ -61,22 +84,8 @@ public class Repair implements Runnable {
                             Arrays.asList(columnFamilies)));
 
             for(String keyspace: keySpaces){
-                LOGGER.info("Starting repair : keySpace = {}, " +
-                        "columnFamilies = {}",
-                        keyspace,
-                        Arrays.asList(columnFamilies));
-
-                Map<String, String> options = new HashMap<String, String>();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                PrintStream outStream = new PrintStream(baos);
-                probe.repairAsync(outStream, keyspace, options);
-                LOGGER.info("Repair output = {}", outStream.toString());
-                LOGGER.info("Completed repair : keySpace = {}, " +
-                                "columnFamilies = {}",
-                        keyspace,
-                        Arrays.asList(columnFamilies));
+                repairKeyspace(keyspace, columnFamilies);
             }
-
 
             // Send TASK_FINISHED
             sendStatus(driver, Protos.TaskState.TASK_FINISHED,
