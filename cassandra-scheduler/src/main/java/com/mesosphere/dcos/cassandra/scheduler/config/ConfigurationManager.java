@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
@@ -16,6 +14,9 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
@@ -439,6 +440,33 @@ public class ConfigurationManager implements Managed {
                 context.getKeySpaces(),
                 context.getColumnFamilies()
                 );
+    }
+
+    public RepairTask createRepairTask(
+            CassandraDaemonTask daemon,
+            RepairContext context) {
+        String name = RepairTask.nameForDaemon(daemon);
+        String id = name + "_" + UUID.randomUUID().toString();
+
+        return RepairTask.create(
+                id,
+                daemon.getSlaveId(),
+                daemon.getHostname(),
+                daemon.getExecutor(),
+                name,
+                daemon.getRole(),
+                daemon.getPrincipal(),
+                clusterTaskConfig.getCpus(),
+                clusterTaskConfig.getMemoryMb(),
+                clusterTaskConfig.getDiskMb(),
+                RepairStatus.create(Protos.TaskState.TASK_STAGING,
+                        id,
+                        daemon.getSlaveId(),
+                        name,
+                        Optional.empty()),
+                context.getKeySpaces(),
+                context.getColumnFamilies()
+        );
     }
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {

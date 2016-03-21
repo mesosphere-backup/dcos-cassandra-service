@@ -1,10 +1,10 @@
-package com.mesosphere.dcos.cassandra.scheduler.plan.cleanup;
+package com.mesosphere.dcos.cassandra.scheduler.plan.repair;
 
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
@@ -15,29 +15,29 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
+public class RepairBlock extends AbstractClusterTaskBlock<RepairContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            CleanupBlock.class);
+            RepairBlock.class);
 
-    public static CleanupBlock create(
+    public static RepairBlock create(
             String daemon,
             CassandraTasks cassandraTasks,
             CassandraOfferRequirementProvider provider,
-            CleanupContext context) {
-        return new CleanupBlock(daemon, cassandraTasks, provider, context);
+            RepairContext context) {
+        return new RepairBlock(daemon, cassandraTasks, provider, context);
     }
 
-    public CleanupBlock(
+    public RepairBlock(
             String daemon,
             CassandraTasks cassandraTasks,
             CassandraOfferRequirementProvider provider,
-            CleanupContext context) {
+            RepairContext context) {
         super(daemon, cassandraTasks, provider, context);
     }
 
 
     @Override
-    protected Optional<CassandraTask> getOrCreateTask(CleanupContext context)
+    protected Optional<CassandraTask> getOrCreateTask(RepairContext context)
             throws PersistenceException {
         CassandraDaemonTask daemonTask =
                 cassandraTasks.getDaemons().get(daemon);
@@ -46,19 +46,19 @@ public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
             setStatus(Status.Complete);
             return Optional.empty();
         }
-        return Optional.of(cassandraTasks.getOrCreateCleanup(
+        return Optional.of(cassandraTasks.getOrCreateRepair(
                 daemonTask,
                 context));
     }
 
     @Override
     public String getName() {
-        return CleanupTask.nameForDaemon(daemon);
+        return RepairTask.nameForDaemon(daemon);
     }
 
     @Override
     public String toString() {
-        return "CleanupBlock{" +
+        return "RepairBlock{" +
                 "name='" + getName() + '\'' +
                 ", id=" + id +
                 '}';

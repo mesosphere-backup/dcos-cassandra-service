@@ -10,6 +10,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 
@@ -36,6 +37,8 @@ import java.util.Optional;
                 "SNAPSHOT_RESTORE"),
         @JsonSubTypes.Type(value = CleanupStatus.class, name =
                 "CLEANUP"),
+        @JsonSubTypes.Type(value = RepairStatus.class, name =
+                "REPAIR"),
 })
 public abstract class CassandraTaskStatus {
 
@@ -131,6 +134,18 @@ public abstract class CassandraTaskStatus {
 
             case CLEANUP:
                 return CleanupStatus.create(
+                        status.getState(),
+                        status.getTaskId().getValue(),
+                        status.getSlaveId().getValue(),
+                        status.getExecutorId().getValue(),
+                        (status.hasMessage()) ?
+                                Optional.of(
+                                        status.getMessage()) :
+                                Optional.empty()
+                );
+
+            case REPAIR:
+                return RepairStatus.create(
                         status.getState(),
                         status.getTaskId().getValue(),
                         status.getSlaveId().getValue(),

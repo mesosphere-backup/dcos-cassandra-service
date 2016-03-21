@@ -11,6 +11,8 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
@@ -168,6 +170,13 @@ public class CassandraTasks implements Managed {
                         (CleanupTask) entry.getValue())));
     }
 
+    public Map<String, RepairTask> getRepairTasks() {
+        return tasks.entrySet().stream().filter(entry -> entry.getValue()
+                .getType() == CassandraTask.TYPE.REPAIR).collect
+                (Collectors.toMap(entry -> entry.getKey(), entry -> (
+                        (RepairTask) entry.getValue())));
+    }
+
     public CassandraDaemonTask createDaemon(String name) throws
             PersistenceException {
         CassandraDaemonTask task = configuration.createDaemon(
@@ -260,6 +269,18 @@ public class CassandraTasks implements Managed {
         return task;
     }
 
+    public RepairTask createRepairTask(
+            CassandraDaemonTask daemon,
+            RepairContext context) throws PersistenceException {
+        RepairTask task = configuration.createRepairTask(
+                daemon,
+                context);
+        synchronized (persistent) {
+            update(task);
+        }
+        return task;
+    }
+
     public CassandraDaemonTask getOrCreateDaemon(String name) throws
             PersistenceException {
         if (getDaemons().containsKey(name)) {
@@ -328,12 +349,25 @@ public class CassandraTasks implements Managed {
             CassandraDaemonTask daemon,
             CleanupContext context) throws PersistenceException {
 
-        String name = RestoreSnapshotTask.nameForDaemon(daemon);
+        String name = CleanupTask.nameForDaemon(daemon);
         Map<String, CleanupTask> cleanups = getCleanupTasks();
         if (cleanups.containsKey(name)) {
             return cleanups.get(name);
         } else {
             return createCleanupTask(daemon, context);
+        }
+    }
+
+    public RepairTask getOrCreateRepair(
+            CassandraDaemonTask daemon,
+            RepairContext context) throws PersistenceException {
+
+        String name = RepairTask.nameForDaemon(daemon);
+        Map<String, RepairTask> repairs = getRepairTasks();
+        if (repairs.containsKey(name)) {
+            return repairs.get(name);
+        } else {
+            return createRepairTask(daemon, context);
         }
     }
 
