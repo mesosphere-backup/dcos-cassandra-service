@@ -5,8 +5,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
-import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
@@ -16,6 +14,8 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementP
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStage;
 import com.mesosphere.dcos.cassandra.scheduler.plan.DeploymentManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;

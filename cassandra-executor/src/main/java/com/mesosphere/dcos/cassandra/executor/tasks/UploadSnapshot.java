@@ -1,10 +1,9 @@
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
-import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;

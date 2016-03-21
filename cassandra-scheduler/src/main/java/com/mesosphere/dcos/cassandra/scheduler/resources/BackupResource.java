@@ -1,7 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
@@ -41,7 +40,7 @@ public class BackupResource {
             if (manager.canStartBackup()) {
                 final BackupContext backupContext = from(request);
                 manager.startBackup(backupContext);
-                LOGGER.info("Backup started : context = {}",backupContext);
+                LOGGER.info("Backup started : context = {}", backupContext);
                 return Response.accepted().build();
             } else {
                 // Send error back

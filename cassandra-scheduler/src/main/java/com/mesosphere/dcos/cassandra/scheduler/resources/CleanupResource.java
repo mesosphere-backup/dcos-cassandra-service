@@ -1,7 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;

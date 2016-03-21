@@ -1,6 +1,5 @@
 package com.mesosphere.dcos.cassandra.executor;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
@@ -35,7 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.mock;
 
@@ -92,12 +90,12 @@ public class CassandraDaemonProcessTest {
     private static String version = "2.2.5";
 
     private static final Path cassandraTar = Paths.get(Resources.getResource(
-            "apache-cassandra-"+ version +"-bin.tar.gz")
+            "apache-cassandra-" + version + "-bin.tar.gz")
             .getFile()
     );
 
     private static final Path cassandra = Paths.get("",
-            "apache-cassandra-"+version);
+            "apache-cassandra-" + version);
 
     private static final Path volume = Paths.get("",
             "volume");
@@ -108,8 +106,8 @@ public class CassandraDaemonProcessTest {
     @Produces(MediaType.APPLICATION_JSON)
     public static class SeedsResource {
         @GET
-        public Map<String,Object> ping() {
-            return ImmutableMap.of("isSeed",true,"seeds",Collections
+        public Map<String, Object> ping() {
+            return ImmutableMap.of("isSeed", true, "seeds", Collections
                     .EMPTY_LIST);
         }
     }
@@ -125,7 +123,7 @@ public class CassandraDaemonProcessTest {
         unpack(cassandraTar.toFile(), Paths.get(""));
 
         cassandra.resolve("bin").resolve("cassandra").toFile().setExecutable
-                (true,false);
+                (true, false);
 
     }
 

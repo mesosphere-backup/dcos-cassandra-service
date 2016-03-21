@@ -16,7 +16,7 @@ public class DaemonRunning extends HealthCheck {
 
 
     @Inject
-    public DaemonRunning(final CassandraExecutor executor){
+    public DaemonRunning(final CassandraExecutor executor) {
         this.executor = executor;
     }
 
@@ -26,7 +26,7 @@ public class DaemonRunning extends HealthCheck {
         Optional<CassandraDaemonProcess> daemon =
                 executor.getCassandraDaemon();
 
-        if(daemon.isPresent()){
+        if (daemon.isPresent()) {
             return (daemon.get().isOpen()) ?
                     Result.healthy() : Result.unhealthy("Cassandra Daemon is " +
                     "not running");

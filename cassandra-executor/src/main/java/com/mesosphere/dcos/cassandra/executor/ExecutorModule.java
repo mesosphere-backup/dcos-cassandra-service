@@ -3,8 +3,6 @@ package com.mesosphere.dcos.cassandra.executor;
 import com.google.inject.AbstractModule;
 import com.mesosphere.dcos.cassandra.executor.config.CassandraExecutorConfiguration;
 import org.apache.mesos.Executor;
-import org.apache.mesos.ExecutorDriver;
-import org.apache.mesos.MesosExecutorDriver;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

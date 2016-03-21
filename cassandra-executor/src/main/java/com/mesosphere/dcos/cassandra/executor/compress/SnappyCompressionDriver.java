@@ -41,7 +41,7 @@ public class SnappyCompressionDriver implements CompressionDriver {
         try {
             compressedInputStream = new SnappyInputStream(new BufferedInputStream(source));
             output = new BufferedOutputStream(destination, DEFAULT_BUFFER_SIZE);
-            
+
             int bytesRead;
             byte[] data = new byte[DEFAULT_BUFFER_SIZE];
             while ((bytesRead = compressedInputStream.read(data, 0, DEFAULT_BUFFER_SIZE)) != -1) {

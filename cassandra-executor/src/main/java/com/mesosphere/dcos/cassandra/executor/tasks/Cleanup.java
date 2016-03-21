@@ -36,28 +36,28 @@ public class Cleanup implements Runnable {
         probe.forceKeyspaceCleanup(null);
     }
 
-    private List<String> getKeySpaces(){
-        if(task.getKeySpaces().isEmpty()){
+    private List<String> getKeySpaces() {
+        if (task.getKeySpaces().isEmpty()) {
             return probe.getNonSystemKeyspaces();
         } else {
             return task.getKeySpaces();
         }
     }
 
-    private String [] getColumnFamilies(){
-        if(task.getColumnFamilies().isEmpty()){
+    private String[] getColumnFamilies() {
+        if (task.getColumnFamilies().isEmpty()) {
             return new String[0];
-        } else{
-            String [] cf = new String[task.getColumnFamilies().size()];
+        } else {
+            String[] cf = new String[task.getColumnFamilies().size()];
             return task.getColumnFamilies().toArray(cf);
         }
     }
 
-    private void cleanupKeySpace(String keySpace,String [] columnFamiles)
+    private void cleanupKeySpace(String keySpace, String[] columnFamiles)
             throws InterruptedException, ExecutionException, IOException {
         LOGGER.info("Performing cleanup of selected columnFamilies in {}",
                 keySpace);
-        probe.forceKeyspaceCleanup(keySpace,columnFamiles);
+        probe.forceKeyspaceCleanup(keySpace, columnFamiles);
     }
 
     @Override
@@ -66,20 +66,20 @@ public class Cleanup implements Runnable {
             // Send TASK_RUNNING
 
             final List<String> keySpaces = getKeySpaces();
-            final String [] columnFamilies = getColumnFamilies();
+            final String[] columnFamilies = getColumnFamilies();
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
                     String.format("Starting cleanup: keySpaces = %s, " +
-                            "columnFamilies = %s",
+                                    "columnFamilies = %s",
                             keySpaces,
                             Arrays.asList(columnFamilies)));
 
-            for(String keyspace: keySpaces){
+            for (String keyspace : keySpaces) {
                 LOGGER.info("Starting cleanup : keySpace = {}, " +
-                        "columnFamilies = {}",
+                                "columnFamilies = {}",
                         keyspace,
                         Arrays.asList(columnFamilies));
 
-                probe.forceKeyspaceCleanup(keyspace,columnFamilies);
+                probe.forceKeyspaceCleanup(keyspace, columnFamilies);
 
                 LOGGER.info("Completed cleanup : keySpace = {}, " +
                                 "columnFamilies = {}",

@@ -26,9 +26,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class ConfigurationManagerTest {
 
@@ -321,7 +319,7 @@ public class ConfigurationManagerTest {
 
         manager.start();
 
-        assertEquals(manager.getErrors().size(),1);
+        assertEquals(manager.getErrors().size(), 1);
 
     }
 
@@ -388,7 +386,7 @@ public class ConfigurationManagerTest {
         );
 
         manager.start();
-        assertEquals(manager.getErrors().size(),1);
+        assertEquals(manager.getErrors().size(), 1);
 
     }
 

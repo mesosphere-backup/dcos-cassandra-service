@@ -16,15 +16,15 @@ public class MesosConfig {
 
     public static MesosConfig create(String servers,
                                      String path,
-                                     Duration timeout){
+                                     Duration timeout) {
 
-        return new MesosConfig(servers,path,timeout);
+        return new MesosConfig(servers, path, timeout);
     }
 
     @JsonCreator
     public static MesosConfig create(@JsonProperty("servers") String servers,
                                      @JsonProperty("path") String path,
-                                     @JsonProperty("timeoutMs") Long timeoutMs){
+                                     @JsonProperty("timeoutMs") Long timeoutMs) {
 
         return create(servers,
                 path,
@@ -54,7 +54,7 @@ public class MesosConfig {
     }
 
     @JsonProperty("timeoutMs")
-    public Long getTimeoutMillis(){
+    public Long getTimeoutMillis() {
 
         return timeout.toMillis();
     }

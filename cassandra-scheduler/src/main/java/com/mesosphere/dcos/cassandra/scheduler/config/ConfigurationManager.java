@@ -248,7 +248,7 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getDiskMb(),
                 cassandraConfig.mutable()
                         .setVolume(
-                        cassandraConfig.getVolume().withId()).
+                                cassandraConfig.getVolume().withId()).
                         setApplication(cassandraConfig.getApplication()
                                 .toBuilder().setSeedProvider(
                                         CassandraApplicationConfig
@@ -289,7 +289,7 @@ public class ConfigurationManager implements Managed {
                                                         seedsUrl))
                                 .build())
                         .build(),
-              daemonTask.getStatus());
+                daemonTask.getStatus());
 
 
     }
@@ -439,7 +439,7 @@ public class ConfigurationManager implements Managed {
                         Optional.empty()),
                 context.getKeySpaces(),
                 context.getColumnFamilies()
-                );
+        );
     }
 
     public RepairTask createRepairTask(

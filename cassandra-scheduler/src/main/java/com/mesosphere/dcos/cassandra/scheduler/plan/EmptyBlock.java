@@ -1,9 +1,10 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 
-
 import org.apache.mesos.Protos;
-import org.apache.mesos.offer.OfferRequirement;import org.apache.mesos.scheduler.plan.Block;import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.scheduler.plan.Status;
 
 import java.util.UUID;
 

@@ -15,12 +15,15 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by kowens on 2/9/16.
  */
-public class DcosSeedProvider implements SeedProvider{
+public class DcosSeedProvider implements SeedProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger
             (DcosSeedProvider.class);
@@ -28,25 +31,25 @@ public class DcosSeedProvider implements SeedProvider{
 
     private final String seedsUrl;
 
-    public DcosSeedProvider(final Map<String,String> properties){
+    public DcosSeedProvider(final Map<String, String> properties) {
 
         seedsUrl = properties.get("seeds_url");
 
     }
 
-   private static InetAddress getLocalAddress() throws UnknownHostException {
-       String libProcessAddress = System.getenv("LIBPROCESS_IP");
+    private static InetAddress getLocalAddress() throws UnknownHostException {
+        String libProcessAddress = System.getenv("LIBPROCESS_IP");
 
-       if(libProcessAddress == null || libProcessAddress.isEmpty()){
-           LOGGER.info("LIBPROCESS_IP address not found defaulting to " +
-                   "localhost");
-           return InetAddress.getLocalHost();
+        if (libProcessAddress == null || libProcessAddress.isEmpty()) {
+            LOGGER.info("LIBPROCESS_IP address not found defaulting to " +
+                    "localhost");
+            return InetAddress.getLocalHost();
 
-       } else {
+        } else {
 
-           return InetAddress.getByName(libProcessAddress);
-       }
-   }
+            return InetAddress.getByName(libProcessAddress);
+        }
+    }
 
 
     public List<InetAddress> getRemoteSeeds() throws IOException {
@@ -63,7 +66,7 @@ public class DcosSeedProvider implements SeedProvider{
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataInputStream responseStream = new DataInputStream((FilterInputStream)
                 connection
-                .getContent());
+                        .getContent());
         int c = 0;
         while ((c = responseStream.read(b, 0, b.length)) != -1)
             bos.write(b, 0, c);
@@ -72,29 +75,29 @@ public class DcosSeedProvider implements SeedProvider{
         connection.disconnect();
 
 
-        JSONObject json = (JSONObject)JSONValue.parse(response);
+        JSONObject json = (JSONObject) JSONValue.parse(response);
 
         boolean isSeed = (Boolean) json.get("isSeed");
 
         List<String> seedStrings = (json.containsKey("seeds"))
-        ? (List<String>) json.get("seeds") : Collections.emptyList();
+                ? (List<String>) json.get("seeds") : Collections.emptyList();
 
         List<InetAddress> addresses;
 
-        if(isSeed){
+        if (isSeed) {
             addresses = new ArrayList<>(seedStrings.size() + 1);
             addresses.add(getLocalAddress());
-        } else{
+        } else {
 
             addresses = new ArrayList<>(seedStrings.size());
         }
 
-        for(String seed: seedStrings){
+        for (String seed : seedStrings) {
 
             addresses.add(InetAddress.getByName(seed));
         }
 
-        LOGGER.info("Retrieved remote seeds {}",addresses);
+        LOGGER.info("Retrieved remote seeds {}", addresses);
 
         return addresses;
     }
@@ -103,12 +106,12 @@ public class DcosSeedProvider implements SeedProvider{
     @Override
     public List<InetAddress> getSeeds() {
 
-        try{
+        try {
             return getRemoteSeeds();
-        } catch(Throwable ex){
+        } catch (Throwable ex) {
             LOGGER.error(
-                    String.format("Failed to retrieve seeds from %s",seedsUrl)
-                    ,ex);
+                    String.format("Failed to retrieve seeds from %s", seedsUrl)
+                    , ex);
 
             return Collections.emptyList();
         }

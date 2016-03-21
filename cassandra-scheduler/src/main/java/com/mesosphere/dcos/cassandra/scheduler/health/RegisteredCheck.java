@@ -4,8 +4,6 @@ import com.codahale.metrics.health.HealthCheck;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 
-import java.util.Optional;
-
 
 public class RegisteredCheck extends HealthCheck {
     public static final String NAME = "registered";

@@ -1,7 +1,5 @@
 package com.mesosphere.dcos.cassandra.scheduler.persistence;
 
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-
 import java.util.Optional;
 import java.util.Set;
 

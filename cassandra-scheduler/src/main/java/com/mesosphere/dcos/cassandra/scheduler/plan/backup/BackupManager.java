@@ -1,18 +1,21 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.apache.mesos.scheduler.plan.*;
+import org.apache.mesos.scheduler.plan.Phase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * BackupManager is responsible for orchestrating cluster-wide backup.
@@ -65,7 +68,7 @@ public class BackupManager {
     public void startBackup(BackupContext context) {
         LOGGER.info("Starting backup");
 
-        if(canStartBackup()) {
+        if (canStartBackup()) {
             try {
                 persistentBackupContext.store(context);
                 this.backup = new BackupSnapshotPhase(
@@ -85,6 +88,7 @@ public class BackupManager {
             }
         }
     }
+
     public void stopBackup() {
         LOGGER.info("Stopping backup");
         try {
@@ -107,7 +111,7 @@ public class BackupManager {
         return backupContext == null;
     }
 
-    public boolean inProgress(){
+    public boolean inProgress() {
 
         return (backupContext != null && !isComplete());
     }
@@ -119,8 +123,8 @@ public class BackupManager {
                 upload != null && upload.isComplete());
     }
 
-    public List<Phase> getPhases(){
-        if(backupContext == null){
+    public List<Phase> getPhases() {
+        if (backupContext == null) {
             return Collections.emptyList();
         } else {
             return Arrays.asList(backup, upload);

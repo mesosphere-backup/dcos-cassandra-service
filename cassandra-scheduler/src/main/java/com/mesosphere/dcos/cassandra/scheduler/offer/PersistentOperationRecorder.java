@@ -29,7 +29,7 @@ public class PersistentOperationRecorder implements OperationRecorder {
                             cassandraTasks.update(
                                     taskInfo.getTaskId().getValue()
                                     , offer);
-                        } catch(Throwable throwable){
+                        } catch (Throwable throwable) {
 
                             LOGGER.error(String.format(
                                     "Error updating task in recorder: " +

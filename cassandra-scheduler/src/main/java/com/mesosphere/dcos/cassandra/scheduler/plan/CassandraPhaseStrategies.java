@@ -8,9 +8,10 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreSnapshotPhase;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.UploadBackupPhase;
 import org.apache.mesos.scheduler.plan.*;
 
-public class CassandraPhaseStrategies implements PhaseStrategyFactory{
+public class CassandraPhaseStrategies implements PhaseStrategyFactory {
 
     private final Class<?> phaseStrategy;
+
     @Inject
     public CassandraPhaseStrategies(
             @Named("ConfiguredPhaseStrategy") final String phaseStrategy) {
@@ -18,12 +19,14 @@ public class CassandraPhaseStrategies implements PhaseStrategyFactory{
             this.phaseStrategy =
                     this.getClass().getClassLoader().loadClass(phaseStrategy);
         } catch (ClassNotFoundException e) {
-           throw new RuntimeException(String.format(
-                   "Failed to load class for phaseStrategy $s",
-                   phaseStrategy
-           ),e);
+            throw new RuntimeException(String.format(
+                    "Failed to load class for phaseStrategy $s",
+                    phaseStrategy
+            ), e);
         }
-    };
+    }
+
+    ;
 
     @Override
     public PhaseStrategy getStrategy(Phase phase) {
@@ -31,7 +34,7 @@ public class CassandraPhaseStrategies implements PhaseStrategyFactory{
             return NoOpPhaseStrategy.get();
         } else if (phase instanceof ReconciliationPhase) {
             return ReconciliationStrategy.create((ReconciliationPhase) phase);
-        } else if(phase instanceof BackupSnapshotPhase ||
+        } else if (phase instanceof BackupSnapshotPhase ||
                 phase instanceof UploadBackupPhase ||
                 phase instanceof DownloadSnapshotPhase ||
                 phase instanceof RestoreSnapshotPhase) {
@@ -41,8 +44,8 @@ public class CassandraPhaseStrategies implements PhaseStrategyFactory{
                 return (PhaseStrategy)
                         phaseStrategy.getConstructor(Phase.class).newInstance(
                                 phase);
-            } catch (Exception ex){
-                throw new RuntimeException("Failed to PhaseStrategy",ex);
+            } catch (Exception ex) {
+                throw new RuntimeException("Failed to PhaseStrategy", ex);
             }
         }
     }

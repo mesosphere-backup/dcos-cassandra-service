@@ -1,7 +1,10 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 
-import org.apache.mesos.scheduler.plan.Block;import org.apache.mesos.scheduler.plan.DefaultPhase;import java.util.Collections;
+import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.scheduler.plan.DefaultPhase;
+
+import java.util.Collections;
 import java.util.UUID;
 
 /**

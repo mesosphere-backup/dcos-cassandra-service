@@ -314,7 +314,7 @@ public class CassandraTasksTest {
         tasks.start();
 
         assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon( CassandraDaemonTask
+        CassandraDaemonTask task = tasks.createDaemon(CassandraDaemonTask
                 .NAME_PREFIX + 0);
         assertEquals(1, tasks.get().size());
 
@@ -345,7 +345,7 @@ public class CassandraTasksTest {
 
         assertEquals(0, tasks.get().size());
         CassandraDaemonTask runningTask1 =
-                tasks.createDaemon( CassandraDaemonTask.NAME_PREFIX + 0);
+                tasks.createDaemon(CassandraDaemonTask.NAME_PREFIX + 0);
         assertEquals(1, tasks.get().size());
         Protos.TaskStatus taskStatus1 = Protos.TaskStatus.newBuilder()
                 .setTaskId(Protos.TaskID.newBuilder().setValue(

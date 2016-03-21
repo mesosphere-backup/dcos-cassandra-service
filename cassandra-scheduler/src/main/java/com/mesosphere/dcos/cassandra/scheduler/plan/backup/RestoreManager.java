@@ -1,14 +1,14 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.apache.mesos.scheduler.plan.*;
+import org.apache.mesos.scheduler.plan.Phase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,10 +32,10 @@ public class RestoreManager {
 
     @Inject
     public RestoreManager(
-                          final CassandraTasks cassandraTasks,
-                          final ClusterTaskOfferRequirementProvider provider,
-                          final PersistenceFactory persistenceFactory,
-                          final Serializer<RestoreContext> serializer) {
+            final CassandraTasks cassandraTasks,
+            final ClusterTaskOfferRequirementProvider provider,
+            final PersistenceFactory persistenceFactory,
+            final Serializer<RestoreContext> serializer) {
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
 
@@ -107,7 +107,7 @@ public class RestoreManager {
         return context == null || isComplete();
     }
 
-    public boolean inProgress(){
+    public boolean inProgress() {
 
         return (context != null && !isComplete());
     }
@@ -119,11 +119,11 @@ public class RestoreManager {
                 restore != null && restore.isComplete());
     }
 
-    public List<Phase> getPhases(){
-        if(context == null){
+    public List<Phase> getPhases() {
+        if (context == null) {
             return Collections.emptyList();
         } else {
-            return Arrays.asList(download,restore);
+            return Arrays.asList(download, restore);
         }
     }
 }

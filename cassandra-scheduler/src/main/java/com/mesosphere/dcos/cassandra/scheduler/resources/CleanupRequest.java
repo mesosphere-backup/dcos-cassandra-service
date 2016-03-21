@@ -70,7 +70,7 @@ public class CleanupRequest {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return JsonUtils.toJsonString(this);
     }
 }

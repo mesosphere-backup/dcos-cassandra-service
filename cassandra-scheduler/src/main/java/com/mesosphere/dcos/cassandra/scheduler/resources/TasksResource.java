@@ -22,7 +22,6 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
-import org.apache.mesos.protobuf.TaskUtil;
 import org.glassfish.jersey.server.ManagedAsync;
 
 import javax.ws.rs.*;
@@ -128,7 +127,7 @@ public class TasksResource {
 
     @GET
     @Path("connect/native")
-    public List<String> nativeConnection(){
+    public List<String> nativeConnection() {
         return tasks.getDaemons().values().stream()
                 .filter(daemonTask ->
                         Protos.TaskState.TASK_RUNNING.equals(
@@ -138,13 +137,13 @@ public class TasksResource {
                                 ":" +
                                 daemonTask.getConfig()
                                         .getApplication()
-                        .getNativeTransportPort())
+                                        .getNativeTransportPort())
                 .collect(Collectors.toList());
     }
 
     @GET
     @Path("connect/rpc")
-    public List<String> rpcConnection(){
+    public List<String> rpcConnection() {
         return tasks.getDaemons().values().stream()
                 .filter(daemonTask ->
                         Protos.TaskState.TASK_RUNNING.equals(

@@ -4,7 +4,7 @@ import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
 
-public class MesosExecutorDriverFactory implements ExecutorDriverFactory{
+public class MesosExecutorDriverFactory implements ExecutorDriverFactory {
 
     @Override
     public ExecutorDriver getDriver(Executor executor) {

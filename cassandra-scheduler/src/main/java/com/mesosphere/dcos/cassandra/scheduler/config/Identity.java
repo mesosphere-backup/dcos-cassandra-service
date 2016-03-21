@@ -22,35 +22,35 @@ public class Identity {
 
     public static final Serializer<Identity> JSON_SERIALIZER =
             new
-            Serializer<Identity>() {
+                    Serializer<Identity>() {
 
-                @Override
-                public byte[] serialize(Identity value)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.writeValueAsBytes(value);
-                    } catch (JsonProcessingException ex) {
+                        @Override
+                        public byte[] serialize(Identity value)
+                                throws SerializationException {
+                            try {
+                                return JsonUtils.MAPPER.writeValueAsBytes(value);
+                            } catch (JsonProcessingException ex) {
 
-                        throw new SerializationException(
-                                "Error writing Identity " +
-                                        "as JSON formatted byte array", ex);
-                    }
-                }
+                                throw new SerializationException(
+                                        "Error writing Identity " +
+                                                "as JSON formatted byte array", ex);
+                            }
+                        }
 
-                @Override
-                public Identity deserialize(byte[] bytes)
-                        throws SerializationException {
+                        @Override
+                        public Identity deserialize(byte[] bytes)
+                                throws SerializationException {
 
-                    try {
-                        return JsonUtils.MAPPER.readValue(bytes,
-                                Identity.class);
-                    } catch (IOException ex) {
+                            try {
+                                return JsonUtils.MAPPER.readValue(bytes,
+                                        Identity.class);
+                            } catch (IOException ex) {
 
-                        throw new SerializationException("Exception parsing " +
-                                "identity from JSON", ex);
-                    }
-                }
-            };
+                                throw new SerializationException("Exception parsing " +
+                                        "identity from JSON", ex);
+                            }
+                        }
+                    };
 
 
     @JsonCreator

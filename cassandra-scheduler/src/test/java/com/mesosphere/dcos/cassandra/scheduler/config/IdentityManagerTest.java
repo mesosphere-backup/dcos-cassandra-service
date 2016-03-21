@@ -34,7 +34,6 @@ public class IdentityManagerTest {
 
     private static Identity initial;
 
-   
 
     @BeforeClass
     public static void beforeAll() throws Exception {
@@ -48,7 +47,7 @@ public class IdentityManagerTest {
                         CassandraSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(new GuavaModule())
-                        .registerModule(new Jdk8Module()),
+                                .registerModule(new Jdk8Module()),
                         "dw");
 
         CassandraSchedulerConfiguration config = factory.build(
