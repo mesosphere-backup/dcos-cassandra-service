@@ -45,21 +45,26 @@ public class CassandraRepairScheduler {
         if (terminatedOption.isPresent()) {
             try {
                 CassandraDaemonTask terminated = terminatedOption.get();
-                terminated = cassandraTasks.replaceDaemon(terminated);
+                CassandraDaemonTask cloned = cassandraTasks.cloneDaemon(terminated);
                 OfferRequirement offerReq =
-                        (terminated.getConfig().getReplaceIp().isEmpty()) ?
+                        (cloned.getConfig().getReplaceIp().isEmpty()) ?
                                 offerRequirementProvider.getReplacementOfferRequirement(
-                                        terminated.toProto())
+                                        cloned.toProto())
                                 : offerRequirementProvider.getNewOfferRequirement(
-                                terminated
+                                cloned
                                         .toProto());
                 OfferEvaluator offerEvaluator = new OfferEvaluator(offerReq);
                 List<OfferRecommendation> recommendations =
                         offerEvaluator.evaluate(offers);
                 LOGGER.debug("Got recommendations: {} for terminated task: {}",
                         recommendations,
-                        terminated.getId());
+                        cloned.getId());
                 acceptedOffers = offerAccepter.accept(driver, recommendations);
+
+                if (acceptedOffers.size() != 0) {
+                    cassandraTasks.update(cloned);
+                    LOGGER.info("Accepted {} offer", acceptedOffers.size());
+                }
             } catch (PersistenceException ex) {
                 LOGGER.error(
                         String.format("Persistence error recovering " +
@@ -69,6 +74,7 @@ public class CassandraRepairScheduler {
         }
         return acceptedOffers;
     }
+
 
     private Optional<CassandraDaemonTask> getTerminatedTask(
             final Set<String> ignore) {
