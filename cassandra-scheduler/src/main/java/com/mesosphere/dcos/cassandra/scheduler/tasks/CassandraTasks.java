@@ -86,7 +86,7 @@ public class CassandraTasks implements Managed {
         }
     }
 
-    private void update(CassandraTask task) throws PersistenceException {
+    public void update(CassandraTask task) throws PersistenceException {
         persistent.put(task.getName(), task);
         if (tasks.containsKey(task.getName())) {
             byId.remove(tasks.get(task.getName()).getId());
@@ -385,6 +385,15 @@ public class CassandraTasks implements Managed {
             return updated;
         }
 
+    }
+
+    public CassandraDaemonTask cloneDaemon(CassandraDaemonTask task)
+            throws PersistenceException {
+        synchronized (persistent) {
+            final CassandraDaemonTask updated =
+                    configuration.replaceDaemon(task);
+            return updated;
+        }
     }
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task)
