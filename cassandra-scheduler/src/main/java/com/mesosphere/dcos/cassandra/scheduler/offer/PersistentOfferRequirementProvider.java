@@ -9,6 +9,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.PlacementStrategy;
 import org.apache.mesos.offer.ResourceUtils;
+import org.apache.mesos.offer.VolumeRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,13 +55,17 @@ public class PersistentOfferRequirementProvider implements CassandraOfferRequire
         LOGGER.info("Avoiding agents: {}", agentsToAvoid);
         LOGGER.info("Colocating with agents: {}", agentsToColocate);
         final Identity identity = identityManager.get();
+        final VolumeRequirement volumeRequirement = VolumeRequirement.create();
+        volumeRequirement.setVolumeMode(OfferRequirement.VolumeMode.CREATE);
+        // TODO: Make this configurable
+        volumeRequirement.setVolumeType(OfferRequirement.VolumeType.MOUNT);
         return new OfferRequirement(
                 identity.getRole(),
                 identity.getPrincipal(),
                 Arrays.asList(taskInfo),
                 agentsToAvoid,
                 agentsToColocate,
-                OfferRequirement.VolumeMode.CREATE
+                volumeRequirement
         );
     }
 
@@ -100,13 +105,17 @@ public class PersistentOfferRequirementProvider implements CassandraOfferRequire
             Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
         final Identity identity = identityManager.get();
+        final VolumeRequirement volumeRequirement = VolumeRequirement.create();
+        volumeRequirement.setVolumeMode(OfferRequirement.VolumeMode.EXISTING);
+        // TODO: Make this configurable
+        volumeRequirement.setVolumeType(OfferRequirement.VolumeType.MOUNT);
         return new OfferRequirement(
                 identity.getRole(),
                 identity.getPrincipal(),
                 Arrays.asList(taskInfo),
                 null,
                 null,
-                OfferRequirement.VolumeMode.EXISTING);
+                volumeRequirement);
     }
 
     private boolean hasVolume(Protos.TaskInfo taskInfo) {
