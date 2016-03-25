@@ -56,9 +56,8 @@ public class PersistentOfferRequirementProvider implements CassandraOfferRequire
         LOGGER.info("Colocating with agents: {}", agentsToColocate);
         final Identity identity = identityManager.get();
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
-        volumeRequirement.setVolumeMode(OfferRequirement.VolumeMode.CREATE);
-        // TODO: Make this configurable
-        volumeRequirement.setVolumeType(OfferRequirement.VolumeType.MOUNT);
+        volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.CREATE);
+        volumeRequirement.setVolumeType(configurationManager.getCassandraConfig().getDiskType());
         return new OfferRequirement(
                 identity.getRole(),
                 identity.getPrincipal(),
@@ -106,9 +105,8 @@ public class PersistentOfferRequirementProvider implements CassandraOfferRequire
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
         final Identity identity = identityManager.get();
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
-        volumeRequirement.setVolumeMode(OfferRequirement.VolumeMode.EXISTING);
-        // TODO: Make this configurable
-        volumeRequirement.setVolumeType(OfferRequirement.VolumeType.MOUNT);
+        volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.EXISTING);
+        volumeRequirement.setVolumeType(configurationManager.getCassandraConfig().getDiskType());
         return new OfferRequirement(
                 identity.getRole(),
                 identity.getPrincipal(),

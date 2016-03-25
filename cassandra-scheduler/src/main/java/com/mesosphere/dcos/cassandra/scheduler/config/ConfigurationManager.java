@@ -246,6 +246,7 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getCpus(),
                 cassandraConfig.getMemoryMb(),
                 cassandraConfig.getDiskMb(),
+                cassandraConfig.getDiskType(),
                 cassandraConfig.mutable()
                         .setVolume(
                                 cassandraConfig.getVolume().withId()).
@@ -279,6 +280,7 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getCpus(),
                 cassandraConfig.getMemoryMb(),
                 cassandraConfig.getDiskMb(),
+                cassandraConfig.getDiskType(),
                 cassandraConfig.mutable().setReplaceIp(daemonTask.getHostname())
                         .setVolume(
                                 cassandraConfig.getVolume().withId()).
@@ -528,6 +530,7 @@ public class ConfigurationManager implements Managed {
                 cassandraConfig.getCpus(),
                 cassandraConfig.getMemoryMb(),
                 cassandraConfig.getDiskMb(),
+                cassandraConfig.getDiskType(),
                 cassandraConfig.mutable()
                         .setVolume(task.getConfig().getVolume())
                         .setApplication(cassandraConfig.getApplication()

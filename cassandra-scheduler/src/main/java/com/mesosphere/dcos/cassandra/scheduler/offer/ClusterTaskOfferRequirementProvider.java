@@ -47,8 +47,8 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
         LOGGER.info("Colocating with agents: {}", agentsToColocate);
         final Identity identity = identityManager.get();
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
-        volumeRequirement.setVolumeMode(OfferRequirement.VolumeMode.NONE);
-        volumeRequirement.setVolumeType(OfferRequirement.VolumeType.ROOT);
+        volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.NONE);
+        volumeRequirement.setVolumeType(VolumeRequirement.VolumeType.ROOT);
         return new OfferRequirement(
                 identity.getRole(),
                 identity.getPrincipal(),
@@ -67,8 +67,8 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
         final PlacementStrategy placementStrategy =
                 new ClusterTaskPlacementStrategy(cassandraTasks);
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
-        volumeRequirement.setVolumeMode(OfferRequirement.VolumeMode.NONE);
-        volumeRequirement.setVolumeType(OfferRequirement.VolumeType.ROOT);
+        volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.NONE);
+        volumeRequirement.setVolumeType(VolumeRequirement.VolumeType.ROOT);
         return new OfferRequirement(
                 Arrays.asList(taskInfo),
                 placementStrategy.getAgentsToAvoid(taskInfo),
@@ -87,8 +87,8 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
         final Identity identity = identityManager.get();
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
-        volumeRequirement.setVolumeMode(OfferRequirement.VolumeMode.NONE);
-        volumeRequirement.setVolumeType(OfferRequirement.VolumeType.ROOT);
+        volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.NONE);
+        volumeRequirement.setVolumeType(VolumeRequirement.VolumeType.ROOT);
         return new OfferRequirement(
                 identity.getRole(),
                 identity.getPrincipal(),
