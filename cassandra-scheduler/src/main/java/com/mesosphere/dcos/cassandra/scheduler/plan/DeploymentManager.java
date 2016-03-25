@@ -41,7 +41,7 @@ public class DeploymentManager {
                 cassandraTasks,
                 provider,
                 client);
-        this.reconciliation = ReconciliationPhase.create(reconciler);
+        this.reconciliation = ReconciliationPhase.create(reconciler,cassandraTasks);
     }
 
     public List<? extends Phase> getPhases() {

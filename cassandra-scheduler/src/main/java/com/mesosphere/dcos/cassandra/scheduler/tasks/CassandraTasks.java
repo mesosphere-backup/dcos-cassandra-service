@@ -21,6 +21,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentMap;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.Protos;
+import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 /**
  * TaskStore for Cassandra framework tasks.
  */
-public class CassandraTasks implements Managed {
+public class CassandraTasks implements Managed, TaskStatusProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraTasks.class);
 
@@ -510,4 +511,8 @@ public class CassandraTasks implements Managed {
         return Protos.TaskState.TASK_RUNNING == task.getStatus().getState();
     }
 
+    @Override
+    public Set<Protos.TaskStatus> getTaskStatuses() throws Exception {
+        return get().values().stream().map(task -> task.getStatus().toProto()).collect(Collectors.toSet());
+    }
 }
