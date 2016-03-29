@@ -225,7 +225,8 @@ public class CassandraDaemonProcess {
     private final NodeProbe probe;
     private final CompletableFuture<Object> closeFuture =
             new CompletableFuture<>();
-    private boolean metricsEnabled = MetricsConfig.metricsEnabled();
+    private final MetricsConfig metricsConfig;
+    private boolean metricsEnabled;
 
     public CassandraDaemonProcess(final CassandraDaemonTask task,
                                   final ScheduledExecutorService executor,
@@ -247,9 +248,11 @@ public class CassandraDaemonProcess {
                 .setRpcAddress(getListenAddress())
                 .build().writeDaemonConfiguration(paths.cassandraConfig());
 
+        this.metricsConfig = new MetricsConfig(task.getExecutor());
+        metricsEnabled = metricsConfig.metricsEnabled();
         if (metricsEnabled) {
-            metricsEnabled = MetricsConfig.writeMetricsConfig(
-                    paths.cassandraConfig());
+            metricsEnabled = metricsConfig.writeMetricsConfig(
+                    paths.cassandraConfig().getParent());
         }
 
         process = createDaemon();
@@ -310,7 +313,7 @@ public class CassandraDaemonProcess {
                 "JMX_PORT",
                 Integer.toString(task.getConfig().getJmxPort()));
         if (metricsEnabled) {
-            MetricsConfig.setEnv(builder.environment());
+            metricsConfig.setEnv(builder.environment());
         }
         return builder.start();
     }

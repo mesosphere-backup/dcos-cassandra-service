@@ -121,6 +121,8 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
                 configuration.getMesosConfig());
         LOGGER.info("Framework ZooKeeper Configuration = {}",
                 configuration.getCuratorConfig());
+        LOGGER.info("Framework Executor Configuration = {}",
+                configuration.getExecutorConfig());
         LOGGER.info(
                 "------------ Cassandra Configuration ------------");
         LOGGER.info("heap = {}", configuration.getCassandraConfig().getHeap());

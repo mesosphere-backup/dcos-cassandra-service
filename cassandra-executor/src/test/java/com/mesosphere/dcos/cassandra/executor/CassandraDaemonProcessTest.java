@@ -37,9 +37,6 @@ import java.util.concurrent.Executors;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.mock;
 
-/**
- * Created by kowens on 2/9/16.
- */
 @RunWith(MockitoJUnitRunner.class)
 public class CassandraDaemonProcessTest {
 
@@ -214,7 +211,14 @@ public class CassandraDaemonProcessTest {
                         9000,
                         9001,
                         Collections.emptyList(),
-                        "./jre"),
+                        "./jre",
+                        true,
+                        "statsd",
+                        "metrics.prefix.",
+                        17,
+                        "SECONDS",
+                        "127.1.2.3",
+                        1234),
                 "server0",
                 "cassandra",
                 "cassandra",

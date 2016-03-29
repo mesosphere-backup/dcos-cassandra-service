@@ -218,7 +218,14 @@ public class ConfigurationManager implements Managed {
                 Arrays.asList(executorConfig.getJreLocation(),
                         executorConfig.getExecutorLocation(),
                         executorConfig.getCassandraLocation()),
-                executorConfig.getJavaHome()
+                executorConfig.getJavaHome(),
+                executorConfig.getMetricsEnable(),
+                executorConfig.getMetricsCollector(),
+                executorConfig.getMetricsPrefix(),
+                executorConfig.getMetricsFlushPeriod(),
+                executorConfig.getMetricsFlushPeriodUnit(),
+                executorConfig.getMetricsHost(),
+                executorConfig.getMetricsPort()
         );
     }
 

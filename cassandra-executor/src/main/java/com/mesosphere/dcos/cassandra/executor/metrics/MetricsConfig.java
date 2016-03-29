@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.executor.metrics;
 
 
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -26,49 +27,69 @@ public class MetricsConfig {
     private static final String ENV_KEY = "JVM_EXTRA_OPTS";
     private static final String STATSD_HOST_ENV = "STATSD_UDP_HOST";
     private static final String STATSD_PORT_ENV = "STATSD_UDP_PORT";
-    private static final int STATSD_FLUSH_PERIOD = 10;
-    private static final String STATSD_FLUSH_PERIOD_UNIT = "SECONDS";
+    private final CassandraTaskExecutor executor;
 
-    private MetricsConfig() {
+    public MetricsConfig(CassandraTaskExecutor executor) {
+        this.executor = executor;
     }
 
-    public static boolean metricsEnabled() {
-        return System.getenv(STATSD_HOST_ENV) != null &&
-                System.getenv(STATSD_PORT_ENV) != null;
+    public boolean metricsEnabled() {
+        return executor.isMetricsEnable() ||
+                (System.getenv(STATSD_HOST_ENV) != null &&
+                        System.getenv(STATSD_PORT_ENV) != null);
     }
 
-    public static boolean writeMetricsConfig(final Path dir) {
+    public String getMetricsHost() {
+        String host = System.getenv(STATSD_HOST_ENV);
+        if (host == null) {
+            host = executor.getMetricsHost();
+        }
+        return host;
+    }
+
+    public int getMetricsPort() {
+        int port = -1;
+        String portStr = System.getenv(STATSD_PORT_ENV);
+        if (portStr != null) {
+            try {
+                port = Integer.parseInt(portStr);
+            } catch (NumberFormatException ne) {
+                LOGGER.error("Failed to parse port parameter", ne);
+            }
+        } else {
+            port = executor.getMetricsPort();
+        }
+        return port;
+    }
+
+    public boolean writeMetricsConfig(final Path dir) {
         if (!metricsEnabled()) {
             LOGGER.info("Metrics is not enabled");
             return false;
         }
 
-        String host = System.getenv(STATSD_HOST_ENV);
-
-        int port;
-        try {
-            port = Integer.parseInt(System.getenv(STATSD_PORT_ENV));
-        } catch (NumberFormatException ne) {
-            LOGGER.error("Failed to parse port parameter", ne);
-            return false;
-        }
-
         LOGGER.info("Building {}", CONFIG_FILE);
         Map<String, Object> hostMap = new HashMap<>();
-        hostMap.put("host", host);
+        hostMap.put("host", getMetricsHost());
+
+        int port = getMetricsPort();
+        if (port == -1) {
+            return false;
+        }
         hostMap.put("port", port);
+
         List<Object> hostMapList = new ArrayList<>();
         hostMapList.add(hostMap);
 
         Map<String, Object> statsdMap = new HashMap<>();
-        statsdMap.put("period", STATSD_FLUSH_PERIOD);
-        statsdMap.put("timeunit", STATSD_FLUSH_PERIOD_UNIT);
+        statsdMap.put("period", executor.getMetricsFlushPeriod());
+        statsdMap.put("timeunit", executor.getMetricsFlushPeriodUnit());
         statsdMap.put("hosts", hostMapList);
 
         List<Object> statsdMapList = new ArrayList<>();
         statsdMapList.add(statsdMap);
         final Map<String, Object> yamlMap = new HashMap<>();
-        yamlMap.put("statsd", statsdMapList);
+        yamlMap.put(executor.getMetricsCollector(), statsdMapList);
         LOGGER.info("Writing {}", CONFIG_FILE);
         final Yaml yaml = new Yaml();
         final File metricsYaml = dir.resolve(CONFIG_FILE).toFile();
@@ -82,7 +103,7 @@ public class MetricsConfig {
         return true;
     }
 
-    public static void setEnv(final Map<String, String> env) {
+    public void setEnv(final Map<String, String> env) {
         if (metricsEnabled()) {
             env.put(ENV_KEY, ENV_VALUE);
             LOGGER.info("Set metrics configuration: key = {}, " +

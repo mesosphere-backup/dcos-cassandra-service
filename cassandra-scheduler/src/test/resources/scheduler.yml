@@ -13,6 +13,13 @@ executor:
   jreLocation : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executorLocation : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
   cassandraLocation : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
+  metricsEnable : ${EXECUTOR_METRICS_ENABLE:-false}
+  metricsCollector : ${EXECUTOR_METRICS_COLLECTOR:-"statsd"}
+  metricsPrefix : ${EXECUTOR_METRICS_PREFIX:-"metrics."}
+  metricsFlushPeriod : ${EXECUTOR_METRICS_FLUSH_PERIOD:-10}
+  metricsFlushPeriodUnit : ${EXECUTOR_METRICS_FLUSH_PERIOD_UNIT:-"SECONDS"}
+  metricsHost : ${EXECUTOR_METRICS_HOST:-"127.0.0.1"}
+  metricsPort : ${EXECUTOR_METRICS_PORT:-1234}
 clusterTask:
   cpus: ${CLUSTER_TASK_CPUS:-0.1}
   memoryMb: ${CLUSTER_TASK_MEMORY_MB:-256}

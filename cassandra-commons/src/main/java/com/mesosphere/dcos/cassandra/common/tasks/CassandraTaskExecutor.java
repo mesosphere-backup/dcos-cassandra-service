@@ -35,6 +35,13 @@ public class CassandraTaskExecutor {
         private int adminPort;
         private List<URI> uris;
         private String javaHome;
+        private final boolean metricsEnable;
+        private final String metricsCollector;
+        private final String metricsPrefix;
+        private final int metricsFlushPeriod;
+        private final String metricsFlushPeriodUnit;
+        private final String metricsHost;
+        private final int metricsPort;
 
         private Builder(CassandraTaskExecutor executor) {
 
@@ -50,7 +57,13 @@ public class CassandraTaskExecutor {
             this.apiPort = executor.apiPort;
             this.uris = executor.uris;
             this.javaHome = executor.javaHome;
-
+            this.metricsEnable = executor.metricsEnable;
+            this.metricsCollector = executor.metricsCollector;
+            this.metricsPrefix = executor.metricsPrefix;
+            this.metricsFlushPeriod = executor.metricsFlushPeriod;
+            this.metricsFlushPeriodUnit = executor.metricsFlushPeriodUnit;
+            this.metricsHost = executor.metricsHost;
+            this.metricsPort = executor.metricsPort;
         }
 
         public int getAdminPort() {
@@ -174,7 +187,14 @@ public class CassandraTaskExecutor {
                     apiPort,
                     adminPort,
                     uris,
-                    javaHome);
+                    javaHome,
+                    metricsEnable,
+                    metricsCollector,
+                    metricsPrefix,
+                    metricsFlushPeriod,
+                    metricsFlushPeriodUnit,
+                    metricsHost,
+                    metricsPort);
         }
     }
 
@@ -190,7 +210,14 @@ public class CassandraTaskExecutor {
             int apiPort,
             int adminPort,
             List<URI> uris,
-            String javaHome) {
+            String javaHome,
+            boolean metricsEnable,
+            String metricsCollector,
+            String metricsPrefix,
+            int metricsFlushPeriod,
+            String metricsFlushPeriodUnit,
+            String metricsHost,
+            int metricsPort) {
 
         return new CassandraTaskExecutor(
                 frameworkId,
@@ -204,7 +231,14 @@ public class CassandraTaskExecutor {
                 apiPort,
                 adminPort,
                 uris,
-                javaHome);
+                javaHome,
+                metricsEnable,
+                metricsCollector,
+                metricsPrefix,
+                metricsFlushPeriod,
+                metricsFlushPeriodUnit,
+                metricsHost,
+                metricsPort);
 
     }
 
@@ -240,7 +274,14 @@ public class CassandraTaskExecutor {
                 info.getCommand().getUrisList().stream().map(uri ->
                         uri.getValue()).map(URI::create).collect(
                         Collectors.toList()),
-                env.get("JAVA_HOME"));
+                env.get("JAVA_HOME"),
+                Boolean.parseBoolean(env.get("EXECUTOR_METRICS_ENABLE")),
+                env.get("EXECUTOR_METRICS_COLLECTOR"),
+                env.get("EXECUTOR_METRICS_PREFIX"),
+                Integer.parseInt(env.get("EXECUTOR_METRICS_FLUSH_PERIOD")),
+                env.get("EXECUTOR_METRICS_FLUSH_PERIOD_UNIT"),
+                env.get("EXECUTOR_METRICS_HOST"),
+                Integer.parseInt(env.get("EXECUTOR_METRICS_PORT")));
     }
 
     @JsonCreator
@@ -256,7 +297,14 @@ public class CassandraTaskExecutor {
             @JsonProperty("apiPort") int apiPort,
             @JsonProperty("adminPort") int adminPort,
             @JsonProperty("uris") List<String> uris,
-            @JsonProperty("javaHome") String javaHome) {
+            @JsonProperty("javaHome") String javaHome,
+            @JsonProperty("metricsEnable") boolean metricsEnable,
+            @JsonProperty("metricsCollector") String metricsCollector,
+            @JsonProperty("metricsPrefix") String metricsPrefix,
+            @JsonProperty("metricsFlushPeriod") int metricsFlushPeriod,
+            @JsonProperty("metricsFlushPeriodUnit") String metricsFlushPeriodUnit,
+            @JsonProperty("metricsHost") String metricsHost,
+            @JsonProperty("metricsPort") int metricsPort) {
 
         return create(
                 frameworkId,
@@ -270,8 +318,14 @@ public class CassandraTaskExecutor {
                 apiPort,
                 adminPort,
                 uris.stream().map(URI::create).collect(Collectors.toList()),
-                javaHome);
-
+                javaHome,
+                metricsEnable,
+                metricsCollector,
+                metricsPrefix,
+                metricsFlushPeriod,
+                metricsFlushPeriodUnit,
+                metricsHost,
+                metricsPort);
     }
 
     @JsonProperty("frameworkId")
@@ -297,6 +351,20 @@ public class CassandraTaskExecutor {
     private final List<URI> uris;
     @JsonProperty("javaHome")
     private final String javaHome;
+    @JsonProperty("metricsEnable")
+    private final boolean metricsEnable;
+    @JsonProperty("metricsCollector")
+    private final String metricsCollector;
+    @JsonProperty("metricsPrefix")
+    private final String metricsPrefix;
+    @JsonProperty("metricsFlushPeriod")
+    private final int metricsFlushPeriod;
+    @JsonProperty("metricsFlushPeriodUnit")
+    private final String metricsFlushPeriodUnit;
+    @JsonProperty("metricsHost")
+    private final String metricsHost;
+    @JsonProperty("metricsPort")
+    private final int metricsPort;
 
     public CassandraTaskExecutor(
             String frameworkId,
@@ -310,7 +378,14 @@ public class CassandraTaskExecutor {
             int apiPort,
             int adminPort,
             List<URI> uris,
-            String javaHome) {
+            String javaHome,
+            boolean metricsEnable,
+            String metricsCollector,
+            String metricsPrefix,
+            int metricsFlushPeriod,
+            String metricsFlushPeriodUnit,
+            String metricsHost,
+            int metricsPort) {
         this.adminPort = adminPort;
         this.frameworkId = frameworkId;
         this.id = id;
@@ -323,6 +398,13 @@ public class CassandraTaskExecutor {
         this.apiPort = apiPort;
         this.uris = ImmutableList.copyOf(uris);
         this.javaHome = javaHome;
+        this.metricsEnable = metricsEnable;
+        this.metricsCollector = metricsCollector;
+        this.metricsPrefix = metricsPrefix;
+        this.metricsFlushPeriod = metricsFlushPeriod;
+        this.metricsFlushPeriodUnit = metricsFlushPeriodUnit;
+        this.metricsHost = metricsHost;
+        this.metricsPort = metricsPort;
     }
 
     @JsonProperty("uris")
@@ -378,6 +460,20 @@ public class CassandraTaskExecutor {
         return memoryMb;
     }
 
+    public boolean isMetricsEnable() { return metricsEnable; }
+
+    public String getMetricsCollector() { return metricsCollector; }
+
+    public String getMetricsPrefix() { return metricsPrefix; }
+
+    public int getMetricsFlushPeriod() { return metricsFlushPeriod; }
+
+    public String getMetricsFlushPeriodUnit() { return metricsFlushPeriodUnit; }
+
+    public String getMetricsHost() { return metricsHost; }
+
+    public int getMetricsPort() { return metricsPort; }
+
     public Builder mutable() {
         return new Builder(this);
     }
@@ -394,7 +490,6 @@ public class CassandraTaskExecutor {
     }
 
     private Protos.Environment getEnvironment() {
-
         return Protos.Environment.newBuilder()
                 .addAllVariables(Arrays.asList(
                         Protos.Environment.Variable
@@ -408,7 +503,36 @@ public class CassandraTaskExecutor {
                                 .setValue(Integer.toString(apiPort)).build(),
                         Protos.Environment.Variable
                                 .newBuilder().setName("EXECUTOR_ADMIN_PORT")
-                                .setValue(Integer.toString(adminPort)).build()
+                                .setValue(Integer.toString(adminPort)).build(),
+                        Protos.Environment.Variable
+                                .newBuilder().setName("EXECUTOR_METRICS_ENABLE")
+                                .setValue(Boolean.toString(metricsEnable))
+                                .build(),
+                        Protos.Environment.Variable
+                                .newBuilder()
+                                .setName("EXECUTOR_METRICS_COLLECTOR")
+                                .setValue(metricsCollector).build(),
+                        Protos.Environment.Variable
+                                .newBuilder().setName("EXECUTOR_METRICS_PREFIX")
+                                .setValue(metricsPrefix).build(),
+                        Protos.Environment.Variable
+                                .newBuilder()
+                                .setName("EXECUTOR_METRICS_FLUSH_PERIOD")
+                                .setValue(Integer.toString(metricsFlushPeriod))
+                                .build(),
+                        Protos.Environment.Variable
+                                .newBuilder()
+                                .setName("EXECUTOR_METRICS_FLUSH_PERIOD_UNIT")
+                                .setValue(metricsFlushPeriodUnit)
+                                .build(),
+                        Protos.Environment.Variable
+                                .newBuilder().setName("EXECUTOR_METRICS_HOST")
+                                .setValue(metricsHost)
+                                .build(),
+                        Protos.Environment.Variable
+                                .newBuilder().setName("EXECUTOR_METRICS_PORT")
+                                .setValue(Integer.toString(metricsPort))
+                                .build()
                 )).build();
     }
 
@@ -452,7 +576,16 @@ public class CassandraTaskExecutor {
                 Objects.equals(getCommand(), that.getCommand()) &&
                 Objects.equals(getArguments(), that.getArguments()) &&
                 Objects.equals(uris, that.uris) &&
-                Objects.equals(getJavaHome(), that.getJavaHome());
+                Objects.equals(getJavaHome(), that.getJavaHome()) &&
+                isMetricsEnable() == that.isMetricsEnable() &&
+                Objects.equals(getMetricsCollector(),
+                        that.getMetricsCollector()) &&
+                Objects.equals(getMetricsPrefix(), that.getMetricsPrefix()) &&
+                getMetricsFlushPeriod() == that.getMetricsFlushPeriod() &&
+                Objects.equals(getMetricsFlushPeriodUnit(),
+                        that.getMetricsFlushPeriodUnit()) &&
+                Objects.equals(getMetricsHost(), that.getMetricsHost()) &&
+                getMetricsPort() == that.getMetricsPort();
     }
 
     @Override
@@ -461,7 +594,10 @@ public class CassandraTaskExecutor {
                 getArguments(),
                 getCpus(), getMemoryMb(), getDiskMb(), getHeapMb(),
                 getApiPort(),
-                getAdminPort(), uris, getJavaHome());
+                getAdminPort(), uris, getJavaHome(),
+                isMetricsEnable(), getMetricsCollector(), getMetricsPrefix(),
+                getMetricsFlushPeriod(), getMetricsFlushPeriodUnit(),
+                getMetricsHost(), getMetricsPort());
     }
 
     @Override
