@@ -85,6 +85,7 @@ public class MetricsConfig {
         statsdMap.put("period", executor.getMetricsFlushPeriod());
         statsdMap.put("timeunit", executor.getMetricsFlushPeriodUnit());
         statsdMap.put("hosts", hostMapList);
+        statsdMap.put("prefix", executor.getMetricsPrefix());
 
         List<Object> statsdMapList = new ArrayList<>();
         statsdMapList.add(statsdMap);
