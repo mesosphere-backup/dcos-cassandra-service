@@ -39,7 +39,7 @@ public class MetricsConfig {
                         System.getenv(STATSD_PORT_ENV) != null);
     }
 
-    public String getMetricsHost() {
+    private String getMetricsHost() {
         String host = System.getenv(STATSD_HOST_ENV);
         if (host == null) {
             host = executor.getMetricsHost();
@@ -47,7 +47,7 @@ public class MetricsConfig {
         return host;
     }
 
-    public int getMetricsPort() {
+    private int getMetricsPort() {
         int port = -1;
         String portStr = System.getenv(STATSD_PORT_ENV);
         if (portStr != null) {
