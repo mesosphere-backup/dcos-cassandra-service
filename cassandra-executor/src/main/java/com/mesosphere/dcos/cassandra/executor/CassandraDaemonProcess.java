@@ -248,8 +248,7 @@ public class CassandraDaemonProcess {
                 .build().writeDaemonConfiguration(paths.cassandraConfig());
 
         if (metricsEnabled) {
-            metricsEnabled = MetricsConfig.writeMetricsConfig(
-                    paths.cassandraConfig());
+            metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());
         }
 
         process = createDaemon();
