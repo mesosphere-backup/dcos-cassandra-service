@@ -9,7 +9,6 @@ import random
 import string
 import sys
 import urllib
-import urlparse
 
 # non-stdlib libs:
 try:
@@ -50,7 +49,7 @@ def marathon_launch_app(marathon_url, app_id, cmd, instances=1, packages=[], env
     for package in packages:
         formatted_packages.append({"uri": package})
     formatted_env = {}
-    for k,v in env.iteritems():
+    for k,v in env.items():
         formatted_env[str(k)] = str(v)
     post_json = {
         "id": app_id,
@@ -74,7 +73,8 @@ def get_random_id(length=8):
 
 
 JRE_JAVA_PATH = "jre/bin/java"
-CASSANDRA_STRESS_PATH = "apache-cassandra-2.2.5/tools/bin/cassandra-stress"
+CASSANDRA_STRESS_PATH = "apache-cassandra-*/tools/bin/cassandra-stress"
+DEFAULT_PORT=9042
 
 
 @click.command()
@@ -93,8 +93,6 @@ CASSANDRA_STRESS_PATH = "apache-cassandra-2.2.5/tools/bin/cassandra-stress"
               help="consistency level to request for writers")
 @click.option("--truncate", show_default=True, default='never',
               help="whether to truncate writes")
-@click.option("--error-threshold", show_default=True, default=0.02,
-              help="when to give up")
 @click.option("--username", envvar="DCOS_USERNAME",
               help="username to use when making requests to the DCOS cluster (if the cluster requires auth)")
 @click.option("--password", envvar="DCOS_PASSWORD",
@@ -103,10 +101,12 @@ CASSANDRA_STRESS_PATH = "apache-cassandra-2.2.5/tools/bin/cassandra-stress"
               help="url of the cassandra package")
 @click.option("--jre-url", show_default=True, default="https://s3-eu-west-1.amazonaws.com/downloads.mesosphere.com/kafka/jre-8u72-linux-x64.tar.gz",
               help="url of the jre package")
-@click.option("--keyspace-override",
+@click.option("--keyspace-override", default="",
               help="keyspace to use instead of a randomized default")
-@click.option("--ip-override",
-              help="list of node endpoints to use instead of what the framework returns")
+@click.option("--ip-override", default=[],
+              help="list of node ips to use instead of what the framework returns")
+@click.option("--port-override", show_default=True, default=DEFAULT_PORT,
+              help="node port to use. cassandra-stress lacks support for multiple ports.")
 def main(
         cluster_url,
         framework_name,
@@ -116,13 +116,13 @@ def main(
         duration,
         consistency,
         truncate,
-        error_threshold,
         username,
         password,
         pkg_url,
         jre_url,
         keyspace_override,
-        ip_override):
+        ip_override,
+        port_override):
     """Launches zero or more test writer and reader clients against a Cassandra framework.
 
     The clients are launched as marathon tasks, which may be destroyed using the provided curl commands when testing is complete.
@@ -149,23 +149,33 @@ def main(
         headers = {"Authorization": "token={}".format(tok_response["token"])}
 
     if not ip_override:
-        # user didn't manually specify ips, fetch them from the framework directly before proceeding
+        # args didn't specify manual ips, so fetch the list with a framework RPC:
         fetch_ips_path = '{}/service/{}/v1/nodes/connect/native'.format(cluster_url.rstrip("/"), framework_name)
         json = __handle_response('GET', fetch_ips_path, requests.get(fetch_ips_path, headers=headers))
-        ip_override = ','.join(json)
-        print('Using node IPs: {}'.format(json))
+        # strip ":port" from returned endpoints. the ":" confuses cassandra-stress, it parses them as IPv6 IPs.
+        ips = []
+        for endpoint in json:
+            ip, port = endpoint.split(':')
+            # if port arg is default, try using a port value returned by the framework
+            if not port_override == DEFAULT_PORT:
+                port_override = port
+            ips.append(ip)
+        ip_override = ','.join(ips)
+        print('Using node IPs: {}, Port: {}'.format(ip_override, port_override))
 
     if not keyspace_override:
         # user didn't manually specify keyspace, generate random one (matches marathon job names)
-        keyspace_override = 'test-' + keyspace_rand_id
+        # 'can only contain alphanumeric and underscore characters'
+        keyspace_override = 'test_' + keyspace_rand_id
 
-    common_args = '-node {} -schema keyspace={} -rate threads={}'.format(
-        ip_override, keyspace_override, thread_count)
-    #TODO invalid parameters "duration=1h" "cl=one" "err<0.02" "truncate=never"
-    ORIG_common_args = '-node {} -schema keyspace={} -rate threads={} duration={} cl={} err\<{} truncate={}'.format(
-        ip_override, keyspace_override, thread_count, duration, consistency, error_threshold, truncate)
-    reader_args = "counter_read " + common_args
-    writer_args = "counter_write " + common_args
+    # Note that non-dashed args (eg "duration"/"truncate") must go first, followed by dashed args (eg "-node"/"-rate"):
+    # See the available args here: https://docs.datastax.com/en/cassandra/2.1/cassandra/tools/toolsCStress_t.html
+
+    common_args = 'duration={} cl={} truncate={} -node {} -mode native cql3 port={} -schema keyspace={} -rate threads={}'.format(
+        duration, consistency, truncate, ip_override, port_override, keyspace_override, thread_count)
+    reader_args = "counter_read {}".format(common_args)
+    writer_args = "counter_write {}".format(common_args)
+
     marathon_url = marathon_apps_url(cluster_url)
     if not marathon_launch_app(
             marathon_url = marathon_url,
@@ -188,14 +198,17 @@ def main(
         print("Starting writers failed")
         return 1
 
+    curl_headers = ""
+    for k,v in headers.items():
+        curl_headers += ' -H "{}: {}"'.format(k,v)
     print('''#################
 Readers/writers have been launched.
 When finished, delete them from Marathon with these commands:
 
-curl -X DELETE {}/{}
-curl -X DELETE {}/{}'''.format(
-    marathon_url, reader_app_id,
-    marathon_url, writer_app_id))
+curl -X DELETE{} {}/{}
+curl -X DELETE{} {}/{}'''.format(
+    curl_headers, marathon_url, reader_app_id,
+    curl_headers, marathon_url, writer_app_id))
     return 0
 
 if __name__ == "__main__":
