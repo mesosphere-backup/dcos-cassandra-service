@@ -10,6 +10,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,6 +64,18 @@ public class MetricsConfig {
         return port;
     }
 
+    private String getMetricsPrefix() {
+        String prefix = executor.getMetricsPrefix();
+        if (executor.getMetricsPrefixIncludeHostname()) {
+            try {
+                prefix = prefix + "." + InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                prefix = prefix + ".unknown-host";
+            }
+        }
+        return prefix;
+    }
+
     public boolean writeMetricsConfig(final Path dir) {
         if (!metricsEnabled()) {
             LOGGER.info("Metrics is not enabled");
@@ -85,7 +99,7 @@ public class MetricsConfig {
         statsdMap.put("period", executor.getMetricsFlushPeriod());
         statsdMap.put("timeunit", executor.getMetricsFlushPeriodUnit());
         statsdMap.put("hosts", hostMapList);
-        statsdMap.put("prefix", executor.getMetricsPrefix());
+        statsdMap.put("prefix", getMetricsPrefix());
 
         List<Object> statsdMapList = new ArrayList<>();
         statsdMapList.add(statsdMap);

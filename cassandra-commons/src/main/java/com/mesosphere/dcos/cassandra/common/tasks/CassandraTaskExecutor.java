@@ -38,6 +38,7 @@ public class CassandraTaskExecutor {
         private final boolean metricsEnable;
         private final String metricsCollector;
         private final String metricsPrefix;
+        private final boolean metricsPrefixIncludeHostname;
         private final int metricsFlushPeriod;
         private final String metricsFlushPeriodUnit;
         private final String metricsHost;
@@ -60,6 +61,8 @@ public class CassandraTaskExecutor {
             this.metricsEnable = executor.metricsEnable;
             this.metricsCollector = executor.metricsCollector;
             this.metricsPrefix = executor.metricsPrefix;
+            this.metricsPrefixIncludeHostname =
+                    executor.metricsPrefixIncludeHostname;
             this.metricsFlushPeriod = executor.metricsFlushPeriod;
             this.metricsFlushPeriodUnit = executor.metricsFlushPeriodUnit;
             this.metricsHost = executor.metricsHost;
@@ -191,6 +194,7 @@ public class CassandraTaskExecutor {
                     metricsEnable,
                     metricsCollector,
                     metricsPrefix,
+                    metricsPrefixIncludeHostname,
                     metricsFlushPeriod,
                     metricsFlushPeriodUnit,
                     metricsHost,
@@ -214,6 +218,7 @@ public class CassandraTaskExecutor {
             boolean metricsEnable,
             String metricsCollector,
             String metricsPrefix,
+            boolean metricsPrefixIncludeHostname,
             int metricsFlushPeriod,
             String metricsFlushPeriodUnit,
             String metricsHost,
@@ -235,6 +240,7 @@ public class CassandraTaskExecutor {
                 metricsEnable,
                 metricsCollector,
                 metricsPrefix,
+                metricsPrefixIncludeHostname,
                 metricsFlushPeriod,
                 metricsFlushPeriodUnit,
                 metricsHost,
@@ -278,6 +284,8 @@ public class CassandraTaskExecutor {
                 Boolean.parseBoolean(env.get("EXECUTOR_METRICS_ENABLE")),
                 env.get("EXECUTOR_METRICS_COLLECTOR"),
                 env.get("EXECUTOR_METRICS_PREFIX"),
+                Boolean.parseBoolean(env.get
+                        ("EXECUTOR_METRICS_PREFIX_INCLUDE_HOSTNAME")),
                 Integer.parseInt(env.get("EXECUTOR_METRICS_FLUSH_PERIOD")),
                 env.get("EXECUTOR_METRICS_FLUSH_PERIOD_UNIT"),
                 env.get("EXECUTOR_METRICS_HOST"),
@@ -301,6 +309,8 @@ public class CassandraTaskExecutor {
             @JsonProperty("metricsEnable") boolean metricsEnable,
             @JsonProperty("metricsCollector") String metricsCollector,
             @JsonProperty("metricsPrefix") String metricsPrefix,
+            @JsonProperty("metricsPrefixIncludeHostname") boolean
+                    metricsPrefixIncludeHostname,
             @JsonProperty("metricsFlushPeriod") int metricsFlushPeriod,
             @JsonProperty("metricsFlushPeriodUnit") String metricsFlushPeriodUnit,
             @JsonProperty("metricsHost") String metricsHost,
@@ -322,6 +332,7 @@ public class CassandraTaskExecutor {
                 metricsEnable,
                 metricsCollector,
                 metricsPrefix,
+                metricsPrefixIncludeHostname,
                 metricsFlushPeriod,
                 metricsFlushPeriodUnit,
                 metricsHost,
@@ -357,6 +368,8 @@ public class CassandraTaskExecutor {
     private final String metricsCollector;
     @JsonProperty("metricsPrefix")
     private final String metricsPrefix;
+    @JsonProperty("metricsPrefixIncludeHostname")
+    private final boolean metricsPrefixIncludeHostname;
     @JsonProperty("metricsFlushPeriod")
     private final int metricsFlushPeriod;
     @JsonProperty("metricsFlushPeriodUnit")
@@ -382,6 +395,7 @@ public class CassandraTaskExecutor {
             boolean metricsEnable,
             String metricsCollector,
             String metricsPrefix,
+            boolean metricsPrefixIncludeHostname,
             int metricsFlushPeriod,
             String metricsFlushPeriodUnit,
             String metricsHost,
@@ -401,6 +415,7 @@ public class CassandraTaskExecutor {
         this.metricsEnable = metricsEnable;
         this.metricsCollector = metricsCollector;
         this.metricsPrefix = metricsPrefix;
+        this.metricsPrefixIncludeHostname = metricsPrefixIncludeHostname;
         this.metricsFlushPeriod = metricsFlushPeriod;
         this.metricsFlushPeriodUnit = metricsFlushPeriodUnit;
         this.metricsHost = metricsHost;
@@ -466,6 +481,10 @@ public class CassandraTaskExecutor {
 
     public String getMetricsPrefix() { return metricsPrefix; }
 
+    public boolean getMetricsPrefixIncludeHostname() {
+        return metricsPrefixIncludeHostname;
+    }
+
     public int getMetricsFlushPeriod() { return metricsFlushPeriod; }
 
     public String getMetricsFlushPeriodUnit() { return metricsFlushPeriodUnit; }
@@ -515,6 +534,10 @@ public class CassandraTaskExecutor {
                         Protos.Environment.Variable
                                 .newBuilder().setName("EXECUTOR_METRICS_PREFIX")
                                 .setValue(metricsPrefix).build(),
+                        Protos.Environment.Variable.newBuilder()
+                                .setName("EXECUTOR_METRICS_PREFIX_INCLUDE_HOSTNAME")
+                                .setValue(Boolean.toString(
+                                        metricsPrefixIncludeHostname)).build(),
                         Protos.Environment.Variable
                                 .newBuilder()
                                 .setName("EXECUTOR_METRICS_FLUSH_PERIOD")
@@ -581,6 +604,8 @@ public class CassandraTaskExecutor {
                 Objects.equals(getMetricsCollector(),
                         that.getMetricsCollector()) &&
                 Objects.equals(getMetricsPrefix(), that.getMetricsPrefix()) &&
+                getMetricsPrefixIncludeHostname() ==
+                        that.getMetricsPrefixIncludeHostname() &&
                 getMetricsFlushPeriod() == that.getMetricsFlushPeriod() &&
                 Objects.equals(getMetricsFlushPeriodUnit(),
                         that.getMetricsFlushPeriodUnit()) &&
@@ -591,13 +616,11 @@ public class CassandraTaskExecutor {
     @Override
     public int hashCode() {
         return Objects.hash(getFrameworkId(), getId(), getCommand(),
-                getArguments(),
-                getCpus(), getMemoryMb(), getDiskMb(), getHeapMb(),
-                getApiPort(),
-                getAdminPort(), uris, getJavaHome(),
+                getArguments(), getCpus(), getMemoryMb(), getDiskMb(),
+                getHeapMb(), getApiPort(), getAdminPort(), uris, getJavaHome(),
                 isMetricsEnable(), getMetricsCollector(), getMetricsPrefix(),
-                getMetricsFlushPeriod(), getMetricsFlushPeriodUnit(),
-                getMetricsHost(), getMetricsPort());
+                getMetricsPrefixIncludeHostname(), getMetricsFlushPeriod(),
+                getMetricsFlushPeriodUnit(), getMetricsHost(), getMetricsPort());
     }
 
     @Override

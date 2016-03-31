@@ -62,6 +62,7 @@ public class ExecutorConfig {
             boolean metricsEnable,
             String metricsCollector,
             String metricsPrefix,
+            boolean metricsPrefixIncludeHostname,
             int metricsFlushPeriod,
             String metricsFlushPeriodUnit,
             String metricsHost,
@@ -83,6 +84,7 @@ public class ExecutorConfig {
                 metricsEnable,
                 metricsCollector,
                 metricsPrefix,
+                metricsPrefixIncludeHostname,
                 metricsFlushPeriod,
                 metricsFlushPeriodUnit,
                 metricsHost,
@@ -107,6 +109,7 @@ public class ExecutorConfig {
             @JsonProperty("metricsEnable") boolean metricsEnable,
             @JsonProperty("metricsCollector") String metricsCollector,
             @JsonProperty("metricsPrefix") String metricsPrefix,
+            @JsonProperty("metricsPrefixIncludeHostname") boolean metricsPrefixIncludeHostname,
             @JsonProperty("metricsFlushPeriod") int metricsFlushPeriod,
             @JsonProperty("metricsFlushPeriodUnit") String metricsFlushPeriodUnit,
             @JsonProperty("metricsHost") String metricsHost,
@@ -129,6 +132,7 @@ public class ExecutorConfig {
                 metricsEnable,
                 metricsCollector,
                 metricsPrefix,
+                metricsPrefixIncludeHostname,
                 metricsFlushPeriod,
                 metricsFlushPeriodUnit,
                 metricsHost,
@@ -164,6 +168,8 @@ public class ExecutorConfig {
     private final String metricsCollector;
     @JsonProperty("metricsPrefix")
     private final String metricsPrefix;
+    @JsonProperty("metricsPrefixIncludeHostname")
+    private final boolean metricsPrefixIncludeHostname;
     @JsonProperty("metricsFlushPeriod")
     private final int metricsFlushPeriod;
     @JsonProperty("metricsFlushPeriodUnit")
@@ -189,6 +195,7 @@ public class ExecutorConfig {
             boolean metricsEnable,
             String metricsCollector,
             String metricsPrefix,
+            boolean metricsPrefixIncludeHostname,
             int metricsFlushPeriod,
             String metricsFlushPeriodUnit,
             String metricsHost,
@@ -209,6 +216,7 @@ public class ExecutorConfig {
         this.metricsEnable = metricsEnable;
         this.metricsCollector = metricsCollector;
         this.metricsPrefix = metricsPrefix;
+        this.metricsPrefixIncludeHostname = metricsPrefixIncludeHostname;
         this.metricsFlushPeriod = metricsFlushPeriod;
         this.metricsFlushPeriodUnit = metricsFlushPeriodUnit;
         this.metricsHost = metricsHost;
@@ -290,6 +298,10 @@ public class ExecutorConfig {
         return metricsPrefix;
     }
 
+    public boolean getMetricsPrefixIncludeHostname() {
+        return metricsPrefixIncludeHostname;
+    }
+
     public int getMetricsFlushPeriod() {
         return metricsFlushPeriod;
     }
@@ -329,6 +341,8 @@ public class ExecutorConfig {
                 Objects.equals(getMetricsCollector(),
                         that.getMetricsCollector()) &&
                 Objects.equals(getMetricsPrefix(), that.getMetricsPrefix()) &&
+                getMetricsPrefixIncludeHostname() ==
+                        that.getMetricsPrefixIncludeHostname() &&
                 getMetricsFlushPeriod() == that.getMetricsFlushPeriod() &&
                 Objects.equals(getMetricsFlushPeriodUnit(),
                         that.getMetricsFlushPeriodUnit()) &&
@@ -343,9 +357,9 @@ public class ExecutorConfig {
                 getDiskMb(), getHeapMb(), getApiPort(), getAdminPort(),
                 getJreLocation(), getExecutorLocation(), getCassandraLocation(),
                 getJavaHome(), getMetricsEnable(), getMetricsCollector(),
-                getMetricsPrefix(), getMetricsFlushPeriod(),
-                getMetricsFlushPeriodUnit(), getMetricsHost(),
-                getMetricsPort());
+                getMetricsPrefix(), getMetricsPrefixIncludeHostname(),
+                getMetricsFlushPeriod(), getMetricsFlushPeriodUnit(),
+                getMetricsHost(), getMetricsPort());
     }
 
     @Override

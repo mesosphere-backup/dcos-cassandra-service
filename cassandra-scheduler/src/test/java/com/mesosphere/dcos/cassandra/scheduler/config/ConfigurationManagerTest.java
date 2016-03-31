@@ -207,7 +207,7 @@ public class ConfigurationManagerTest {
                 new ArrayList<String>(), 1.2, 345, 678, 901, 17, 19, "/java/home",
                 URI.create("/jre/location"), URI.create("/executor/location"),
                 URI.create("/cassandra/location"), true, "statsd",
-                "metrics.prefix.", 1, "SECOND", "127.0.0.3", 1234);
+                "metrics.prefix.", true, 1, "SECOND", "127.0.0.3", 1234);
 
         int updatedServers = config.getServers() + 10;
 
@@ -504,7 +504,7 @@ public class ConfigurationManagerTest {
                 "/java/home", URI.create("/jre/location"),
                 URI.create("/executor/location"),
                 URI.create("/cassandra/location"), true, "statsd",
-                "metrics.prefix.", 1, "SECOND", "127.0.0.3", 1234);
+                "metrics.prefix.", false, 1, "SECOND", "127.0.0.3", 1234);
 
         assertNotSame(new_config, manager.getExecutorConfig());
         manager.setExecutorConfig(new_config);

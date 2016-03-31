@@ -215,6 +215,7 @@ public class CassandraDaemonProcessTest {
                         true,
                         "statsd",
                         "metrics.prefix.",
+                        true,
                         17,
                         "SECONDS",
                         "127.1.2.3",

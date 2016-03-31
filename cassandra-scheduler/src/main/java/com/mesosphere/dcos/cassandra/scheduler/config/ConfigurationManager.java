@@ -222,6 +222,7 @@ public class ConfigurationManager implements Managed {
                 executorConfig.getMetricsEnable(),
                 executorConfig.getMetricsCollector(),
                 executorConfig.getMetricsPrefix(),
+                executorConfig.getMetricsPrefixIncludeHostname(),
                 executorConfig.getMetricsFlushPeriod(),
                 executorConfig.getMetricsFlushPeriodUnit(),
                 executorConfig.getMetricsHost(),

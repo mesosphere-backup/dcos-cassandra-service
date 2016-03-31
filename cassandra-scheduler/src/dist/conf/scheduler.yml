@@ -16,6 +16,7 @@ executor:
   metricsEnable : ${EXECUTOR_METRICS_ENABLE:-false}
   metricsCollector : ${EXECUTOR_METRICS_COLLECTOR:-"statsd"}
   metricsPrefix : ${EXECUTOR_METRICS_PREFIX:-"metrics."}
+  metricsPrefixIncludeHostname : ${EXECUTOR_METRICS_PREFIX_INCLUDE_HOSTNAME:-false}
   metricsFlushPeriod : ${EXECUTOR_METRICS_FLUSH_PERIOD:-10}
   metricsFlushPeriodUnit : ${EXECUTOR_METRICS_FLUSH_PERIOD_UNIT:-"SECONDS"}
   metricsHost : ${EXECUTOR_METRICS_HOST:-"127.0.0.1"}
