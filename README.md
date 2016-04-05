@@ -757,7 +757,10 @@ The cleanup payload reference by, cleanup.json above, is a JSON object that indi
 ```
 
 ### Backup and Restore
-The DCOS Cassandra framework does not allow for autosnapshot to be enabled. Autosnapshot created on disk snapshots that Cassandra will never remove. Instead the service provides a mechanism to snapshot your tables and ship them to a remote location. 
+
+DCOS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
+
+Cassandra takes a snapshot your tables and ships them to a remote location. 
 Once the snapshots have been uploaded to a remote location, you can restore the data to a new cluster, in the event of a disaster, or restore them to an existing cluster, in the event that a user error has caused a data loss.
 
 #### Backup
