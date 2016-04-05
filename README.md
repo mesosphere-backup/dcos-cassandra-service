@@ -89,6 +89,8 @@ DCOS Cassandra provides the following features:
 
 - Step 1. Install a Cassandra cluster from the DCOS CLI.
 
+**Note:** Your cluster must have at least 3 private nodes.
+
 ```bash
 $ dcos package install cassandra
 ```
@@ -119,7 +121,9 @@ USE demo; SELECT * from demo.map;
 
 ### Install and Customize
 
-To start a basic test cluster, run the following command on the DCOS CLI. **Note:** Your cluster must have at least 3 private nodes.
+To start a basic test cluster, run the following command on the DCOS CLI.
+
+**Note:** Your cluster must have at least 3 private nodes.
 
 ``` bash
 $ dcos package install cassandra
