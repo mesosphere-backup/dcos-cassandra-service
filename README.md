@@ -119,9 +119,7 @@ USE demo; SELECT * from demo.map;
 
 ### Install and Customize
 
-#### Default install configuration
-
-To start a basic test cluster, run the following command on the DCOS CLI:
+To start a basic test cluster, run the following command on the DCOS CLI. **Note:** Your cluster must have at least 3 private nodes.
 
 ``` bash
 $ dcos package install cassandra
@@ -134,8 +132,6 @@ All `dcos cassandra` CLI commands have a `--framework-name` argument that allows
 ``` bash
 $ dcos config set cassandra.framework_name new_default_name
 ```
-
-The default cluster, `cassandra`, is intended for testing and development. It is not suitable for production use without additional customization. In particular, the default installation will create a cluster with three nodes with a default cassandra application configuration.
 
 #### Custom install configuration
 
