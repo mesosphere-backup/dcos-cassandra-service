@@ -1,0 +1,4 @@
+# Install requirements for running launcher.py.
+# $ pip install -r requirements.txt
+click
+requests
