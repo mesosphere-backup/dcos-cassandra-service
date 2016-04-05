@@ -221,7 +221,6 @@ public class CassandraDaemonProcessTest {
                 CassandraConfig.DEFAULT.getCpus(),
                 CassandraConfig.DEFAULT.getMemoryMb(),
                 CassandraConfig.DEFAULT.getDiskMb(),
-                CassandraConfig.DEFAULT.getDiskType(),
                 CassandraConfig.DEFAULT.mutable().setApplication(
                         CassandraConfig.DEFAULT.getApplication().toBuilder()
                                 .setSeedProvider(CassandraApplicationConfig.createDcosSeedProvider(

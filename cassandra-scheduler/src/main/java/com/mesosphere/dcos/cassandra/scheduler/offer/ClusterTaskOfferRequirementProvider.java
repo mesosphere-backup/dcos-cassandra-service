@@ -19,6 +19,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
             ClusterTaskOfferRequirementProvider.class);
     private IdentityManager identityManager;
     private CassandraTasks cassandraTasks;
+    private static VolumeRequirement MODE_NONE_TYPE_ROOT = VolumeRequirement.create();
 
     @Inject
     public ClusterTaskOfferRequirementProvider(
@@ -46,16 +47,13 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
         LOGGER.info("Avoiding agents: {}", agentsToAvoid);
         LOGGER.info("Colocating with agents: {}", agentsToColocate);
         final Identity identity = identityManager.get();
-        final VolumeRequirement volumeRequirement = VolumeRequirement.create();
-        volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.NONE);
-        volumeRequirement.setVolumeType(VolumeRequirement.VolumeType.ROOT);
         return new OfferRequirement(
                 identity.getRole(),
                 identity.getPrincipal(),
                 Arrays.asList(taskInfo),
                 agentsToAvoid,
                 agentsToColocate,
-                volumeRequirement,
+                MODE_NONE_TYPE_ROOT,
                 OfferRequirement.ExecutorMode.EXISTING
         );
     }
@@ -66,14 +64,11 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
         LOGGER.info("Getting replacement requirement for task: {}", taskInfo.getTaskId().getValue());
         final PlacementStrategy placementStrategy =
                 new ClusterTaskPlacementStrategy(cassandraTasks);
-        final VolumeRequirement volumeRequirement = VolumeRequirement.create();
-        volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.NONE);
-        volumeRequirement.setVolumeType(VolumeRequirement.VolumeType.ROOT);
         return new OfferRequirement(
                 Arrays.asList(taskInfo),
                 placementStrategy.getAgentsToAvoid(taskInfo),
                 placementStrategy.getAgentsToColocate(taskInfo),
-                volumeRequirement,
+                MODE_NONE_TYPE_ROOT,
                 OfferRequirement.ExecutorMode.EXISTING);
     }
 
@@ -86,16 +81,13 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
             Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
         final Identity identity = identityManager.get();
-        final VolumeRequirement volumeRequirement = VolumeRequirement.create();
-        volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.NONE);
-        volumeRequirement.setVolumeType(VolumeRequirement.VolumeType.ROOT);
         return new OfferRequirement(
                 identity.getRole(),
                 identity.getPrincipal(),
                 Arrays.asList(taskInfo),
                 null,
                 null,
-                volumeRequirement,
+                MODE_NONE_TYPE_ROOT,
                 OfferRequirement.ExecutorMode.EXISTING);
     }
 }

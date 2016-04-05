@@ -115,7 +115,6 @@ public abstract class CassandraTask {
                         config.getCpus(),
                         config.getMemoryMb(),
                         config.getDiskMb(),
-                        config.getDiskType(),
                         config,
                         CassandraDaemonStatus.create(
                                 Protos.TaskState.TASK_STAGING,

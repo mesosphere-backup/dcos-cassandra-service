@@ -18,7 +18,7 @@ public class CassandraConfigParser {
     private int memoryMb;
     @JsonProperty("diskMb")
     private int diskMb;
-    @JsonProperty
+    @JsonProperty("diskType")
     private VolumeRequirement.VolumeType diskType;
     @JsonProperty("version")
     private String version;

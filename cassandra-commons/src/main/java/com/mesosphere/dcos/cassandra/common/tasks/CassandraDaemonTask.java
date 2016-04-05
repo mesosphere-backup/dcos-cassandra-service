@@ -30,7 +30,6 @@ public class CassandraDaemonTask extends CassandraTask {
         private double cpus;
         private int memoryMb;
         private int diskMb;
-        private VolumeRequirement.VolumeType diskType;
         private CassandraDaemonStatus status;
         private CassandraConfig config;
 
@@ -46,7 +45,6 @@ public class CassandraDaemonTask extends CassandraTask {
             this.cpus = task.cpus;
             this.memoryMb = task.memoryMb;
             this.diskMb = task.diskMb;
-            this.diskType = task.diskType;
             this.status = task.getStatus();
             this.config = task.config;
 
@@ -77,14 +75,6 @@ public class CassandraDaemonTask extends CassandraTask {
         public Builder setDiskMb(int diskMb) {
             this.diskMb = diskMb;
             return this;
-        }
-
-        public VolumeRequirement.VolumeType getDiskType() {
-            return diskType;
-        }
-
-        public void setDiskType(VolumeRequirement.VolumeType diskType) {
-            this.diskType = diskType;
         }
 
         public CassandraTaskExecutor getExecutor() {
@@ -180,7 +170,6 @@ public class CassandraDaemonTask extends CassandraTask {
                     cpus,
                     memoryMb,
                     diskMb,
-                    diskType,
                     config,
                     status
             );
@@ -201,7 +190,6 @@ public class CassandraDaemonTask extends CassandraTask {
             @JsonProperty("cpus") double cpus,
             @JsonProperty("memoryMb") int memoryMb,
             @JsonProperty("diskMb") int diskMb,
-            @JsonProperty("diskType") VolumeRequirement.VolumeType diskType,
             @JsonProperty("config") CassandraConfig config,
             @JsonProperty("status") CassandraDaemonStatus status) {
 
@@ -216,7 +204,7 @@ public class CassandraDaemonTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
-                diskType,
+                config.getDiskType(),
                 config,
                 status
         );
@@ -299,7 +287,6 @@ public class CassandraDaemonTask extends CassandraTask {
                     cpus,
                     memoryMb,
                     diskMb,
-                    diskType,
                     updateConfig((CassandraDaemonStatus) status),
                     (CassandraDaemonStatus) status);
         }
@@ -322,7 +309,6 @@ public class CassandraDaemonTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
-                diskType,
                 config,
                 ((CassandraDaemonStatus) status).update(state));
 
@@ -350,7 +336,6 @@ public class CassandraDaemonTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
-                diskType,
                 config,
                 (CassandraDaemonStatus) status);
     }
@@ -368,7 +353,6 @@ public class CassandraDaemonTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
-                diskType,
                 config,
                 (CassandraDaemonStatus) status);
     }
