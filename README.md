@@ -239,20 +239,22 @@ The plan can be viewed from the API via the REST endpoint. A curl example is pro
 curl http:/<dcos_url>/service/cassandra/v1/plan
 ```
 
-#####Plan Errors
+##### Plan Errors
 If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation can not progress.
-#####Reconciliation Phase
-The first phase of the installation plan is the reconciliation phase. This phase ensures that the DCOS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. For large deployments, reconciliation will occur periodically, and the in-progress phase will switch from Deploy to Reconciliation. This is not cause for concern.
-#####Deploy Phase
+
+##### Reconciliation Phase
+The first phase of the installation plan is the reconciliation phase. This phase ensures that the DCOS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DCOS Cassandra Service and occurs each time the framework starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
+
+##### Deploy Phase
 The second phase of the installation is the deploy phase. This phase will deploy the request number of Cassandra nodes. Each block in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
-#####Pausing Installation
+##### Pausing Installation
 In order to pause installation a REST API request, as shown below, can be issued. The installation will pause after completing installation of the current node and wait for user input.
 
 ``` bash
 curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
-#####Resuming Installation
+##### Resuming Installation
 If installation has been paused. The REST API request below will resume installation at the next pending node.
 
 ``` bash
