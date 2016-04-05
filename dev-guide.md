@@ -1,11 +1,12 @@
 # Dev Guide
 
-## Initializing dcos-commons submodule
+## Requirements
+- JDK 8
+- Protobuf 2.5.0
+
+## Clone the repo (including sub-modules)
 ```
-$ git submodule init
-$ git submodule update --remote
-$ cd dcos-commons
-$ git checkout master
+$ git clone --recursive git@github.com:mesosphere/dcos-cassandra-service.git
 ```
 
 ## Build instructions
