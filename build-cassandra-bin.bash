@@ -1,16 +1,31 @@
 #!/bin/bash
 
 # DESCRIPTION:
-# Creates a customized apache-cassandra-VERSION-bin.tar.gz,
-# which includes additional libs that aren't present in the stock version.
+#  Creates a customized apache-cassandra-VERSION-bin.tar.gz,
+#  which includes additional libs that aren't present in the stock version.
+# USAGE:
+#  $ ./build-cassandra-bin.bash
+#  [...]
+#  Created: /path/to/dcos-cassandra-service/cassandra-bin-tmp/apache-cassandra-2.2.5-bin-dcos.tar.gz
+#  Summary of lib/ changes:
+#  [... diff between original apache-cassandra-x.y.z-bin.tar.gz and new apache-cassandra-x.y.z-bin-dcos.tar.gz ... ]
+# CUSTOMIZATION:
+#  See variables below, in particular CASSANDRA_VERSION for bumping the version of cassandra to package.
 
 set -o errexit -o nounset -o pipefail
 
+# VERSION SETTINGS
 CASSANDRA_VERSION="2.2.5"
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
 STATSD_REPORTER_VERSION="4.1.2"
 REPORTER_CONFIG_VERSION="3.0.0"
 SEED_PROVIDER_VERSION="0.1.0"
+
+# PATHS AND FILENAME SETTINGS
+CASSANDRA_DIST_NAME="apache-cassandra-${CASSANDRA_VERSION}"
+CASSANDRA_STOCK_IMAGE="${CASSANDRA_DIST_NAME}-bin.tar.gz"
+CASSANDRA_CUSTOM_IMAGE="${CASSANDRA_DIST_NAME}-bin-dcos.tar.gz"
+CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL="https://archive.apache.org/dist/cassandra/${CASSANDRA_VERSION}/${CASSANDRA_STOCK_IMAGE}"
 
 function _download {
     if [ ! -f "$2" ]; then
@@ -31,11 +46,6 @@ function _package_github {
         cd ..
     fi
 }
-
-CASSANDRA_DIST_NAME="apache-cassandra-${CASSANDRA_VERSION}"
-CASSANDRA_STOCK_IMAGE="${CASSANDRA_DIST_NAME}-bin.tar.gz"
-CASSANDRA_CUSTOM_IMAGE="${CASSANDRA_DIST_NAME}-bin-dcos.tar.gz"
-CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL="https://archive.apache.org/dist/cassandra/${CASSANDRA_VERSION}/${CASSANDRA_STOCK_IMAGE}"
 
 mkdir -p "cassandra-bin-tmp"
 cd "cassandra-bin-tmp"
