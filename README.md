@@ -56,7 +56,7 @@ DCOS Cassandra Service Guide
 
 ## Overview
 
-DCOS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DCOS, eliminating nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many servers, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation] (http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DCOS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DCOS Cassandra in moments. Multiple Cassandra clusters can be installed on DCOS and managed independently, so you can offer Cassandra as a managed service to your organization.
+DCOS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DCOS, eliminating nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation] (http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DCOS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DCOS Cassandra in moments. Multiple Cassandra clusters can be installed on DCOS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
 ### Benefits
 
@@ -243,7 +243,7 @@ curl http:/<dcos_url>/service/cassandra/v1/plan
 If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation can not progress.
 
 ##### Reconciliation Phase
-The first phase of the installation plan is the reconciliation phase. This phase ensures that the DCOS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DCOS Cassandra Service and occurs each time the framework starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
+The first phase of the installation plan is the reconciliation phase. This phase ensures that the DCOS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DCOS Cassandra Service and occurs each time the service starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
 
 ##### Deploy Phase
 The second phase of the installation is the deploy phase. This phase will deploy the request number of Cassandra nodes. Each block in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
@@ -269,7 +269,7 @@ Uninstalling a cluster is also straightforward. Replace `cassandra` with the nam
 $ dcos package uninstall --app-id=cassandra
 ```
 
-Then, use the [framerwork cleaner script](https://github.com/mesosphere/framework-cleaner) to remove your Cassandra instance from Zookeeper and to destroy all data associated with it. The script require several arguments, the values for which are derived from your framework name:
+Then, use the [framework cleaner script](https://github.com/mesosphere/framework-cleaner) to remove your Cassandra instance from Zookeeper and to destroy all data associated with it. The script require several arguments, the values for which are derived from your framework name:
 
 `framework-role` is `<framework-name>-role`.
 `framework-principle` is `<framework-name>-principal.
@@ -284,7 +284,7 @@ You can customize your cluster in-place when it is up and running.
 The Cassandra scheduler runs as a Marathon process and can be reconfigured by changing values within Marathon. These are the general steps to follow:
 
 1. View your Marathon dashboard at `http://<dcos_url>/marathon`
-2. In the list of `Applications`, click the name of the Cassandra framework to be updated.
+2. In the list of `Applications`, click the name of the Cassandra service to be updated.
 3. Within the Cassandra instance details view, click the `Configuration` tab, then click the `Edit` button.
 4. In the dialog that appears, expand the `Environment Variables` section and update any field(s) to their desired value(s). For example, to increase the number of nodes, edit the value for `NODES`. Click `Change and deploy configuration` to apply any changes and cleanly reload the Cassandra scheduler. The Cassandra cluster itself will persist across the change.
 
@@ -468,11 +468,11 @@ If you enter `continue` a second time, the rest of the plan will be executed wit
 
 ### Configuration Options
 
-The following describes the most commonly used features of the Cassandra framework and how to configure them via the DCOS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DCOS command line (See the [Installation section](#installation)) or via modification to the Service Scheduler’s Marathon environment at runtime (See the [Configuration Update section](#configuration-update)). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DCOS scheduler.
+The following describes the most commonly used features of DCOS Cassandra and how to configure them via the DCOS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DCOS command line (See the [Installation section](#installation)) or via modification to the Service Scheduler’s Marathon environment at runtime (See the [Configuration Update section](#configuration-update)). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DCOS scheduler.
 
 #### Service Configuration
 
-The service configuration object contains properties that MUST be specified during installation and CANNOT  be modified after installation is in progress. This configuration object is similar across all DCOS Infinity frameworks. Service configuration example:
+The service configuration object contains properties that MUST be specified during installation and CANNOT  be modified after installation is in progress. This configuration object is similar across all DCOS Infinity services. Service configuration example:
 
 ``` json
 {
@@ -674,7 +674,7 @@ The response, for both the CLI and the REST API is as below.
 ]
 ```
 
-This JSON array contains a list of valid servers that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple servers in configuration of the CQL Driver used by the application. 
+This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in configuration of the CQL Driver used by the application. 
 
 ####Configuring the CQL Driver
 #####Adding the Driver to Your Application
@@ -873,7 +873,7 @@ You can access the `stderr` and `stdout` logs from the Marathon web interface. T
 
 ## Limitations
 
-- Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, the framework could allow for a user specified degree of parallelism when taking backups. 
+- Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, DCOS Cassandra could allow for a user specified degree of parallelism when taking backups. 
 - Cluster restore can only restore a cluster of the same size as, or larger than, the cluster from which the backup was taken.
 - While nodes can be replaced, there is currently no way to shrink the size of the cluster. Future releases will contain decommissions and remove operations.
 - Anti-Entropy repair can only be performed sequentially, for the primary range of each node, across the entire cluster. There are use cases where one might wish to repair an individual node, but running the repair procedure, as implemented, is always sufficient to repair the cluster.
