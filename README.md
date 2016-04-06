@@ -383,10 +383,10 @@ And, now if you query the plan again, here's how the response will look (notice 
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
                     "message": "Deploying Cassandra node node-0", 
                     "name": "node-0", 
-                    "status": “Complete"
+                    "status": "Complete"
                 }, 
                 {
-                    "has_decision_point": false”, 
+                    "has_decision_point": false, 
                     "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
                     "message": "Deploying Cassandra node node-1", 
                     "name": "node-1", 
@@ -440,7 +440,7 @@ After you execute the continue operation, the plan will look like this:
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
                     "message": "Deploying Cassandra node node-0", 
                     "name": "node-0", 
-                    "status": “Complete"
+                    "status": "Complete"
                 }, 
                 {
                     "has_decision_point": false, 
@@ -734,7 +734,7 @@ Here <nodes> is an optional comma separated list indicating the nodes to cleanup
 The following curl command demonstrates how to start a cleanup operation.
 
 ``` bash
-curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
+curl -X PUT -H "Content-Type:application/json" http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
 ```
 
 ####Cleanup Payload
