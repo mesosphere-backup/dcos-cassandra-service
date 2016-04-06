@@ -415,7 +415,7 @@ Enter the `continue` command to resume the update process.
 
 After you execute the continue operation, the plan will look like this:
 
-```
+``` json
 {
     "errors": [], 
     "phases": [
