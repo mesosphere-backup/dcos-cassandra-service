@@ -24,10 +24,10 @@ import com.mesosphere.dcos.cassandra.common.serialization.SerializationException
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.Volume;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+import org.apache.mesos.offer.VolumeRequirement;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * CassandraConfig aggregates the configuration properties for a Cassandra
@@ -46,6 +46,7 @@ public class CassandraConfig {
                     0.2,
                     4096,
                     10240,
+                    VolumeRequirement.VolumeType.ROOT,
                     "",
                     HeapConfig.DEFAULT,
                     Location.DEFAULT,
@@ -64,6 +65,7 @@ public class CassandraConfig {
         private double cpus;
         private int memoryMb;
         private int diskMb;
+        private VolumeRequirement.VolumeType diskType;
         private String replaceIp;
         private HeapConfig heap;
         private Location location;
@@ -77,6 +79,7 @@ public class CassandraConfig {
             this.cpus = config.cpus;
             this.memoryMb = config.memoryMb;
             this.diskMb = config.diskMb;
+            this.diskType = config.diskType;
             this.replaceIp = config.replaceIp;
             this.heap = config.heap;
             this.location = config.location;
@@ -114,6 +117,14 @@ public class CassandraConfig {
         public Builder setDiskMb(int diskMb) {
             this.diskMb = diskMb;
             return this;
+        }
+
+        public VolumeRequirement.VolumeType getDiskType() {
+            return diskType;
+        }
+
+        public void setDiskType(VolumeRequirement.VolumeType diskType) {
+            this.diskType = diskType;
         }
 
         public HeapConfig getHeap() {
@@ -186,6 +197,7 @@ public class CassandraConfig {
                     cpus,
                     memoryMb,
                     diskMb,
+                    diskType,
                     replaceIp,
                     heap,
                     location,
@@ -235,6 +247,7 @@ public class CassandraConfig {
             @JsonProperty("cpus") double cpus,
             @JsonProperty("memoryMb") int memoryMb,
             @JsonProperty("diskMb") int diskMb,
+            @JsonProperty("diskType") VolumeRequirement.VolumeType diskType,
             @JsonProperty("replaceIp") String replaceIp,
             @JsonProperty("heap") HeapConfig heap,
             @JsonProperty("location") Location location,
@@ -248,6 +261,7 @@ public class CassandraConfig {
                 cpus,
                 memoryMb,
                 diskMb,
+                diskType,
                 replaceIp,
                 heap,
                 location,
@@ -264,6 +278,7 @@ public class CassandraConfig {
                 config.getCpus(),
                 config.getMemoryMb(),
                 config.getDiskMb(),
+                VolumeRequirement.VolumeType.valueOf(config.getDiskType()),
                 (config.hasReplaceIp()) ? config.getReplaceIp() : "",
                 HeapConfig.parse(config.getHeap()),
                 Location.parse(config.getLocation()),
@@ -290,6 +305,9 @@ public class CassandraConfig {
     @JsonProperty("diskMb")
     private final int diskMb;
 
+    @JsonProperty("diskType")
+    private VolumeRequirement.VolumeType diskType;
+
     @JsonProperty("replaceIp")
     private final String replaceIp;
 
@@ -312,6 +330,7 @@ public class CassandraConfig {
                            final double cpus,
                            final int memoryMb,
                            final int diskMb,
+                           final VolumeRequirement.VolumeType diskType,
                            final String replaceIp,
                            final HeapConfig heap,
                            final Location location,
@@ -322,6 +341,7 @@ public class CassandraConfig {
         this.cpus = cpus;
         this.memoryMb = memoryMb;
         this.diskMb = diskMb;
+        this.diskType = diskType;
         this.replaceIp = (replaceIp != null) ? replaceIp : "";
         this.heap = heap;
         this.location = location;
@@ -362,6 +382,10 @@ public class CassandraConfig {
         return diskMb;
     }
 
+    public VolumeRequirement.VolumeType getDiskType() {
+        return diskType;
+    }
+
     public int getMemoryMb() {
         return memoryMb;
     }
@@ -379,6 +403,7 @@ public class CassandraConfig {
                         .setVersion(version)
                         .setCpus(cpus)
                         .setDiskMb(diskMb)
+                        .setDiskType(diskType.name())
                         .setMemoryMb(memoryMb)
                         .setReplaceIp(replaceIp)
                         .setHeap(heap.toProto())
@@ -405,6 +430,7 @@ public class CassandraConfig {
         return Double.compare(that.getCpus(), getCpus()) == 0 &&
                 getMemoryMb() == that.getMemoryMb() &&
                 getDiskMb() == that.getDiskMb() &&
+                getDiskType() == that.getDiskType() &&
                 getJmxPort() == that.getJmxPort() &&
                 Objects.equals(getVersion(), that.getVersion()) &&
                 Objects.equals(getReplaceIp(), that.getReplaceIp()) &&
@@ -415,7 +441,7 @@ public class CassandraConfig {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getVersion(), getCpus(), getMemoryMb(), getDiskMb(),
+        return Objects.hash(getVersion(), getCpus(), getMemoryMb(), getDiskMb(), getDiskType(),
                 getReplaceIp(), getHeap(), getLocation(), getJmxPort(),
                 getApplication());
     }

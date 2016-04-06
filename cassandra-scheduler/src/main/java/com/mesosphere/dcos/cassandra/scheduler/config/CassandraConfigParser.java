@@ -6,6 +6,7 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.Volume;
+import org.apache.mesos.offer.VolumeRequirement;
 
 import static com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig.*;
 
@@ -17,6 +18,8 @@ public class CassandraConfigParser {
     private int memoryMb;
     @JsonProperty("diskMb")
     private int diskMb;
+    @JsonProperty("diskType")
+    private VolumeRequirement.VolumeType diskType;
     @JsonProperty("version")
     private String version;
     @JsonProperty("numTokens")
@@ -149,6 +152,7 @@ public class CassandraConfigParser {
     public CassandraConfigParser() {
         cpus = CassandraConfig.DEFAULT.getCpus();
         diskMb = CassandraConfig.DEFAULT.getDiskMb();
+        diskType = CassandraConfig.DEFAULT.getDiskType();
         memoryMb = CassandraConfig.DEFAULT.getMemoryMb();
         version = CassandraConfig.DEFAULT.getVersion();
         numTokens = DEFAULT_NUM_TOKENS;
@@ -306,6 +310,7 @@ public class CassandraConfigParser {
                 cpus,
                 memoryMb,
                 diskMb,
+                diskType,
                 "",
                 heap,
                 CassandraConfig.DEFAULT.getLocation(),
