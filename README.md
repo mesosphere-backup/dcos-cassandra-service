@@ -301,7 +301,7 @@ Make the REST request below to view the current plan:
 curl -v http://<dcos_url>/service/cassandra/v1/plan
 ```
 
-When using the `STAGE` deployment strategy, an update plan will initially pause without doing any update to ensure the plan is correct. It will look like this:
+Response will look similar to this:
 
 ``` json
 {
@@ -354,62 +354,9 @@ When using the `STAGE` deployment strategy, an update plan will initially pause 
 }
 ```
 
-Enter the `continue` command to execute the first block.
+If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
 
-After you execute the continue operation, the plan will look like this:
-
-``` json
-{
-    "errors": [], 
-    "phases": [
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false, 
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
-                    "message": "Reconciliation complete", 
-                    "name": "Reconciliation", 
-                    "status": "Complete"
-                }
-            ], 
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
-            "name": "Reconciliation", 
-            "status": "Complete"
-        }, 
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false, 
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
-                    "message": "Deploying Cassandra node node-0", 
-                    "name": "node-0", 
-                    "status": “Complete"
-                }, 
-                {
-                    "has_decision_point": true, 
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
-                    "message": "Deploying Cassandra node node-1", 
-                    "name": "node-1", 
-                    "status": "Pending"
-                }, 
-                {
-                    "has_decision_point": false, 
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
-                    "message": "Deploying Cassandra node node-2", 
-                    "name": "node-2", 
-                    "status": "Pending"
-                }
-            ], 
-            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
-            "name": "Deploy", 
-            "status": "Pending"
-        }
-    ], 
-    "status": "InProgress"
-}
-```
-
-If you enter `continue` a second time, the rest of the plan will be executed without further interruption. If you want to interrupt a configuration update that is in progress, enter the `interrupt` command:
+And, now if you query the plan again, here's how the response will look (notice `status: "Waiting"`):
 
 ``` json
 {
@@ -443,6 +390,63 @@ If you enter `continue` a second time, the rest of the plan will be executed wit
                     "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
                     "message": "Deploying Cassandra node node-1", 
                     "name": "node-1", 
+                    "status": "InProgress"
+                }, 
+                {
+                    "has_decision_point": false, 
+                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
+                    "message": "Deploying Cassandra node node-2", 
+                    "name": "node-2", 
+                    "status": "Pending"
+                }
+            ], 
+            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
+            "name": "Deploy", 
+            "status": "Waiting"
+        }
+    ], 
+    "status": "Waiting"
+}
+```
+
+**Note:** The interrupt command can’t stop a block that is `InProgress`, but it will stop the change on the subsequent blocks.
+
+Enter the `continue` command to resume the update process.
+
+After you execute the continue operation, the plan will look like this:
+
+```
+{
+    "errors": [], 
+    "phases": [
+        {
+            "blocks": [
+                {
+                    "has_decision_point": false, 
+                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
+                    "message": "Reconciliation complete", 
+                    "name": "Reconciliation", 
+                    "status": "Complete"
+                }
+            ], 
+            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
+            "name": "Reconciliation", 
+            "status": "Complete"
+        }, 
+        {
+            "blocks": [
+                {
+                    "has_decision_point": false, 
+                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
+                    "message": "Deploying Cassandra node node-0", 
+                    "name": "node-0", 
+                    "status": “Complete"
+                }, 
+                {
+                    "has_decision_point": false, 
+                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
+                    "message": "Deploying Cassandra node node-1", 
+                    "name": "node-1", 
                     "status": "Complete"
                 }, 
                 {
@@ -450,7 +454,7 @@ If you enter `continue` a second time, the rest of the plan will be executed wit
                     "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
                     "message": "Deploying Cassandra node node-2", 
                     "name": "node-2", 
-                    "status": "InProgress"
+                    "status": "Pending"
                 }
             ], 
             "id": "c4f61c72-038d-431c-af73-6a9787219233", 
@@ -461,8 +465,6 @@ If you enter `continue` a second time, the rest of the plan will be executed wit
     "status": "InProgress"
 }
 ```
-
-**Note:** The interrupt command can’t stop a block that is `InProgress`, but it will stop the change on the subsequent blocks.
 
 ### Configuration Options
 
