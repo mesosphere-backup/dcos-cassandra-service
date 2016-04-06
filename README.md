@@ -96,7 +96,7 @@ $ dcos package install cassandra
 Step 2. [SSH into an agent node](https://docs.mesosphere.com/administration/sshcluster/), and then launch a docker container:
 
 ```
-$ docker run --net=host -it mohitsoni/alpine-cqlsh:2.2.5 /bin/sh
+$ docker run --net=host -it mesosphere/cqlsh:2.2.5 /bin/sh
 ```
 
 Step 3. Run /tmp/create.sh from inside the docker container to create a `demo` keyspace with a `map` table:
