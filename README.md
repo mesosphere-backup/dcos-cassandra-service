@@ -23,7 +23,7 @@ DCOS Cassandra Service Guide
       * [Changing Configuration at Runtime](#changing-configuration-at-runtime)
         * [Configuration Deployment Strategy](#configuration-deployment-strategy)
           * [Configuration Update Plans](#configuration-update-plans)
-      * [Configuration Update REST API](#configuration-update-rest-api)
+      * [Configuration Update](#configuration-update)
       * [Configuration Options](#configuration-options)
         * [Service Configuration](#service-configuration)
         * [Node Configuration](#node-configuration)
@@ -37,7 +37,6 @@ DCOS Cassandra Service Guide
       * [Global Row Cache Configuration](#global-row-cache-configuration)
       * [Connecting Clients](#connecting-clients)
         * [Connection Info Using the CLI](#connection-info-using-the-cli)
-        * [Connection Info Using the API](#connection-info-using-the-api)
         * [Connection Info Response](#connection-info-response)
         * [Configuring the CQL Driver](#configuring-the-cql-driver)
           * [Adding the Driver to Your Application](#adding-the-driver-to-your-application)
@@ -45,18 +44,22 @@ DCOS Cassandra Service Guide
     * [Managing](#managing)
       * [Add a Node](#add-a-node)
       * [Cleanup](#cleanup)
-        * [Cleanup Using the CLI](#cleanup-using-the-cli)
-      * [Cleanup Using the API](#cleanup-using-the-api)
         * [Cleanup Payload](#cleanup-payload)
       * [Backup and Restore](#backup-and-restore)
         * [Backup](#backup)
-          * [Backup Using the CLI](#backup-using-the-cli)
-          * [Backup using the API](#backup-using-the-api)
         * [Restore](#restore)
-          * [Restore Using the DCOS CLI](#restore-using-the-dcos-cli)
-          * [Restore Using the API](#restore-using-the-api)
     * [Upgrading Software](#upgrading-software)
     * [Troubleshooting](#troubleshooting)
+    * [API Reference](#api-reference)
+      * [Configuration via API](#configuration-via-api)
+        * [View the Installation Plan via API](#view-the-installation-plan-via-api)
+        * [Retrieve Connection Info via API](#retrieve-connection-info-via-api)
+        * [Pause Installation via API](#pause-installation-via-api)
+        * [Resume Installation via API](#resume-installation-via-api)
+      * [Managing via API](#managing-via-api)
+        * [Cleanup via API](#cleanup-via-api)
+        * [Backup via API](#backup-via-api)
+        * [Restore via API](#restore-via-api)
     * [Limitations](#limitations)
     * [Development](#development)
 
@@ -184,7 +187,7 @@ $ dcos package install cassandra --options=cassandra1.json
 
 In order to avoid port conflicts, by default you cannot collocate more than one Cassandra instance on the same node. 
 
-####Installation Plan
+#### Installation Plan
 When the DCOS Cassandra service is initially installed it will generate an installation plan as shown below. 
 
 ``` json
@@ -238,7 +241,7 @@ When the DCOS Cassandra service is initially installed it will generate an insta
 }
 ```
 
-#####Viewing the Installation Plan
+##### Viewing the Installation Plan
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
 ``` bash
@@ -253,6 +256,7 @@ The first phase of the installation plan is the reconciliation phase. This phase
 
 ##### Deploy Phase
 The second phase of the installation is the deploy phase. This phase will deploy the request number of Cassandra nodes. Each block in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
+
 ##### Pausing Installation
 In order to pause installation a REST API request, as shown below, can be issued. The installation will pause after completing installation of the current node and wait for user input.
 
@@ -301,7 +305,7 @@ Configuration updates are rolled out through execution of Update Plans. You can 
 ##### Configuration Update Plans 
 This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration. However, the default strategy can be overridden by a user provided strategy.
 
-### Configuration Update REST API
+### Configuration Update
 
 Make the REST request below to view the current plan:
 
@@ -655,22 +659,15 @@ The following configuration properties are global for all row caches.
 
 ### Connecting Clients
 The only supported client for the DSOC Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
-####Connection Info Using the CLI
+#### Connection Info Using the CLI
 The following command can be executed from the cli in order to retrieve a set of nodes to connect to.
 
 ``` bash
 dcos cassandra --framework-name=<framework-name> node
 ```
 
-####Connection Info Using the API
-The following curl example demonstrates how to retrive connection a set of nodes to connect to using the REST API.
-
-``` bash
-curl http://<dcos_url>/cassandra/v1/nodes/connect
-```
-
-####Connection Info Response
-The response, for both the CLI and the REST API is as below.
+#### Connection Info Response
+The response is as below.
 
 ``` json
 [
@@ -682,8 +679,8 @@ The response, for both the CLI and the REST API is as below.
 
 This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in configuration of the CQL Driver used by the application. 
 
-####Configuring the CQL Driver
-#####Adding the Driver to Your Application
+#### Configuring the CQL Driver
+##### Adding the Driver to Your Application
 
 ``` xml
 <dependency>
@@ -694,7 +691,8 @@ This JSON array contains a list of valid nodes that the client can use to connec
 ```
 
 The above is the correct dependency for CQL driver to use with the DCOS Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra Cluster.
-#####Connecting the CQL Driver.
+
+##### Connecting the CQL Driver.
 The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query.
 
 ```
@@ -727,8 +725,7 @@ Increase the `NODES` value via Marathon as described in the Configuration Update
 ### Cleanup
 Cassandra does not automatically remove data when a node looses part of its partition range. This can occur when nodes are added or removed from the ring. To remove the unnecessary data cleanup should be run. Cleanup can be a CPU and disk intensive operation. As such, it is recommended to delay running cleanup until off peak hours. The DCOS Cassandra service will minimize the aggregate CPU and disk utilization for the cluster by performing cleanup for each selected node, sequentially.
 
-####Cleanup Using the CLI
-From the cli enter the following command:
+To perform a cleanup from the CLI, enter the following command:
 
 ``` bash
 dcos cassandra --framework-name=<framewor-name> cleanup --nodes=<nodes>
@@ -736,14 +733,7 @@ dcos cassandra --framework-name=<framewor-name> cleanup --nodes=<nodes>
 
 Here <nodes> is an optional comma separated list indicating the nodes to cleanup.
 
-###Cleanup Using the API
-The following curl command demonstrates how to start a cleanup operation.
-
-``` bash
-curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
-```
-
-####Cleanup Payload
+#### Cleanup Payload
 The cleanup payload reference by, cleanup.json above, is a JSON object that indicates which nodes, keyspaces, and column families should have the cleanup operation applied. Note that system keyspaces should not be included here. If keySpaces is empty then all keyspaces will be cleaned, if nodes is empty then cleanup will be applied to all nodes. If columnFamilies is empty, then all column families, for the selected keyspaces will be cleaned.
 
 ``` json
@@ -773,9 +763,7 @@ Once the snapshots have been uploaded to a remote location, you can restore the 
 
 You can take a complete snapshot of your DCOS Cassandra ring and upload the artifacts to S3. Do the following to initiate the backup:
 
-##### Backup Using the CLI
-
-Enter the following command on the DCOS CLI:
+To perform a backup, enter the following command on the DCOS CLI:
 
 ``` bash
 dcos cassandra --framework-name=<framework-name> backup start \
@@ -791,9 +779,89 @@ Check status of the backup:
 dcos cassandra --framework-name=<framewor-name> backup status
 ```
 
-##### Backup using the API
+#### Restore
 
-First, create the request payload, for example in a file `backup.json`:
+You can restore your DCOS Cassandra snapshots on a new Cassandra ring.
+
+To restore, enter the following command on the DCOS CLI:
+
+``` bash
+dcos cassandra --framework-name=<framework-name> restore start \
+    --name=<backup-name> \
+    --external_location=s3://<bucket-name> \
+    --s3_access_key=<s3-access-key> \
+    --s3_secret_key=<s3-secret-key>
+```
+
+Check the status of the restore:
+
+``` bash
+dcos cassandra --framework-name=<framework-name> restore status
+```
+
+## Upgrading Software
+
+``` bash
+dcos package upgrade cassandra <!-- ??? -->
+```
+
+## Troubleshooting
+
+You can access the `stderr` and `stdout` logs from the Marathon web interface. The logs appear in the details view for your DCOS Cassandra instance.
+
+## API Reference
+
+### Configuration via API
+
+#### View the Installation Plan via API
+
+``` bash
+curl http:/<dcos_url>/service/cassandra/v1/plan
+```
+
+#### Retrieve Connection Info via API
+
+``` bash
+curl http://<dcos_url>/cassandra/v1/nodes/connect
+```
+
+You will see a response similar to the following:
+
+``` json
+[
+    "10.0.0.47:9042", 
+    "10.0.0.50:9042", 
+    "10.0.0.49:9042"
+]
+```
+
+This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in configuration of the CQL Driver used by the application.
+
+#### Pause Installation via API
+The installation will pause after completing installation of the current node and wait for user input.
+
+``` bash
+curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+```
+
+#### Resume Installation via API
+The REST API request below will resume installation at the next pending node.
+
+``` bash
+curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
+```
+
+### Managing via API
+
+#### Cleanup via API
+
+``` bash
+curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
+```
+
+#### Backup via API
+
+First, create the request payload, for example, in a file `backup.json`:
 
 ``` json
 {
@@ -817,33 +885,11 @@ Check status of the backup:
 curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
 ```
 
-#### Restore
-
-You can restore your DCOS Cassandra snapshots on a new Cassandra ring.
-
-##### Restore Using the DCOS CLI
-
-Enter the following command on the DCOS CLI:
-
-``` bash
-dcos cassandra --framework-name=<framework-name> restore start \
-    --name=<backup-name> \
-    --external_location=s3://<bucket-name> \
-    --s3_access_key=<s3-access-key> \
-    --s3_secret_key=<s3-secret-key>
-```
-
-Check the status of the restore:
-
-``` bash
-dcos cassandra --framework-name=<framework-name> restore status
-```
-
-##### Restore Using the API
+#### Restore via API
 
 First, bring up a new instance of your Cassandra cluster with the same number of nodes as the cluster whose snapshot backup you want to restore.
 
-Next, create the request payload, for example in a file `restore.json`:
+Next, create the request payload, for example, in a file `restore.json`:
 
 ``` json
 {
@@ -861,21 +907,11 @@ curl -X PUT -H 'Content-Type: application/json' -d @restore.json http://cassandr
 {"status":"started", message:""}
 ```
 
-To check status of the restore:
+Check status of the restore:
 
 ``` bash
 curl -X GET http://cassandra.marathon.mesos:9000/v1/restore/status
 ```
-
-## Upgrading Software
-
-``` bash
-dcos package upgrade cassandra <!-- ??? -->
-```
-
-## Troubleshooting
-
-You can access the `stderr` and `stdout` logs from the Marathon web interface. The logs appear in the details view for your DCOS Cassandra instance.
 
 ## Limitations
 
