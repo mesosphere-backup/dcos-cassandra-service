@@ -16,16 +16,17 @@ public class RepairRequest {
     @JsonCreator
     public static RepairRequest create(
             @JsonProperty("nodes") final List<String> nodes,
-            @JsonProperty("keySpaces") final List<String> keySpaces,
-            @JsonProperty("columnFamilies") final List<String> columnFamilies) {
+            @JsonProperty("key_spaces") final List<String> keySpaces,
+            @JsonProperty("column_families") final List<String>
+                    columnFamilies) {
         return new RepairRequest(nodes, keySpaces, columnFamilies);
     }
 
     @JsonProperty("nodes")
     private final List<String> nodes;
-    @JsonProperty("keySpaces")
+    @JsonProperty("key_spaces")
     private final List<String> keySpaces;
-    @JsonProperty("columnFamilies")
+    @JsonProperty("column_families")
     private final List<String> columnFamiles;
 
     public RepairRequest(

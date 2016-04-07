@@ -21,9 +21,6 @@ public class BackupResource {
     private static final Logger LOGGER = LoggerFactory.getLogger
             (BackupResource.class);
 
-    private final static String STATUS_ALREADY_RUNNING = "already_running";
-    private final static String MESSAGE_ALREADY_RUNNING = "An existing backup is already in progress";
-
     private final BackupManager manager;
 
     @Inject
