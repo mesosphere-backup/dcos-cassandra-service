@@ -16,6 +16,7 @@
 
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
@@ -31,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -126,9 +128,9 @@ public class TasksResource {
     }
 
     @GET
-    @Path("connect/native")
-    public List<String> nativeConnection() {
-        return tasks.getDaemons().values().stream()
+    @Path("connect")
+    public Map<String,List<String>> nativeConnection() {
+        return ImmutableMap.of("nodes",tasks.getDaemons().values().stream()
                 .filter(daemonTask ->
                         Protos.TaskState.TASK_RUNNING.equals(
                                 daemonTask.getStatus().getState()))
@@ -138,22 +140,6 @@ public class TasksResource {
                                 daemonTask.getConfig()
                                         .getApplication()
                                         .getNativeTransportPort())
-                .collect(Collectors.toList());
-    }
-
-    @GET
-    @Path("connect/rpc")
-    public List<String> rpcConnection() {
-        return tasks.getDaemons().values().stream()
-                .filter(daemonTask ->
-                        Protos.TaskState.TASK_RUNNING.equals(
-                                daemonTask.getStatus().getState()))
-                .map(daemonTask ->
-                        daemonTask.getHostname() +
-                                ":" +
-                                daemonTask.getConfig()
-                                        .getApplication()
-                                        .getRpcPort())
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
     }
 }
