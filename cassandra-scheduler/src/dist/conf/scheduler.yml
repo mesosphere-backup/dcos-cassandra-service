@@ -93,16 +93,14 @@ seed_nodes: ${SEED_NODES:-2}
 placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
 api_port : ${API_PORT:-8080}
 server:
-  adminContextPath: /
+  type: simple
+  adminContextPath: /admin
   applicationContextPath: /
-  applicationConnectors:
-    - type: http
-      port: ${API_PORT:-8080}
-  adminConnectors:
-    - type: http
-      port: ${ADMIN_PORT:-8081}
+  connector:
+    type: http
+    port: ${API_PORT:-8080}
 logging:
-  level: INFO
+  level: ${LOG_LEVEL:-INFO}
   appenders:
     - type: file
       currentLogFilename: ${LOG_FILE:-dcos-cassandra-service.log}
