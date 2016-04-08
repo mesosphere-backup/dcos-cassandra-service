@@ -44,6 +44,8 @@ message CassandraConfig{
     optional Volume volume = 9;
 
     optional bytes application = 10;
+
+    optional string diskType = 11;
 }
 
 message CassandraTaskData{

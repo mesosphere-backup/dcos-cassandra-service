@@ -8,6 +8,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import org.apache.mesos.Protos;
+import org.apache.mesos.offer.VolumeRequirement;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -286,6 +287,7 @@ public class RestoreSnapshotTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
+                VolumeRequirement.VolumeType.ROOT,
                 status);
 
         this.backupName = backupName;

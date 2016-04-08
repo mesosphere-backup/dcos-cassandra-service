@@ -1,62 +1,71 @@
 DCOS Cassandra Service Guide
 ======================
 
-[Overview](#overview)
-- [Benefits](#benefits)
-- [Features](#features)
-- [Related Services](#related-services)
-
-[Getting Started](#getting-started)
-- [Quick Start](#quick-start)
-- [Install and Customize](#install-and-customize)
-  - [Default install configuration](#default-install-configuration)
-  - [Custom install configuration](#custom-install-configuration)
-- [Multiple Cassandra Cluster Installation](#multiple-cassandra-cluster-installation)
-- [Uninstall](#uninstall)
-
-[Configuring](#configuring)
-- [Changing Configuration at Runtime](#changing-configuration-at-runtime)
-  - [Configuration Deployment Strategy](#configuration-deployment-strategy)
-  - [Configuration Update Plans](#configuration-update-plans)
-  - [Configuration Update REST API](#configuration-update-rest-api)
-- [Configuration Options](#configuration-options)
-  - [Service Configuration](#service-configuration)
-  - [Node Configuration](#node-configuration)
-  - [Cassandra Application Configuration](#Cassandra-application-configuration)
-  - [Communication Configuration](#communication-configuration)
-  - [Hinted Handoff Configuration](#hinted-handoff-configuration)
-  - [Snitch Configuration](#snitch-configuration)
-
-[Connecting Clients](#connecting-clients) <!-- note this section may disappear -->
-
-[Managing](#managing) <!-- note these sections may disappear -->
-- [Add a Node](#add-a-node)
-- [Cleanup](#cleanup)
-- [Backup and Restore](#backup-and-restore)
-  - [Backup](#backup)
-    - [Backup Using the CLI](#backup-using-the-cli)
-    - [Backup using the API](#backup-using-the-api)
-  - [Restore](#restore)
-    - [Restore Using the DCOS CLI](#Restore Using the DCOS CLI)
-    - [Restore Using the API](#restore-using-the-api)
-
-[Upgrading Software](#upgrading-software) <!-- note this section may disappear -->
-
-[Troubleshooting](#troubleshooting)<!-- note there is not much here -->
-
-[Limitations](#limitations)
-
-[API Reference](#api-reference)
-- [Connection Information](#connection-information)
-- [Node Operations](#node-operations)
-  - [Add Node](#add-node)
-  - [Remove Node](#remove-node)
-
-[Development](#development)
+* [DCOS Cassandra Service Guide](#dcos-cassandra-service-guide)
+    * [Overview](#overview)
+      * [Benefits](#benefits)
+      * [Features](#features)
+      * [Related Services](#related-services)
+    * [Getting Started](#getting-started)
+      * [Quick Start](#quick-start)
+      * [Install and Customize](#install-and-customize)
+        * [Custom install configuration](#custom-install-configuration)
+      * [Multiple Cassandra Cluster Installation](#multiple-cassandra-cluster-installation)
+        * [Installation Plan](#installation-plan)
+          * [Viewing the Installation Plan](#viewing-the-installation-plan)
+          * [Plan Errors](#plan-errors)
+          * [Reconciliation Phase](#reconciliation-phase)
+          * [Deploy Phase](#deploy-phase)
+          * [Pausing Installation](#pausing-installation)
+          * [Resuming Installation](#resuming-installation)
+      * [Uninstall](#uninstall)
+    * [Configuring](#configuring)
+      * [Changing Configuration at Runtime](#changing-configuration-at-runtime)
+        * [Configuration Deployment Strategy](#configuration-deployment-strategy)
+          * [Configuration Update Plans](#configuration-update-plans)
+      * [Configuration Update](#configuration-update)
+      * [Configuration Options](#configuration-options)
+        * [Service Configuration](#service-configuration)
+        * [Node Configuration](#node-configuration)
+        * [Cassandra Application Configuration](#cassandra-application-configuration)
+        * [Communication Configuration](#communication-configuration)
+        * [Commit Log Configuration](#commit-log-configuration)
+        * [Column Index Configuration](#column-index-configuration)
+        * [Hinted Handoff Configuration](#hinted-handoff-configuration)
+        * [Dynamic Snitch Configuration](#dynamic-snitch-configuration)
+        * [Global Key Cache Configuration](#global-key-cache-configuration)
+      * [Global Row Cache Configuration](#global-row-cache-configuration)
+      * [Connecting Clients](#connecting-clients)
+        * [Connection Info Using the CLI](#connection-info-using-the-cli)
+        * [Connection Info Response](#connection-info-response)
+        * [Configuring the CQL Driver](#configuring-the-cql-driver)
+          * [Adding the Driver to Your Application](#adding-the-driver-to-your-application)
+          * [Connecting the CQL Driver\.](#connecting-the-cql-driver)
+    * [Managing](#managing)
+      * [Add a Node](#add-a-node)
+      * [Cleanup](#cleanup)
+        * [Cleanup Payload](#cleanup-payload)
+      * [Backup and Restore](#backup-and-restore)
+        * [Backup](#backup)
+        * [Restore](#restore)
+    * [Upgrading Software](#upgrading-software)
+    * [Troubleshooting](#troubleshooting)
+    * [API Reference](#api-reference)
+      * [Configuration via API](#configuration-via-api)
+        * [View the Installation Plan via API](#view-the-installation-plan-via-api)
+        * [Retrieve Connection Info via API](#retrieve-connection-info-via-api)
+        * [Pause Installation via API](#pause-installation-via-api)
+        * [Resume Installation via API](#resume-installation-via-api)
+      * [Managing via API](#managing-via-api)
+        * [Cleanup via API](#cleanup-via-api)
+        * [Backup via API](#backup-via-api)
+        * [Restore via API](#restore-via-api)
+    * [Limitations](#limitations)
+    * [Development](#development)
 
 ## Overview
 
-DCOS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DCOS, eliminating nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many servers, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation] (http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DCOS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DCOS Cassandra in moments. Multiple Cassandra clusters can be installed on DCOS and managed independently, so you can offer Cassandra as a managed service to your organization.
+DCOS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DCOS. DCOS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation] (http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DCOS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DCOS Cassandra in moments. Multiple Cassandra clusters can be installed on DCOS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
 ### Benefits
 
@@ -64,7 +73,7 @@ DCOS Cassandra offers the following benefits:
 
 - Easy installation
 - Multiple Cassandra clusters
-- Elastic Cluster Scaling
+- Elastic cluster scaling
 - Replication for high availability
 - Integrated monitoring
 
@@ -74,7 +83,7 @@ DCOS Cassandra offers the following benefits:
 DCOS Cassandra provides the following features:
 
 - Single command installation for rapid provisioning
-- Persistent Storage volumes for enhanced data durability
+- Persistent storage volumes for enhanced data durability
 - Runtime configuration and software updates for high availablity
 - Health checks and metrics for monitoring
 - Backup and restore for disaster recovery
@@ -88,6 +97,8 @@ DCOS Cassandra provides the following features:
 ### Quick Start
 
 - Step 1. Install a Cassandra cluster from the DCOS CLI.
+
+**Note:** Your cluster must have at least 3 private nodes.
 
 ```bash
 $ dcos package install cassandra
@@ -108,7 +119,7 @@ $ /tmp/create.sh
 Step 4. Insert Fortune 1000 companies into the table:
 
 ``` bash
-$ cqlsh -f /tmp/insert.cql <!-- need to specify the host before -f -- how to do this? -->
+$ cqlsh -f /tmp/insert.cql
 ```
 
 Step 6. Execute following query to show the data:
@@ -119,9 +130,9 @@ USE demo; SELECT * from demo.map;
 
 ### Install and Customize
 
-#### Default install configuration
+To start a basic test cluster, run the following command on the DCOS CLI.
 
-To start a basic test cluster, run the following command on the DCOS CLI:
+**Note:** Your cluster must have at least 3 private nodes.
 
 ``` bash
 $ dcos package install cassandra
@@ -134,8 +145,6 @@ All `dcos cassandra` CLI commands have a `--framework-name` argument that allows
 ``` bash
 $ dcos config set cassandra.framework_name new_default_name
 ```
-
-The default cluster, `cassandra`, is intended for testing and development. It is not suitable for production use without additional customization. In particular, the default installation will create a cluster with three nodes with a default cassandra application configuration.
 
 #### Custom install configuration
 
@@ -178,7 +187,7 @@ $ dcos package install cassandra --options=cassandra1.json
 
 In order to avoid port conflicts, by default you cannot collocate more than one Cassandra instance on the same node. 
 
-####Installation Plan
+#### Installation Plan
 When the DCOS Cassandra service is initially installed it will generate an installation plan as shown below. 
 
 ``` json
@@ -232,28 +241,31 @@ When the DCOS Cassandra service is initially installed it will generate an insta
 }
 ```
 
-#####Viewing the Installation Plan
+##### Viewing the Installation Plan
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
 ``` bash
 curl http:/<dcos_url>/service/cassandra/v1/plan
 ```
 
-#####Plan Errors
-If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation can not progress.
-#####Reconciliation Phase
-The first phase of the installation plan is the reconciliation phase. This phase ensures that the DCOS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. For large deployments, reconciliation will occur periodically, and the in-progress phase will switch from Deploy to Reconciliation. This is not cause for concern.
-#####Deploy Phase
-The second phase of the installation is the deploy phase. This phase will deploy the request number of Cassandra nodes. Each block in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
-#####Pausing Installation
-In order to pause installation a REST API request, as shown below, can be issued. The installation will pause after completing installation of the current node and wait for user input.
+##### Plan Errors
+If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress.
+
+##### Reconciliation Phase
+The first phase of the installation plan is the reconciliation phase. This phase ensures that the DCOS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DCOS Cassandra Service and occurs each time the service starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
+
+##### Deploy Phase
+The second phase of the installation is the deploy phase. This phase will deploy the requested number of Cassandra nodes. Each block in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
+
+##### Pausing Installation
+In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
 
 ``` bash
 curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
-#####Resuming Installation
-If installation has been paused. The REST API request below will resume installation at the next pending node.
+##### Resuming Installation
+If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ``` bash
 curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
@@ -261,17 +273,17 @@ curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 
 ### Uninstall
 
-Uninstalling a cluster is also straightforward. Replace `cassandra` with the name of the Cassandra instance to be uninstalled.
+Uninstalling a cluster is straightforward. Replace `cassandra` with the name of the Cassandra instance to be uninstalled.
 
 ``` bash
 $ dcos package uninstall --app-id=cassandra
 ```
 
-Then, use the [framerwork cleaner script](https://github.com/mesosphere/framework-cleaner) to remove your Cassandra instance from Zookeeper and to destroy all data associated with it. The script require several arguments, the values for which are derived from your framework name:
+Then, use the [framework cleaner script](https://github.com/mesosphere/framework-cleaner) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your framework name:
 
-`framework-role` is `<framework-name>-role`.
-`framework-principle` is `<framework-name>-principal.
-`zk_path` is `<framework-name>`.
+- `framework-role` is `<framework-name>-role`.
+- `framework-principle` is `<framework-name>-principal`.
+= `zk_path` is `<framework-name>`.
 
 ## Configuring
 
@@ -282,7 +294,7 @@ You can customize your cluster in-place when it is up and running.
 The Cassandra scheduler runs as a Marathon process and can be reconfigured by changing values within Marathon. These are the general steps to follow:
 
 1. View your Marathon dashboard at `http://<dcos_url>/marathon`
-2. In the list of `Applications`, click the name of the Cassandra framework to be updated.
+2. In the list of `Applications`, click the name of the Cassandra service to be updated.
 3. Within the Cassandra instance details view, click the `Configuration` tab, then click the `Edit` button.
 4. In the dialog that appears, expand the `Environment Variables` section and update any field(s) to their desired value(s). For example, to increase the number of nodes, edit the value for `NODES`. Click `Change and deploy configuration` to apply any changes and cleanly reload the Cassandra scheduler. The Cassandra cluster itself will persist across the change.
 
@@ -291,9 +303,9 @@ The Cassandra scheduler runs as a Marathon process and can be reconfigured by ch
 Configuration updates are rolled out through execution of Update Plans. You can configure the way these plans are executed.
 
 ##### Configuration Update Plans 
-This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration. However, the default strategy can be overridden by a user provided strategy.
+This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration. However, the default strategy can be overridden by a strategy the user provides.
 
-### Configuration Update REST API
+### Configuration Update
 
 Make the REST request below to view the current plan:
 
@@ -301,7 +313,7 @@ Make the REST request below to view the current plan:
 curl -v http://<dcos_url>/service/cassandra/v1/plan
 ```
 
-When using the `STAGE` deployment strategy, an update plan will initially pause without doing any update to ensure the plan is correct. It will look like this:
+Response will look similar to this:
 
 ``` json
 {
@@ -354,7 +366,64 @@ When using the `STAGE` deployment strategy, an update plan will initially pause 
 }
 ```
 
-Enter the `continue` command to execute the first block.
+If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
+
+If you query the plan again, the response will look like this (notice `status: "Waiting"`):
+
+``` json
+{
+    "errors": [], 
+    "phases": [
+        {
+            "blocks": [
+                {
+                    "has_decision_point": false, 
+                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
+                    "message": "Reconciliation complete", 
+                    "name": "Reconciliation", 
+                    "status": "Complete"
+                }
+            ], 
+            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
+            "name": "Reconciliation", 
+            "status": "Complete"
+        }, 
+        {
+            "blocks": [
+                {
+                    "has_decision_point": false, 
+                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
+                    "message": "Deploying Cassandra node node-0", 
+                    "name": "node-0", 
+                    "status": “Complete"
+                }, 
+                {
+                    "has_decision_point": false, 
+                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
+                    "message": "Deploying Cassandra node node-1", 
+                    "name": "node-1", 
+                    "status": "Pending"
+                }, 
+                {
+                    "has_decision_point": false, 
+                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
+                    "message": "Deploying Cassandra node node-2", 
+                    "name": "node-2", 
+                    "status": "InProgress"
+                }
+            ], 
+            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
+            "name": "Deploy", 
+            "status": "Waiting"
+        }
+    ], 
+    "status": "Waiting"
+}
+```
+
+**Note:** The interrupt command can’t stop a block that is `InProgress`, but it will stop the change on the subsequent blocks.
+
+Enter the `continue` command to resume the update process.
 
 After you execute the continue operation, the plan will look like this:
 
@@ -386,11 +455,11 @@ After you execute the continue operation, the plan will look like this:
                     "status": “Complete"
                 }, 
                 {
-                    "has_decision_point": true, 
+                    "has_decision_point": false, 
                     "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
                     "message": "Deploying Cassandra node node-1", 
                     "name": "node-1", 
-                    "status": "Pending"
+                    "status": "Complete"
                 }, 
                 {
                     "has_decision_point": false, 
@@ -408,69 +477,14 @@ After you execute the continue operation, the plan will look like this:
     "status": "InProgress"
 }
 ```
-
-If you enter `continue` a second time, the rest of the plan will be executed without further interruption. If you want to interrupt a configuration update that is in progress, enter the `interrupt` command:
-
-``` json
-{
-    "errors": [], 
-    "phases": [
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false, 
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
-                    "message": "Reconciliation complete", 
-                    "name": "Reconciliation", 
-                    "status": "Complete"
-                }
-            ], 
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
-            "name": "Reconciliation", 
-            "status": "Complete"
-        }, 
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false, 
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
-                    "message": "Deploying Cassandra node node-0", 
-                    "name": "node-0", 
-                    "status": “Complete"
-                }, 
-                {
-                    "has_decision_point": false”, 
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
-                    "message": "Deploying Cassandra node node-1", 
-                    "name": "node-1", 
-                    "status": "Complete"
-                }, 
-                {
-                    "has_decision_point": false, 
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
-                    "message": "Deploying Cassandra node node-2", 
-                    "name": "node-2", 
-                    "status": "InProgress"
-                }
-            ], 
-            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
-            "name": "Deploy", 
-            "status": "Pending"
-        }
-    ], 
-    "status": "InProgress"
-}
-```
-
-**Note:** The interrupt command can’t stop a block that is `InProgress`, but it will stop the change on the subsequent blocks.
 
 ### Configuration Options
 
-The following describes the most commonly used features of the Cassandra framework and how to configure them via the DCOS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DCOS command line (See the [Installation section](#installation)) or via modification to the Service Scheduler’s Marathon environment at runtime (See the [Configuration Update section](#configuration-update)). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DCOS scheduler.
+The following describes the most commonly used features of DCOS Cassandra and how to configure them via the DCOS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DCOS command line (See the [Installation section](#installation)) or via modification to the Service Scheduler’s Marathon environment at runtime (See the [Configuration Update section](#configuration-update)). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DCOS scheduler.
 
 #### Service Configuration
 
-The service configuration object contains properties that MUST be specified during installation and CANNOT  be modified after installation is in progress. This configuration object is similar across all DCOS Infinity frameworks. Service configuration example:
+The service configuration object contains properties that MUST be specified during installation and CANNOT be modified after installation is in progress. This configuration object is similar across all DCOS Infinity services. Service configuration example:
 
 ``` json
 {
@@ -499,7 +513,7 @@ The service configuration object contains properties that MUST be specified duri
 
 #### Node Configuration
 
-The node configuration object corresponds to the configuration for Cassandra nodes in the Cassandra cluster. Node configuration MUST be specified during installation and MAY be modified during configuration updates. All of the properties except for volume_size MAY be modified during the configuration update process.
+The node configuration object corresponds to the configuration for Cassandra nodes in the Cassandra cluster. Node configuration MUST be specified during installation and MAY be modified during configuration updates. All of the properties except for `volume_size` MAY be modified during the configuration update process.
 
 Example node configuration:
 
@@ -534,7 +548,7 @@ Example node configuration:
 
 #### Cassandra Application Configuration
 
-The Cassandra application is configured via the cassandra json object. **You should not modify these settings without strong reason and an advanced knowledge of Cassandra internals and cluster operations.** The available configuration items are included for advanced users who need to tune the default configuration for specific workloads.
+The Cassandra application is configured via the Cassandra JSON object. **You should not modify these settings without strong reason and an advanced knowledge of Cassandra internals and cluster operations.** The available configuration items are included for advanced users who need to tune the default configuration for specific workloads.
 
 Example Cassandra configuration:
 
@@ -602,6 +616,7 @@ The DCOS Cassandra service only supports the commitlog_sync model for configurin
 | commitLogSegmentSizeInMb | integer | The size of the commit log in MB. This property determines the maximum mutation size, defined as half the segment size. If a mutation's size exceeds the maximum mutation size, the mutation is rejected. Before increasing the commitlog segment size of the commitlog segments, investigate why the mutations are larger than expected. |
 
 #### Column Index Configuration
+
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
 | columnIndexSizeInKb | integer | Index size  of rows within a partition. For very large rows this value can be decreased to increase seek time. If key caching is enabled be careful when increasing this value, as the key cache may become overwhelmed. |
@@ -610,7 +625,7 @@ The DCOS Cassandra service only supports the commitlog_sync model for configurin
 
 #### Hinted Handoff Configuration
 
-Hinted handoff is the process by which Cassandra recovers consistency when a write occurs and a node that should hold a replica of the data is not available. If hinted handoff is enabled, Cassandra will record the fact that the value needs to be replicated and replay the write when the node becomes available. Hinted handoff is enabled by default, and the following table describes how hinted handoff can be configured.
+Hinted handoff is the process by which Cassandra recovers consistency when a write occurs and a node that should hold a replica of the data is not available. If hinted handoff is enabled, Cassandra will record the fact that the value needs to be replicated and replay the write when the node becomes available. Hinted handoff is enabled by default. The following table describes how hinted handoff can be configured.
 
 | Property                | Type  | Description     |
 | ------------------------ | ------- | ------------------- |
@@ -619,7 +634,8 @@ Hinted handoff is the process by which Cassandra recovers consistency when a wri
 | maxHintDeliveryThreads   | integer | The number of threads that deliver hints. The default value of 2 should be sufficient most use cases. |
 
 #### Dynamic Snitch Configuration
-The endpoint snitch for the service is always the GossipPropertyFileSnitch, but, in addition to this, Cassandra uses a dynamic snitch to determine when requests should be routed away from poorly performing nodes. The configuration parameters below control the behavior of the snitch.
+
+The endpoint snitch for the service is always the `GossipPropertyFileSnitch`, but, in addition to this, Cassandra uses a dynamic snitch to determine when requests should be routed away from poorly performing nodes. The configuration parameters below control the behavior of the snitch.
 
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
@@ -628,7 +644,8 @@ The endpoint snitch for the service is always the GossipPropertyFileSnitch, but,
 | dynamicSnitchUpdateIntervalInMs | integer | The time interval, in ms, for node score calculation. This is a CPU intensive operation. Reducing this interval should be performed with extreme caution. |
 
 #### Global Key Cache Configuration
-The partition key cache is a cache of the partition index for a Cassandra table. It is enabled by setting the parameter when creating the table. Using the key cache, instead of relying on the OS page cache can decrease CPU and memory utilization. However, as the value associated with keys in the partition index is not cached along with key, reads that utilize the key cache will still require that row values be read from storage media, through the OS page cache. The following configuraiton items control the system global configuration for key caches.
+
+The partition key cache is a cache of the partition index for a Cassandra table. It is enabled by setting the parameter when creating the table. Using the key cache instead of relying on the OS page cache can decrease CPU and memory utilization. However, as the value associated with keys in the partition index is not cached along with key, reads that utilize the key cache will still require that row values be read from storage media, through the OS page cache. The following configuraiton items control the system global configuration for key caches.
 
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
@@ -636,8 +653,10 @@ The partition key cache is a cache of the partition index for a Cassandra table.
 | keyCacheSizeInMb | integer | The maximum size of the key cache in Mb. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0. |
 
 ### Global Row Cache Configuration
-Row caching caches both the key and the associated row in memory. During the read path, when rows are reconstructed from the MemTable and SSTables, the reconstructed row is cached in memory preventing further reads from storage media until the row is ejected or dirtied. 
-Like key caching, row caching is configurable on a per table basis, but it should be used with extreme caution. Misusing row caching can result in overwhelming the JVM and causing Cassandra to crash. Use row caching under the following conditions - only if you are absolutely certain that doing so will not overwhelm the JVM, the partition you will cache is small, and client applications will read most of the partition all at once.
+
+Row caching caches both the key and the associated row in memory. During the read path, when rows are reconstructed from the `MemTable` and `SSTables`, the reconstructed row is cached in memory preventing further reads from storage media until the row is ejected or dirtied. 
+Like key caching, row caching is configurable on a per table basis, but it should be used with extreme caution. Misusing row caching can overwhelm the JVM and cause Cassandra to crash. Use row caching under the following conditions: only if you are absolutely certain that doing so will not overwhelm the JVM, the partition you will cache is small, and client applications will read most of the partition all at once.
+
 The following configuration properties are global for all row caches.
 
 | Property                 | Type    | Description     |
@@ -646,23 +665,20 @@ The following configuration properties are global for all row caches.
 | rowCacheSizeInMb | integer | The maximum size of the key cache in Mb. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled. |
 
 ### Connecting Clients
-The only supported client for the DSOC Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
-####Connection Info Using the CLI
-The following command can be executed from the cli in order to retrieve a set of nodes to connect to.
+
+The only supported client for the DSOC Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
+
+#### Connection Info Using the CLI
+
+The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
 ``` bash
 dcos cassandra --framework-name=<framework-name> node
 ```
 
-####Connection Info Using the API
-The following curl example demonstrates how to retrive connection a set of nodes to connect to using the REST API.
+#### Connection Info Response
 
-``` bash
-curl http://<dcos_url>/cassandra/v1/nodes/connect
-```
-
-####Connection Info Response
-The response, for both the CLI and the REST API is as below.
+The response is as below.
 
 ``` json
 [
@@ -672,10 +688,10 @@ The response, for both the CLI and the REST API is as below.
 ]
 ```
 
-This JSON array contains a list of valid servers that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple servers in configuration of the CQL Driver used by the application. 
+This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the configuration of the CQL Driver used by the application. 
 
-####Configuring the CQL Driver
-#####Adding the Driver to Your Application
+#### Configuring the CQL Driver
+##### Adding the Driver to Your Application
 
 ``` xml
 <dependency>
@@ -685,8 +701,9 @@ This JSON array contains a list of valid servers that the client can use to conn
 </dependency>
 ```
 
-The above is the correct dependency for CQL driver to use with the DCOS Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra Cluster.
-#####Connecting the CQL Driver.
+The snippet above is the correct dependency for CQL driver to use with the DCOS Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
+
+##### Connecting the CQL Driver.
 The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query.
 
 ```
@@ -714,29 +731,23 @@ try {
 ## Managing
 
 ### Add a Node
-Increase the `NODES` value via Marathon as described in the Configuration Update section. This create a update plan as described in that section. An additional node will be added as the last block of that plan. After a node has been added it is advisable to run cleanup, as described in the Cleanup subsection of the Managing section. It is safe to delay running cleanup until off peak hours.
+Increase the `NODES` value via Marathon as described in the [Configuration Update](#configuration-update) section. This creates an update plan as described in that section. An additional node will be added as the last block of that plan. After a node has been added, you should run cleanup, as described in the [Cleanup](#cleanup) section. It is safe to delay running cleanup until off-peak hours.
 
 ### Cleanup
-Cassandra does not automatically remove data when a node looses part of its partition range. This can occur when nodes are added or removed from the ring. To remove the unnecessary data cleanup should be run. Cleanup can be a CPU and disk intensive operation. As such, it is recommended to delay running cleanup until off peak hours. The DCOS Cassandra service will minimize the aggregate CPU and disk utilization for the cluster by performing cleanup for each selected node, sequentially.
 
-####Cleanup Using the CLI
-From the cli enter the following command:
+Cassandra does not automatically remove data when a node loses part of its partition range. This can occur when nodes are added or removed from the ring. Tun cleanup to remove the unnecessary data. Cleanup can be a CPU- and disk-intensive operation. As such, it is recommended to delay running cleanup until off-peak hours. The DCOS Cassandra service will minimize the aggregate CPU and disk utilization for the cluster by performing cleanup for each selected node sequentially.
+
+To perform a cleanup from the CLI, enter the following command:
 
 ``` bash
 dcos cassandra --framework-name=<framewor-name> cleanup --nodes=<nodes>
 ```
 
-Here <nodes> is an optional comma separated list indicating the nodes to cleanup.
+Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup.
 
-###Cleanup Using the API
-The following curl command demonstrates how to start a cleanup operation.
+#### Cleanup Payload
 
-``` bash
-curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
-```
-
-####Cleanup Payload
-The cleanup payload reference by, cleanup.json above, is a JSON object that indicates which nodes, keyspaces, and column families should have the cleanup operation applied. Note that system keyspaces should not be included here. If keySpaces is empty then all keyspaces will be cleaned, if nodes is empty then cleanup will be applied to all nodes. If columnFamilies is empty, then all column families, for the selected keyspaces will be cleaned.
+The cleanup payload referenced by `cleanup.json`, above, is a JSON object that indicates which nodes, keyspaces, and column families should have the cleanup operation applied. Note that system keyspaces should not be included here. If `keySpaces` is empty, then all keyspaces will be cleaned. If `nodes` is empty, then cleanup will be applied to all nodes. If `columnFamilies` is empty, then all column families for the selected keyspaces will be cleaned.
 
 ``` json
 {
@@ -755,16 +766,16 @@ The cleanup payload reference by, cleanup.json above, is a JSON object that indi
 ```
 
 ### Backup and Restore
-The DCOS Cassandra framework does not allow for autosnapshot to be enabled. Autosnapshot created on disk snapshots that Cassandra will never remove. Instead the service provides a mechanism to snapshot your tables and ship them to a remote location. 
-Once the snapshots have been uploaded to a remote location, you can restore the data to a new cluster, in the event of a disaster, or restore them to an existing cluster, in the event that a user error has caused a data loss.
+
+DCOS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
+
+Cassandra takes a snapshot your tables and ships them to a remote location. Once the snapshots have been uploaded to a remote location, you can restore the data to a new cluster, in the event of a disaster, or restore them to an existing cluster, in the event that a user error has caused a data loss.
 
 #### Backup
 
-You can take a complete snapshot of your DCOS Cassandra ring and upload the artifacts to S3. Do the following to initiate the backup:
+You can take a complete snapshot of your DCOS Cassandra ring and upload the artifacts to S3.
 
-##### Backup Using the CLI
-
-Enter the following command on the DCOS CLI:
+To perform a backup, enter the following command on the DCOS CLI:
 
 ``` bash
 dcos cassandra --framework-name=<framework-name> backup start \
@@ -780,9 +791,91 @@ Check status of the backup:
 dcos cassandra --framework-name=<framewor-name> backup status
 ```
 
-##### Backup using the API
+#### Restore
 
-First, create the request payload, for example in a file `backup.json`:
+You can restore your DCOS Cassandra snapshots on a new Cassandra ring.
+
+To restore, enter the following command on the DCOS CLI:
+
+``` bash
+dcos cassandra --framework-name=<framework-name> restore start \
+    --name=<backup-name> \
+    --external_location=s3://<bucket-name> \
+    --s3_access_key=<s3-access-key> \
+    --s3_secret_key=<s3-secret-key>
+```
+
+Check the status of the restore:
+
+``` bash
+dcos cassandra --framework-name=<framework-name> restore status
+```
+
+## Upgrading Software
+
+``` bash
+dcos package upgrade cassandra
+```
+
+## Troubleshooting
+
+You can access the `stderr` and `stdout` logs from the Marathon web interface. The logs appear in the details view for your DCOS Cassandra instance.
+
+## API Reference
+
+### Configuration via API
+
+#### View the Installation Plan via API
+
+``` bash
+curl http:/<dcos_url>/service/cassandra/v1/plan
+```
+
+#### Retrieve Connection Info via API
+
+``` bash
+curl http://<dcos_url>/cassandra/v1/nodes/connect
+```
+
+You will see a response similar to the following:
+
+``` json
+[
+    "10.0.0.47:9042", 
+    "10.0.0.50:9042", 
+    "10.0.0.49:9042"
+]
+```
+
+This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the CQL Driver configuration used by the application.
+
+#### Pause Installation via API
+
+The installation will pause after completing installation of the current node and wait for user input.
+
+``` bash
+curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+```
+
+#### Resume Installation via API
+
+The REST API request below will resume installation at the next pending node.
+
+``` bash
+curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
+```
+
+### Managing via API
+
+#### Cleanup via API
+
+``` bash
+curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
+```
+
+#### Backup via API
+
+First, create the request payload, for example, in a file `backup.json`:
 
 ``` json
 {
@@ -806,33 +899,11 @@ Check status of the backup:
 curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
 ```
 
-#### Restore
-
-You can restore your DCOS Cassandra snapshots on a new Cassandra ring.
-
-##### Restore Using the DCOS CLI
-
-Enter the following command on the DCOS CLI:
-
-``` bash
-dcos cassandra --framework-name=<framework-name> restore start \
-    --name=<backup-name> \
-    --external_location=s3://<bucket-name> \
-    --s3_access_key=<s3-access-key> \
-    --s3_secret_key=<s3-secret-key>
-```
-
-Check the status of the restore:
-
-``` bash
-dcos cassandra --framework-name=<framework-name> restore status
-```
-
-##### Restore Using the API
+#### Restore via API
 
 First, bring up a new instance of your Cassandra cluster with the same number of nodes as the cluster whose snapshot backup you want to restore.
 
-Next, create the request payload, for example in a file `restore.json`:
+Next, create the request payload, for example, in a file `restore.json`:
 
 ``` json
 {
@@ -850,28 +921,18 @@ curl -X PUT -H 'Content-Type: application/json' -d @restore.json http://cassandr
 {"status":"started", message:""}
 ```
 
-To check status of the restore:
+Check status of the restore:
 
 ``` bash
 curl -X GET http://cassandra.marathon.mesos:9000/v1/restore/status
 ```
 
-## Upgrading Software
-
-``` bash
-dcos package upgrade cassandra <!-- ??? -->
-```
-
-## Troubleshooting
-
-You can access the `stderr` and `stdout` logs from the Marathon web interface. The logs appear in the details view for your DCOS Cassandra instance.
-
 ## Limitations
 
-- Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, the framework could allow for a user specified degree of parallelism when taking backups. 
+- Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, DCOS Cassandra could allow for a user-specified degree of parallelism when taking backups.
 - Cluster restore can only restore a cluster of the same size as, or larger than, the cluster from which the backup was taken.
 - While nodes can be replaced, there is currently no way to shrink the size of the cluster. Future releases will contain decommissions and remove operations.
-- Anti-Entropy repair can only be performed sequentially, for the primary range of each node, across the entire cluster. There are use cases where one might wish to repair an individual node, but running the repair procedure, as implemented, is always sufficient to repair the cluster.
+- Anti-entropy repair can only be performed sequentially, for the primary range of each node, across the entire cluster. There are use cases where one might wish to repair an individual node, but running the repair procedure as implemented is always sufficient to repair the cluster.
 
 ## Development
 

@@ -17,6 +17,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.offer.VolumeRequirement;
 
 import java.io.IOException;
 import java.util.List;
@@ -313,6 +314,7 @@ public abstract class CassandraTask {
     protected final double cpus;
     protected final int memoryMb;
     protected final int diskMb;
+    protected final VolumeRequirement.VolumeType diskType;
     protected final CassandraTaskStatus status;
 
     protected CassandraTask(
@@ -327,6 +329,7 @@ public abstract class CassandraTask {
             double cpus,
             int memoryMb,
             int diskMb,
+            VolumeRequirement.VolumeType diskType,
             CassandraTaskStatus status) {
         this.type = type;
         this.id = id;
@@ -339,6 +342,7 @@ public abstract class CassandraTask {
         this.cpus = cpus;
         this.memoryMb = memoryMb;
         this.diskMb = diskMb;
+        this.diskType = diskType;
         this.status = status;
     }
 
@@ -350,6 +354,11 @@ public abstract class CassandraTask {
     @JsonProperty("diskMb")
     public int getDiskMb() {
         return diskMb;
+    }
+
+    @JsonProperty("diskType")
+    public VolumeRequirement.VolumeType getDiskType() {
+        return diskType;
     }
 
     @JsonProperty("memoryMb")
@@ -461,6 +470,7 @@ public abstract class CassandraTask {
         return Double.compare(that.getCpus(), getCpus()) == 0 &&
                 getMemoryMb() == that.getMemoryMb() &&
                 getDiskMb() == that.getDiskMb() &&
+                getDiskType() == that.getDiskType() &&
                 getType() == that.getType() &&
                 Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getSlaveId(), that.getSlaveId()) &&
@@ -476,7 +486,7 @@ public abstract class CassandraTask {
     public int hashCode() {
         return Objects.hash(getType(), getId(), getSlaveId(), getHostname(),
                 getExecutor(), getName(), getRole(), getPrincipal(), getCpus(),
-                getMemoryMb(), getDiskMb(), getStatus());
+                getMemoryMb(), getDiskMb(), getDiskType(), getStatus());
     }
 
     @Override

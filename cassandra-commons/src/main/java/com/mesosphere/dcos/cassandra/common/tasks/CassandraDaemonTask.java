@@ -6,6 +6,7 @@ import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.offer.VolumeRequirement;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -203,6 +204,7 @@ public class CassandraDaemonTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
+                config.getDiskType(),
                 config,
                 status
         );
@@ -230,6 +232,7 @@ public class CassandraDaemonTask extends CassandraTask {
                                   double cpus,
                                   int memoryMb,
                                   int diskMb,
+                                  VolumeRequirement.VolumeType diskType,
                                   CassandraConfig config,
                                   CassandraDaemonStatus status) {
 
@@ -244,6 +247,7 @@ public class CassandraDaemonTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
+                diskType,
                 status);
 
         this.config = config;

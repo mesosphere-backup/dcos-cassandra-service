@@ -21,6 +21,7 @@ cassandra:
   cpus: ${CASSANDRA_CPUS:-0.5}
   memoryMb: ${CASSANDRA_MEMORY_MB:-4096}
   diskMb: ${CASSANRA_DISK_MB:-10240}
+  diskType: ${CASSANDRA_DISK_TYPE:-ROOT}
   version: ${CASSANDRA_VERSION:-2.2.5}
   heap:
     sizeMb : ${CASSANDRA_HEAP_MB:-2048}
