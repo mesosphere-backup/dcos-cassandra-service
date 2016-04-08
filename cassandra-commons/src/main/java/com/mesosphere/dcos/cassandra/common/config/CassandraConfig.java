@@ -245,13 +245,13 @@ public class CassandraConfig {
     public static CassandraConfig create(
             @JsonProperty("version") String version,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb,
-            @JsonProperty("diskType") VolumeRequirement.VolumeType diskType,
-            @JsonProperty("replaceIp") String replaceIp,
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb,
+            @JsonProperty("disk_type") VolumeRequirement.VolumeType diskType,
+            @JsonProperty("replace_ip") String replaceIp,
             @JsonProperty("heap") HeapConfig heap,
             @JsonProperty("location") Location location,
-            @JsonProperty("jmxPort") int jmxPort,
+            @JsonProperty("jmx_port") int jmxPort,
             @JsonProperty("volume") Volume volume,
             @JsonProperty("application")
             CassandraApplicationConfig application) {
@@ -299,16 +299,16 @@ public class CassandraConfig {
     @JsonProperty("cpus")
     private final double cpus;
 
-    @JsonProperty("memoryMb")
+    @JsonProperty("memory_mb")
     private final int memoryMb;
 
-    @JsonProperty("diskMb")
+    @JsonProperty("disk_mb")
     private final int diskMb;
 
-    @JsonProperty("diskType")
+    @JsonProperty("disk_type")
     private VolumeRequirement.VolumeType diskType;
 
-    @JsonProperty("replaceIp")
+    @JsonProperty("replace_ip")
     private final String replaceIp;
 
     @JsonProperty("heap")
@@ -317,7 +317,7 @@ public class CassandraConfig {
     @JsonProperty("location")
     private final Location location;
 
-    @JsonProperty("jmxPort")
+    @JsonProperty("jmx_port")
     private final int jmxPort;
 
     @JsonProperty("volume")

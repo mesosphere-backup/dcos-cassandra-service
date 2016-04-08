@@ -54,6 +54,8 @@ public class RepairRequest {
         return nodes;
     }
 
+    public boolean isValid(){return !nodes.isEmpty();}
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

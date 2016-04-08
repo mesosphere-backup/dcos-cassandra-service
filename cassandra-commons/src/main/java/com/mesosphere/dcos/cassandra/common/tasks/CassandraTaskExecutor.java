@@ -245,18 +245,18 @@ public class CassandraTaskExecutor {
 
     @JsonCreator
     public static CassandraTaskExecutor createJson(
-            @JsonProperty("frameworkId") String frameworkId,
+            @JsonProperty("framework_id") String frameworkId,
             @JsonProperty("id") String id,
             @JsonProperty("command") String command,
             @JsonProperty("arguments") List<String> arguments,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb,
-            @JsonProperty("heapMb") int heapMb,
-            @JsonProperty("apiPort") int apiPort,
-            @JsonProperty("adminPort") int adminPort,
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb,
+            @JsonProperty("heap_mb") int heapMb,
+            @JsonProperty("api_port") int apiPort,
+            @JsonProperty("admin_port") int adminPort,
             @JsonProperty("uris") List<String> uris,
-            @JsonProperty("javaHome") String javaHome) {
+            @JsonProperty("java_home") String javaHome) {
 
         return create(
                 frameworkId,
@@ -274,7 +274,7 @@ public class CassandraTaskExecutor {
 
     }
 
-    @JsonProperty("frameworkId")
+    @JsonProperty("framework_id")
     private final String frameworkId;
     @JsonProperty("id")
     private final String id;
@@ -284,18 +284,18 @@ public class CassandraTaskExecutor {
     private final List<String> arguments;
     @JsonProperty("cpus")
     private final double cpus;
-    @JsonProperty("memoryMb")
+    @JsonProperty("memory_mb")
     private final int memoryMb;
-    @JsonProperty("diskMb")
+    @JsonProperty("disk_mb")
     private final int diskMb;
-    @JsonProperty("heapMb")
+    @JsonProperty("heap_mb")
     private final int heapMb;
-    @JsonProperty("apiPort")
+    @JsonProperty("api_port")
     private final int apiPort;
-    @JsonProperty("adminPort")
+    @JsonProperty("admin_port")
     private final int adminPort;
     private final List<URI> uris;
-    @JsonProperty("javaHome")
+    @JsonProperty("java_home")
     private final String javaHome;
 
     public CassandraTaskExecutor(

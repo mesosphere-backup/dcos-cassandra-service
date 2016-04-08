@@ -8,145 +8,146 @@ import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.Volume;
 import org.apache.mesos.offer.VolumeRequirement;
 
-import static com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig.*;
+import static com.mesosphere.dcos.cassandra.common.config
+        .CassandraApplicationConfig.*;
 
 public class CassandraConfigParser {
 
     @JsonProperty("cpus")
     private double cpus;
-    @JsonProperty("memoryMb")
+    @JsonProperty("memory_mb")
     private int memoryMb;
-    @JsonProperty("diskMb")
+    @JsonProperty("disk_mb")
     private int diskMb;
-    @JsonProperty("diskType")
+    @JsonProperty("disk_type")
     private VolumeRequirement.VolumeType diskType;
     @JsonProperty("version")
     private String version;
-    @JsonProperty("numTokens")
+    @JsonProperty(NUM_TOKENS_KEY)
     private int numTokens;
-    @JsonProperty("hintedHandoffEnabled")
+    @JsonProperty(HINTED_HANDOFF_ENABLED_KEY)
     private boolean hintedHandoffEnabled;
-    @JsonProperty("maxHintWindowInMs")
+    @JsonProperty(MAX_HINT_WINDOW_IN_MS_KEY)
     private int maxHintWindowInMs;
-    @JsonProperty("hintedHandoffThrottleInKb")
+    @JsonProperty(HINTED_HANDOFF_THROTTLE_IN_KB_KEY)
     private int hintedHandoffThrottleInKb;
-    @JsonProperty("maxHintsDeliveryThreads")
+    @JsonProperty(MAX_HINTS_DELIVERY_THREADS_KEY)
     private int maxHintsDeliveryThreads;
-    @JsonProperty("batchlogReplayThrottleInKb")
+    @JsonProperty(BATCHLOG_REPLAY_THROTTLE_IN_KB_KEY)
     private int batchlogReplayThrottleInKb;
-    @JsonProperty("partitioner")
+    @JsonProperty(PARTITIONER_KEY)
     private String partitioner;
-    @JsonProperty("volumeSizeMb")
+    @JsonProperty("volume_size_mb")
     private int volumeSizeMb;
-    @JsonProperty("diskFailurePolicy")
+    @JsonProperty(DISK_FAILURE_POLICY_KEY)
     private String diskFailurePolicy;
-    @JsonProperty("commitFailurePolicy")
+    @JsonProperty(COMMIT_FAILURE_POLICY_KEY)
     private String commitFailurePolicy;
-    @JsonProperty("keyCacheSizeInMb")
+    @JsonProperty(KEY_CACHE_SIZE_IN_MB_KEY)
     private Integer keyCacheSizeInMb;
-    @JsonProperty("keyCacheSavePeriod")
+    @JsonProperty(KEY_CACHE_SAVE_PERIOD_KEY)
     private int keyCacheSavePeriod;
-    @JsonProperty("rowCacheSizeInMb")
+    @JsonProperty(ROW_CACHE_SIZE_IN_MB_KEY)
     private int rowCacheSizeInMb;
-    @JsonProperty("rowCacheSavePeriod")
+    @JsonProperty(ROW_CACHE_SAVE_PERIOD_KEY)
     private int rowCacheSavePeriod;
-    @JsonProperty("counterCacheSizeInMb")
+    @JsonProperty(COUNTER_CACHE_SIZE_IN_MB_KEY)
     private Integer counterCacheSizeInMb;
-    @JsonProperty("counterCacheSavePeriod")
+    @JsonProperty(COUNTER_CACHE_SAVE_PERIOD_KEY)
     private int counterCacheSavePeriod;
-    @JsonProperty("commitlogSync")
+    @JsonProperty(COMMITLOG_SYNC_KEY)
     private String commitlogSync;
-    @JsonProperty("commitlogSyncPeriodInMs")
+    @JsonProperty(COMMITLOG_SYNC_PERIOD_IN_MS_KEY)
     private int commitlogSyncPeriodInMs;
-    @JsonProperty("commitlogSegmentSizeInMb")
+    @JsonProperty(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY)
     private int commitlogSegmentSizeInMb;
-    @JsonProperty("concurrentReads")
+    @JsonProperty(CONCURRENT_READS_KEY)
     private int concurrentReads;
-    @JsonProperty("concurrentWrites")
+    @JsonProperty(CONCURRENT_WRITES_KEY)
     private int concurrentWrites;
-    @JsonProperty("concurrentCounterWrites")
+    @JsonProperty(CONCURRENT_COUNTER_WRITES_KEY)
     private int concurrentCounterWrites;
-    @JsonProperty("memtableAllocationType")
+    @JsonProperty(MEMTABLE_ALLOCATION_TYPE_KEY)
     private String memtableAllocationType;
-    @JsonProperty("indexSummaryCapacityInMb")
+    @JsonProperty(INDEX_SUMMARY_CAPACITY_IN_MB_KEY)
     private Integer indexSummaryCapacityInMb;
-    @JsonProperty("indexSummaryResizeIntervalInMinutes")
+    @JsonProperty(INDEX_SUMMARY_RESIZE_INTERVAL_IN_MINUTES_KEY)
     private int indexSummaryResizeIntervalInMinutes;
-    @JsonProperty("trickleFsync")
+    @JsonProperty(TRICKLE_FSYNC_KEY)
     private boolean trickleFsync;
-    @JsonProperty("trickleFsyncIntervalInKb")
+    @JsonProperty(TRICKLE_FSYNC_INTERVAL_IN_KB_KEY)
     private int trickleFsyncIntervalInKb;
-    @JsonProperty("storagePort")
+    @JsonProperty(STORAGE_PORT_KEY)
     private int storagePort;
-    @JsonProperty("sslStoragePort")
+    @JsonProperty(SSL_STORAGE_PORT_KEY)
     private int sslStoragePort;
-    @JsonProperty("startNativeTransport")
+    @JsonProperty(START_NATIVE_TRANSPORT_KEY)
     private boolean startNativeTransport;
-    @JsonProperty("nativeTransportPort")
+    @JsonProperty(NATIVE_TRANSPORT_PORT_KEY)
     private int nativeTransportPort;
-    @JsonProperty("startRpc")
+    @JsonProperty(START_RPC_KEY)
     private boolean startRpc;
-    @JsonProperty("rpcPort")
+    @JsonProperty(RPC_PORT_KEY)
     private int rpcPort;
-    @JsonProperty("rpcKeepalive")
+    @JsonProperty(RPC_KEEPALIVE_KEY)
     private boolean rpcKeepalive;
-    @JsonProperty("rpcServerType")
+    @JsonProperty(RPC_SERVER_TYPE_KEY)
     private String rpcServerType;
-    @JsonProperty("thriftFramedTransportSizeInMb")
+    @JsonProperty(THRIFT_FRAMED_TRANSPORT_SIZE_IN_MB_KEY)
     private int thriftFramedTransportSizeInMb;
-    @JsonProperty("tombstoneWarnThreshold")
+    @JsonProperty(TOMBSTONE_WARN_THRESHOLD_KEY)
     private int tombstoneWarnThreshold;
-    @JsonProperty("tombstoneFailureThreshold")
+    @JsonProperty(TOMBSTONE_FAILURE_THRESHOLD_KEY)
     private int tombstoneFailureThreshold;
-    @JsonProperty("columnIndexSizeInKb")
+    @JsonProperty(COLUMN_INDEX_SIZE_IN_KB_KEY)
     private int columnIndexSizeInKb;
-    @JsonProperty("batchSizeWarnThresholdInKb")
+    @JsonProperty(BATCH_SIZE_WARN_THRESHOLD_IN_KB_KEY)
     private int batchSizeWarnThresholdInKb;
-    @JsonProperty("batchSizeFailThresholdInKb")
+    @JsonProperty(BATCH_SIZE_FAIL_THRESHOLD_IN_KB_KEY)
     private int batchSizeFailThresholdInKb;
-    @JsonProperty("compactionThroughputMbPerSec")
+    @JsonProperty(COMPACTION_THROUGHPUT_MB_PER_SEC_KEY)
     private int compactionThroughputMbPerSec;
-    @JsonProperty("compactionLargePartitionWarningThresholdMb")
+    @JsonProperty(COMPACTION_LARGE_PARTITION_WARNING_THRESHOLD_MB_KEY)
     private int compactionLargePartitionWarningThresholdMb;
-    @JsonProperty("sstablePreemptiveOpenIntervalInMb")
+    @JsonProperty(SSTABLE_PREEMPTIVE_OPEN_INTERVAL_IN_MB_KEY)
     private int sstablePreemptiveOpenIntervalInMb;
-    @JsonProperty("readRequestTimeoutInMs")
+    @JsonProperty(READ_REQUEST_TIMEOUT_IN_MS_KEY)
     private int readRequestTimeoutInMs;
-    @JsonProperty("rangeRequestTimeoutInMs")
+    @JsonProperty(RANGE_REQUEST_TIMEOUT_IN_MS_KEY)
     private int rangeRequestTimeoutInMs;
-    @JsonProperty("writeRequestTimeoutInMs")
+    @JsonProperty(WRITE_REQUEST_TIMEOUT_IN_MS_KEY)
     private int writeRequestTimeoutInMs;
-    @JsonProperty("counterWriteRequestTimeoutInMs")
+    @JsonProperty(COUNTER_WRITE_REQUEST_TIMEOUT_IN_MS_KEY)
     private int counterWriteRequestTimeoutInMs;
-    @JsonProperty("casContentionTimeoutInMs")
+    @JsonProperty(CAS_CONTENTION_TIMEOUT_IN_MS_KEY)
     private int casContentionTimeoutInMs;
-    @JsonProperty("truncateRequestTimeoutInMs")
+    @JsonProperty(TRUNCATE_REQUEST_TIMEOUT_IN_MS_KEY)
     private int truncateRequestTimeoutInMs;
-    @JsonProperty("requestTimeoutInMs")
+    @JsonProperty(REQUEST_TIMEOUT_IN_MS_KEY)
     private int requestTimeoutInMs;
-    @JsonProperty("crossNodeTimeout")
+    @JsonProperty(CROSS_NODE_TIMEOUT_KEY)
     private boolean crossNodeTimeout;
-    @JsonProperty("dynamicSnitchUpdateIntervalInMs")
+    @JsonProperty(DYNAMIC_SNITCH_UPDATE_INTERVAL_IN_MS_KEY)
     private int dynamicSnitchUpdateIntervalInMs;
-    @JsonProperty("dynamicSnitchResetIntervalInMs")
+    @JsonProperty(DYNAMIC_SNITCH_RESET_INTERVAL_IN_MS_KEY)
     private int dynamicSnitchResetIntervalInMs;
-    @JsonProperty("dynamicSnitchBadnessThreshold")
+    @JsonProperty(DYNAMIC_SNITCH_BADNESS_THRESHOLD_KEY)
     private double dynamicSnitchBadnessThreshold;
-    @JsonProperty("requestScheduler")
+    @JsonProperty(REQUEST_SCHEDULER_KEY)
     private String requestScheduler;
-    @JsonProperty("internodeCompression")
+    @JsonProperty(INTERNODE_COMPRESSION_KEY)
     private String internodeCompression;
-    @JsonProperty("interDcTcpNodelay")
+    @JsonProperty(INTER_DC_TCP_NODELAY_KEY)
     private boolean interDcTcpNodelay;
-    @JsonProperty("tracetypeQueryTtl")
+    @JsonProperty(TRACETYPE_QUERY_TTL_KEY)
     private int tracetypeQueryTtl;
-    @JsonProperty("tracetypeRepairTtl")
+    @JsonProperty(TRACETYPE_REPAIR_TTL_KEY)
     private int tracetypeRepairTtl;
-    @JsonProperty("windowsTimerInterval")
+    @JsonProperty(WINDOWS_TIMER_INTERVAL_KEY)
     private int windowsTimerInterval;
     @JsonProperty("heap")
     private HeapConfig heap;
-    @JsonProperty("jmxPort")
+    @JsonProperty("jmx_port")
     private int jmxPort;
 
     public CassandraConfigParser() {

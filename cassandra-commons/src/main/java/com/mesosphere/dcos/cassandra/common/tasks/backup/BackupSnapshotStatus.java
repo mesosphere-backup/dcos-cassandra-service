@@ -14,8 +14,8 @@ public class BackupSnapshotStatus extends CassandraTaskStatus {
     public static BackupSnapshotStatus create(
             @JsonProperty("state") Protos.TaskState state,
             @JsonProperty("id") String id,
-            @JsonProperty("slaveId") String slaveId,
-            @JsonProperty("executorId") String executorId,
+            @JsonProperty("slave_id") String slaveId,
+            @JsonProperty("executor_id") String executorId,
             @JsonProperty("message") Optional<String> message) {
         return new BackupSnapshotStatus(state, id, slaveId, executorId, message);
     }

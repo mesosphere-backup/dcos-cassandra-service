@@ -166,11 +166,11 @@ public abstract class CassandraTaskStatus {
     protected final Protos.TaskState state;
     @JsonProperty("type")
     protected final CassandraTask.TYPE type;
-    @JsonProperty("slaveId")
+    @JsonProperty("slave_id")
     protected final String slaveId;
     @JsonProperty("id")
     protected final String id;
-    @JsonProperty("executorId")
+    @JsonProperty("executor_id")
     protected final String executorId;
     @JsonProperty("message")
     protected final Optional<String> message;

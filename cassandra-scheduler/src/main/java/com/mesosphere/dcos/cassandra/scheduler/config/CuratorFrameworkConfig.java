@@ -24,11 +24,11 @@ public class CuratorFrameworkConfig {
     @JsonCreator
     public static CuratorFrameworkConfig create(
             @JsonProperty("servers") String servers,
-            @JsonProperty("sessionTimeoutMs") Long sessionTimeoutMs,
-            @JsonProperty("connectionTimeoutMs") Long connectionTimeoutMs,
-            @JsonProperty("operationTimeoutMs")
+            @JsonProperty("session_timeout_ms") Long sessionTimeoutMs,
+            @JsonProperty("connection_timeout_ms") Long connectionTimeoutMs,
+            @JsonProperty("operation_timeout_ms")
             Optional<Long> operationTimeoutMs,
-            @JsonProperty("backoffMs") Long backoffMs) {
+            @JsonProperty("backoff_ms") Long backoffMs) {
 
         return new CuratorFrameworkConfig(
                 servers,
@@ -84,22 +84,22 @@ public class CuratorFrameworkConfig {
         return backoff;
     }
 
-    @JsonProperty("sessionTimeoutMs")
+    @JsonProperty("session_timeout_ms")
     public long getSessionTimeoutMs() {
         return sessionTimeout.toMillis();
     }
 
-    @JsonProperty("connectionTimeoutMs")
+    @JsonProperty("connection_timeout_ms")
     public long getConnectionTimeoutMs() {
         return connectionTimeout.toMillis();
     }
 
-    @JsonProperty("operationTimeoutMs")
+    @JsonProperty("operation_timeout_ms")
     public Optional<Long> getOperationTimeoutMs() {
         return operationTimeout.map(timeout -> timeout.toMillis());
     }
 
-    @JsonProperty("backoffMs")
+    @JsonProperty("backoff_ms")
     public long getBackoffMs() {
         return backoff.toMillis();
     }
