@@ -452,7 +452,7 @@ After you execute the continue operation, the plan will look like this:
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
                     "message": "Deploying Cassandra node node-0", 
                     "name": "node-0", 
-                    "status": “Complete"
+                    "status": "Complete"
                 }, 
                 {
                     "has_decision_point": false, 
