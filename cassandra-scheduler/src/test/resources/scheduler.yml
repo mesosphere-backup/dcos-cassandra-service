@@ -8,7 +8,6 @@ executor:
   disk_mb : ${EXECUTOR_DISK_MB:-1024}
   heap_mb : ${EXECUTOR_HEAP_MB:-512}
   api_port : ${EXECUTOR_API_PORT:-9000}
-  admin_port : ${EXECUTOR_ADMIN_PORT:-9001}
   java_home : ${EXECUTOR_JAVA_HOME:-"./jre"}
   jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
@@ -93,16 +92,14 @@ seed_nodes: ${SEED_NODES:-2}
 placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
 api_port : ${API_PORT:-8080}
 server:
-  adminContextPath: /
+  type: simple
+  adminContextPath: /admin
   applicationContextPath: /
-  applicationConnectors:
-    - type: http
-      port: ${API_PORT:-8080}
-  adminConnectors:
-    - type: http
-      port: ${ADMIN_PORT:-8081}
+  connector:
+    type: http
+    port: ${API_PORT:-8080}
 logging:
-  level: INFO
+  level: ${LOG_LEVEL:-INFO}
   appenders:
     - type: file
       currentLogFilename: ${LOG_FILE:-dcos-cassandra-service.log}

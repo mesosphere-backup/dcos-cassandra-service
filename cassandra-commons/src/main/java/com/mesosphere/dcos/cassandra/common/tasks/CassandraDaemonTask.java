@@ -361,8 +361,7 @@ public class CassandraDaemonTask extends CassandraTask {
     public List<Resource> getReserveResources() {
         return Arrays.asList(
 
-                reservedPorts(PortRange.fromPorts(executor
-                                .getAdminPort(),
+                reservedPorts(PortRange.fromPorts(
                         executor.getApiPort(),
                         config.getJmxPort(),
                         config.getApplication().getStoragePort(),

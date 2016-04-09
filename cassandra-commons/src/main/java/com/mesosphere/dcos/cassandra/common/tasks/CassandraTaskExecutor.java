@@ -32,13 +32,11 @@ public class CassandraTaskExecutor {
         private int diskMb;
         private int heapMb;
         private int apiPort;
-        private int adminPort;
         private List<URI> uris;
         private String javaHome;
 
         private Builder(CassandraTaskExecutor executor) {
 
-            this.adminPort = executor.adminPort;
             this.frameworkId = executor.frameworkId;
             this.id = executor.id;
             this.command = executor.command;
@@ -51,15 +49,6 @@ public class CassandraTaskExecutor {
             this.uris = executor.uris;
             this.javaHome = executor.javaHome;
 
-        }
-
-        public int getAdminPort() {
-            return adminPort;
-        }
-
-        public Builder setAdminPort(int adminPort) {
-            this.adminPort = adminPort;
-            return this;
         }
 
         public int getApiPort() {
@@ -172,7 +161,6 @@ public class CassandraTaskExecutor {
                     diskMb,
                     heapMb,
                     apiPort,
-                    adminPort,
                     uris,
                     javaHome);
         }
@@ -188,7 +176,6 @@ public class CassandraTaskExecutor {
             int diskMb,
             int heapMb,
             int apiPort,
-            int adminPort,
             List<URI> uris,
             String javaHome) {
 
@@ -202,7 +189,6 @@ public class CassandraTaskExecutor {
                 diskMb,
                 heapMb,
                 apiPort,
-                adminPort,
                 uris,
                 javaHome);
 
@@ -236,7 +222,6 @@ public class CassandraTaskExecutor {
                         .replace("-Xmx", "")
                         .replace("M", "")),
                 Integer.parseInt(env.get("EXECUTOR_API_PORT")),
-                Integer.parseInt(env.get("EXECUTOR_ADMIN_PORT")),
                 info.getCommand().getUrisList().stream().map(uri ->
                         uri.getValue()).map(URI::create).collect(
                         Collectors.toList()),
@@ -254,7 +239,6 @@ public class CassandraTaskExecutor {
             @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("heap_mb") int heapMb,
             @JsonProperty("api_port") int apiPort,
-            @JsonProperty("admin_port") int adminPort,
             @JsonProperty("uris") List<String> uris,
             @JsonProperty("java_home") String javaHome) {
 
@@ -268,7 +252,6 @@ public class CassandraTaskExecutor {
                 diskMb,
                 heapMb,
                 apiPort,
-                adminPort,
                 uris.stream().map(URI::create).collect(Collectors.toList()),
                 javaHome);
 
@@ -292,8 +275,6 @@ public class CassandraTaskExecutor {
     private final int heapMb;
     @JsonProperty("api_port")
     private final int apiPort;
-    @JsonProperty("admin_port")
-    private final int adminPort;
     private final List<URI> uris;
     @JsonProperty("java_home")
     private final String javaHome;
@@ -308,10 +289,8 @@ public class CassandraTaskExecutor {
             int diskMb,
             int heapMb,
             int apiPort,
-            int adminPort,
             List<URI> uris,
             String javaHome) {
-        this.adminPort = adminPort;
         this.frameworkId = frameworkId;
         this.id = id;
         this.command = command;
@@ -334,9 +313,6 @@ public class CassandraTaskExecutor {
     }
 
 
-    public int getAdminPort() {
-        return adminPort;
-    }
 
     public int getApiPort() {
         return apiPort;
@@ -405,10 +381,8 @@ public class CassandraTaskExecutor {
                                 .setValue("-Xmx" + heapMb + "M").build(),
                         Protos.Environment.Variable
                                 .newBuilder().setName("EXECUTOR_API_PORT")
-                                .setValue(Integer.toString(apiPort)).build(),
-                        Protos.Environment.Variable
-                                .newBuilder().setName("EXECUTOR_ADMIN_PORT")
-                                .setValue(Integer.toString(adminPort)).build()
+                                .setValue(Integer.toString(apiPort)).build()
+
                 )).build();
     }
 
@@ -446,7 +420,6 @@ public class CassandraTaskExecutor {
                 getDiskMb() == that.getDiskMb() &&
                 getHeapMb() == that.getHeapMb() &&
                 getApiPort() == that.getApiPort() &&
-                getAdminPort() == that.getAdminPort() &&
                 Objects.equals(getFrameworkId(), that.getFrameworkId()) &&
                 Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getCommand(), that.getCommand()) &&
@@ -460,8 +433,7 @@ public class CassandraTaskExecutor {
         return Objects.hash(getFrameworkId(), getId(), getCommand(),
                 getArguments(),
                 getCpus(), getMemoryMb(), getDiskMb(), getHeapMb(),
-                getApiPort(),
-                getAdminPort(), uris, getJavaHome());
+                getApiPort(), uris, getJavaHome());
     }
 
     @Override

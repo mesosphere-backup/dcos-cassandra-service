@@ -34,7 +34,9 @@ public class BackupResource {
     public Response start(StartBackupRequest request) {
         LOGGER.info("Processing start backup request = {}", request);
         try {
-            if (manager.canStartBackup()) {
+            if(!request.isValid()){
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            } else  if (manager.canStartBackup()) {
                 final BackupContext backupContext = from(request);
                 manager.startBackup(backupContext);
                 LOGGER.info("Backup started : context = {}", backupContext);

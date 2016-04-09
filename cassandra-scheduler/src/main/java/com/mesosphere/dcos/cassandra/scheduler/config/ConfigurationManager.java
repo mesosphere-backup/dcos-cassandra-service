@@ -214,7 +214,6 @@ public class ConfigurationManager implements Managed {
                 executorConfig.getDiskMb(),
                 executorConfig.getHeapMb(),
                 executorConfig.getApiPort(),
-                executorConfig.getAdminPort(),
                 Arrays.asList(executorConfig.getJreLocation(),
                         executorConfig.getExecutorLocation(),
                         executorConfig.getCassandraLocation()),

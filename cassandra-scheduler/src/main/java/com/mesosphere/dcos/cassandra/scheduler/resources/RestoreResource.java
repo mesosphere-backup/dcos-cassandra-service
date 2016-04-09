@@ -34,7 +34,9 @@ public class RestoreResource {
     public Response start(StartRestoreRequest request) {
         LOGGER.info("Processing restore request: request = {}", request);
         try {
-            if (manager.canStartRestore()) {
+            if(!request.isValid()){
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            } else if (manager.canStartRestore()) {
                 final RestoreContext context = from(request);
                 manager.startRestore(context);
                 LOGGER.info("Started restore: context = {}", context);

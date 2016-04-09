@@ -54,7 +54,6 @@ public class ExecutorConfig {
             int diskMb,
             int heapMb,
             int apiPort,
-            int adminPort,
             String javaHome,
             URI jreLocation,
             URI executorLocation,
@@ -68,7 +67,6 @@ public class ExecutorConfig {
                 diskMb,
                 heapMb,
                 apiPort,
-                adminPort,
                 javaHome,
                 jreLocation,
                 executorLocation,
@@ -85,7 +83,6 @@ public class ExecutorConfig {
             @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("heap_mb") int heapMb,
             @JsonProperty("api_port") int apiPort,
-            @JsonProperty("admin_port") int adminPort,
             @JsonProperty("java_home") String javaHome,
             @JsonProperty("jre_location") String jreLocation,
             @JsonProperty("executor_location") String executorLocation,
@@ -100,7 +97,6 @@ public class ExecutorConfig {
                 diskMb,
                 heapMb,
                 apiPort,
-                adminPort,
                 javaHome,
                 URI.create(jreLocation),
                 URI.create(executorLocation),
@@ -123,8 +119,6 @@ public class ExecutorConfig {
     private final int heapMb;
     @JsonProperty("api_port")
     private final int apiPort;
-    @JsonProperty("admin_port")
-    private final int adminPort;
     private final URI jreLocation;
     private final URI executorLocation;
     private final URI cassandraLocation;
@@ -140,13 +134,11 @@ public class ExecutorConfig {
             int diskMb,
             int heapMb,
             int apiPort,
-            int adminPort,
             String javaHome,
             URI jreLocation,
             URI executorLocation,
             URI cassandraLocation) {
 
-        this.adminPort = adminPort;
         this.command = command;
         this.arguments = arguments;
         this.cpus = cpus;
@@ -160,9 +152,6 @@ public class ExecutorConfig {
         this.javaHome = javaHome;
     }
 
-    public int getAdminPort() {
-        return adminPort;
-    }
 
     public int getApiPort() {
         return apiPort;
@@ -233,7 +222,6 @@ public class ExecutorConfig {
                 getDiskMb() == that.getDiskMb() &&
                 getHeapMb() == that.getHeapMb() &&
                 getApiPort() == that.getApiPort() &&
-                getAdminPort() == that.getAdminPort() &&
                 Objects.equals(getCommand(), that.getCommand()) &&
                 Objects.equals(getArguments(), that.getArguments()) &&
                 Objects.equals(getJreLocation(), that.getJreLocation()) &&
@@ -248,7 +236,7 @@ public class ExecutorConfig {
     public int hashCode() {
         return Objects.hash(getCommand(), getArguments(), getCpus(),
                 getMemoryMb(),
-                getDiskMb(), getHeapMb(), getApiPort(), getAdminPort(),
+                getDiskMb(), getHeapMb(), getApiPort(),
                 getJreLocation(), getExecutorLocation(), getCassandraLocation(),
                 getJavaHome());
     }
