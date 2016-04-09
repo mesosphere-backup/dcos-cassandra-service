@@ -823,15 +823,15 @@ You can access the `stderr` and `stdout` logs from the Marathon web interface. T
 
 ## API Reference
 
-### Configuration via API
+### Configuration
 
-#### View the Installation Plan via API
+#### View the Installation Plan
 
 ``` bash
 curl http:/<dcos_url>/service/cassandra/v1/plan
 ```
 
-#### Retrieve Connection Info via API
+#### Retrieve Connection Info
 
 ``` bash
 curl http://<dcos_url>/cassandra/v1/nodes/connect
@@ -849,7 +849,7 @@ You will see a response similar to the following:
 
 This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the CQL Driver configuration used by the application.
 
-#### Pause Installation via API
+#### Pause Installation
 
 The installation will pause after completing installation of the current node and wait for user input.
 
@@ -857,7 +857,7 @@ The installation will pause after completing installation of the current node an
 curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
-#### Resume Installation via API
+#### Resume Installation
 
 The REST API request below will resume installation at the next pending node.
 
@@ -865,15 +865,15 @@ The REST API request below will resume installation at the next pending node.
 curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 ```
 
-### Managing via API
+### Managing
 
-#### Cleanup via API
+#### Cleanup
 
 ``` bash
 curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
 ```
 
-#### Backup via API
+#### Backup
 
 First, create the request payload, for example, in a file `backup.json`:
 
@@ -899,7 +899,7 @@ Check status of the backup:
 curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
 ```
 
-#### Restore via API
+#### Restore
 
 First, bring up a new instance of your Cassandra cluster with the same number of nodes as the cluster whose snapshot backup you want to restore.
 
