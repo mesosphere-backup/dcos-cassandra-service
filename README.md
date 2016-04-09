@@ -395,7 +395,7 @@ If you query the plan again, the response will look like this (notice `status: "
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
                     "message": "Deploying Cassandra node node-0", 
                     "name": "node-0", 
-                    "status": “Complete"
+                    "status": "Complete"
                 }, 
                 {
                     "has_decision_point": false, 
