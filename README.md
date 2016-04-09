@@ -177,9 +177,9 @@ Installing multiple Cassandra clusters is identical to installing a Cassandra cl
 ``` json
 $ cat cassandra1.json
 {
- "service": {
-   "name": "cassandra1"
- }
+   "service": {
+       "name": "cassandra1"
+   }
 }
 
 $ dcos package install cassandra --options=cassandra1.json
