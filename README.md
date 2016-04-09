@@ -520,7 +520,6 @@ Example node configuration:
 ``` json
 {
 	"node": {
-
 		"cpus": 0.5,
 		"mem": 4096,
 		"disk": 10240,
