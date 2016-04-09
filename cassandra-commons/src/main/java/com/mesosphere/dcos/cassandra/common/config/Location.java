@@ -19,13 +19,13 @@ public class Location {
 
     @JsonProperty("rack")
     private final String rack;
-    @JsonProperty("dataCenter")
+    @JsonProperty("data_center")
     private final String dataCenter;
 
     @JsonCreator
     public static Location create(
             @JsonProperty("rack") final String rack,
-            @JsonProperty("dataCenter") final String dataCenter) {
+            @JsonProperty("data_center") final String dataCenter) {
         return new Location(rack, dataCenter);
     }
 

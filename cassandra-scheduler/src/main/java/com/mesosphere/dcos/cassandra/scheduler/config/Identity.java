@@ -62,7 +62,7 @@ public class Identity {
             @JsonProperty("cluster") final String cluster,
             @JsonProperty("role") final String role,
             @JsonProperty("principal") final String principal,
-            @JsonProperty("failoverTimeoutS") final Long failoverTimeoutS,
+            @JsonProperty("failover_timeout_s") final Long failoverTimeoutS,
             @JsonProperty("secret") final String secret,
             @JsonProperty("checkpoint") final boolean checkpoint) {
 
@@ -180,7 +180,7 @@ public class Identity {
         return failoverTimeout;
     }
 
-    @JsonProperty("failoverTimeoutS")
+    @JsonProperty("failover_timeout_s")
     public long getFailoverTimeoutS() {
         return failoverTimeout.getSeconds();
     }

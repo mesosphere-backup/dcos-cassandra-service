@@ -43,18 +43,18 @@ public class CassandraSchedulerConfiguration extends Configuration {
                     250L);
     private String seedsUrl;
 
-    @JsonProperty("frameworkVersion")
+    @JsonProperty("framework_version")
     public String getVersion() {
         return version;
     }
 
-    @JsonProperty("frameworkVersion")
+    @JsonProperty("framework_version")
     public CassandraSchedulerConfiguration setVersion(String version) {
         this.version = version;
         return this;
     }
 
-    @JsonProperty("frameworkName")
+    @JsonProperty("framework_name")
     public String getName() {
         return name;
     }
@@ -74,7 +74,7 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return cassandraConfig;
     }
 
-    @JsonProperty("frameworkName")
+    @JsonProperty("framework_name")
     public CassandraSchedulerConfiguration setName(String name) {
         this.name = name;
         return this;
@@ -124,23 +124,23 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
-    @JsonProperty("clusterTask")
+    @JsonProperty("cluster_task")
     public ClusterTaskConfig getClusterTaskConfig() {
         return clusterTaskConfig;
     }
 
-    @JsonProperty("clusterTask")
+    @JsonProperty("cluster_task")
     public CassandraSchedulerConfiguration setClusterTaskConfig(ClusterTaskConfig clusterTaskConfig) {
         this.clusterTaskConfig = clusterTaskConfig;
         return this;
     }
 
-    @JsonProperty("seedNodes")
+    @JsonProperty("seed_nodes")
     public int getSeeds() {
         return seeds;
     }
 
-    @JsonProperty("seedNodes")
+    @JsonProperty("seed_nodes")
     public CassandraSchedulerConfiguration setSeeds(int seeds) {
         this.seeds = seeds;
         return this;
@@ -157,35 +157,35 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
-    @JsonProperty("placementStrategy")
+    @JsonProperty("placement_strategy")
     public String getPlacementStrategy() {
         return placementStrategy;
     }
 
-    @JsonProperty("placementStrategy")
+    @JsonProperty("placement_strategy")
     public CassandraSchedulerConfiguration setPlacementStrategy(String placementStrategy) {
         this.placementStrategy = placementStrategy;
         return this;
     }
 
 
-    @JsonProperty("apiPort")
+    @JsonProperty("api_port")
     public int getApiPort() {
         return apiPort;
     }
 
-    @JsonProperty("apiPort")
+    @JsonProperty("api_port")
     public CassandraSchedulerConfiguration setApiPort(int port) {
         this.apiPort = port;
         return this;
     }
 
-    @JsonProperty("seedsUrl")
+    @JsonProperty("seeds_url")
     public String getSeedsUrl() {
         return seedsUrl;
     }
 
-    @JsonProperty("seedsUrl")
+    @JsonProperty("seeds_url")
     public CassandraSchedulerConfiguration setSeedsUrl(String seedsUrl) {
         this.seedsUrl = seedsUrl;
         return this;
@@ -203,12 +203,12 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
-    @JsonProperty("phaseStrategy")
+    @JsonProperty("phase_strategy")
     public String getPhaseStrategy() {
         return phaseStrategy;
     }
 
-    @JsonProperty("phaseStrategy")
+    @JsonProperty("phase_strategy")
     public CassandraSchedulerConfiguration setPhaseStrategy(
             String phaseStrategy) {
         this.phaseStrategy = phaseStrategy;

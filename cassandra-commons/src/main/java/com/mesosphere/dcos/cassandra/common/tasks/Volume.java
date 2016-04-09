@@ -14,7 +14,7 @@ public class Volume {
 
     @JsonProperty("path")
     private final String path;
-    @JsonProperty("sizeMb")
+    @JsonProperty("size_mb")
     private final int sizeMb;
     @JsonProperty("id")
     private final String id;
@@ -22,7 +22,7 @@ public class Volume {
     @JsonCreator
     public static Volume create(
             @JsonProperty("path") final String path,
-            @JsonProperty("sizeMb") final int sizeMb,
+            @JsonProperty("size_mb") final int sizeMb,
             @JsonProperty("id") final String id
     ) {
         return new Volume(path, sizeMb, id);

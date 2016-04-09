@@ -141,7 +141,8 @@ public abstract class CassandraTask {
                         (int) getTotalReservedDisk(resources,
                                 role,
                                 principal),
-                        BackupSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                        BackupSnapshotStatus.create(
+                                Protos.TaskState.TASK_STAGING,
                                 info.getTaskId().getValue(),
                                 info.getSlaveId().getValue(),
                                 info.getExecutor().getExecutorId().getValue(),
@@ -202,7 +203,8 @@ public abstract class CassandraTask {
                         (int) getTotalReservedDisk(resources,
                                 role,
                                 principal),
-                        DownloadSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                        DownloadSnapshotStatus.create(
+                                Protos.TaskState.TASK_STAGING,
                                 info.getTaskId().getValue(),
                                 info.getSlaveId().getValue(),
                                 info.getExecutor().getExecutorId().getValue(),
@@ -231,7 +233,8 @@ public abstract class CassandraTask {
                         (int) getTotalReservedDisk(resources,
                                 role,
                                 principal),
-                        RestoreSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
+                        RestoreSnapshotStatus.create(
+                                Protos.TaskState.TASK_STAGING,
                                 info.getTaskId().getValue(),
                                 info.getSlaveId().getValue(),
                                 info.getExecutor().getExecutorId().getValue(),
@@ -299,7 +302,7 @@ public abstract class CassandraTask {
         }
     }
 
-    public static String uniqueId(){
+    public static String uniqueId() {
         return UUID.randomUUID().toString();
     }
 
@@ -351,17 +354,17 @@ public abstract class CassandraTask {
         return cpus;
     }
 
-    @JsonProperty("diskMb")
+    @JsonProperty("disk_mb")
     public int getDiskMb() {
         return diskMb;
     }
 
-    @JsonProperty("diskType")
+    @JsonProperty("disk_type")
     public VolumeRequirement.VolumeType getDiskType() {
         return diskType;
     }
 
-    @JsonProperty("memoryMb")
+    @JsonProperty("memory_mb")
     public int getMemoryMb() {
         return memoryMb;
     }
@@ -401,7 +404,7 @@ public abstract class CassandraTask {
         return hostname;
     }
 
-    @JsonProperty("slaveId")
+    @JsonProperty("slave_id")
     public String getSlaveId() {
         return slaveId;
     }
@@ -425,17 +428,17 @@ public abstract class CassandraTask {
     }
 
     @JsonIgnore
-    public boolean isTerminated(){
+    public boolean isTerminated() {
         return status.isTerminated();
     }
 
     @JsonIgnore
-    public boolean isRunning(){
+    public boolean isRunning() {
         return status.isRunning();
     }
 
     @JsonIgnore
-    public boolean isLaunching(){
+    public boolean isLaunching() {
         return status.isLaunching();
     }
 

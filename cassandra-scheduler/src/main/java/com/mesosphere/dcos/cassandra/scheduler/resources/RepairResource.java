@@ -41,18 +41,12 @@ public class RepairResource {
     public Response start(RepairRequest request) {
         LOGGER.info("Processing start repair request = {}", request);
         try {
-            if (manager.canStartRepair()) {
-                Set<String> nodes = getNodes(request);
-                if (nodes.isEmpty()) {
-                    return Response.status(Response.Status.BAD_REQUEST)
-                            .entity(ErrorResponse.fromString(
-                                    String.format("Invalid node list %s",
-                                            request.getNodes())
-                            ))
-                            .build();
-                }
+            if (!request.isValid()) {
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            } else if (manager.canStartRepair()) {
+
                 manager.startRepair(RepairContext.create(
-                        new ArrayList<>(nodes),
+                        new ArrayList<>(request.getNodes()),
                         request.getKeySpaces(),
                         request.getColumnFamiles()
                 ));

@@ -1,9 +1,7 @@
 server:
-  adminContextPath: /
+  type: simple
+  adminContextPath: /admin
   applicationContextPath: /
-  applicationConnectors:
-    - type: http
-      port: ${EXECUTOR_API_PORT:-9000}
-  adminConnectors:
-    - type: http
-      port: ${EXECUTOR_ADMIN_PORT:-9001}
+  connector:
+    type: http
+    port: ${EXECUTOR_API_PORT:-8080}

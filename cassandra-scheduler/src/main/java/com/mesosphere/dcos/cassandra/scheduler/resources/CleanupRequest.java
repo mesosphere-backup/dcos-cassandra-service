@@ -54,6 +54,10 @@ public class CleanupRequest {
         return nodes;
     }
 
+    public boolean isValid(){
+        return !this.nodes.isEmpty();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

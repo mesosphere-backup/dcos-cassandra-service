@@ -212,7 +212,6 @@ public class CassandraDaemonProcessTest {
                         1024,
                         512,
                         9000,
-                        9001,
                         Collections.emptyList(),
                         "./jre"),
                 "server0",

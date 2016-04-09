@@ -51,4 +51,9 @@ public class StartBackupRequest {
     public void setS3SecretKey(String s3SecretKey) {
         this.s3SecretKey = s3SecretKey;
     }
+
+    public boolean isValid(){
+        return name != null && externalLocation != null &&
+                s3AccessKey != null && s3SecretKey != null;
+    }
 }

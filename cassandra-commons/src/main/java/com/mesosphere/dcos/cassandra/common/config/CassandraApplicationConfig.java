@@ -55,6 +55,7 @@ public class CassandraApplicationConfig {
     public static final String ROLES_VALIDITY_IN_MS_KEY = "roles_validity_in_ms";
     public static final String PERMISSIONS_VALIDITY_IN_MS_KEY = "permissions_validity_in_ms";
     public static final String PARTITIONER_KEY = "partitioner";
+    public static final String PERSISTENT_VOLUME_KEY = "persistent_volume";
     public static final String DATA_FILE_DIRECTORIES_KEY = "data_file_directories";
     public static final String COMMITLOG_DIRECTORY_KEY = "commitlog_directory";
     public static final String DISK_FAILURE_POLICY_KEY = "disk_failure_policy";
@@ -255,81 +256,84 @@ public class CassandraApplicationConfig {
 
     @JsonCreator
     public static CassandraApplicationConfig create(
-            @JsonProperty("clusterName") final String clusterName,
-            @JsonProperty("numTokens") final int numTokens,
-            @JsonProperty("hintedHandoffEnabled") final boolean hintedHandoffEnabled,
-            @JsonProperty("maxHintWindowInMs") final int maxHintWindowInMs,
-            @JsonProperty("hintedHandoffThrottleInKb") final int hintedHandoffThrottleInKb,
-            @JsonProperty("maxHintsDeliveryThreads") final int maxHintsDeliveryThreads,
-            @JsonProperty("batchlogReplayThrottleInKb") final int batchlogReplayThrottleInKb,
-            @JsonProperty("authenticator") final String authenticator,
-            @JsonProperty("authorizer") final String authorizer,
-            @JsonProperty("roleManager") final String roleManager,
-            @JsonProperty("rolesValidityInMs") final int rolesValidityInMs,
-            @JsonProperty("permissionsValidityInMs") final int permissionsValidityInMs,
-            @JsonProperty("partitioner") final String partitioner,
-            @JsonProperty("persistentVolume") final String persistentVolume,
-            @JsonProperty("diskFailurePolicy") final String diskFailurePolicy,
-            @JsonProperty("commitFailurePolicy") final String commitFailurePolicy,
-            @JsonProperty("keyCacheSizeInMb") final Integer keyCacheSizeInMb,
-            @JsonProperty("keyCacheSavePeriod") final int keyCacheSavePeriod,
-            @JsonProperty("rowCacheSizeInMb") final int rowCacheSizeInMb,
-            @JsonProperty("rowCacheSavePeriod") final int rowCacheSavePeriod,
-            @JsonProperty("counterCacheSizeInMb") final Integer counterCacheSizeInMb,
-            @JsonProperty("counterCacheSavePeriod") final int counterCacheSavePeriod,
-            @JsonProperty("commitlogSync") final String commitlogSync,
-            @JsonProperty("commitlogSyncPeriodInMs") final int commitlogSyncPeriodInMs,
-            @JsonProperty("commitlogSegmentSizeInMb") final int commitlogSegmentSizeInMb,
-            @JsonProperty("seedProvider") final List<Map<String, Object>> seedProvider,
-            @JsonProperty("concurrentReads") final int concurrentReads,
-            @JsonProperty("concurrentWrites") final int concurrentWrites,
-            @JsonProperty("concurrentCounterWrites") final int concurrentCounterWrites,
-            @JsonProperty("memtableAllocationType") final String memtableAllocationType,
-            @JsonProperty("indexSummaryCapacityInMb") final Integer indexSummaryCapacityInMb,
-            @JsonProperty("indexSummaryResizeIntervalInMinutes") final int indexSummaryResizeIntervalInMinutes,
-            @JsonProperty("trickleFsync") final boolean trickleFsync,
-            @JsonProperty("trickleFsyncIntervalInKb") final int trickleFsyncIntervalInKb,
-            @JsonProperty("storagePort") final int storagePort,
-            @JsonProperty("sslStoragePort") final int sslStoragePort,
-            @JsonProperty("listenAddress") final String listenAddress,
-            @JsonProperty("startNativeTransport") final boolean startNativeTransport,
-            @JsonProperty("nativeTransportPort") final int nativeTransportPort,
-            @JsonProperty("startRpc") final boolean startRpc,
-            @JsonProperty("rpcAddress") final String rpcAddress,
-            @JsonProperty("rpcPort") final int rpcPort,
-            @JsonProperty("rpcKeepalive") final boolean rpcKeepalive,
-            @JsonProperty("rpcServerType") final String rpcServerType,
-            @JsonProperty("thriftFramedTransportSizeInMb") final int thriftFramedTransportSizeInMb,
-            @JsonProperty("incrementalBackups") final boolean incrementalBackups,
-            @JsonProperty("snapshotBeforeCompaction") final boolean snapshotBeforeCompaction,
-            @JsonProperty("autoSnapshot") final boolean autoSnapshot,
-            @JsonProperty("tombstoneWarnThreshold") final int tombstoneWarnThreshold,
-            @JsonProperty("tombstoneFailureThreshold") final int tombstoneFailureThreshold,
-            @JsonProperty("columnIndexSizeInKb") final int columnIndexSizeInKb,
-            @JsonProperty("batchSizeWarnThresholdInKb") final int batchSizeWarnThresholdInKb,
-            @JsonProperty("batchSizeFailThresholdInKb") final int batchSizeFailThresholdInKb,
-            @JsonProperty("compactionThroughputMbPerSec") final int compactionThroughputMbPerSec,
-            @JsonProperty("compactionLargePartitionWarningThresholdMb") final int compactionLargePartitionWarningThresholdMb,
-            @JsonProperty("sstablePreemptiveOpenIntervalInMb") final int sstablePreemptiveOpenIntervalInMb,
-            @JsonProperty("readRequestTimeoutInMs") final int readRequestTimeoutInMs,
-            @JsonProperty("rangeRequestTimeoutInMs") final int rangeRequestTimeoutInMs,
-            @JsonProperty("writeRequestTimeoutInMs") final int writeRequestTimeoutInMs,
-            @JsonProperty("counterWriteRequestTimeoutInMs") final int counterWriteRequestTimeoutInMs,
-            @JsonProperty("casContentionTimeoutInMs") final int casContentionTimeoutInMs,
-            @JsonProperty("truncateRequestTimeoutInMs") final int truncateRequestTimeoutInMs,
-            @JsonProperty("requestTimeoutInMs") final int requestTimeoutInMs,
-            @JsonProperty("crossNodeTimeout") final boolean crossNodeTimeout,
-            @JsonProperty("endpointSnitch") final String endpointSnitch,
-            @JsonProperty("dynamicSnitchUpdateIntervalInMs") final int dynamicSnitchUpdateIntervalInMs,
-            @JsonProperty("dynamicSnitchResetIntervalInMs") final int dynamicSnitchResetIntervalInMs,
-            @JsonProperty("dynamicSnitchBadnessThreshold") final double dynamicSnitchBadnessThreshold,
-            @JsonProperty("requestScheduler") final String requestScheduler,
-            @JsonProperty("internodeCompression") final String internodeCompression,
-            @JsonProperty("interDcTcpNodelay") final boolean interDcTcpNodelay,
-            @JsonProperty("tracetypeQueryTtl") final int tracetypeQueryTtl,
-            @JsonProperty("tracetypeRepairTtl") final int tracetypeRepairTtl,
-            @JsonProperty("enableUserDefinedFunctions") final boolean enableUserDefinedFunctions,
-            @JsonProperty("windowsTimerInterval") final int windowsTimerInterval) {
+            @JsonProperty(CLUSTER_NAME_KEY) final String clusterName,
+            @JsonProperty(NUM_TOKENS_KEY) final int numTokens,
+            @JsonProperty(HINTED_HANDOFF_ENABLED_KEY) final boolean hintedHandoffEnabled,
+            @JsonProperty(MAX_HINT_WINDOW_IN_MS_KEY) final int maxHintWindowInMs,
+            @JsonProperty(HINTED_HANDOFF_THROTTLE_IN_KB_KEY) final int hintedHandoffThrottleInKb,
+            @JsonProperty(MAX_HINTS_DELIVERY_THREADS_KEY) final int
+                    maxHintsDeliveryThreads,
+            @JsonProperty(BATCHLOG_REPLAY_THROTTLE_IN_KB_KEY) final int
+                    batchlogReplayThrottleInKb,
+            @JsonProperty(AUTHENTICATOR_KEY) final String authenticator,
+            @JsonProperty(AUTHORIZER_KEY) final String authorizer,
+            @JsonProperty(ROLE_MANAGER_KEY) final String roleManager,
+            @JsonProperty(ROLES_VALIDITY_IN_MS_KEY) final int rolesValidityInMs,
+            @JsonProperty(PERMISSIONS_VALIDITY_IN_MS_KEY) final int permissionsValidityInMs,
+            @JsonProperty(PARTITIONER_KEY) final String partitioner,
+            @JsonProperty(PERSISTENT_VOLUME_KEY) final String persistentVolume,
+            @JsonProperty(DISK_FAILURE_POLICY_KEY) final String diskFailurePolicy,
+            @JsonProperty(COMMIT_FAILURE_POLICY_KEY) final String commitFailurePolicy,
+            @JsonProperty(KEY_CACHE_SIZE_IN_MB_KEY) final Integer keyCacheSizeInMb,
+            @JsonProperty(KEY_CACHE_SAVE_PERIOD_KEY) final int keyCacheSavePeriod,
+            @JsonProperty(ROW_CACHE_SIZE_IN_MB_KEY) final int rowCacheSizeInMb,
+            @JsonProperty(ROW_CACHE_SAVE_PERIOD_KEY) final int rowCacheSavePeriod,
+            @JsonProperty(COUNTER_CACHE_SIZE_IN_MB_KEY) final Integer counterCacheSizeInMb,
+            @JsonProperty(COUNTER_CACHE_SAVE_PERIOD_KEY) final int counterCacheSavePeriod,
+            @JsonProperty(COMMITLOG_SYNC_KEY) final String commitlogSync,
+            @JsonProperty(COMMITLOG_SYNC_PERIOD_IN_MS_KEY) final int commitlogSyncPeriodInMs,
+            @JsonProperty(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY) final int commitlogSegmentSizeInMb,
+            @JsonProperty(SEED_PROVIDER_KEY) final List<Map<String, Object>> seedProvider,
+            @JsonProperty(CONCURRENT_READS_KEY) final int concurrentReads,
+            @JsonProperty(CONCURRENT_WRITES_KEY) final int concurrentWrites,
+            @JsonProperty(CONCURRENT_COUNTER_WRITES_KEY) final int concurrentCounterWrites,
+            @JsonProperty(MEMTABLE_ALLOCATION_TYPE_KEY) final String memtableAllocationType,
+            @JsonProperty(INDEX_SUMMARY_CAPACITY_IN_MB_KEY) final Integer indexSummaryCapacityInMb,
+            @JsonProperty(INDEX_SUMMARY_RESIZE_INTERVAL_IN_MINUTES_KEY) final int indexSummaryResizeIntervalInMinutes,
+            @JsonProperty(TRICKLE_FSYNC_KEY) final boolean trickleFsync,
+            @JsonProperty(TRICKLE_FSYNC_INTERVAL_IN_KB_KEY) final int trickleFsyncIntervalInKb,
+            @JsonProperty(STORAGE_PORT_KEY) final int storagePort,
+            @JsonProperty(SSL_STORAGE_PORT_KEY) final int sslStoragePort,
+            @JsonProperty(LISTEN_ADDRESS_KEY) final String listenAddress,
+            @JsonProperty(START_NATIVE_TRANSPORT_KEY) final boolean startNativeTransport,
+            @JsonProperty(NATIVE_TRANSPORT_PORT_KEY) final int nativeTransportPort,
+            @JsonProperty(START_RPC_KEY) final boolean startRpc,
+            @JsonProperty(RPC_ADDRESS_KEY) final String rpcAddress,
+            @JsonProperty(RPC_PORT_KEY) final int rpcPort,
+            @JsonProperty(RPC_KEEPALIVE_KEY) final boolean rpcKeepalive,
+            @JsonProperty(RPC_SERVER_TYPE_KEY) final String rpcServerType,
+            @JsonProperty(THRIFT_FRAMED_TRANSPORT_SIZE_IN_MB_KEY) final int thriftFramedTransportSizeInMb,
+            @JsonProperty(INCREMENTAL_BACKUPS_KEY) final boolean incrementalBackups,
+            @JsonProperty(SNAPSHOT_BEFORE_COMPACTION_KEY) final boolean snapshotBeforeCompaction,
+            @JsonProperty(AUTO_SNAPSHOT_KEY) final boolean autoSnapshot,
+            @JsonProperty(TOMBSTONE_WARN_THRESHOLD_KEY) final int tombstoneWarnThreshold,
+            @JsonProperty(TOMBSTONE_FAILURE_THRESHOLD_KEY) final int tombstoneFailureThreshold,
+            @JsonProperty(COLUMN_INDEX_SIZE_IN_KB_KEY) final int columnIndexSizeInKb,
+            @JsonProperty(BATCH_SIZE_WARN_THRESHOLD_IN_KB_KEY) final int batchSizeWarnThresholdInKb,
+            @JsonProperty(BATCH_SIZE_FAIL_THRESHOLD_IN_KB_KEY) final int batchSizeFailThresholdInKb,
+            @JsonProperty(COMPACTION_THROUGHPUT_MB_PER_SEC_KEY) final int compactionThroughputMbPerSec,
+            @JsonProperty
+                    (COMPACTION_LARGE_PARTITION_WARNING_THRESHOLD_MB_KEY) final int compactionLargePartitionWarningThresholdMb,
+            @JsonProperty(SSTABLE_PREEMPTIVE_OPEN_INTERVAL_IN_MB_KEY) final int sstablePreemptiveOpenIntervalInMb,
+            @JsonProperty(READ_REQUEST_TIMEOUT_IN_MS_KEY) final int readRequestTimeoutInMs,
+            @JsonProperty(RANGE_REQUEST_TIMEOUT_IN_MS_KEY) final int rangeRequestTimeoutInMs,
+            @JsonProperty(WRITE_REQUEST_TIMEOUT_IN_MS_KEY) final int writeRequestTimeoutInMs,
+            @JsonProperty(COUNTER_WRITE_REQUEST_TIMEOUT_IN_MS_KEY) final int counterWriteRequestTimeoutInMs,
+            @JsonProperty(CAS_CONTENTION_TIMEOUT_IN_MS_KEY) final int casContentionTimeoutInMs,
+            @JsonProperty(TRUNCATE_REQUEST_TIMEOUT_IN_MS_KEY) final int truncateRequestTimeoutInMs,
+            @JsonProperty(REQUEST_TIMEOUT_IN_MS_KEY) final int requestTimeoutInMs,
+            @JsonProperty(CROSS_NODE_TIMEOUT_KEY) final boolean crossNodeTimeout,
+            @JsonProperty(ENDPOINT_SNITCH_KEY) final String endpointSnitch,
+            @JsonProperty(DYNAMIC_SNITCH_UPDATE_INTERVAL_IN_MS_KEY) final int dynamicSnitchUpdateIntervalInMs,
+            @JsonProperty(DYNAMIC_SNITCH_RESET_INTERVAL_IN_MS_KEY) final int dynamicSnitchResetIntervalInMs,
+            @JsonProperty(DYNAMIC_SNITCH_BADNESS_THRESHOLD_KEY) final double dynamicSnitchBadnessThreshold,
+            @JsonProperty(REQUEST_SCHEDULER_KEY) final String requestScheduler,
+            @JsonProperty(INTERNODE_COMPRESSION_KEY) final String internodeCompression,
+            @JsonProperty(INTER_DC_TCP_NODELAY_KEY) final boolean interDcTcpNodelay,
+            @JsonProperty(TRACETYPE_QUERY_TTL_KEY) final int tracetypeQueryTtl,
+            @JsonProperty(TRACETYPE_REPAIR_TTL_KEY) final int tracetypeRepairTtl,
+            @JsonProperty(ENABLE_USER_DEFINED_FUNCTIONS_KEY) final boolean enableUserDefinedFunctions,
+            @JsonProperty(WINDOWS_TIMER_INTERVAL_KEY) final int windowsTimerInterval) {
 
         return new CassandraApplicationConfig(clusterName,
                 numTokens,
@@ -413,155 +417,155 @@ public class CassandraApplicationConfig {
         return new Builder();
     }
 
-    @JsonProperty("clusterName")
+    @JsonProperty(CLUSTER_NAME_KEY)
     private final String clusterName;
-    @JsonProperty("numTokens")
+    @JsonProperty(NUM_TOKENS_KEY)
     private final int numTokens;
-    @JsonProperty("hintedHandoffEnabled")
+    @JsonProperty(HINTED_HANDOFF_ENABLED_KEY)
     private final boolean hintedHandoffEnabled;
-    @JsonProperty("maxHintWindowInMs")
+    @JsonProperty(MAX_HINT_WINDOW_IN_MS_KEY)
     private final int maxHintWindowInMs;
-    @JsonProperty("hintedHandoffThrottleInKb")
+    @JsonProperty(HINTED_HANDOFF_THROTTLE_IN_KB_KEY)
     private final int hintedHandoffThrottleInKb;
-    @JsonProperty("maxHintsDeliveryThreads")
+    @JsonProperty(MAX_HINTS_DELIVERY_THREADS_KEY)
     private final int maxHintsDeliveryThreads;
-    @JsonProperty("batchlogReplayThrottleInKb")
+    @JsonProperty(BATCHLOG_REPLAY_THROTTLE_IN_KB_KEY)
     private final int batchlogReplayThrottleInKb;
-    @JsonProperty("authenticator")
+    @JsonProperty(AUTHENTICATOR_KEY)
     private final String authenticator;
-    @JsonProperty("authorizer")
+    @JsonProperty(AUTHORIZER_KEY)
     private final String authorizer;
-    @JsonProperty("roleManager")
+    @JsonProperty(ROLE_MANAGER_KEY)
     private final String roleManager;
-    @JsonProperty("rolesValidityInMs")
+    @JsonProperty(ROLES_VALIDITY_IN_MS_KEY)
     private final int rolesValidityInMs;
-    @JsonProperty("permissionsValidityInMs")
+    @JsonProperty(PERMISSIONS_VALIDITY_IN_MS_KEY)
     private final int permissionsValidityInMs;
-    @JsonProperty("partitioner")
+    @JsonProperty(PARTITIONER_KEY)
     private final String partitioner;
-    @JsonProperty("persistentVolume")
+    @JsonProperty(PERSISTENT_VOLUME_KEY)
     private final String persistentVolume;
-    @JsonProperty("diskFailurePolicy")
+    @JsonProperty(DISK_FAILURE_POLICY_KEY)
     private final String diskFailurePolicy;
-    @JsonProperty("commitFailurePolicy")
+    @JsonProperty(COMMIT_FAILURE_POLICY_KEY)
     private final String commitFailurePolicy;
-    @JsonProperty("keyCacheSizeInMb")
+    @JsonProperty(KEY_CACHE_SIZE_IN_MB_KEY)
     private final Integer keyCacheSizeInMb;
-    @JsonProperty("keyCacheSavePeriod")
+    @JsonProperty(KEY_CACHE_SAVE_PERIOD_KEY)
     private final int keyCacheSavePeriod;
-    @JsonProperty("rowCacheSizeInMb")
+    @JsonProperty(ROW_CACHE_SIZE_IN_MB_KEY)
     private final int rowCacheSizeInMb;
-    @JsonProperty("rowCacheSavePeriod")
+    @JsonProperty(ROW_CACHE_SAVE_PERIOD_KEY)
     private final int rowCacheSavePeriod;
-    @JsonProperty("counterCacheSizeInMb")
+    @JsonProperty(COUNTER_CACHE_SIZE_IN_MB_KEY)
     private final Integer counterCacheSizeInMb;
-    @JsonProperty("counterCacheSavePeriod")
+    @JsonProperty(COUNTER_CACHE_SAVE_PERIOD_KEY)
     private final int counterCacheSavePeriod;
-    @JsonProperty("commitlogSync")
+    @JsonProperty(COMMITLOG_SYNC_KEY)
     private final String commitlogSync;
-    @JsonProperty("commitlogSyncPeriodInMs")
+    @JsonProperty(COMMITLOG_SYNC_PERIOD_IN_MS_KEY)
     private final int commitlogSyncPeriodInMs;
-    @JsonProperty("commitlogSegmentSizeInMb")
+    @JsonProperty(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY)
     private final int commitlogSegmentSizeInMb;
-    @JsonProperty("seedProvider")
+    @JsonProperty(SEED_PROVIDER_KEY)
     private final List<Map<String, Object>> seedProvider;
-    @JsonProperty("concurrentReads")
+    @JsonProperty(CONCURRENT_READS_KEY)
     private final int concurrentReads;
-    @JsonProperty("concurrentWrites")
+    @JsonProperty(CONCURRENT_WRITES_KEY)
     private final int concurrentWrites;
-    @JsonProperty("concurrentCounterWrites")
+    @JsonProperty(CONCURRENT_COUNTER_WRITES_KEY)
     private final int concurrentCounterWrites;
-    @JsonProperty("memtableAllocationType")
+    @JsonProperty(MEMTABLE_ALLOCATION_TYPE_KEY)
     private final String memtableAllocationType;
-    @JsonProperty("indexSummaryCapacityInMb")
+    @JsonProperty(INDEX_SUMMARY_CAPACITY_IN_MB_KEY)
     private final Integer indexSummaryCapacityInMb;
-    @JsonProperty("indexSummaryResizeIntervalInMinutes")
+    @JsonProperty(INDEX_SUMMARY_RESIZE_INTERVAL_IN_MINUTES_KEY)
     private final int indexSummaryResizeIntervalInMinutes;
-    @JsonProperty("trickleFsync")
+    @JsonProperty(TRICKLE_FSYNC_KEY)
     private final boolean trickleFsync;
-    @JsonProperty("trickleFsyncIntervalInKb")
+    @JsonProperty(TRICKLE_FSYNC_INTERVAL_IN_KB_KEY)
     private final int trickleFsyncIntervalInKb;
-    @JsonProperty("storagePort")
+    @JsonProperty(STORAGE_PORT_KEY)
     private final int storagePort;
-    @JsonProperty("sslStoragePort")
+    @JsonProperty(SSL_STORAGE_PORT_KEY)
     private final int sslStoragePort;
-    @JsonProperty("listenAddress")
+    @JsonProperty(LISTEN_ADDRESS_KEY)
     private final String listenAddress;
-    @JsonProperty("startNativeTransport")
+    @JsonProperty(START_NATIVE_TRANSPORT_KEY)
     private final boolean startNativeTransport;
-    @JsonProperty("nativeTransportPort")
+    @JsonProperty(NATIVE_TRANSPORT_PORT_KEY)
     private final int nativeTransportPort;
-    @JsonProperty("startRpc")
+    @JsonProperty(START_RPC_KEY)
     private final boolean startRpc;
     @JsonProperty("rpcAddress")
     private final String rpcAddress;
-    @JsonProperty("rpcPort")
+    @JsonProperty(RPC_PORT_KEY)
     private final int rpcPort;
-    @JsonProperty("rpcKeepalive")
+    @JsonProperty(RPC_KEEPALIVE_KEY)
     private final boolean rpcKeepalive;
-    @JsonProperty("rpcServerType")
+    @JsonProperty(RPC_SERVER_TYPE_KEY)
     private final String rpcServerType;
-    @JsonProperty("thriftFramedTransportSizeInMb")
+    @JsonProperty(THRIFT_FRAMED_TRANSPORT_SIZE_IN_MB_KEY)
     private final int thriftFramedTransportSizeInMb;
-    @JsonProperty("incrementalBackups")
+    @JsonProperty(INCREMENTAL_BACKUPS_KEY)
     private final boolean incrementalBackups;
-    @JsonProperty("snapshotBeforeCompaction")
+    @JsonProperty(SNAPSHOT_BEFORE_COMPACTION_KEY)
     private final boolean snapshotBeforeCompaction;
-    @JsonProperty("autoSnapshot")
+    @JsonProperty(AUTO_SNAPSHOT_KEY)
     private final boolean autoSnapshot;
-    @JsonProperty("tombstoneWarnThreshold")
+    @JsonProperty(TOMBSTONE_WARN_THRESHOLD_KEY)
     private final int tombstoneWarnThreshold;
-    @JsonProperty("tombstoneFailureThreshold")
+    @JsonProperty(TOMBSTONE_FAILURE_THRESHOLD_KEY)
     private final int tombstoneFailureThreshold;
-    @JsonProperty("columnIndexSizeInKb")
+    @JsonProperty(COLUMN_INDEX_SIZE_IN_KB_KEY)
     private final int columnIndexSizeInKb;
-    @JsonProperty("batchSizeWarnThresholdInKb")
+    @JsonProperty(BATCH_SIZE_WARN_THRESHOLD_IN_KB_KEY)
     private final int batchSizeWarnThresholdInKb;
-    @JsonProperty("batchSizeFailThresholdInKb")
+    @JsonProperty(BATCH_SIZE_FAIL_THRESHOLD_IN_KB_KEY)
     private final int batchSizeFailThresholdInKb;
-    @JsonProperty("compactionThroughputMbPerSec")
+    @JsonProperty(COMPACTION_THROUGHPUT_MB_PER_SEC_KEY)
     private final int compactionThroughputMbPerSec;
-    @JsonProperty("compactionLargePartitionWarningThresholdMb")
+    @JsonProperty(COMPACTION_LARGE_PARTITION_WARNING_THRESHOLD_MB_KEY)
     private final int compactionLargePartitionWarningThresholdMb;
-    @JsonProperty("sstablePreemptiveOpenIntervalInMb")
+    @JsonProperty(SSTABLE_PREEMPTIVE_OPEN_INTERVAL_IN_MB_KEY)
     private final int sstablePreemptiveOpenIntervalInMb;
-    @JsonProperty("readRequestTimeoutInMs")
+    @JsonProperty(READ_REQUEST_TIMEOUT_IN_MS_KEY)
     private final int readRequestTimeoutInMs;
-    @JsonProperty("rangeRequestTimeoutInMs")
+    @JsonProperty(RANGE_REQUEST_TIMEOUT_IN_MS_KEY)
     private final int rangeRequestTimeoutInMs;
-    @JsonProperty("writeRequestTimeoutInMs")
+    @JsonProperty(WRITE_REQUEST_TIMEOUT_IN_MS_KEY)
     private final int writeRequestTimeoutInMs;
-    @JsonProperty("counterWriteRequestTimeoutInMs")
+    @JsonProperty(COUNTER_WRITE_REQUEST_TIMEOUT_IN_MS_KEY)
     private final int counterWriteRequestTimeoutInMs;
-    @JsonProperty("casContentionTimeoutInMs")
+    @JsonProperty(CAS_CONTENTION_TIMEOUT_IN_MS_KEY)
     private final int casContentionTimeoutInMs;
-    @JsonProperty("truncateRequestTimeoutInMs")
+    @JsonProperty(TRUNCATE_REQUEST_TIMEOUT_IN_MS_KEY)
     private final int truncateRequestTimeoutInMs;
-    @JsonProperty("requestTimeoutInMs")
+    @JsonProperty(REQUEST_TIMEOUT_IN_MS_KEY)
     private final int requestTimeoutInMs;
-    @JsonProperty("crossNodeTimeout")
+    @JsonProperty(CROSS_NODE_TIMEOUT_KEY)
     private final boolean crossNodeTimeout;
-    @JsonProperty("endpointSnitch")
+    @JsonProperty(ENDPOINT_SNITCH_KEY)
     private final String endpointSnitch;
-    @JsonProperty("dynamicSnitchUpdateIntervalInMs")
+    @JsonProperty(DYNAMIC_SNITCH_UPDATE_INTERVAL_IN_MS_KEY)
     private final int dynamicSnitchUpdateIntervalInMs;
-    @JsonProperty("dynamicSnitchResetIntervalInMs")
+    @JsonProperty(DYNAMIC_SNITCH_RESET_INTERVAL_IN_MS_KEY)
     private final int dynamicSnitchResetIntervalInMs;
-    @JsonProperty("dynamicSnitchBadnessThreshold")
+    @JsonProperty(DYNAMIC_SNITCH_BADNESS_THRESHOLD_KEY)
     private final double dynamicSnitchBadnessThreshold;
-    @JsonProperty("requestScheduler")
+    @JsonProperty(REQUEST_SCHEDULER_KEY)
     private final String requestScheduler;
-    @JsonProperty("internodeCompression")
+    @JsonProperty(INTERNODE_COMPRESSION_KEY)
     private final String internodeCompression;
-    @JsonProperty("interDcTcpNodelay")
+    @JsonProperty(INTER_DC_TCP_NODELAY_KEY)
     private final boolean interDcTcpNodelay;
-    @JsonProperty("tracetypeQueryTtl")
+    @JsonProperty(TRACETYPE_QUERY_TTL_KEY)
     private final int tracetypeQueryTtl;
-    @JsonProperty("tracetypeRepairTtl")
+    @JsonProperty(TRACETYPE_REPAIR_TTL_KEY)
     private final int tracetypeRepairTtl;
-    @JsonProperty("enableUserDefinedFunctions")
+    @JsonProperty(ENABLE_USER_DEFINED_FUNCTIONS_KEY)
     private final boolean enableUserDefinedFunctions;
-    @JsonProperty("windowsTimerInterval")
+    @JsonProperty(WINDOWS_TIMER_INTERVAL_KEY)
     private final int windowsTimerInterval;
 
     public CassandraApplicationConfig(

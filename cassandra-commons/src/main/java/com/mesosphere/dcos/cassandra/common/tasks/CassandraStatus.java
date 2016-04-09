@@ -14,21 +14,21 @@ public class CassandraStatus {
     final CassandraMode mode;
     @JsonProperty("joined")
     final boolean joined;
-    @JsonProperty("rpcRunning")
+    @JsonProperty("rpc_running")
     final boolean rpcRunning;
-    @JsonProperty("nativeTransportRunning")
+    @JsonProperty("native_transport_running")
     final boolean nativeTransportRunning;
-    @JsonProperty("gossipInitialized")
+    @JsonProperty("gossip_initialized")
     final boolean gossipInitialized;
-    @JsonProperty("gossipRunning")
+    @JsonProperty("gossip_running")
     final boolean gossipRunning;
-    @JsonProperty("hostId")
+    @JsonProperty("host_id")
     final String hostId;
     @JsonProperty("endpoint")
     final String endpoint;
-    @JsonProperty("tokenCount")
+    @JsonProperty("token_count")
     final int tokenCount;
-    @JsonProperty("dataCenter")
+    @JsonProperty("data_center")
     final String dataCenter;
     @JsonProperty("rack")
     final String rack;
@@ -39,15 +39,15 @@ public class CassandraStatus {
     public static CassandraStatus create(
             @JsonProperty("mode") final CassandraMode mode,
             @JsonProperty("joined") final boolean joined,
-            @JsonProperty("rpcRunning")final boolean rpcRunning,
-            @JsonProperty("nativeTransportRunning")
+            @JsonProperty("rpc_running")final boolean rpcRunning,
+            @JsonProperty("native_transport_running")
             final boolean nativeTransportRunning,
-            @JsonProperty("gossipInitialized") final boolean gossipInitialized,
-            @JsonProperty("gossipRunning")final boolean gossipRunning,
-            @JsonProperty("hostId")final String hostId,
+            @JsonProperty("gossip_initialized") final boolean gossipInitialized,
+            @JsonProperty("gossip_running")final boolean gossipRunning,
+            @JsonProperty("host_id")final String hostId,
             @JsonProperty("endpoint") final String endpoint,
-            @JsonProperty("tokenCount")final int tokenCount,
-            @JsonProperty("dataCenter")final String dataCenter,
+            @JsonProperty("token_count")final int tokenCount,
+            @JsonProperty("data_center")final String dataCenter,
             @JsonProperty("rack") final String rack,
             @JsonProperty("version")final String version) {
 

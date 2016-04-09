@@ -233,43 +233,43 @@ public class BackupSnapshotTask extends CassandraTask {
         }
     }
 
-    @JsonProperty("keySpaces")
+    @JsonProperty("key_spaces")
     private final List<String> keySpaces;
 
-    @JsonProperty("columnFamilies")
+    @JsonProperty("column_families")
     private final List<String> columnFamilies;
 
-    @JsonProperty("backupName")
+    @JsonProperty("backup_name")
     private final String backupName;
 
-    @JsonProperty("externalLocation")
+    @JsonProperty("external_location")
     private final String externalLocation;
 
-    @JsonProperty("s3AccessKey")
+    @JsonProperty("s3_access_key")
     private final String s3AccessKey;
 
-    @JsonProperty("s3SecretKey")
+    @JsonProperty("s3_secret_key")
     private final String s3SecretKey;
 
     @JsonCreator
     public static BackupSnapshotTask create(
             @JsonProperty("id") String id,
-            @JsonProperty("slaveId") String slaveId,
+            @JsonProperty("slave_id") String slaveId,
             @JsonProperty("hostname") String hostname,
             @JsonProperty("executor") CassandraTaskExecutor executor,
             @JsonProperty("name") String name,
             @JsonProperty("role") String role,
             @JsonProperty("principal") String principal,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb,
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("status") BackupSnapshotStatus status,
-            @JsonProperty("keySpaces") List<String> keySpaces,
-            @JsonProperty("columnFamilies") List<String> columnFamilies,
-            @JsonProperty("backupName") String backupName,
-            @JsonProperty("externalLocation") String externalLocation,
-            @JsonProperty("s3AccessKey") String s3AccessKey,
-            @JsonProperty("s3SecretKey") String s3SecretKey) {
+            @JsonProperty("key_spaces") List<String> keySpaces,
+            @JsonProperty("column_families") List<String> columnFamilies,
+            @JsonProperty("backup_name") String backupName,
+            @JsonProperty("external_location") String externalLocation,
+            @JsonProperty("s3_access_key") String s3AccessKey,
+            @JsonProperty("s3_secret_key") String s3SecretKey) {
 
 
         return new BackupSnapshotTask(id,

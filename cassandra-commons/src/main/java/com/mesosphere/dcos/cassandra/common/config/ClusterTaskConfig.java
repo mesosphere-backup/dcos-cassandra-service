@@ -111,8 +111,8 @@ public class ClusterTaskConfig {
     @JsonCreator
     public static ClusterTaskConfig create(
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb) {
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb) {
 
         return new ClusterTaskConfig(
                 cpus,
@@ -123,10 +123,10 @@ public class ClusterTaskConfig {
     @JsonProperty("cpus")
     private final double cpus;
 
-    @JsonProperty("memoryMb")
+    @JsonProperty("memory_mb")
     private final int memoryMb;
 
-    @JsonProperty("diskMb")
+    @JsonProperty("disk_mb")
     private final int diskMb;
 
     public ClusterTaskConfig(

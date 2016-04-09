@@ -181,15 +181,15 @@ public class CassandraDaemonTask extends CassandraTask {
     @JsonCreator
     public static CassandraDaemonTask create(
             @JsonProperty("id") String id,
-            @JsonProperty("slaveId") String slaveId,
+            @JsonProperty("slave_id") String slaveId,
             @JsonProperty("hostname") String hostname,
             @JsonProperty("executor") CassandraTaskExecutor executor,
             @JsonProperty("name") String name,
             @JsonProperty("role") String role,
             @JsonProperty("principal") String principal,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb,
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("config") CassandraConfig config,
             @JsonProperty("status") CassandraDaemonStatus status) {
 
@@ -361,8 +361,7 @@ public class CassandraDaemonTask extends CassandraTask {
     public List<Resource> getReserveResources() {
         return Arrays.asList(
 
-                reservedPorts(PortRange.fromPorts(executor
-                                .getAdminPort(),
+                reservedPorts(PortRange.fromPorts(
                         executor.getApiPort(),
                         config.getJmxPort(),
                         config.getApplication().getStoragePort(),
