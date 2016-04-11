@@ -554,43 +554,43 @@ Example Cassandra configuration:
 ``` json
 {
 	"cassandra": {
-		"jmxPort": 7199,
-		"hintedHandoffEnabled": true,
-		"maxHintWindowInMs": 10800000,
-		"hintedHandoffThrottleInKb": 1024,
-		"maxHintsDeliveryThreads": 2,
-		"batchlogReplayThrottleInKb": 1024,
-		"keyCacheSavePeriod": 14400,
-		"rowCacheSizeInMb": 0,
-		"rowCacheSavePeriod": 0,
-		"commitlogSyncPeriodInMs": 10000,
-		"commitlogSegmentSizeInMb": 32,
-		"concurrentReads": 16,
-		"concurrentWrites": 32,
-		"concurrentCounterWrites": 16,
-		"memtableAllocationType": "heap_buffers",
-		"indexSummaryResizeIntervalInMinutes": 60,
-		"storagePort": 7000,
-		"startNativeTransport": true,
-		"nativeTransportPort": 9042,
-		"tombstoneWarnThreshold": 1000,
-		"tombstoneFailureThreshold": 100000,
-		"columnIndexSizeInKb": 64,
-		"batchSizeWarnThresholdInKb": 5,
-		"batchSizeFailThresholdInKb": 50,
-		"compactionThroughputMbPerSec": 16,
-		"sstablePreemptiveOpenIntervalInMb": 50,
-		"readRequestTimeoutInMs": 5000,
-		"rangeRequestTimeoutInMs": 10000,
-		"writeRequestTimeoutInMs": 2000,
-		"counterWriteRequestTimeoutInMs": 5000,
-		"casContentionTimeoutInMs": 1000,
-		"truncateRequestTimeoutInMs": 60000,
-		"requestTimeoutInMs": 1000,
-		"dynamicSnitchUpdateIntervalInMs": 100,
-		"dynamicSnitchResetIntervalInMs": 600000,
-		"dynamicSnitchBadnessThreshold": 0.1,
-		"internodeCompression": "all"
+		"jmx_port": 7199,
+		"hinted_handoff_enabled": true,
+		"max_hint_window_in_ms": 10800000,
+		"hinted_handoff_throttle_in_kb": 1024,
+		"max_hints_delivery_threads": 2,
+		"batchlog_replay_throttle_in_kb": 1024,
+		"key_cache_save_period": 14400,
+		"row_cache_size_in_mb": 0,
+		"row_cache_save_period": 0,
+		"commitlog_sync_period_in_ms": 10000,
+		"commitlog_segment_size_in_mb": 32,
+		"concurrent_reads": 16,
+		"concurrent_writes": 32,
+		"concurrent_counter_writes": 16,
+		"memtable_allocation_type": "heap_buffers",
+		"index_summary_resize_interval_in_minutes": 60,
+		"storage_port": 7000,
+		"start_native_transport": true,
+		"native_transport_port": 9042,
+		"tombstone_warn_threshold": 1000,
+		"tombstone_failure_threshold": 100000,
+		"column_index_size_in_kb": 64,
+		"batch_size_warn_threshold_in_kb": 5,
+		"batch_size_fail_threshold_in_kb": 50,
+		"compaction_throughput_mb_per_sec": 16,
+		"sstable_preemptive_open_interval_in_mb": 50,
+		"read_request_timeout_in_ms": 5000,
+		"range_request_timeout_in_ms": 10000,
+		"write_request_timeout_in_ms": 2000,
+		"counter_write_request_timeout_in_ms": 5000,
+		"cas_contention_timeout_in_ms": 1000,
+		"truncate_request_timeout_in_ms": 60000,
+		"request_timeout_in_ms": 1000,
+		"dynamic_snitch_update_interval_in_ms": 100,
+		"dynamic_snitch_reset_interval_in_ms": 600000,
+		"dynamic_snitch_badness_threshold": 0.1,
+		"internode_compression": "all"
 	}
 }
 ```
@@ -601,25 +601,25 @@ The IP address of the Cassandra node is determined automatically by the service 
 
 | Property             | Type    | Description |
 | -------------------- | ------- | --------------- |
-| jmxPort              | integer | The port on which the application will listen for JMX connections. Remote JMX connections are disabled due to security considerations. |
-| storagePort          | integer | The port the application uses for inter-node communication. |
-| internodeCompression | all|none|dc | If set to all, traffic between all nodes is compressed. If set to dc, traffic between datacenters is compressed. If set to none, no compression is used for internode communication. |
-| nativeTransportPort  | integer | The port the application uses for inter-node communication. |
+| jmx_port              | integer | The port on which the application will listen for JMX connections. Remote JMX connections are disabled due to security considerations. |
+| storage_port          | integer | The port the application uses for inter-node communication. |
+| internode_compression | all|none|dc | If set to all, traffic between all nodes is compressed. If set to dc, traffic between datacenters is compressed. If set to none, no compression is used for internode communication. |
+| native_transport_port  | integer | The port the application uses for inter-node communication. |
 #### Commit Log Configuration
 
 The DCOS Cassandra service only supports the commitlog_sync model for configuring the Cassandra commit log. In this model a node responds to write requests after writing the request to file system and replicating to the configured number of nodes, but prior to synchronizing the commit log file to storage media. Cassandra will synchronize the data to storage media after a configurable time period. If all nodes in the cluster should fail, at the Operating System level or below, during this window the acknowledged writes will be lost. Note that, even if the JVM crashes, the data will still be available on the nodes persistent volume when the service recovers the node.The configuration parameters below control the window in which data remains acknowledged but has not been written to storage media.
 
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
-| commitlogSyncPeriodInMs  | integer | The time, in ms, between successive calls to the fsync system call. This defines the maximum window between write acknowledgement and a potential data loss. |
-| commitLogSegmentSizeInMb | integer | The size of the commit log in MB. This property determines the maximum mutation size, defined as half the segment size. If a mutation's size exceeds the maximum mutation size, the mutation is rejected. Before increasing the commitlog segment size of the commitlog segments, investigate why the mutations are larger than expected. |
+| commitlog_sync_periodInMs  | integer | The time, in ms, between successive calls to the fsync system call. This defines the maximum window between write acknowledgement and a potential data loss. |
+| commitlog_segment_size_in_mb | integer | The size of the commit log in MB. This property determines the maximum mutation size, defined as half the segment size. If a mutation's size exceeds the maximum mutation size, the mutation is rejected. Before increasing the commitlog segment size of the commitlog segments, investigate why the mutations are larger than expected. |
 
 #### Column Index Configuration
 
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
-| columnIndexSizeInKb | integer | Index size  of rows within a partition. For very large rows this value can be decreased to increase seek time. If key caching is enabled be careful when increasing this value, as the key cache may become overwhelmed. |
-|indexSummaryResizeIntervalInMiinutes| integer |  How frequently index summaries should be re-sampled in minutes. This is done periodically to redistribute memory from the fixed-size pool to SSTables proportional their recent read rates.|
+| column_index_size_in_kb | integer | Index size  of rows within a partition.For very large rows this value can be decreased to increase seek time. If key caching is enabled be careful when increasing this value, as the key cache may become overwhelmed. |
+|index_summary_resize_interval_in_minutes| integer |  How frequently index summaries should be re-sampled in minutes. This is done periodically to redistribute memory from the fixed-size pool to SSTables proportional their recent read rates.|
 
 
 #### Hinted Handoff Configuration
@@ -628,9 +628,9 @@ Hinted handoff is the process by which Cassandra recovers consistency when a wri
 
 | Property                | Type  | Description     |
 | ------------------------ | ------- | ------------------- |
-| hintedHandoffEnabled     | boolean | If true, hinted handoff will be used to maintain consistency during node failure. |
-| maxHintWindowInMs        | integer | The maximum amount of time, in ms, that Cassandra will record hints for an unavailable node. |
-| maxHintDeliveryThreads   | integer | The number of threads that deliver hints. The default value of 2 should be sufficient most use cases. |
+| hinted_handoff_enabled     | boolean | If true, hinted handoff will be used to maintain consistency during node failure. |
+| max_hint_window_in_ms        | integer | The maximum amount of time, in ms, that Cassandra will record hints for an unavailable node. |
+| max_hint_delivery_threads   | integer | The number of threads that deliver hints. The default value of 2 should be sufficient most use cases. |
 
 #### Dynamic Snitch Configuration
 
@@ -638,9 +638,9 @@ The endpoint snitch for the service is always the `GossipPropertyFileSnitch`, bu
 
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
-| dynamicSnitchBadnessThreshold | number |  Controls how much worse a poorly performing node has to be before the dynamic snitch prefers other replicas over it. A value of 0.2 means Cassandra continues to prefer the static snitch values until the node response time is 20% worse than the best performing node. Until the threshold is reached, incoming requests are statically routed to the closest replica. | 
-| dynamicSnitchResetIntervalInMs | integer | Time interval, in ms, to reset all node scores, allowing a bad nodes to recover. |
-| dynamicSnitchUpdateIntervalInMs | integer | The time interval, in ms, for node score calculation. This is a CPU intensive operation. Reducing this interval should be performed with extreme caution. |
+| dynamic_snitch_badness_threshold | number |  Controls how much worse a poorly performing node has to be before the dynamic snitch prefers other replicas over it. A value of 0.2 means Cassandra continues to prefer the static snitch values until the node response time is 20% worse than the best performing node. Until the threshold is reached, incoming requests are statically routed to the closest replica. | 
+| dynamic_snitch_reset_interval_in_ms | integer | Time interval, in ms, to reset all node scores, allowing a bad nodes to recover. |
+| dynamic_snitch_update_interval_in_ms | integer | The time interval, in ms, for node score calculation. This is a CPU intensive operation. Reducing this interval should be performed with extreme caution. |
 
 #### Global Key Cache Configuration
 
@@ -648,8 +648,8 @@ The partition key cache is a cache of the partition index for a Cassandra table.
 
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
-| keyCacheSavePeriod | integer | The duration in seconds that keys are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O. |
-| keyCacheSizeInMb | integer | The maximum size of the key cache in Mb. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0. |
+| key_cache_save_period | integer | The duration in seconds that keys are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O. |
+| key_cache_size_in_mb | integer | The maximum size of the key cache in Mb. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0. |
 
 ### Global Row Cache Configuration
 
@@ -660,8 +660,8 @@ The following configuration properties are global for all row caches.
 
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
-| rowCacheSavePeriod | integer | The duration in seconds that rows are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O. |
-| rowCacheSizeInMb | integer | The maximum size of the key cache in Mb. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled. |
+| row_cache_save_period | integer | The duration in seconds that rows are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O. |
+| row_cache_size_in_mb | integer | The maximum size of the key cache in Mb. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled. |
 
 ### Connecting Clients
 
@@ -681,9 +681,9 @@ The response is as below.
 
 ``` json
 [
-    "10.0.0.47:9042", 
+    nodes:["10.0.0.47:9042", 
     "10.0.0.50:9042", 
-    "10.0.0.49:9042"
+    "10.0.0.49:9042"]
 ]
 ```
 
@@ -840,9 +840,9 @@ You will see a response similar to the following:
 
 ``` json
 [
-    "10.0.0.47:9042", 
+    nodes: ["10.0.0.47:9042", 
     "10.0.0.50:9042", 
-    "10.0.0.49:9042"
+    "10.0.0.49:9042"]
 ]
 ```
 
@@ -879,9 +879,9 @@ First, create the request payload, for example, in a file `backup.json`:
 ``` json
 {
     "name":"<backup-name>",
-    "external-location":"s3://<bucket-name>",
-    "s3-access-key":"<s3-access-key>",
-    "s3-secret-key":"<s3-secret-key>"
+    "external_location":"s3://<bucket-name>",
+    "s3_access_key":"<s3-access-key>",
+    "s3_secret_key":"<s3-secret-key>"
 }
 ```
 
@@ -907,9 +907,9 @@ Next, create the request payload, for example, in a file `restore.json`:
 ``` json
 {
     "name":"<backup-name-to-restore>",
-    "external-location":"s3://<bucket-name-where-backups-are-stored>",
-    "s3-access-key":"<s3-access-key>",
-    "s3-secret-key":"<s3-secret-key>"
+    "external_location":"s3://<bucket-name-where-backups-are-stored>",
+    "s3_access_key":"<s3-access-key>",
+    "s3_secret_key":"<s3-secret-key>"
 }
 ```
 
