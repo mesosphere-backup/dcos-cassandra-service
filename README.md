@@ -964,16 +964,16 @@ First, create the request payload, for example, in a file `repair.json`:
 
 ``` json
 {
-    "nodes":[*],
-    "key_spaces":[my_keyspace],
-    "column_families":[my_cf_1, my_cf_w]
+    "nodes":["*"],
+    "key_spaces":["my_keyspace"],
+    "column_families":["my_cf_1", "my_cf_w"]
 }
 ```
 In the above, the nodes list indicates the nodes on which the repair will be performed. The value [*], indicates to perform the repair cluster wide. key_spaces and column_families indicate the key spaces and column families on which repair will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The json below shows the request payload for a cluster wide repair operation of all key spaces and column families.
 
 ``` json
 {
-    "nodes":[*]
+    "nodes":["*"]
 }
 ```
 
