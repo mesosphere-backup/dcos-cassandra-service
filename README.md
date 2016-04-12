@@ -100,7 +100,7 @@ DCOS Cassandra provides the following features:
 
 ### Quick Start
 
-- Step 1. Install a Cassandra cluster from the DCOS CLI.
+Step 1. Install a Cassandra cluster from the DCOS CLI.
 
 **Note:** Your cluster must have at least 3 private nodes.
 
