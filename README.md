@@ -34,7 +34,8 @@ DCOS Cassandra Service Guide
         * [Hinted Handoff Configuration](#hinted-handoff-configuration)
         * [Dynamic Snitch Configuration](#dynamic-snitch-configuration)
         * [Global Key Cache Configuration](#global-key-cache-configuration)
-      * [Global Row Cache Configuration](#global-row-cache-configuration)
+        * [Global Row Cache Configuration](#global-row-cache-configuration)
+      * [Operating System Configuration](#operating-system-configuration)
       * [Connecting Clients](#connecting-clients)
         * [Connection Info Using the CLI](#connection-info-using-the-cli)
         * [Connection Info Response](#connection-info-response)
@@ -44,21 +45,21 @@ DCOS Cassandra Service Guide
     * [Managing](#managing)
       * [Add a Node](#add-a-node)
       * [Cleanup](#cleanup)
-        * [Cleanup Payload](#cleanup-payload)
+      * [Repair] (#repair)
       * [Backup and Restore](#backup-and-restore)
         * [Backup](#backup)
         * [Restore](#restore)
-    * [Upgrading Software](#upgrading-software)
     * [Troubleshooting](#troubleshooting)
     * [API Reference](#api-reference)
-      * [Configuration](#configuration)
+      * [Configuration](#configuration])
         * [View the Installation Plan](#view-the-installation-plan)
         * [Retrieve Connection Info](#retrieve-connection-info)
         * [Pause Installation](#pause-installation)
         * [Resume Installation](#resume-installation)
       * [Managing](#managing)
         * [Cleanup](#cleanup)
-        * [Backup](#backup)
+        * [Repair] (#repair)
+        * [Backup] (#backup)
         * [Restore](#restore)
     * [Limitations](#limitations)
     * [Development](#development)
@@ -84,15 +85,17 @@ DCOS Cassandra provides the following features:
 
 - Single command installation for rapid provisioning
 - Persistent storage volumes for enhanced data durability
-- Runtime configuration and software updates for high availablity
+- Runtime configuration and software updates for high availability
 - Health checks and metrics for monitoring
 - Backup and restore for disaster recovery
+- Cluster wide automation Cleanup and Repair 
 
 ### Related Services
 
 - [DCOS Spark](https://docs.mesosphere.com/manage-service/spark)
 
 ## Getting Started
+Prior to installing the DCOS Cassandra Service, ensure that your DCOS cluster has at least 3 DCOS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000,7001,7199,9042, and 9160 are available.
 
 ### Quick Start
 
@@ -249,7 +252,7 @@ curl http:/<dcos_url>/service/cassandra/v1/plan
 ```
 
 ##### Plan Errors
-If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress.
+If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress. See the [Troubleshooting](#troubleshooting) section for information on resolving errors.
 
 ##### Reconciliation Phase
 The first phase of the installation plan is the reconciliation phase. This phase ensures that the DCOS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DCOS Cassandra Service and occurs each time the service starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
@@ -268,7 +271,7 @@ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ``` bash
-curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
+curl -X PUT http://<dcos_url>/service/cassandra/v1/plan?cmd=proceed
 ```
 
 ### Uninstall
@@ -519,7 +522,7 @@ Example node configuration:
 
 ``` json
 {
-	"node": {
+	"nodes": {
 		"cpus": 0.5,
 		"mem": 4096,
 		"disk": 10240,
@@ -663,6 +666,22 @@ The following configuration properties are global for all row caches.
 | row_cache_save_period | integer | The duration in seconds that rows are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O. |
 | row_cache_size_in_mb | integer | The maximum size of the key cache in Mb. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled. |
 
+### Operating System Configuration
+In order for Cassandra to function correctly there are several important configuration modifications that need to be performed to the OS hosting the deployment.
+#### Time Synchronization
+While writes in Cassandra are atomic at the column level, Cassandra only implements last write wins ordering to resolve consistency during concurrent writes to the same column. If system time is not synchronized across DOCS agent nodes, this will result in inconsistencies in the value stored with respect to the ordering of mutations as observed by the client. It is imperative that a mechanism, such as NTP, is used for time synchronization.
+#### Configuration Settings
+In addition to time synchronization, Cassandra requires OS level configuration settings typical of a production data base server.
+
+|File                                   | Setting                           | Value                 | Reason  |
+| ------------------------------------- | --------------------------------- | --------------------- |---------|
+| /etc/sysctl.conf | vm.max_map_count | 131702 | Aside from calls to the system malloc implementation, Cassandra uses mmap directly to memory map files. Exceeding the number of allowed memory mappings will cause a Cassandra node to fail. |
+| /etc/sysctl.conf | vm.swappiness    | 0 | If the OS swaps out the Cassandra process it can fail to respond to requests resulting in the node being marked down by the cluster. |
+| /etc/security/limits.conf | memlock | unlimited | A Cassandra node can fail to load and map SSTables due to insufficient memory mappings into process address space. This will cause the node to terminate.|
+| /etc/security/limits.conf | nofile | unlimited | If this value is too low a Cassandra node will terminate due to insufficient file handles. |
+| /etc/security/limits.conf, /etc/security/limits.d/90-nproc.conf | nproc | 32768 | A Cassandra node spawns many threads, which go towards kernel nproc count. If nproc is not set appropriately the node will be killed.|
+
+####
 ### Connecting Clients
 
 The only supported client for the DSOC Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
@@ -739,31 +758,21 @@ Cassandra does not automatically remove data when a node loses part of its parti
 To perform a cleanup from the CLI, enter the following command:
 
 ``` bash
-dcos cassandra --framework-name=<framewor-name> cleanup --nodes=<nodes>
+dcos cassandra --framework-name=<framewor-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
-Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup.
+Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup, `<key_spaces>` is an optional comma-separated list of the key spaces to cleanup, and `<column-families>` is an optional comma-separated list of the column-families to cleanup.
+If no arguments are specified a cleanup will be performed for all nodes, key spaces, and column families.
 
-#### Cleanup Payload
+### Repair
+Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed. 
+Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra framework will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
 The cleanup payload referenced by `cleanup.json`, above, is a JSON object that indicates which nodes, keyspaces, and column families should have the cleanup operation applied. Note that system keyspaces should not be included here. If `keySpaces` is empty, then all keyspaces will be cleaned. If `nodes` is empty, then cleanup will be applied to all nodes. If `columnFamilies` is empty, then all column families for the selected keyspaces will be cleaned.
 
-``` json
-{
-	"nodes": [
-		"node-0",
-		"node-1"
-	],
-	"keySpaces": [
-		"my-keyspace"
-	],
-	"columnFamilies": [
-		"my-first-table",
-		"my-second-table"
-	]
-}
-```
-
+Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
+If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
+ 
 ### Backup and Restore
 
 DCOS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
@@ -810,15 +819,71 @@ Check the status of the restore:
 dcos cassandra --framework-name=<framework-name> restore status
 ```
 
-## Upgrading Software
-
-``` bash
-dcos package upgrade cassandra
-```
-
 ## Troubleshooting
 
-You can access the `stderr` and `stdout` logs from the Marathon web interface. The logs appear in the details view for your DCOS Cassandra instance.
+###Configuration Update Errors
+The plan below shows shows contains a configuration error that will not allow the installation or configuration update to progress.
+
+``` json
+{
+    "errors": ["The number of seeds is greater than the number of nodes."], 
+    "phases": [
+        {
+            "blocks": [
+                {
+                    "has_decision_point": false, 
+                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
+                    "message": "Reconciliation complete", 
+                    "name": "Reconciliation", 
+                    "status": "Complete"
+                }
+            ], 
+            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
+            "name": "Reconciliation", 
+            "status": "Complete"
+        }, 
+        {
+            "blocks": [
+                {
+                    "has_decision_point": false, 
+                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
+                    "message": "Deploying Cassandra node node-0", 
+                    "name": "node-0", 
+                    "status": "Pending"
+                }, 
+                {
+                    "has_decision_point": false, 
+                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
+                    "message": "Deploying Cassandra node node-1", 
+                    "name": "node-1", 
+                    "status": "Pending"
+                }, 
+                {
+                    "has_decision_point": false, 
+                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
+                    "message": "Deploying Cassandra node node-2", 
+                    "name": "node-2", 
+                    "status": "Pending"
+                }
+            ], 
+            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
+            "name": "Deploy", 
+            "status": "Pending"
+        }
+    ], 
+    "status": "Error"
+}
+```
+To proceed with the installation or configuration update fix the indicated errors by updating the configuration as detailed in the [Configuration Update](#configuration-update) section.
+
+###Replacing a Permanently Failed Node
+The DCOS Cassandra Service is resilient to temporary node failures. However, if a DCOS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server.
+
+``` bash
+dcos cassandra --framework-name=<framework-name> node replace <node_id>
+```
+
+This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
 
 ## API Reference
 
@@ -868,8 +933,48 @@ curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 
 #### Cleanup
 
+First, create the request payload, for example, in a file `cleanup.json`:
+
+``` json
+{
+    "nodes":[*],
+    "key_spaces":[my_keyspace],
+    "column_families":[my_cf_1, my_cf_w]
+}
+```
+In the above, the nodes list indicates the nodes on which cleanup will be performed. The value [*], indicates to perform the cleanup cluster wide. key_spaces and column_families indicate the key spaces and column families on which cleanup will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The json below shows the request payload for a cluster wide cleanup operation of all key spaces and column families.
+
+``` json
+{
+    "nodes":[*]
+}
+```
+
 ``` bash
 curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
+```
+
+#### Repair
+
+First, create the request payload, for example, in a file `repair.json`:
+
+``` json
+{
+    "nodes":[*],
+    "key_spaces":[my_keyspace],
+    "column_families":[my_cf_1, my_cf_w]
+}
+```
+In the above, the nodes list indicates the nodes on which the repair will be performed. The value [*], indicates to perform the repair cluster wide. key_spaces and column_families indicate the key spaces and column families on which repair will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The json below shows the request payload for a cluster wide repair operation of all key spaces and column families.
+
+``` json
+{
+    "nodes":[*]
+}
+```
+
+``` bash
+curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/repair/start --data @repair.json
 ```
 
 #### Backup
