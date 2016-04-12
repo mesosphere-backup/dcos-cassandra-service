@@ -9,7 +9,9 @@ DCOS Cassandra Service Guide
     * [Getting Started](#getting-started)
       * [Quick Start](#quick-start)
       * [Install and Customize](#install-and-customize)
-        * [Custom install configuration](#custom-install-configuration)
+        * [Default Installation] (#default-installation)
+        * [Custom Installation](#custom-installation)
+        * [Minimal Installation] (#minimal-installation)
       * [Multiple Cassandra Cluster Installation](#multiple-cassandra-cluster-installation)
         * [Installation Plan](#installation-plan)
           * [Viewing the Installation Plan](#viewing-the-installation-plan)
@@ -95,7 +97,6 @@ DCOS Cassandra provides the following features:
 - [DCOS Spark](https://docs.mesosphere.com/manage-service/spark)
 
 ## Getting Started
-Prior to installing the DCOS Cassandra Service, ensure that your DCOS cluster has at least 3 DCOS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000,7001,7199,9042, and 9160 are available.
 
 ### Quick Start
 
@@ -133,15 +134,15 @@ USE demo; SELECT * from demo.map;
 
 ### Install and Customize
 
-To start a basic test cluster, run the following command on the DCOS CLI.
-
-**Note:** Your cluster must have at least 3 private nodes.
+#### Default Installation
+Prior to installing a default cluster, ensure that your DCOS cluster has at least 3 DCOS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000,7001,7199,9042, and 9160 are available.
+To start a the default cluster, run the following command on the DCOS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes, and it may be scaled to a production deployment.
 
 ``` bash
 $ dcos package install cassandra
 ```
 
-This command creates a new Cassandra cluster. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `framework-name` at install time](#custom-install-configuration) for each additional instance.
+This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `framework-name` at install time](#custom-installation) for each additional instance.
 
 All `dcos cassandra` CLI commands have a `--framework-name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a framework name, the CLI assumes the default value, `cassandra`. The default value for `--framework-name` can be customized via the DCOS CLI configuration.
 
@@ -149,9 +150,32 @@ All `dcos cassandra` CLI commands have a `--framework-name` argument that allows
 $ dcos config set cassandra.framework_name new_default_name
 ```
 
-#### Custom install configuration
+#### Minimal Installation
+You may wish to install Cassandra on a local DCOS cluster. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
+As with the default installation, you must ensure that ports 7000,7001,7199,9042, and 9160 are available. Note that this configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development. 
 
-Customize the defaults by creating a JSON file. Then pass it to `dcos package install` using the `--options` parameter.
+To start a minimal cluster with a single node, create a JSON options file named `sample-cassandra-minimal.json`:
+
+``` json
+{
+    "nodes": {
+        "cpus": 0.5,
+        "mem": 2048,
+        "disk": 4096,
+        "heap": {
+            "size": 1024,
+            "new": 100
+        },
+        "volume_size": 4096,
+        "count": 1,
+        "seeds": 1
+    }
+}
+```
+This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an addition 3 Gb of memory for the DCOS Cassandra Framework itself. Also, cluster operations will require an addition 512 Mb of memory.
+
+#### Custom Installation
+If you are ready to ship into production, you will likely need to customize the deployment to suite the workload requirements of application(s). You can customize the default deployment by creating a JSON file. Then pass it to `dcos package install` using the `--options` parameter.
 
 Sample JSON options file named `sample-cassandra.json`:
 
@@ -608,6 +632,7 @@ The IP address of the Cassandra node is determined automatically by the service 
 | storage_port          | integer | The port the application uses for inter-node communication. |
 | internode_compression | all|none|dc | If set to all, traffic between all nodes is compressed. If set to dc, traffic between datacenters is compressed. If set to none, no compression is used for internode communication. |
 | native_transport_port  | integer | The port the application uses for inter-node communication. |
+
 #### Commit Log Configuration
 
 The DCOS Cassandra service only supports the commitlog_sync model for configuring the Cassandra commit log. In this model a node responds to write requests after writing the request to file system and replicating to the configured number of nodes, but prior to synchronizing the commit log file to storage media. Cassandra will synchronize the data to storage media after a configurable time period. If all nodes in the cluster should fail, at the Operating System level or below, during this window the acknowledged writes will be lost. Note that, even if the JVM crashes, the data will still be available on the nodes persistent volume when the service recovers the node.The configuration parameters below control the window in which data remains acknowledged but has not been written to storage media.
@@ -654,7 +679,7 @@ The partition key cache is a cache of the partition index for a Cassandra table.
 | key_cache_save_period | integer | The duration in seconds that keys are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O. |
 | key_cache_size_in_mb | integer | The maximum size of the key cache in Mb. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0. |
 
-### Global Row Cache Configuration
+#### Global Row Cache Configuration
 
 Row caching caches both the key and the associated row in memory. During the read path, when rows are reconstructed from the `MemTable` and `SSTables`, the reconstructed row is cached in memory preventing further reads from storage media until the row is ejected or dirtied. 
 Like key caching, row caching is configurable on a per table basis, but it should be used with extreme caution. Misusing row caching can overwhelm the JVM and cause Cassandra to crash. Use row caching under the following conditions: only if you are absolutely certain that doing so will not overwhelm the JVM, the partition you will cache is small, and client applications will read most of the partition all at once.
@@ -770,7 +795,11 @@ If no arguments are specified a cleanup will be performed for all nodes, key spa
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed. 
 Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra framework will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
-The cleanup payload referenced by `cleanup.json`, above, is a JSON object that indicates which nodes, keyspaces, and column families should have the cleanup operation applied. Note that system keyspaces should not be included here. If `keySpaces` is empty, then all keyspaces will be cleaned. If `nodes` is empty, then cleanup will be applied to all nodes. If `columnFamilies` is empty, then all column families for the selected keyspaces will be cleaned.
+To perform a repair from the CLI, enter the following command:
+
+``` bash
+dcos cassandra --framework-name=<framewor-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
 If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
