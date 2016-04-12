@@ -51,17 +51,16 @@ DCOS Cassandra Service Guide
         * [Restore](#restore)
     * [Troubleshooting](#troubleshooting)
     * [API Reference](#api-reference)
-      * [Configuration via API](#configuration-via-api)
-        * [View the Installation Plan via API](#view-the-installation-plan-via-api)
-        * [Retrieve Connection Info via API](#retrieve-connection-info-via-api)
-        * [Pause Installation via API](#pause-installation-via-api)
-        * [Resume Installation via API](#resume-installation-via-api)
-      * [Managing via API](#managing-via-api)
-        * [Cleanup via API](#cleanup-via-api)
-        * [Repair via API] (#repair-via-api)
-        * [Backup via API](#backup-via-api)
-        * [Restore via API](#restore-via-api)
-        * [Replace via API] (#replace-via-api)
+      * [Configuration](#configuration])
+        * [View the Installation Plan](#view-the-installation-plan)
+        * [Retrieve Connection Info](#retrieve-connection-info)
+        * [Pause Installation](#pause-installation)
+        * [Resume Installation](#resume-installation)
+      * [Managing](#managing)
+        * [Cleanup](#cleanup)
+        * [Repair] (#repair)
+        * [Backup] (#backup)
+        * [Restore](#restore)
     * [Limitations](#limitations)
     * [Development](#development)
 
@@ -181,9 +180,9 @@ Installing multiple Cassandra clusters is identical to installing a Cassandra cl
 ``` json
 $ cat cassandra1.json
 {
- "service": {
-   "name": "cassandra1"
- }
+   "service": {
+       "name": "cassandra1"
+   }
 }
 
 $ dcos package install cassandra --options=cassandra1.json
@@ -399,7 +398,7 @@ If you query the plan again, the response will look like this (notice `status: "
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
                     "message": "Deploying Cassandra node node-0", 
                     "name": "node-0", 
-                    "status": “Complete"
+                    "status": "Complete"
                 }, 
                 {
                     "has_decision_point": false, 
@@ -456,7 +455,7 @@ After you execute the continue operation, the plan will look like this:
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
                     "message": "Deploying Cassandra node node-0", 
                     "name": "node-0", 
-                    "status": “Complete"
+                    "status": "Complete"
                 }, 
                 {
                     "has_decision_point": false, 
@@ -524,7 +523,6 @@ Example node configuration:
 ``` json
 {
 	"nodes": {
-
 		"cpus": 0.5,
 		"mem": 4096,
 		"disk": 10240,
@@ -693,7 +691,7 @@ The only supported client for the DSOC Cassandra Service is the Datastax Java CQ
 The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
 ``` bash
-dcos cassandra --framework-name=<framework-name> node
+dcos cassandra --framework-name=<framework-name> node connection
 ```
 
 #### Connection Info Response
@@ -770,10 +768,8 @@ If no arguments are specified a cleanup will be performed for all nodes, key spa
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed. 
 Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra framework will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
-To perform a repair on the primary range of the tokens for a set of nodes run the following from the CLI.
-``` bash
-dcos cassandra --framework-name=<framewor-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
-```
+The cleanup payload referenced by `cleanup.json`, above, is a JSON object that indicates which nodes, keyspaces, and column families should have the cleanup operation applied. Note that system keyspaces should not be included here. If `keySpaces` is empty, then all keyspaces will be cleaned. If `nodes` is empty, then cleanup will be applied to all nodes. If `columnFamilies` is empty, then all column families for the selected keyspaces will be cleaned.
+
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
 If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
  
@@ -891,15 +887,15 @@ This will replace the node with a new node of the same name running on a differe
 
 ## API Reference
 
-### Configuration via API
+### Configuration
 
-#### View the Installation Plan via API
+#### View the Installation Plan
 
 ``` bash
 curl http:/<dcos_url>/service/cassandra/v1/plan
 ```
 
-#### Retrieve Connection Info via API
+#### Retrieve Connection Info
 
 ``` bash
 curl http://<dcos_url>/cassandra/v1/nodes/connect
@@ -917,7 +913,7 @@ You will see a response similar to the following:
 
 This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the CQL Driver configuration used by the application.
 
-#### Pause Installation via API
+#### Pause Installation
 
 The installation will pause after completing installation of the current node and wait for user input.
 
@@ -925,7 +921,7 @@ The installation will pause after completing installation of the current node an
 curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
-#### Resume Installation via API
+#### Resume Installation
 
 The REST API request below will resume installation at the next pending node.
 
@@ -933,9 +929,9 @@ The REST API request below will resume installation at the next pending node.
 curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 ```
 
-### Managing via API
+### Managing
 
-#### Cleanup via API
+#### Cleanup
 
 First, create the request payload, for example, in a file `cleanup.json`:
 
@@ -958,7 +954,7 @@ In the above, the nodes list indicates the nodes on which cleanup will be perfor
 curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
 ```
 
-#### Repair via API
+#### Repair
 
 First, create the request payload, for example, in a file `repair.json`:
 
@@ -981,7 +977,7 @@ In the above, the nodes list indicates the nodes on which the repair will be per
 curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/repair/start --data @repair.json
 ```
 
-#### Backup via API
+#### Backup
 
 First, create the request payload, for example, in a file `backup.json`:
 
@@ -1007,7 +1003,7 @@ Check status of the backup:
 curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
 ```
 
-#### Restore via API
+#### Restore
 
 First, bring up a new instance of your Cassandra cluster with the same number of nodes as the cluster whose snapshot backup you want to restore.
 
