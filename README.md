@@ -716,7 +716,7 @@ The only supported client for the DSOC Cassandra Service is the Datastax Java CQ
 The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
 ``` bash
-dcos cassandra --framework-name=<framework-name> node connection
+dcos cassandra --framework-name=<framework-name> connection
 ```
 
 #### Connection Info Response
