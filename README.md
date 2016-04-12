@@ -53,7 +53,7 @@ DCOS Cassandra Service Guide
         * [Restore](#restore)
     * [Troubleshooting](#troubleshooting)
     * [API Reference](#api-reference)
-      * [Configuration](#configuration])
+      * [Configuration](#configuration-api])
         * [View the Installation Plan](#view-the-installation-plan)
         * [Retrieve Connection Info](#retrieve-connection-info)
         * [Pause Installation](#pause-installation)
