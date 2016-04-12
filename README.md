@@ -491,14 +491,14 @@ The service configuration object contains properties that MUST be specified duri
 
 ``` json
 {
-	"service": {
-		"name": "cassandra2",
-		"role": "cassandra_role",
-		"principal": "cassandra_principal",
-		"secret" : "/path/to/secret_file",
-		"apiPort": 9000,
-		"adminPort": 9001
-	}
+    "service": {
+        "name": "cassandra2",
+        "role": "cassandra_role",
+        "principal": "cassandra_principal",
+        "secret" : "/path/to/secret_file",
+        "apiPort": 9000,
+        "adminPort": 9001
+    }
 }
 ```
 
@@ -522,18 +522,18 @@ Example node configuration:
 
 ``` json
 {
-	"nodes": {
-		"cpus": 0.5,
-		"mem": 4096,
-		"disk": 10240,
-		"heap": {
-			"size": 2048,
-			"new": 400
-		},
-		"volume_size": 9216,
-		"count": 3,
-		"seeds": 2
-	}
+    "nodes": {
+        "cpus": 0.5,
+        "mem": 4096,
+        "disk": 10240,
+        "heap": {
+            "size": 2048,
+            "new": 400
+        },
+        "volume_size": 9216,
+        "count": 3,
+        "seeds": 2
+    }
 }
 ```
 
@@ -556,45 +556,45 @@ Example Cassandra configuration:
 
 ``` json
 {
-	"cassandra": {
-		"jmx_port": 7199,
-		"hinted_handoff_enabled": true,
-		"max_hint_window_in_ms": 10800000,
-		"hinted_handoff_throttle_in_kb": 1024,
-		"max_hints_delivery_threads": 2,
-		"batchlog_replay_throttle_in_kb": 1024,
-		"key_cache_save_period": 14400,
-		"row_cache_size_in_mb": 0,
-		"row_cache_save_period": 0,
-		"commitlog_sync_period_in_ms": 10000,
-		"commitlog_segment_size_in_mb": 32,
-		"concurrent_reads": 16,
-		"concurrent_writes": 32,
-		"concurrent_counter_writes": 16,
-		"memtable_allocation_type": "heap_buffers",
-		"index_summary_resize_interval_in_minutes": 60,
-		"storage_port": 7000,
-		"start_native_transport": true,
-		"native_transport_port": 9042,
-		"tombstone_warn_threshold": 1000,
-		"tombstone_failure_threshold": 100000,
-		"column_index_size_in_kb": 64,
-		"batch_size_warn_threshold_in_kb": 5,
-		"batch_size_fail_threshold_in_kb": 50,
-		"compaction_throughput_mb_per_sec": 16,
-		"sstable_preemptive_open_interval_in_mb": 50,
-		"read_request_timeout_in_ms": 5000,
-		"range_request_timeout_in_ms": 10000,
-		"write_request_timeout_in_ms": 2000,
-		"counter_write_request_timeout_in_ms": 5000,
-		"cas_contention_timeout_in_ms": 1000,
-		"truncate_request_timeout_in_ms": 60000,
-		"request_timeout_in_ms": 1000,
-		"dynamic_snitch_update_interval_in_ms": 100,
-		"dynamic_snitch_reset_interval_in_ms": 600000,
-		"dynamic_snitch_badness_threshold": 0.1,
-		"internode_compression": "all"
-	}
+    "cassandra": {
+        "jmx_port": 7199,
+        "hinted_handoff_enabled": true,
+        "max_hint_window_in_ms": 10800000,
+        "hinted_handoff_throttle_in_kb": 1024,
+        "max_hints_delivery_threads": 2,
+        "batchlog_replay_throttle_in_kb": 1024,
+        "key_cache_save_period": 14400,
+        "row_cache_size_in_mb": 0,
+        "row_cache_save_period": 0,
+        "commitlog_sync_period_in_ms": 10000,
+        "commitlog_segment_size_in_mb": 32,
+        "concurrent_reads": 16,
+        "concurrent_writes": 32,
+        "concurrent_counter_writes": 16,
+        "memtable_allocation_type": "heap_buffers",
+        "index_summary_resize_interval_in_minutes": 60,
+        "storage_port": 7000,
+        "start_native_transport": true,
+        "native_transport_port": 9042,
+        "tombstone_warn_threshold": 1000,
+        "tombstone_failure_threshold": 100000,
+        "column_index_size_in_kb": 64,
+        "batch_size_warn_threshold_in_kb": 5,
+        "batch_size_fail_threshold_in_kb": 50,
+        "compaction_throughput_mb_per_sec": 16,
+        "sstable_preemptive_open_interval_in_mb": 50,
+        "read_request_timeout_in_ms": 5000,
+        "range_request_timeout_in_ms": 10000,
+        "write_request_timeout_in_ms": 2000,
+        "counter_write_request_timeout_in_ms": 5000,
+        "cas_contention_timeout_in_ms": 1000,
+        "truncate_request_timeout_in_ms": 60000,
+        "request_timeout_in_ms": 1000,
+        "dynamic_snitch_update_interval_in_ms": 100,
+        "dynamic_snitch_reset_interval_in_ms": 600000,
+        "dynamic_snitch_badness_threshold": 0.1,
+        "internode_compression": "all"
+    }
 }
 ```
 
@@ -699,11 +699,13 @@ dcos cassandra --framework-name=<framework-name> node connection
 The response is as below.
 
 ``` json
-[
-    nodes:["10.0.0.47:9042", 
-    "10.0.0.50:9042", 
-    "10.0.0.49:9042"]
-]
+{
+    "nodes": [
+        "10.0.0.47:9042",
+        "10.0.0.50:9042",
+        "10.0.0.49:9042"
+    ]
+}
 ```
 
 This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the configuration of the CQL Driver used by the application. 
@@ -904,11 +906,13 @@ curl http://<dcos_url>/cassandra/v1/nodes/connect
 You will see a response similar to the following:
 
 ``` json
-[
-    nodes: ["10.0.0.47:9042", 
-    "10.0.0.50:9042", 
-    "10.0.0.49:9042"]
-]
+{
+    "nodes": [
+        "10.0.0.47:9042",
+        "10.0.0.50:9042",
+        "10.0.0.49:9042"
+    ]
+}
 ```
 
 This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the CQL Driver configuration used by the application.
@@ -937,16 +941,16 @@ First, create the request payload, for example, in a file `cleanup.json`:
 
 ``` json
 {
-    "nodes":[*],
-    "key_spaces":[my_keyspace],
-    "column_families":[my_cf_1, my_cf_w]
+    "nodes":["*"],
+    "key_spaces":["my_keyspace"],
+    "column_families":["my_cf_1", "my_cf_w"]
 }
 ```
 In the above, the nodes list indicates the nodes on which cleanup will be performed. The value [*], indicates to perform the cleanup cluster wide. key_spaces and column_families indicate the key spaces and column families on which cleanup will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The json below shows the request payload for a cluster wide cleanup operation of all key spaces and column families.
 
 ``` json
 {
-    "nodes":[*]
+    "nodes":["*"]
 }
 ```
 
