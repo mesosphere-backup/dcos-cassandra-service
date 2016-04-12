@@ -917,19 +917,21 @@ dcos cassandra --framework-name=<framework-name> node replace <node_id>
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
 
 ## API Reference
+The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token. 
+The <dcos_url> parameter referenced below indicates the base URL of the DCOS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
 
-### Configuration
+###Configuration
 
 #### View the Installation Plan
 
 ``` bash
-curl http:/<dcos_url>/service/cassandra/v1/plan
+curl -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan
 ```
 
 #### Retrieve Connection Info
 
 ``` bash
-curl http://<dcos_url>/cassandra/v1/nodes/connect
+curl -H "Authorization:token=<auth_token>" <dcos_url>/cassandra/v1/nodes/connect
 ```
 
 You will see a response similar to the following:
@@ -951,7 +953,7 @@ This JSON array contains a list of valid nodes that the client can use to connec
 The installation will pause after completing installation of the current node and wait for user input.
 
 ``` bash
-curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+curl -X PUT -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
 #### Resume Installation
@@ -959,7 +961,7 @@ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 The REST API request below will resume installation at the next pending node.
 
 ``` bash
-curl -X PUT http://<dcos_surl>/service/cassandra/v1/plan?cmd=proceed
+curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 ```
 
 ### Managing
@@ -984,7 +986,7 @@ In the above, the nodes list indicates the nodes on which cleanup will be perfor
 ```
 
 ``` bash
-curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
+curl -X PUT -H "Content-Type:application/json" -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
 ```
 
 #### Repair
@@ -1007,7 +1009,7 @@ In the above, the nodes list indicates the nodes on which the repair will be per
 ```
 
 ``` bash
-curl -X PUT -H “Content-Type:application/json” http://<dcos_url>/service/cassandra/v1/repair/start --data @repair.json
+curl -X PUT -H "Content-Type:application/json" -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/repair/start --data @repair.json
 ```
 
 #### Backup
@@ -1026,7 +1028,7 @@ First, create the request payload, for example, in a file `backup.json`:
 Then, submit the request payload via `PUT` request to `/v1/backup/start`
 
 ``` bash
-curl -X PUT -H 'Content-Type: application/json' -d @backup.json http://cassandra.marathon.mesos:9000/v1/backup/start
+curl -X PUT -H "Content-Type: application/json" -H "Authorization:token=<auth_token>" -d @backup.json <dcos_url>/service/cassandra/v1/backup/start
 {"status":"started", message:""}
 ```
 
@@ -1054,14 +1056,14 @@ Next, create the request payload, for example, in a file `restore.json`:
 Next, submit the request payload via `PUT` request to `/v1/restore/start`
 
 ``` bash
-curl -X PUT -H 'Content-Type: application/json' -d @restore.json http://cassandra.marathon.mesos:9000/v1/restore/start
+curl -X PUT -H "Content-Type: application/json" -H "Authorization:token=<auth_token>" -d @restore.json <dcos_url>/service/cassandra/v1/restore/start
 {"status":"started", message:""}
 ```
 
 Check status of the restore:
 
 ``` bash
-curl -X GET http://cassandra.marathon.mesos:9000/v1/restore/status
+curl -X -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/restore/status
 ```
 
 ## Limitations
