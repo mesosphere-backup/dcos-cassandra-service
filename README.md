@@ -38,12 +38,12 @@ DCOS Cassandra Service Guide
         * [Global Key Cache Configuration](#global-key-cache-configuration)
         * [Global Row Cache Configuration](#global-row-cache-configuration)
       * [Operating System Configuration](#operating-system-configuration)
-      * [Connecting Clients](#connecting-clients)
-        * [Connection Info Using the CLI](#connection-info-using-the-cli)
-        * [Connection Info Response](#connection-info-response)
-        * [Configuring the CQL Driver](#configuring-the-cql-driver)
-          * [Adding the Driver to Your Application](#adding-the-driver-to-your-application)
-          * [Connecting the CQL Driver\.](#connecting-the-cql-driver)
+   * [Connecting Clients](#connecting-clients)
+     * [Connection Info Using the CLI](#connection-info-using-the-cli)
+     * [Connection Info Response](#connection-info-response)
+     * [Configuring the CQL Driver](#configuring-the-cql-driver)
+       * [Adding the Driver to Your Application](#adding-the-driver-to-your-application)
+       * [Connecting the CQL Driver\.](#connecting-the-cql-driver)
     * [Managing](#managing)
       * [Add a Node](#add-a-node)
       * [Cleanup](#cleanup)
@@ -735,12 +735,11 @@ In addition to time synchronization, Cassandra requires OS level configuration s
 | /etc/security/limits.conf | nofile | unlimited | If this value is too low a Cassandra node will terminate due to insufficient file handles. |
 | /etc/security/limits.conf, /etc/security/limits.d/90-nproc.conf | nproc | 32768 | A Cassandra node spawns many threads, which go towards kernel nproc count. If nproc is not set appropriately the node will be killed.|
 
-####
-### Connecting Clients
+## Connecting Clients
 
 The only supported client for the DSOC Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
 
-#### Connection Info Using the CLI
+### Connection Info Using the CLI
 
 The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
@@ -748,7 +747,7 @@ The following command can be executed from the cli to retrieve a set of nodes to
 dcos cassandra --framework-name=<framework-name> connection
 ```
 
-#### Connection Info Response
+### Connection Info Response
 
 The response is as below.
 
@@ -764,8 +763,8 @@ The response is as below.
 
 This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the configuration of the CQL Driver used by the application. 
 
-#### Configuring the CQL Driver
-##### Adding the Driver to Your Application
+### Configuring the CQL Driver
+#### Adding the Driver to Your Application
 
 ``` xml
 <dependency>
@@ -777,7 +776,7 @@ This JSON array contains a list of valid nodes that the client can use to connec
 
 The snippet above is the correct dependency for CQL driver to use with the DCOS Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
 
-##### Connecting the CQL Driver.
+#### Connecting the CQL Driver.
 The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query.
 
 ```
