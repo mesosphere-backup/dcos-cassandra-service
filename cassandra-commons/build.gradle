@@ -2,17 +2,18 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 apply plugin: 'com.google.protobuf'
+
 dependencies {
-    compile project(':dcos-commons')
-    compile 'org.apache.cassandra:cassandra-all:2.2.4'
+  compile project(':dcos-commons')
+  compile 'org.apache.cassandra:cassandra-all:2.2.4'
 }
 protobuf {
-    generatedFilesBaseDir = "$projectDir/src/generated"
+  generatedFilesBaseDir = "$projectDir/src/generated"
 }
 
 ext {
-    protobufOutputDir = file("$buildDir/generated/source/proto/main")
+  protobufOutputDir = file("$buildDir/generated/source/proto/main")
 }
 idea.module {
-    sourceDirs += file("$projectDir/src/generated/main/java")
+  sourceDirs += file("$projectDir/src/generated/main/java")
 }

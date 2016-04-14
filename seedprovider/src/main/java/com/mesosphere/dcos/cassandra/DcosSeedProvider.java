@@ -25,96 +25,91 @@ import java.util.Map;
  */
 public class DcosSeedProvider implements SeedProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger
-            (DcosSeedProvider.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(DcosSeedProvider.class);
+
+  private final String seedsUrl;
+
+  public DcosSeedProvider(final Map<String, String> properties) {
+
+    seedsUrl = properties.get("seeds_url");
+
+  }
+
+  private static InetAddress getLocalAddress() throws UnknownHostException {
+    String libProcessAddress = System.getenv("LIBPROCESS_IP");
+
+    if (libProcessAddress == null || libProcessAddress.isEmpty()) {
+      LOGGER.info("LIBPROCESS_IP address not found defaulting to " +
+        "localhost");
+      return InetAddress.getLocalHost();
+
+    } else {
+
+      return InetAddress.getByName(libProcessAddress);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public List<InetAddress> getRemoteSeeds() throws IOException {
+
+    HttpURLConnection connection =
+      (HttpURLConnection) new URL(seedsUrl).openConnection();
+    connection.setConnectTimeout(1000);
+    connection.setReadTimeout(10000);
+    connection.setRequestMethod("GET");
+    if (connection.getResponseCode() != 200)
+      throw new RuntimeException("Unable to get data for URL " + seedsUrl);
+
+    byte[] b = new byte[2048];
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    DataInputStream responseStream = new DataInputStream((FilterInputStream)
+      connection
+        .getContent());
+    int c = 0;
+    while ((c = responseStream.read(b, 0, b.length)) != -1)
+      bos.write(b, 0, c);
+    String response = new String(bos.toByteArray(), Charsets.UTF_8);
+    LOGGER.info("Retrieved response {} from URL {}", response, seedsUrl);
+    connection.disconnect();
 
 
-    private final String seedsUrl;
+    JSONObject json = (JSONObject) JSONValue.parse(response);
 
-    public DcosSeedProvider(final Map<String, String> properties) {
+    boolean isSeed = (Boolean) json.get("isSeed");
 
-        seedsUrl = properties.get("seeds_url");
+    List<String> seedStrings = (json.containsKey("seeds"))
+      ? (List<String>) json.get("seeds") : Collections.emptyList();
 
+    List<InetAddress> addresses;
+
+    if (isSeed) {
+      addresses = new ArrayList<>(seedStrings.size() + 1);
+      addresses.add(getLocalAddress());
+    } else {
+      addresses = new ArrayList<>(seedStrings.size());
     }
 
-    private static InetAddress getLocalAddress() throws UnknownHostException {
-        String libProcessAddress = System.getenv("LIBPROCESS_IP");
-
-        if (libProcessAddress == null || libProcessAddress.isEmpty()) {
-            LOGGER.info("LIBPROCESS_IP address not found defaulting to " +
-                    "localhost");
-            return InetAddress.getLocalHost();
-
-        } else {
-
-            return InetAddress.getByName(libProcessAddress);
-        }
+    for (String seed : seedStrings) {
+      addresses.add(InetAddress.getByName(seed));
     }
 
-
-    public List<InetAddress> getRemoteSeeds() throws IOException {
-
-        HttpURLConnection connection =
-                (HttpURLConnection) new URL(seedsUrl).openConnection();
-        connection.setConnectTimeout(1000);
-        connection.setReadTimeout(10000);
-        connection.setRequestMethod("GET");
-        if (connection.getResponseCode() != 200)
-            throw new RuntimeException("Unable to get data for URL " + seedsUrl);
-
-        byte[] b = new byte[2048];
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataInputStream responseStream = new DataInputStream((FilterInputStream)
-                connection
-                        .getContent());
-        int c = 0;
-        while ((c = responseStream.read(b, 0, b.length)) != -1)
-            bos.write(b, 0, c);
-        String response = new String(bos.toByteArray(), Charsets.UTF_8);
-        LOGGER.info("Retrieved response {} from URL {}", response, seedsUrl);
-        connection.disconnect();
+    LOGGER.info("Retrieved remote seeds {}", addresses);
+    return addresses;
+  }
 
 
-        JSONObject json = (JSONObject) JSONValue.parse(response);
+  @Override
+  public List<InetAddress> getSeeds() {
 
-        boolean isSeed = (Boolean) json.get("isSeed");
+    try {
+      return getRemoteSeeds();
+    } catch (Throwable ex) {
+      LOGGER.error(
+        String.format("Failed to retrieve seeds from %s", seedsUrl)
+        , ex);
 
-        List<String> seedStrings = (json.containsKey("seeds"))
-                ? (List<String>) json.get("seeds") : Collections.emptyList();
-
-        List<InetAddress> addresses;
-
-        if (isSeed) {
-            addresses = new ArrayList<>(seedStrings.size() + 1);
-            addresses.add(getLocalAddress());
-        } else {
-
-            addresses = new ArrayList<>(seedStrings.size());
-        }
-
-        for (String seed : seedStrings) {
-
-            addresses.add(InetAddress.getByName(seed));
-        }
-
-        LOGGER.info("Retrieved remote seeds {}", addresses);
-
-        return addresses;
+      return Collections.emptyList();
     }
 
-
-    @Override
-    public List<InetAddress> getSeeds() {
-
-        try {
-            return getRemoteSeeds();
-        } catch (Throwable ex) {
-            LOGGER.error(
-                    String.format("Failed to retrieve seeds from %s", seedsUrl)
-                    , ex);
-
-            return Collections.emptyList();
-        }
-
-    }
+  }
 }
