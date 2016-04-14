@@ -46,6 +46,8 @@ DCOS Cassandra Service Guide
        * [Connecting the CQL Driver\.](#connecting-the-cql-driver)
     * [Managing](#managing)
       * [Add a Node](#add-a-node)
+      * [Node Status] (#node-status)
+      * [Node Info] (#node-info)
       * [Cleanup](#cleanup)
       * [Repair] (#repair)
       * [Backup and Restore](#backup-and-restore)
@@ -59,6 +61,8 @@ DCOS Cassandra Service Guide
         * [Pause Installation](#pause-installation)
         * [Resume Installation](#resume-installation)
       * [Managing](#managing)
+        * [Node Status] (#node-status)
+        * [Node Info] (#node-info)
         * [Cleanup](#cleanup)
         * [Repair] (#repair)
         * [Backup] (#backup)
@@ -548,9 +552,7 @@ The service configuration object contains properties that MUST be specified duri
         "name": "cassandra2",
         "role": "cassandra_role",
         "principal": "cassandra_principal",
-        "secret" : "/path/to/secret_file",
-        "apiPort": 9000,
-        "adminPort": 9001
+        "secret" : "/path/to/secret_file"
     }
 }
 ```
@@ -561,15 +563,13 @@ The service configuration object contains properties that MUST be specified duri
 | role     | string | The authentication and resource role of the Cassandra cluster. |
 | principal| string | The authentication principal for the Cassandra cluster. |
 |secret    | string | An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DCOS cluster. This parameter is optional, and should be omitted unless the DCOS deployment is specifically configured for authentication. |
-| apiPort  | integer| The port on which the service’s scheduler will listen for API requests. |
-| adminPort| integer| The port on which the service’s scheduler will listen for health checks and admin requests. |
 
 - **In the DCOS CLI, options.json**: `framework-name` = string (default: `cassandra`)
 - **In Marathon**: The framework name cannot be changed after the cluster has started.
 
 #### Node Configuration
 
-The node configuration object corresponds to the configuration for Cassandra nodes in the Cassandra cluster. Node configuration MUST be specified during installation and MAY be modified during configuration updates. All of the properties except for `volume_size` MAY be modified during the configuration update process.
+The node configuration object corresponds to the configuration for Cassandra nodes in the Cassandra cluster. Node configuration MUST be specified during installation and MAY be modified during configuration updates. All of the properties except for `disk` MAY be modified during the configuration update process.
 
 Example node configuration:
 
@@ -582,8 +582,7 @@ Example node configuration:
         "heap": {
             "size": 2048,
             "new": 400
-        },
-        "volume_size": 9216,
+        }
         "count": 3,
         "seeds": 2
     }
@@ -594,10 +593,9 @@ Example node configuration:
 | ----------- | ------- | --------------- |
 | cpus        | number  | The number of cpu shares allocated to the container where the Cassandra process resides. Currently, due to a bug in Mesos, it is not safe to modify this parameter. |
 | mem         | integer | The amount of memory, in MB, allocated to the container where the Cassandra process resides. This value MUST be larger than the specified max heap size. Make sure to allocate enough space for additional memory used by the JVM and other overhead. |
-| disk        | integer | The amount of disk, in MB, allocated to the container where the Cassandra process runs. This value MUST be greater than or equal to the size of the allocated persistent value. In the event that it is greater than the size of the persistent volume, the additional resources will be applied to the sandbox for the Cassandra process. |
+| disk        | integer | The amount of disk, in MB, allocated to a Cassandra node in the cluster. NOTE That once this value is configured it can not be changed|
 | heap.size   | integer | The maximum and minimum heap size used by the Cassandra process in MB. This value SHOULD be at least 2 GB, and it SHOULD be no larger than 80% of the allocated memory for the container. Specifying very large heaps, greater than 8 GB, is currently not a supported configuration. |
 | heap.new    | integer | The young generation heap size in MB. This value should be set at roughly 100MB per allocated CPU core. Increasing the size of this value will generally increase the length of garbage collection pauses. Smaller values will increase the frequency of garbage collection pauses. |
-| volume_size | integer | The size of the persistent volume on which Cassandra’s commit log and data directory will be stored. This value MUST be less than or equal to the size of the allocated disk to the container. Currently, only one persistent volume per node is supported so the commit log, saved caches, and data directories will all be written to the same volume. |
 | count       | integer | The number of nodes in the Cassandra cluster. This value MUST be between 3 and 100. |
 | seeds      | integer  | The number of seed nodes that the service will use to seed the cluster. The service selects seed nodes dynamically based on the current state of the cluster. 2 - 5 seed nodes is generally sufficient. |
 
@@ -659,7 +657,7 @@ The IP address of the Cassandra node is determined automatically by the service 
 | -------------------- | ------- | --------------- |
 | jmx_port              | integer | The port on which the application will listen for JMX connections. Remote JMX connections are disabled due to security considerations. |
 | storage_port          | integer | The port the application uses for inter-node communication. |
-| internode_compression | all|none|dc | If set to all, traffic between all nodes is compressed. If set to dc, traffic between datacenters is compressed. If set to none, no compression is used for internode communication. |
+| internode_compression | all,none,dc | If set to all, traffic between all nodes is compressed. If set to dc, traffic between datacenters is compressed. If set to none, no compression is used for internode communication. |
 | native_transport_port  | integer | The port the application uses for inter-node communication. |
 
 #### Commit Log Configuration
@@ -805,6 +803,72 @@ try {
 
 ### Add a Node
 Increase the `NODES` value via Marathon as described in the [Configuration Update](#configuration-update) section. This creates an update plan as described in that section. An additional node will be added as the last block of that plan. After a node has been added, you should run cleanup, as described in the [Cleanup](#cleanup) section. It is safe to delay running cleanup until off-peak hours.
+
+### Node Status
+
+It is sometimes useful to retrieve information about a Cassandra node for the purpose of troubleshooting or to examine the node's properties. You can request that a node report its status using the following command from the CLI.
+
+```bash
+dcos cassandra --framework-name=<framewor-name> node status <nodeid>
+```
+This command queries the node status directly from the node. If the command fails to return, it may indicate that the node is troubled. Here nodeid is the the sequential integer identifier of the node (e.g. 0, 1, 2 , ..., n). The result that will be returned is as below.
+
+```json
+{
+    "data_center": "dc1",
+    "endpoint": "10.0.3.64",
+    "gossip_initialized": true,
+    "gossip_running": true,
+    "host_id": "32bed59f-3100-40fc-8512-a82aef65abb3",
+    "joined": true,
+    "mode": "NORMAL",
+    "native_transport_running": true,
+    "rack": "rac1",
+    "token_count": 256,
+    "version": "2.2.5"
+}
+```
+| Property                 | Type    | Description     |
+| ------------------------ | ------- | --------------- |
+| data_center | string | The datacenter that the Cassandra node is configured to run in. This has implications for tables created with topology aware replication strategies. The multidatacenter topologies are not currently supported, they will be in future releases.| 
+| endpoint | string | The address of the storage service in the Cluster. |
+| gossip_initialized | boolean | If true, the node has initialized the internal gossip protocol. This value should be true if the node is healthy|
+| gossip_running | boolean | If true, node's gossip protocol is running. This value should be true if the node is healthy|
+| host_id | string| The host id that is exposed to as part of Cassandra's internal protocols. This value may be useful when examining the Cassandra process logs in the cluster. Host's are sometimes referenced by id.|
+| joined | true | If true, the node has successfully joined the cluster. This value should always be true if the node is healthy.|
+| mode | string | The operating mode of the Cassandra node. If the mode is STARTING, JOINING, or JOINED, the node is initializing. If the mode is NORMAL, the node is healthy and ready to receive client requests.|
+| native_transport_running | boolean | If true, the node can service requests over the native transport port using the CQL protocol. If this value is not true, then the node is not capable of serving requests to clients.|
+|rack| string | The rack assigned to the Cassandra node. This property is important for topology aware replication strategies. For the DCOS Cassandra service all nodes in the cluster should report the same value.|
+|token_count | integer | The number of tokens assigned to the node. The Cassandra DCOS service only supports virtual node based deployments. As the resources allocated to each instance are homogenous, the number of tokens assigned to each node is identical and should always be 256.|
+|version| string | The version of Cassandra that is running on the node.|
+
+### Node Info
+
+To view general information about a node, the following command my be run from the CLI.
+```bash
+dcos cassandra --framework-name=<framewor-name> node describe <nodeid>
+```
+In contrast to the status command, this command requests information from the DCOS Cassandra Service and not the Cassandra node. 
+
+```json
+{
+    "hostname": "10.0.3.64",
+    "id": "node-0_2db151cb-e837-4fef-b17b-fbdcd25fadcc",
+    "name": "node-0",
+    "mode": "NORMAL",
+    "slave_id": "8a22d1e9-bfc6-4969-a6bf-6d54c9d41ee3-S4",
+    "state": "TASK_RUNNING"
+}
+```
+
+| Property                 | Type    | Description     |
+| ------------------------ | ------- | --------------- |
+| hostname | string | The hostname or ip address of the DCOS agent on which the node is running.|
+| id | string |  The DCOS identifier of the task for the Cassandra node.|
+| name | string | The name of the Cassandra node. |
+| mode | string | The operating mode of the Cassandra node as recorded by the DCOS Cassandra service. This value should be eventually consistent with the mode returned by the status command.|
+| slave_id | string | The identifier of the DCOS slave agent where the node is running.|
+| state | string | The state of the task for the Cassandra node. If the node is being installed this value may be TASK_STATING or TASK_STARTING. Under normal operating conditions the state should be TASK_RUNNING. The state may be temporarily displayed as TASK_FINISHED during configuration updates or upgrades.|
 
 ### Cleanup
 
@@ -993,6 +1057,20 @@ curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 ```
 
 ### Managing
+
+#### Node Status
+The status of a node can be retrieved by sending a GET request to `/v1/nodes/status`.
+
+``` bash
+curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/status
+```
+
+#### Node Info
+Node information can be retrieved by sending a GET request to `/v1/nodes/info`.
+
+``` bash
+curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/status
+```
 
 #### Cleanup
 
