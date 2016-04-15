@@ -199,7 +199,6 @@ To start a minimal cluster with a single node, create a JSON options file named 
             "size": 1024,
             "new": 100
         },
-        "volume_size": 4096,
         "count": 1,
         "seeds": 1
     }
