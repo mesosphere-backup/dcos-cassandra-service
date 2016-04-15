@@ -94,7 +94,7 @@ DCOS Cassandra provides the following features:
 - Runtime configuration and software updates for high availability
 - Health checks and metrics for monitoring
 - Backup and restore for disaster recovery
-- Cluster wide automation Cleanup and Repair 
+- Cluster wide automation Cleanup and Repair
 
 ### Related Services
 
@@ -129,7 +129,7 @@ Let's [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshclus
 
 ```
 $ dcos node ssh --master-proxy --leader
-core@ip-10-0-6-153 ~ $ 
+core@ip-10-0-6-153 ~ $
 ```
 
 We are now inside our DC/OS cluster and can connect to our Cassandra cluster directly. Let's launch a docker container containing `cqlsh` to connect to our cassandra cluster. We'll use one of the hosts that we retrieved from the `connection` command that we ran previously:
@@ -175,9 +175,9 @@ To start a the default cluster, run the following command on the DCOS CLI. The d
 $ dcos package install cassandra
 ```
 
-This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `framework-name` at install time](#custom-installation) for each additional instance.
+This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `name` at install time](#custom-installation) for each additional instance.
 
-All `dcos cassandra` CLI commands have a `--framework-name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a framework name, the CLI assumes the default value, `cassandra`. The default value for `--framework-name` can be customized via the DCOS CLI configuration.
+All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a framework name, the CLI assumes the default value, `cassandra`. The default value for `--name` can be customized via the DCOS CLI configuration.
 
 ``` bash
 $ dcos config set cassandra.framework_name new_default_name
@@ -185,7 +185,7 @@ $ dcos config set cassandra.framework_name new_default_name
 
 #### Minimal Installation
 You may wish to install Cassandra on a local DCOS cluster. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
-As with the default installation, you must ensure that ports 7000,7001,7199,9042, and 9160 are available. Note that this configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development. 
+As with the default installation, you must ensure that ports 7000,7001,7199,9042, and 9160 are available. Note that this configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
 
 To start a minimal cluster with a single node, create a JSON options file named `sample-cassandra-minimal.json`:
 
@@ -232,7 +232,7 @@ See [Configuration Options](#configuration-options) for a list of fields that ca
 
 ### Multiple Cassandra Cluster Installation
 
-Installing multiple Cassandra clusters is identical to installing a Cassandra cluster with a custom configuration as described above. Use a JSON options file to specify a unique `framework-name` for each installation:
+Installing multiple Cassandra clusters is identical to installing a Cassandra cluster with a custom configuration as described above. Use a JSON options file to specify a unique `name` for each installation:
 
 ``` json
 $ cat cassandra1.json
@@ -245,58 +245,58 @@ $ cat cassandra1.json
 $ dcos package install cassandra --options=cassandra1.json
 ```
 
-In order to avoid port conflicts, by default you cannot collocate more than one Cassandra instance on the same node. 
+In order to avoid port conflicts, by default you cannot collocate more than one Cassandra instance on the same node.
 
 #### Installation Plan
-When the DCOS Cassandra service is initially installed it will generate an installation plan as shown below. 
+When the DCOS Cassandra service is initially installed it will generate an installation plan as shown below.
 
 ``` json
 {
-    "errors": [], 
+    "errors": [],
     "phases": [
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
-                    "message": "Reconciliation complete", 
-                    "name": "Reconciliation", 
+                    "has_decision_point": false,
+                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                    "message": "Reconciliation complete",
+                    "name": "Reconciliation",
                     "status": "Complete"
                 }
-            ], 
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
-            "name": "Reconciliation", 
+            ],
+            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+            "name": "Reconciliation",
             "status": "Complete"
-        }, 
+        },
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
-                    "message": "Deploying Cassandra node node-0", 
-                    "name": "node-0", 
+                    "has_decision_point": false,
+                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                    "message": "Deploying Cassandra node node-0",
+                    "name": "node-0",
                     "status": "Complete"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
-                    "message": "Deploying Cassandra node node-1", 
-                    "name": "node-1", 
+                    "has_decision_point": false,
+                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                    "message": "Deploying Cassandra node node-1",
+                    "name": "node-1",
                     "status": "InProgress"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
-                    "message": "Deploying Cassandra node node-2", 
-                    "name": "node-2", 
+                    "has_decision_point": false,
+                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                    "message": "Deploying Cassandra node node-2",
+                    "name": "node-2",
                     "status": "Pending"
                 }
-            ], 
-            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
-            "name": "Deploy", 
+            ],
+            "id": "c4f61c72-038d-431c-af73-6a9787219233",
+            "name": "Deploy",
             "status": "InProgress"
         }
-    ], 
+    ],
     "status": "InProgress"
 }
 ```
@@ -341,9 +341,9 @@ $ dcos package uninstall --app-id=cassandra
 
 Then, use the [framework cleaner script](https://github.com/mesosphere/framework-cleaner) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your framework name:
 
-- `framework-role` is `<framework-name>-role`.
-- `framework-principle` is `<framework-name>-principal`.
-= `zk_path` is `<framework-name>`.
+- `framework-role` is `<name>-role`.
+- `framework-principle` is `<name>-principal`.
+= `zk_path` is `<name>`.
 
 ## Configuring
 
@@ -362,7 +362,7 @@ The Cassandra scheduler runs as a Marathon process and can be reconfigured by ch
 
 Configuration updates are rolled out through execution of Update Plans. You can configure the way these plans are executed.
 
-##### Configuration Update Plans 
+##### Configuration Update Plans
 This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration. However, the default strategy can be overridden by a strategy the user provides.
 
 ### Configuration Update
@@ -377,51 +377,51 @@ Response will look similar to this:
 
 ``` json
 {
-    "errors": [], 
+    "errors": [],
     "phases": [
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
-                    "message": "Reconciliation complete", 
-                    "name": "Reconciliation", 
+                    "has_decision_point": false,
+                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                    "message": "Reconciliation complete",
+                    "name": "Reconciliation",
                     "status": "Complete"
                 }
-            ], 
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
-            "name": "Reconciliation", 
+            ],
+            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+            "name": "Reconciliation",
             "status": "Complete"
-        }, 
+        },
         {
             "blocks": [
                 {
-                    "has_decision_point": true, 
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
-                    "message": "Deploying Cassandra node node-0", 
-                    "name": "node-0", 
+                    "has_decision_point": true,
+                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                    "message": "Deploying Cassandra node node-0",
+                    "name": "node-0",
                     "status": "Pending"
-                }, 
+                },
                 {
-                    "has_decision_point": true, 
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
-                    "message": "Deploying Cassandra node node-1", 
-                    "name": "node-1", 
+                    "has_decision_point": true,
+                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                    "message": "Deploying Cassandra node node-1",
+                    "name": "node-1",
                     "status": "Pending"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
-                    "message": "Deploying Cassandra node node-2", 
-                    "name": "node-2", 
+                    "has_decision_point": false,
+                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                    "message": "Deploying Cassandra node node-2",
+                    "name": "node-2",
                     "status": "Pending"
                 }
-            ], 
-            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
-            "name": "Deploy", 
+            ],
+            "id": "c4f61c72-038d-431c-af73-6a9787219233",
+            "name": "Deploy",
             "status": "Pending"
         }
-    ], 
+    ],
     "status": "InProgress"
 }
 ```
@@ -432,51 +432,51 @@ If you query the plan again, the response will look like this (notice `status: "
 
 ``` json
 {
-    "errors": [], 
+    "errors": [],
     "phases": [
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
-                    "message": "Reconciliation complete", 
-                    "name": "Reconciliation", 
+                    "has_decision_point": false,
+                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                    "message": "Reconciliation complete",
+                    "name": "Reconciliation",
                     "status": "Complete"
                 }
-            ], 
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
-            "name": "Reconciliation", 
+            ],
+            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+            "name": "Reconciliation",
             "status": "Complete"
-        }, 
+        },
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
-                    "message": "Deploying Cassandra node node-0", 
-                    "name": "node-0", 
+                    "has_decision_point": false,
+                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                    "message": "Deploying Cassandra node node-0",
+                    "name": "node-0",
                     "status": "Complete"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
-                    "message": "Deploying Cassandra node node-1", 
-                    "name": "node-1", 
+                    "has_decision_point": false,
+                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                    "message": "Deploying Cassandra node node-1",
+                    "name": "node-1",
                     "status": "Pending"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
-                    "message": "Deploying Cassandra node node-2", 
-                    "name": "node-2", 
+                    "has_decision_point": false,
+                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                    "message": "Deploying Cassandra node node-2",
+                    "name": "node-2",
                     "status": "InProgress"
                 }
-            ], 
-            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
-            "name": "Deploy", 
+            ],
+            "id": "c4f61c72-038d-431c-af73-6a9787219233",
+            "name": "Deploy",
             "status": "Waiting"
         }
-    ], 
+    ],
     "status": "Waiting"
 }
 ```
@@ -489,51 +489,51 @@ After you execute the continue operation, the plan will look like this:
 
 ``` json
 {
-    "errors": [], 
+    "errors": [],
     "phases": [
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
-                    "message": "Reconciliation complete", 
-                    "name": "Reconciliation", 
+                    "has_decision_point": false,
+                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                    "message": "Reconciliation complete",
+                    "name": "Reconciliation",
                     "status": "Complete"
                 }
-            ], 
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
-            "name": "Reconciliation", 
+            ],
+            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+            "name": "Reconciliation",
             "status": "Complete"
-        }, 
+        },
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
-                    "message": "Deploying Cassandra node node-0", 
-                    "name": "node-0", 
+                    "has_decision_point": false,
+                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                    "message": "Deploying Cassandra node node-0",
+                    "name": "node-0",
                     "status": "Complete"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
-                    "message": "Deploying Cassandra node node-1", 
-                    "name": "node-1", 
+                    "has_decision_point": false,
+                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                    "message": "Deploying Cassandra node node-1",
+                    "name": "node-1",
                     "status": "Complete"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
-                    "message": "Deploying Cassandra node node-2", 
-                    "name": "node-2", 
+                    "has_decision_point": false,
+                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                    "message": "Deploying Cassandra node node-2",
+                    "name": "node-2",
                     "status": "Pending"
                 }
-            ], 
-            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
-            "name": "Deploy", 
+            ],
+            "id": "c4f61c72-038d-431c-af73-6a9787219233",
+            "name": "Deploy",
             "status": "Pending"
         }
-    ], 
+    ],
     "status": "InProgress"
 }
 ```
@@ -564,7 +564,7 @@ The service configuration object contains properties that MUST be specified duri
 | principal| string | The authentication principal for the Cassandra cluster. |
 |secret    | string | An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DCOS cluster. This parameter is optional, and should be omitted unless the DCOS deployment is specifically configured for authentication. |
 
-- **In the DCOS CLI, options.json**: `framework-name` = string (default: `cassandra`)
+- **In the DCOS CLI, options.json**: `name` = string (default: `cassandra`)
 - **In Marathon**: The framework name cannot be changed after the cluster has started.
 
 #### Node Configuration
@@ -693,7 +693,7 @@ The endpoint snitch for the service is always the `GossipPropertyFileSnitch`, bu
 
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
-| dynamic_snitch_badness_threshold | number |  Controls how much worse a poorly performing node has to be before the dynamic snitch prefers other replicas over it. A value of 0.2 means Cassandra continues to prefer the static snitch values until the node response time is 20% worse than the best performing node. Until the threshold is reached, incoming requests are statically routed to the closest replica. | 
+| dynamic_snitch_badness_threshold | number |  Controls how much worse a poorly performing node has to be before the dynamic snitch prefers other replicas over it. A value of 0.2 means Cassandra continues to prefer the static snitch values until the node response time is 20% worse than the best performing node. Until the threshold is reached, incoming requests are statically routed to the closest replica. |
 | dynamic_snitch_reset_interval_in_ms | integer | Time interval, in ms, to reset all node scores, allowing a bad nodes to recover. |
 | dynamic_snitch_update_interval_in_ms | integer | The time interval, in ms, for node score calculation. This is a CPU intensive operation. Reducing this interval should be performed with extreme caution. |
 
@@ -708,7 +708,7 @@ The partition key cache is a cache of the partition index for a Cassandra table.
 
 #### Global Row Cache Configuration
 
-Row caching caches both the key and the associated row in memory. During the read path, when rows are reconstructed from the `MemTable` and `SSTables`, the reconstructed row is cached in memory preventing further reads from storage media until the row is ejected or dirtied. 
+Row caching caches both the key and the associated row in memory. During the read path, when rows are reconstructed from the `MemTable` and `SSTables`, the reconstructed row is cached in memory preventing further reads from storage media until the row is ejected or dirtied.
 Like key caching, row caching is configurable on a per table basis, but it should be used with extreme caution. Misusing row caching can overwhelm the JVM and cause Cassandra to crash. Use row caching under the following conditions: only if you are absolutely certain that doing so will not overwhelm the JVM, the partition you will cache is small, and client applications will read most of the partition all at once.
 
 The following configuration properties are global for all row caches.
@@ -742,7 +742,7 @@ The only supported client for the DSOC Cassandra Service is the Datastax Java CQ
 The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
 ``` bash
-dcos cassandra --framework-name=<framework-name> connection
+dcos cassandra --name=<framework-name> connection
 ```
 
 ### Connection Info Response
@@ -838,7 +838,7 @@ Increase the `NODES` value via Marathon as described in the [Configuration Updat
 It is sometimes useful to retrieve information about a Cassandra node for the purpose of troubleshooting or to examine the node's properties. You can request that a node report its status using the following command from the CLI.
 
 ```bash
-dcos cassandra --framework-name=<framewor-name> node status <nodeid>
+dcos cassandra --name=<framework-name> node status <nodeid>
 ```
 This command queries the node status directly from the node. If the command fails to return, it may indicate that the node is troubled. Here nodeid is the the sequential integer identifier of the node (e.g. 0, 1, 2 , ..., n). The result that will be returned is as below.
 
@@ -859,7 +859,7 @@ This command queries the node status directly from the node. If the command fail
 ```
 | Property                 | Type    | Description     |
 | ------------------------ | ------- | --------------- |
-| data_center | string | The datacenter that the Cassandra node is configured to run in. This has implications for tables created with topology aware replication strategies. The multidatacenter topologies are not currently supported, they will be in future releases.| 
+| data_center | string | The datacenter that the Cassandra node is configured to run in. This has implications for tables created with topology aware replication strategies. The multidatacenter topologies are not currently supported, they will be in future releases.|
 | endpoint | string | The address of the storage service in the Cluster. |
 | gossip_initialized | boolean | If true, the node has initialized the internal gossip protocol. This value should be true if the node is healthy|
 | gossip_running | boolean | If true, node's gossip protocol is running. This value should be true if the node is healthy|
@@ -875,9 +875,9 @@ This command queries the node status directly from the node. If the command fail
 
 To view general information about a node, the following command my be run from the CLI.
 ```bash
-dcos cassandra --framework-name=<framewor-name> node describe <nodeid>
+dcos cassandra --name=<framework-name> node describe <nodeid>
 ```
-In contrast to the status command, this command requests information from the DCOS Cassandra Service and not the Cassandra node. 
+In contrast to the status command, this command requests information from the DCOS Cassandra Service and not the Cassandra node.
 
 ```json
 {
@@ -906,25 +906,25 @@ Cassandra does not automatically remove data when a node loses part of its parti
 To perform a cleanup from the CLI, enter the following command:
 
 ``` bash
-dcos cassandra --framework-name=<framewor-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+dcos cassandra --name=<framework-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup, `<key_spaces>` is an optional comma-separated list of the key spaces to cleanup, and `<column-families>` is an optional comma-separated list of the column-families to cleanup.
 If no arguments are specified a cleanup will be performed for all nodes, key spaces, and column families.
 
 ### Repair
-Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed. 
+Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed.
 Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra framework will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
 To perform a repair from the CLI, enter the following command:
 
 ``` bash
-dcos cassandra --framework-name=<framewor-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+dcos cassandra --name=<framework-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
 If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
- 
+
 ### Backup and Restore
 
 DCOS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
@@ -938,8 +938,8 @@ You can take a complete snapshot of your DCOS Cassandra ring and upload the arti
 To perform a backup, enter the following command on the DCOS CLI:
 
 ``` bash
-dcos cassandra --framework-name=<framework-name> backup start \
-    --name=<backup-name> \
+dcos cassandra --name=<framework-name> backup start \
+    --backup_name=<backup-name> \
     --external_location=s3://<bucket-name> \
     --s3_access_key=<s3-access-key> \
     --s3_secret_key=<s3-secret-key>
@@ -948,7 +948,7 @@ dcos cassandra --framework-name=<framework-name> backup start \
 Check status of the backup:
 
 ``` bash
-dcos cassandra --framework-name=<framewor-name> backup status
+dcos cassandra --name=<framework-name> backup status
 ```
 
 #### Restore
@@ -958,8 +958,8 @@ You can restore your DCOS Cassandra snapshots on a new Cassandra ring.
 To restore, enter the following command on the DCOS CLI:
 
 ``` bash
-dcos cassandra --framework-name=<framework-name> restore start \
-    --name=<backup-name> \
+dcos cassandra --name=<framework-name> restore start \
+    --backup_name=<backup-name> \
     --external_location=s3://<bucket-name> \
     --s3_access_key=<s3-access-key> \
     --s3_secret_key=<s3-secret-key>
@@ -968,7 +968,7 @@ dcos cassandra --framework-name=<framework-name> restore start \
 Check the status of the restore:
 
 ``` bash
-dcos cassandra --framework-name=<framework-name> restore status
+dcos cassandra --name=<framework-name> restore status
 ```
 
 ## Troubleshooting
@@ -978,51 +978,51 @@ The plan below shows shows contains a configuration error that will not allow th
 
 ``` json
 {
-    "errors": ["The number of seeds is greater than the number of nodes."], 
+    "errors": ["The number of seeds is greater than the number of nodes."],
     "phases": [
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87", 
-                    "message": "Reconciliation complete", 
-                    "name": "Reconciliation", 
+                    "has_decision_point": false,
+                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                    "message": "Reconciliation complete",
+                    "name": "Reconciliation",
                     "status": "Complete"
                 }
-            ], 
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929", 
-            "name": "Reconciliation", 
+            ],
+            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+            "name": "Reconciliation",
             "status": "Complete"
-        }, 
+        },
         {
             "blocks": [
                 {
-                    "has_decision_point": false, 
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68", 
-                    "message": "Deploying Cassandra node node-0", 
-                    "name": "node-0", 
+                    "has_decision_point": false,
+                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                    "message": "Deploying Cassandra node node-0",
+                    "name": "node-0",
                     "status": "Pending"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8", 
-                    "message": "Deploying Cassandra node node-1", 
-                    "name": "node-1", 
+                    "has_decision_point": false,
+                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                    "message": "Deploying Cassandra node node-1",
+                    "name": "node-1",
                     "status": "Pending"
-                }, 
+                },
                 {
-                    "has_decision_point": false, 
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125", 
-                    "message": "Deploying Cassandra node node-2", 
-                    "name": "node-2", 
+                    "has_decision_point": false,
+                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                    "message": "Deploying Cassandra node node-2",
+                    "name": "node-2",
                     "status": "Pending"
                 }
-            ], 
-            "id": "c4f61c72-038d-431c-af73-6a9787219233", 
-            "name": "Deploy", 
+            ],
+            "id": "c4f61c72-038d-431c-af73-6a9787219233",
+            "name": "Deploy",
             "status": "Pending"
         }
-    ], 
+    ],
     "status": "Error"
 }
 ```
@@ -1032,13 +1032,13 @@ To proceed with the installation or configuration update fix the indicated error
 The DCOS Cassandra Service is resilient to temporary node failures. However, if a DCOS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server.
 
 ``` bash
-dcos cassandra --framework-name=<framework-name> node replace <node_id>
+dcos cassandra --name=<framework-name> node replace <node_id>
 ```
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
 
 ## API Reference
-The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token. 
+The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.
 The <dcos_url> parameter referenced below indicates the base URL of the DCOS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
 
 ###Configuration
