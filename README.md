@@ -751,15 +751,44 @@ The response is as below.
 
 ``` json
 {
-    "nodes": [
+    "address": [
         "10.0.0.47:9042",
         "10.0.0.50:9042",
         "10.0.0.49:9042"
+    ],
+    "dns": [
+         "node-0.cassandra.mesos:9042",
+         "node-1.cassandra.mesos:9042",
+         "node-2.cassandra.mesos:9042"
     ]
+    
 }
 ```
 
-This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the configuration of the CQL Driver used by the application. 
+This address JSON array contains a list of valid nodes addresses for nodes in the cluster. 
+The dns JSON array contains valid MesosDNS names for the same nodes. For availability 
+reasons, it is best to specify multiple nodes in the configuration of the CQL Driver used 
+by the application. 
+
+If IP addresses are used, and a Cassandra node is moved to a different IP
+address, the address in the list passed to the Cluster configuration of the application 
+should be changed. Note that, once the application is connected to the Cluster, moving a 
+node to a new IP address will not result in a loss of connectivity. The CQL Driver is 
+capable of dealing with topology changes. However, the application's 
+configuration should be pointed to the new address the next time the application is 
+restarted.
+
+If DNS ames are used, the DNS name will always resolve to correct IP address of the node. 
+This is true, even if the node is moved to a new IP address. However, it is important to 
+understand the DNS caching behavior of your application. For a Java application using  
+the CQL driver, if a SecurityManager is installed the default behavior is to cache a 
+successful DNS lookup forever. Therefore, if a node moves, your application will always 
+maintain the original address. If no security manager is installed, the default cache 
+behavior falls back to an implementation defined timeout. If a node moves in this case, 
+the behavior is generally undefined. If you choose to use DNS to resolve entry points to 
+the cluster, the safest method is to set networkaddress.cache.ttl to a reasonable value.
+As with the IP address method, the CQL driver still detect topology changes and reamin 
+connected even if a node moves.
 
 ### Configuring the CQL Driver
 #### Adding the Driver to Your Application
