@@ -1014,8 +1014,6 @@ It is sometimes useful to retrieve information about a Cassandra node for troubl
 ```bash
 dcos cassandra --name=<framework-name> node status <nodeid>
 ```
-$ dcos cassandra --framework-name=<framework-name> node status <nodeid>
-```
 
 This command queries the node status directly from the node. If the command fails to return, it may indicate that the node is troubled. Here, `nodeid` is the the sequential integer identifier of the node (e.g. 0, 1, 2 , ..., n).
 
