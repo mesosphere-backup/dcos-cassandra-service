@@ -45,11 +45,17 @@ Once the cluster is installed, retrieve connection information by running the `c
 ```
 $ dcos cassandra connection
 {
-    "nodes": [
+    "address": [
         "10.0.2.136:9042",
         "10.0.2.138:9042",
         "10.0.2.137:9042"
+    ],
+    "dns": [
+         "node-0.cassandra.mesos:9042",
+         "node-1.cassandra.mesos:9042",
+         "node-2.cassandra.mesos:9042"
     ]
+   
 }
 ```
 
@@ -62,7 +68,7 @@ core@ip-10-0-6-153 ~ $
 
 We are now inside our DC/OS cluster and can connect to our Cassandra cluster directly.
 
-Launch a docker container containing `cqlsh` to connect to our cassandra cluster. We'll use one of the hosts we retrieved from the `connection` command that we ran previously:
+Launch a docker container containing `cqlsh` to connect to our cassandra cluster. We'll use one of the nodes we retrieved from the `connection` command that we ran previously:
 
 ```
 core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh 10.0.2.136
