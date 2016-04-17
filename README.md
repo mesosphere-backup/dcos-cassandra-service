@@ -114,11 +114,7 @@ $ dcos package install cassandra
 
 This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `name` at install time](#custom-installation) for each additional instance.
 
-All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a service name, the CLI assumes the default value, `cassandra`. The default value for `--name` can be customized via the DCOS CLI configuration.
-
-```
-$ dcos config set cassandra.service_name new_default_name
-```
+All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a service name, the CLI assumes the default value, `cassandra`.
 
 ### Minimal Installation
 You may wish to install Cassandra on a local DCOS cluster. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
