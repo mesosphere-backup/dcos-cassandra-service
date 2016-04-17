@@ -117,7 +117,7 @@ This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot s
 All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a service name, the CLI assumes the default value, `cassandra`. The default value for `--name` can be customized via the DCOS CLI configuration.
 
 ```
-$ dcos config set cassandra.framework_name new_default_name
+$ dcos config set cassandra.service_name new_default_name
 ```
 
 ### Minimal Installation
