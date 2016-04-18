@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.common.tasks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
@@ -256,6 +257,10 @@ public class CassandraDaemonTask extends CassandraTask {
     public CassandraConfig getConfig() {
         return config;
     }
+    
+    @JsonIgnore
+    public int getNativeTransportPort() { return config.getApplication().getNativeTransportPort(); }
+
 
     @Override
     public CassandraProtos.CassandraTaskData getTaskData() {
@@ -356,9 +361,6 @@ public class CassandraDaemonTask extends CassandraTask {
                 config,
                 (CassandraDaemonStatus) status);
     }
-
-    @Override
-    public int getNativeTransportPort() { return config.getApplication().getNativeTransportPort(); }
 
     @Override
     public List<Resource> getReserveResources() {
