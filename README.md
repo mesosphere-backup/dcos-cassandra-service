@@ -32,7 +32,7 @@ DCOS Cassandra provides the following features:
 
 ## Quick Start
 
-Install a Cassandra cluster using DCOS CLI:
+* Step 1. Install a Cassandra cluster using DCOS CLI:
 
 **Note:** Your cluster must have at least 3 private nodes.
 
@@ -40,7 +40,7 @@ Install a Cassandra cluster using DCOS CLI:
 $ dcos package install cassandra
 ```
 
-Once the cluster is installed, retrieve connection information by running the `connection` command:
+* Step 2. Once the cluster is installed, retrieve connection information by running the `connection` command:
 
 ```
 $ dcos cassandra connection
@@ -59,35 +59,35 @@ $ dcos cassandra connection
 }
 ```
 
-Let's [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
+* Step 3. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
 
 ```
 $ dcos node ssh --master-proxy --leader
 core@ip-10-0-6-153 ~ $
 ```
 
-We are now inside our DC/OS cluster and can connect to our Cassandra cluster directly.
+Now that you are inside your DC/OS cluster, you can connect to your Cassandra cluster directly.
 
-Launch a docker container containing `cqlsh` to connect to our cassandra cluster. We'll use one of the nodes we retrieved from the `connection` command that we ran previously:
+* Step 4. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
 
 ```
 core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh 10.0.2.136
 cqlsh>
 ```
 
-We are now connected to our Cassandra cluster. Create a sample keyspace called `demo`:
+* Step 5. You are now connected to your Cassandra cluster. Create a sample keyspace called `demo`:
 
 ```
 cqlsh> CREATE KEYSPACE demo WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
 ```
 
-Next, create a sample table called `map` in our `demo` keyspace:
+* Step 6. Create a sample table called `map` in our `demo` keyspace:
 
 ```
 cqlsh> USE demo;CREATE TABLE map (key varchar, value varchar, PRIMARY KEY(key));
 ```
 
-Now, insert some data in the table:
+* Step 7. Insert some data in the table:
 
 ```
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Cassandra', 'Rocks!');
@@ -95,7 +95,7 @@ cqlsh> INSERT INTO demo.map(key, value) VALUES('StaticInfrastructure', 'BeGone!'
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Buzz', 'DC/OS is the new black!');
 ```    
 
-Now that you have inserted some data, query it back to make sure it's persisted correctly:
+* Step 8. Query the data back to make sure it persisted correctly:
 
 ```
 cqlsh> SELECT * FROM demo.map;
