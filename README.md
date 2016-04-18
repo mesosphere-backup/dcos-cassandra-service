@@ -128,6 +128,11 @@ To start a minimal cluster with a single node, create a JSON options file named 
 
 ```
 {
+    "service" : {
+       "cpus": 0.1,
+       "mem": 512,
+       "heap": 256
+    },
     "nodes": {
         "cpus": 0.5,
         "mem": 2048,
@@ -138,10 +143,19 @@ To start a minimal cluster with a single node, create a JSON options file named 
         },
         "count": 1,
         "seeds": 1
+    },
+    "executor" : {
+       "cpus": 0.1,
+       "mem": 512,
+       "heap": 256
+    },
+    "task" : {
+       "cpus": 0.1,
+       "mem": 128,
     }
 }
 ```
-This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an addition 3 Gb of memory for the DCOS Cassandra Framework itself. Also, cluster operations will require an addition 512 Mb of memory.
+This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DCOS Cassandra Service executor and 128 Mb for clusters tasks. The DCOS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 ### Custom Installation
 
@@ -490,7 +504,11 @@ The service configuration object contains properties that MUST be specified duri
         "name": "cassandra2",
         "role": "cassandra_role",
         "principal": "cassandra_principal",
-        "secret" : "/path/to/secret_file"
+        "secret" : "/path/to/secret_file",
+        "cpus" : 0.5,
+        "mem" : 2048,
+        "heap" : 1024,
+        "api_port" : 9000
     }
 }
 ```
@@ -513,7 +531,7 @@ The service configuration object contains properties that MUST be specified duri
     <td>The authentication and resource role of the Cassandra cluster.</td>
   </tr>
   
-   <tr>
+  <tr>
     <td>principal</td>
     <td>string</td>
     <td>The authentication principal for the Cassandra cluster.</td>
@@ -524,6 +542,30 @@ The service configuration object contains properties that MUST be specified duri
     <td>string</td>
     <td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DCOS cluster. This parameter is optional, and should be omitted unless the DCOS deployment is specifically configured for authentication.</td>
   </tr>
+  
+   <tr>
+      <td>cpus</td>
+      <td>number</td>
+      <td>The number of CPU shares allocated to the DCOS Cassandra Service scheduler. </td>
+    </tr>
+    
+    <tr>
+      <td>mem</td>
+      <td>integer</td>
+      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
+    </tr>
+    
+    <tr>
+      <td>heap</td>
+      <td>integer</td>
+      <td>The amount of heap, in MB, allocated for the DCOS Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
+    </tr>
+    
+    <tr>
+      <td>api_port</td>
+      <td>integer</td>
+      <td>The port that the scheduler will accept API requests on.</td>
+    </tr>
   
 </table>
 
@@ -603,6 +645,86 @@ Example node configuration:
   
 </table>
 
+### Executor Configuration
+The executor configuration object allows you modify the resources associated with the DCOS Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
+Example executor configuration:
+```
+{
+    "executor": {
+        "cpus": 0.5,
+        "mem": 1024,
+        "heap" : 768,
+        "disk": 1024,
+        "api_port": 9001
+    }
+}
+```
+
+<table class="table">
+    <tr>
+    <th>Property</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+   <tr>
+      <td>cpus</td>
+      <td>number</td>
+      <td>The number of CPU shares allocated to the DCOS Cassandra Service executor. </td>
+    </tr>
+    
+    <tr>
+      <td>mem</td>
+      <td>integer</td>
+      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
+    </tr>
+    
+    <tr>
+      <td>heap</td>
+      <td>integer</td>
+      <td>The amount of heap, in MB, allocated for the DCOS Cassandra Service executor.</td>
+    </tr>
+    
+    <tr>
+      <td>disk</td>
+      <td>integer</td>
+      <td>The amount of disk, in MB, allocated for the DCOS Cassandra Service executor.</td>
+    </tr>
+    
+    <tr>
+      <td>api_port</td>
+      <td>integer</td>
+      <td>The port that the executor will accept API requests on.</td>
+    </tr>
+  
+</table>
+### Task Configuration
+The task configuration object allows you to modify the resources associated with management operations.  Again, These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
+Example executor configuration:
+```
+{
+    "task": {
+        "cpus": 1.0,
+        "mem": 256
+    }
+}
+```
+<table class="table">
+    <tr>
+    <th>Property</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+   <tr>
+      <td>cpus</td>
+      <td>number</td>
+      <td>The number of CPU shares allocated to the DCOS Cassandra Service tasks. </td>
+    </tr>
+    <tr>
+      <td>mem</td>
+      <td>integer</td>
+      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service tasks.</td>
+    </tr>
+</table>
 ### Cassandra Application Configuration
 
 The Cassandra application is configured via the Cassandra JSON object. **You should not modify these settings without strong reason and an advanced knowledge of Cassandra internals and cluster operations.** The available configuration items are included for advanced users who need to tune the default configuration for specific workloads.
