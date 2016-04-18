@@ -32,7 +32,7 @@ DCOS Cassandra provides the following features:
 
 ## Quick Start
 
-Install a Cassandra cluster using DCOS CLI:
+* Step 1. Install a Cassandra cluster using DCOS CLI:
 
 **Note:** Your cluster must have at least 3 private nodes.
 
@@ -40,7 +40,7 @@ Install a Cassandra cluster using DCOS CLI:
 $ dcos package install cassandra
 ```
 
-Once the cluster is installed, retrieve connection information by running the `connection` command:
+* Step 2. Once the cluster is installed, retrieve connection information by running the `connection` command:
 
 ```
 $ dcos cassandra connection
@@ -59,35 +59,35 @@ $ dcos cassandra connection
 }
 ```
 
-Let's [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
+* Step 3. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
 
 ```
 $ dcos node ssh --master-proxy --leader
 core@ip-10-0-6-153 ~ $
 ```
 
-We are now inside our DC/OS cluster and can connect to our Cassandra cluster directly.
+Now that you are inside your DC/OS cluster, you can connect to your Cassandra cluster directly.
 
-Launch a docker container containing `cqlsh` to connect to our cassandra cluster. We'll use one of the nodes we retrieved from the `connection` command that we ran previously:
+* Step 4. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
 
 ```
 core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh 10.0.2.136
 cqlsh>
 ```
 
-We are now connected to our Cassandra cluster. Create a sample keyspace called `demo`:
+* Step 5. You are now connected to your Cassandra cluster. Create a sample keyspace called `demo`:
 
 ```
 cqlsh> CREATE KEYSPACE demo WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
 ```
 
-Next, create a sample table called `map` in our `demo` keyspace:
+* Step 6. Create a sample table called `map` in our `demo` keyspace:
 
 ```
 cqlsh> USE demo;CREATE TABLE map (key varchar, value varchar, PRIMARY KEY(key));
 ```
 
-Now, insert some data in the table:
+* Step 7. Insert some data in the table:
 
 ```
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Cassandra', 'Rocks!');
@@ -95,7 +95,7 @@ cqlsh> INSERT INTO demo.map(key, value) VALUES('StaticInfrastructure', 'BeGone!'
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Buzz', 'DC/OS is the new black!');
 ```    
 
-Now that you have inserted some data, query it back to make sure it's persisted correctly:
+* Step 8. Query the data back to make sure it persisted correctly:
 
 ```
 cqlsh> SELECT * FROM demo.map;
@@ -114,11 +114,7 @@ $ dcos package install cassandra
 
 This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `name` at install time](#custom-installation) for each additional instance.
 
-All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a service name, the CLI assumes the default value, `cassandra`. The default value for `--name` can be customized via the DCOS CLI configuration.
-
-```
-$ dcos config set cassandra.service_name new_default_name
-```
+All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a service name, the CLI assumes the default value, `cassandra`.
 
 ### Minimal Installation
 You may wish to install Cassandra on a local DCOS cluster. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
@@ -165,7 +161,7 @@ Sample JSON options file named `sample-cassandra.json`:
 
 ```
 {
-    "node": {
+    "nodes": {
         "nodes": 10,
         "seeds": 3
     }
@@ -519,22 +515,27 @@ The service configuration object contains properties that MUST be specified duri
     <th>Type</th>
     <th>Description</th>
   </tr>
+
   <tr>
     <td>name</td>
     <td>string</td>
     <td>The name of the Cassandra cluster.</td>
   </tr>
-  
+
   <tr>
-  	<td>role</td>
+    <td>user</td>
     <td>string</td>
-    <td>The authentication and resource role of the Cassandra cluster.</td>
+    <td>The name of the operating system user account Cassandra tasks run as.</td>
   </tr>
   
   <tr>
     <td>principal</td>
     <td>string</td>
     <td>The authentication principal for the Cassandra cluster.</td>
+  <tr>
+    <td>placement_strategy</TD>
+    <td>string</td>
+    <td>The name of the placement strategy of the Cassandra nodes.</td>
   </tr>
   
   <tr>
@@ -826,7 +827,7 @@ The DCOS Cassandra service only supports the commitlog_sync model for configurin
   </tr>
   
    <tr>
-    <td>commitlog_sync_periodInMs</td>
+    <td>commitlog_sync_period_in_ms</td>
     <td>integer</td>
     <td>The time, in ms, between successive calls to the fsync system call. This defines the maximum window between write acknowledgement and a potential data loss.</td>
   </tr>
@@ -1564,7 +1565,7 @@ First, create the request payload, for example, in a file `backup.json`:
 
 ```
 {
-    "name":"<backup-name>",
+    "backup_name":"<backup-name>",
     "external_location":"s3://<bucket-name>",
     "s3_access_key":"<s3-access-key>",
     "s3_secret_key":"<s3-secret-key>"
@@ -1592,7 +1593,7 @@ Next, create the request payload, for example, in a file `restore.json`:
 
 ```
 {
-    "name":"<backup-name-to-restore>",
+    "backup_name":"<backup-name-to-restore>",
     "external_location":"s3://<bucket-name-where-backups-are-stored>",
     "s3_access_key":"<s3-access-key>",
     "s3_secret_key":"<s3-secret-key>"
