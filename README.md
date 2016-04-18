@@ -147,7 +147,7 @@ Sample JSON options file named `sample-cassandra.json`:
 
 ```
 {
-    "node": {
+    "nodes": {
         "nodes": 10,
         "seeds": 3
     }
