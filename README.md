@@ -1438,7 +1438,7 @@ First, create the request payload, for example, in a file `backup.json`:
 
 ```
 {
-    "name":"<backup-name>",
+    "backup_name":"<backup-name>",
     "external_location":"s3://<bucket-name>",
     "s3_access_key":"<s3-access-key>",
     "s3_secret_key":"<s3-secret-key>"
@@ -1466,7 +1466,7 @@ Next, create the request payload, for example, in a file `restore.json`:
 
 ```
 {
-    "name":"<backup-name-to-restore>",
+    "backup_name":"<backup-name-to-restore>",
     "external_location":"s3://<bucket-name-where-backups-are-stored>",
     "s3_access_key":"<s3-access-key>",
     "s3_secret_key":"<s3-secret-key>"
