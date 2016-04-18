@@ -218,7 +218,7 @@ public class CassandraTaskExecutor {
                 (int) getTotalReservedDisk(resources,
                         role,
                         principal),
-                Integer.parseInt(env.get("JVM_OPTS")
+                Integer.parseInt(env.get("JAVA_OPTS")
                         .replace("-Xmx", "")
                         .replace("M", "")),
                 Integer.parseInt(env.get("EXECUTOR_API_PORT")),
@@ -377,7 +377,7 @@ public class CassandraTaskExecutor {
                                 .newBuilder().setName("JAVA_HOME")
                                 .setValue(javaHome).build(),
                         Protos.Environment.Variable
-                                .newBuilder().setName("JVM_OPTS")
+                                .newBuilder().setName("JAVA_OPTS")
                                 .setValue("-Xmx" + heapMb + "M").build(),
                         Protos.Environment.Variable
                                 .newBuilder().setName("EXECUTOR_API_PORT")

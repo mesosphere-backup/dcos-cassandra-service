@@ -46,7 +46,7 @@ public class CleanupResource {
             }  else if (manager.canStartCleanup()) {
 
                 manager.startCleanup(CleanupContext.create(
-                        new ArrayList<>(request.getNodes()),
+                       new ArrayList<>(getNodes(request)),
                         request.getKeySpaces(),
                         request.getColumnFamiles()
                 ));
