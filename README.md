@@ -504,7 +504,7 @@ The service configuration object contains properties that MUST be specified duri
   <tr>
     <td>user</td>
     <td>string</td>
-    <td>The name of operating system user account Cassandra tasks run as.</td>
+    <td>The name of the operating system user account Cassandra tasks run as.</td>
   </tr>
 
   <tr>
