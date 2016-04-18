@@ -483,10 +483,7 @@ The service configuration object contains properties that MUST be specified duri
 ```
 {
     "service": {
-        "name": "cassandra2",
-        "role": "cassandra_role",
-        "principal": "cassandra_principal",
-        "secret" : "/path/to/secret_file"
+        "name": "cassandra2"
     }
 }
 ```
@@ -497,30 +494,24 @@ The service configuration object contains properties that MUST be specified duri
     <th>Type</th>
     <th>Description</th>
   </tr>
+
   <tr>
     <td>name</td>
     <td>string</td>
     <td>The name of the Cassandra cluster.</td>
   </tr>
-  
+
   <tr>
-  	<td>role</td>
+    <td>user</td>
     <td>string</td>
-    <td>The authentication and resource role of the Cassandra cluster.</td>
+    <td>The name of operating system user account Cassandra tasks run as.</td>
   </tr>
-  
-   <tr>
-    <td>principal</td>
-    <td>string</td>
-    <td>The authentication principal for the Cassandra cluster.</td>
-  </tr>
-  
+
   <tr>
-    <td>secret</td>
+    <td>placement_strategy</TD>
     <td>string</td>
-    <td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DCOS cluster. This parameter is optional, and should be omitted unless the DCOS deployment is specifically configured for authentication.</td>
+    <td>The name of the placement strategy of the Cassandra nodes.</td>
   </tr>
-  
 </table>
 
 - **In the DCOS CLI, options.json**: `name` = string (default: `cassandra`)
@@ -700,7 +691,7 @@ The DCOS Cassandra service only supports the commitlog_sync model for configurin
   </tr>
   
    <tr>
-    <td>commitlog_sync_periodInMs</td>
+    <td>commitlog_sync_period_in_ms</td>
     <td>integer</td>
     <td>The time, in ms, between successive calls to the fsync system call. This defines the maximum window between write acknowledgement and a potential data loss.</td>
   </tr>
