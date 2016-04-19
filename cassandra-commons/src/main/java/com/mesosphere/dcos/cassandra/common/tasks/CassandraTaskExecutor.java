@@ -289,7 +289,7 @@ public class CassandraTaskExecutor {
             @JsonProperty("heap_mb") int heapMb,
             @JsonProperty("api_port") int apiPort,
             @JsonProperty("uris") List<String> uris,
-            @JsonProperty("javaHome") String javaHome,
+            @JsonProperty("java_home") String javaHome,
             @JsonProperty("metrics_enable") boolean metricsEnable,
             @JsonProperty("metrics_collector") String metricsCollector,
             @JsonProperty("metrics_prefix") String metricsPrefix,
