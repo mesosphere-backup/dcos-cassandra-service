@@ -54,7 +54,6 @@ public class ExecutorConfig {
             int diskMb,
             int heapMb,
             int apiPort,
-            int adminPort,
             String javaHome,
             URI jreLocation,
             URI executorLocation,
@@ -76,7 +75,6 @@ public class ExecutorConfig {
                 diskMb,
                 heapMb,
                 apiPort,
-                adminPort,
                 javaHome,
                 jreLocation,
                 executorLocation,
@@ -97,23 +95,22 @@ public class ExecutorConfig {
             @JsonProperty("command") String command,
             @JsonProperty("arguments") List<String> arguments,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb,
-            @JsonProperty("heapMb") int heapMb,
-            @JsonProperty("apiPort") int apiPort,
-            @JsonProperty("adminPort") int adminPort,
-            @JsonProperty("javaHome") String javaHome,
-            @JsonProperty("jreLocation") String jreLocation,
-            @JsonProperty("executorLocation") String executorLocation,
-            @JsonProperty("cassandraLocation") String cassandraLocation,
-            @JsonProperty("metricsEnable") boolean metricsEnable,
-            @JsonProperty("metricsCollector") String metricsCollector,
-            @JsonProperty("metricsPrefix") String metricsPrefix,
-            @JsonProperty("metricsPrefixIncludeHostname") boolean metricsPrefixIncludeHostname,
-            @JsonProperty("metricsFlushPeriod") int metricsFlushPeriod,
-            @JsonProperty("metricsFlushPeriodUnit") String metricsFlushPeriodUnit,
-            @JsonProperty("metricsHost") String metricsHost,
-            @JsonProperty("metricsPort") int metricsPort)
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb,
+            @JsonProperty("heap_mb") int heapMb,
+            @JsonProperty("api_port") int apiPort,
+            @JsonProperty("java_home") String javaHome,
+            @JsonProperty("jre_location") String jreLocation,
+            @JsonProperty("executor_location") String executorLocation,
+            @JsonProperty("cassandra_location") String cassandraLocation,
+            @JsonProperty("metrics_enable") boolean metricsEnable,
+            @JsonProperty("metrics_collector") String metricsCollector,
+            @JsonProperty("metrics_prefix") String metricsPrefix,
+            @JsonProperty("metrics_prefix_include_hostname") boolean metricsPrefixIncludeHostname,
+            @JsonProperty("metrics_flush_period") int metricsFlushPeriod,
+            @JsonProperty("metrics_flush_period_unit") String metricsFlushPeriodUnit,
+            @JsonProperty("metrics_host") String metricsHost,
+            @JsonProperty("metrics_port") int metricsPort)
             throws URISyntaxException, UnsupportedEncodingException {
 
         ExecutorConfig config = create(
@@ -124,7 +121,6 @@ public class ExecutorConfig {
                 diskMb,
                 heapMb,
                 apiPort,
-                adminPort,
                 javaHome,
                 URI.create(jreLocation),
                 URI.create(executorLocation),
@@ -147,37 +143,38 @@ public class ExecutorConfig {
     private final List<String> arguments;
     @JsonProperty("cpus")
     private final double cpus;
-    @JsonProperty("memoryMb")
+    @JsonProperty("memory_mb")
     private final int memoryMb;
-    @JsonProperty("diskMb")
+    @JsonProperty("disk_mb")
     private final int diskMb;
-    @JsonProperty("heapMb")
+    @JsonProperty("heap_mb")
     private final int heapMb;
-    @JsonProperty("apiPort")
+    @JsonProperty("api_port")
     private final int apiPort;
-    @JsonProperty("adminPort")
-    private final int adminPort;
-    @JsonProperty("javaHome")
-    private final String javaHome;
+
     private final URI jreLocation;
     private final URI executorLocation;
     private final URI cassandraLocation;
-    @JsonProperty("metricsEnable")
+
+    @JsonProperty("metrics_enable")
     private final boolean metricsEnable;
-    @JsonProperty("metricsCollector")
+    @JsonProperty("metrics_collector")
     private final String metricsCollector;
-    @JsonProperty("metricsPrefix")
+    @JsonProperty("metrics_prefix")
     private final String metricsPrefix;
-    @JsonProperty("metricsPrefixIncludeHostname")
+    @JsonProperty("metrics_prefix_include_hostname")
     private final boolean metricsPrefixIncludeHostname;
-    @JsonProperty("metricsFlushPeriod")
+    @JsonProperty("metrics_flush_period")
     private final int metricsFlushPeriod;
-    @JsonProperty("metricsFlushPeriodUnit")
+    @JsonProperty("metrics_flush_period_unit")
     private final String metricsFlushPeriodUnit;
-    @JsonProperty("metricsHost")
+    @JsonProperty("metrics_host")
     private final String metricsHost;
-    @JsonProperty("metricsPort")
+    @JsonProperty("metrics_port")
     private final int metricsPort;
+
+    @JsonProperty("java_home")
+    private final String javaHome;
 
     public ExecutorConfig(
             String command,
@@ -187,7 +184,6 @@ public class ExecutorConfig {
             int diskMb,
             int heapMb,
             int apiPort,
-            int adminPort,
             String javaHome,
             URI jreLocation,
             URI executorLocation,
@@ -201,7 +197,6 @@ public class ExecutorConfig {
             String metricsHost,
             int metricsPort) {
 
-        this.adminPort = adminPort;
         this.command = command;
         this.arguments = arguments;
         this.cpus = cpus;
@@ -223,9 +218,6 @@ public class ExecutorConfig {
         this.metricsPort = metricsPort;
     }
 
-    public int getAdminPort() {
-        return adminPort;
-    }
 
     public int getApiPort() {
         return apiPort;
@@ -271,17 +263,17 @@ public class ExecutorConfig {
         return memoryMb;
     }
 
-    @JsonProperty("jreLocation")
+    @JsonProperty("jre_location")
     public String getJreLocationString() {
         return jreLocation.toString();
     }
 
-    @JsonProperty("executorLocation")
+    @JsonProperty("executor_location")
     public String getExecutorLocationString() {
         return executorLocation.toString();
     }
 
-    @JsonProperty("cassandraLocation")
+    @JsonProperty("cassandra_location")
     public String getCassandraLocationString() {
         return cassandraLocation.toString();
     }
@@ -328,7 +320,6 @@ public class ExecutorConfig {
                 getDiskMb() == that.getDiskMb() &&
                 getHeapMb() == that.getHeapMb() &&
                 getApiPort() == that.getApiPort() &&
-                getAdminPort() == that.getAdminPort() &&
                 Objects.equals(getCommand(), that.getCommand()) &&
                 Objects.equals(getArguments(), that.getArguments()) &&
                 Objects.equals(getJreLocation(), that.getJreLocation()) &&
@@ -354,7 +345,7 @@ public class ExecutorConfig {
     public int hashCode() {
         return Objects.hash(getCommand(), getArguments(), getCpus(),
                 getMemoryMb(),
-                getDiskMb(), getHeapMb(), getApiPort(), getAdminPort(),
+                getDiskMb(), getHeapMb(), getApiPort(),
                 getJreLocation(), getExecutorLocation(), getCassandraLocation(),
                 getJavaHome(), getMetricsEnable(), getMetricsCollector(),
                 getMetricsPrefix(), getMetricsPrefixIncludeHostname(),

@@ -21,9 +21,6 @@ public class BackupResource {
     private static final Logger LOGGER = LoggerFactory.getLogger
             (BackupResource.class);
 
-    private final static String STATUS_ALREADY_RUNNING = "already_running";
-    private final static String MESSAGE_ALREADY_RUNNING = "An existing backup is already in progress";
-
     private final BackupManager manager;
 
     @Inject
@@ -37,7 +34,9 @@ public class BackupResource {
     public Response start(StartBackupRequest request) {
         LOGGER.info("Processing start backup request = {}", request);
         try {
-            if (manager.canStartBackup()) {
+            if(!request.isValid()){
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            } else  if (manager.canStartBackup()) {
                 final BackupContext backupContext = from(request);
                 manager.startBackup(backupContext);
                 LOGGER.info("Backup started : context = {}", backupContext);

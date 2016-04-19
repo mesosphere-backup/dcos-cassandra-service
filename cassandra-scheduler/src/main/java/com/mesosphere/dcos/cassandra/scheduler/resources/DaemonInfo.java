@@ -37,11 +37,11 @@ public class DaemonInfo {
     private final String id;
     @JsonProperty("hostname")
     private final String hostname;
-    @JsonProperty("slaveId")
+    @JsonProperty("slave_id")
     private final String slaveId;
     @JsonProperty("state")
     private final Protos.TaskState state;
-    @JsonProperty("operatingMode")
+    @JsonProperty("operating_mode")
     private final CassandraMode mode;
 
     public DaemonInfo(final CassandraDaemonTask task) {

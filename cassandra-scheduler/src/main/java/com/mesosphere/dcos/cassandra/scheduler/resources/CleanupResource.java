@@ -41,18 +41,11 @@ public class CleanupResource {
     public Response start(CleanupRequest request) {
         LOGGER.info("Processing start cleanup request = {}", request);
         try {
-            if (manager.canStartCleanup()) {
-                Set<String> nodes = getNodes(request);
-                if (nodes.isEmpty()) {
-                    return Response.status(Response.Status.BAD_REQUEST)
-                            .entity(ErrorResponse.fromString(
-                                    String.format("Invalid node list %s",
-                                            request.getNodes())
-                            ))
-                            .build();
-                }
+            if(!request.isValid()){
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            }  else if (manager.canStartCleanup()) {
                 manager.startCleanup(CleanupContext.create(
-                        new ArrayList<>(nodes),
+                       new ArrayList<>(getNodes(request)),
                         request.getKeySpaces(),
                         request.getColumnFamiles()
                 ));

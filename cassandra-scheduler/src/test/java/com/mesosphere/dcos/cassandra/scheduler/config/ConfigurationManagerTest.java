@@ -204,7 +204,7 @@ public class ConfigurationManagerTest {
                         .setCpus(0.6).setMemoryMb(10000).build();
 
         ExecutorConfig updatedExecutorConfig = new ExecutorConfig("/command/line",
-                new ArrayList<String>(), 1.2, 345, 678, 901, 17, 19, "/java/home",
+                new ArrayList<String>(), 1.2, 345, 678, 901, 17, "/java/home",
                 URI.create("/jre/location"), URI.create("/executor/location"),
                 URI.create("/cassandra/location"), true, "statsd",
                 "metrics.prefix.", true, 1, "SECOND", "127.0.0.3", 1234);
@@ -500,7 +500,7 @@ public class ConfigurationManagerTest {
         manager.start();
 
         ExecutorConfig new_config = new ExecutorConfig("/command/line",
-                new ArrayList<String>(), 1.2, 345, 678, 901, 17, 19,
+                new ArrayList<String>(), 1.2, 345, 678, 901, 17,
                 "/java/home", URI.create("/jre/location"),
                 URI.create("/executor/location"),
                 URI.create("/cassandra/location"), true, "statsd",

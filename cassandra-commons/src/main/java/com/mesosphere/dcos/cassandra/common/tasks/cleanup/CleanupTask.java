@@ -10,6 +10,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import org.apache.mesos.Protos;
+import org.apache.mesos.offer.VolumeRequirement;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -196,28 +197,28 @@ public class CleanupTask extends CassandraTask {
         }
     }
 
-    @JsonProperty("keySpaces")
+    @JsonProperty("key_spaces")
     private final List<String> keySpaces;
 
-    @JsonProperty("columnFamilies")
+    @JsonProperty("column_families")
     private final List<String> columnFamilies;
 
 
     @JsonCreator
     public static CleanupTask create(
             @JsonProperty("id") String id,
-            @JsonProperty("slaveId") String slaveId,
+            @JsonProperty("slave_id") String slaveId,
             @JsonProperty("hostname") String hostname,
             @JsonProperty("executor") CassandraTaskExecutor executor,
             @JsonProperty("name") String name,
             @JsonProperty("role") String role,
             @JsonProperty("principal") String principal,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb,
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("status") CleanupStatus status,
-            @JsonProperty("keySpaces") List<String> keySpaces,
-            @JsonProperty("columnFamilies") List<String> columnFamilies) {
+            @JsonProperty("key_spaces") List<String> keySpaces,
+            @JsonProperty("column_families") List<String> columnFamilies) {
         return new CleanupTask(id,
                 slaveId,
                 hostname,
@@ -258,6 +259,7 @@ public class CleanupTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
+                VolumeRequirement.VolumeType.ROOT,
                 status);
 
         this.keySpaces = ImmutableList.copyOf(keySpaces);

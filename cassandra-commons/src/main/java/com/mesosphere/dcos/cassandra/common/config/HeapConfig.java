@@ -14,14 +14,14 @@ public class HeapConfig {
 
     public static final HeapConfig DEFAULT = HeapConfig.create(2048,100);
 
-    @JsonProperty("sizeMb")
+    @JsonProperty("size_mb")
     private final int sizeMb;
-    @JsonProperty("newMb")
+    @JsonProperty("new_mb")
     private final int newMb;
     @JsonCreator
     public static HeapConfig create(
-            @JsonProperty("sizeMb") final int sizeMb,
-            @JsonProperty("newMb") final int newMb) {
+            @JsonProperty("size_mb") final int sizeMb,
+            @JsonProperty("new_mb") final int newMb) {
         return new HeapConfig(sizeMb, newMb);
     }
 

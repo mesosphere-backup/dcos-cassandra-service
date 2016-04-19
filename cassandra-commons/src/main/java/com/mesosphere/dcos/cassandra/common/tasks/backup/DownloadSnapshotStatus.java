@@ -14,8 +14,8 @@ public class DownloadSnapshotStatus extends CassandraTaskStatus {
     public static DownloadSnapshotStatus create(
             @JsonProperty("state") Protos.TaskState state,
             @JsonProperty("id") String id,
-            @JsonProperty("slaveId") String slaveId,
-            @JsonProperty("executorId") String executorId,
+            @JsonProperty("slave_id") String slaveId,
+            @JsonProperty("executor_id") String executorId,
             @JsonProperty("message") Optional<String> message) {
         return new DownloadSnapshotStatus(state, id, slaveId, executorId, message);
     }
@@ -35,7 +35,11 @@ public class DownloadSnapshotStatus extends CassandraTaskStatus {
 
     @Override
     public DownloadSnapshotStatus update(Protos.TaskState state) {
-        return create(state, id, slaveId, executorId, message);
+        if (isFinished()) {
+            return this;
+        } else {
+            return create(state, id, slaveId, executorId, message);
+        }
     }
 
     @Override

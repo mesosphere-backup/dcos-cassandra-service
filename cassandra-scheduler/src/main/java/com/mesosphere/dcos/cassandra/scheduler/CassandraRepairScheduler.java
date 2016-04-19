@@ -45,7 +45,8 @@ public class CassandraRepairScheduler {
         if (terminatedOption.isPresent()) {
             try {
                 CassandraDaemonTask terminated = terminatedOption.get();
-                CassandraDaemonTask cloned = cassandraTasks.cloneDaemon(terminated);
+                CassandraDaemonTask cloned = cassandraTasks.cloneDaemon(
+                        terminated);
                 OfferRequirement offerReq =
                         (cloned.getConfig().getReplaceIp().isEmpty()) ?
                                 offerRequirementProvider.getReplacementOfferRequirement(
@@ -53,17 +54,22 @@ public class CassandraRepairScheduler {
                                 : offerRequirementProvider.getNewOfferRequirement(
                                 cloned
                                         .toProto());
-                OfferEvaluator offerEvaluator = new OfferEvaluator(offerReq);
+                OfferEvaluator offerEvaluator = new OfferEvaluator(
+                        offerReq);
                 List<OfferRecommendation> recommendations =
                         offerEvaluator.evaluate(offers);
-                LOGGER.debug("Got recommendations: {} for terminated task: {}",
+                LOGGER.debug(
+                        "Got recommendations: {} for terminated task: {}",
                         recommendations,
                         cloned.getId());
-                acceptedOffers = offerAccepter.accept(driver, recommendations);
-                if (acceptedOffers.size() != 0) {
+                acceptedOffers = offerAccepter.accept(driver,
+                        recommendations);
+                if (acceptedOffers.size() != 0 &&
+                        cloned.getConfig().getReplaceIp().isEmpty()) {
                     cassandraTasks.update(cloned);
                     LOGGER.info("Accepted {} offer", acceptedOffers.size());
                 }
+
             } catch (PersistenceException ex) {
                 LOGGER.error(
                         String.format("Persistence error recovering " +

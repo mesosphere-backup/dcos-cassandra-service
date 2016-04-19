@@ -24,7 +24,8 @@ public class MesosConfig {
     @JsonCreator
     public static MesosConfig create(@JsonProperty("servers") String servers,
                                      @JsonProperty("path") String path,
-                                     @JsonProperty("timeoutMs") Long timeoutMs) {
+                                     @JsonProperty("timeout_ms") Long
+                                                 timeoutMs) {
 
         return create(servers,
                 path,
@@ -53,7 +54,7 @@ public class MesosConfig {
         return "zk://" + servers + path;
     }
 
-    @JsonProperty("timeoutMs")
+    @JsonProperty("timeout_ms")
     public Long getTimeoutMillis() {
 
         return timeout.toMillis();

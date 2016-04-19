@@ -16,8 +16,8 @@ public class CleanupStatus extends CassandraTaskStatus{
     public static CleanupStatus create(
             @JsonProperty("state") Protos.TaskState state,
             @JsonProperty("id") String id,
-            @JsonProperty("slaveId") String slaveId,
-            @JsonProperty("executorId") String executorId,
+            @JsonProperty("slave_id") String slaveId,
+            @JsonProperty("executor_id") String executorId,
             @JsonProperty("message") Optional<String> message) {
         return new CleanupStatus(state, id, slaveId, executorId, message);
     }
@@ -37,7 +37,11 @@ public class CleanupStatus extends CassandraTaskStatus{
 
     @Override
     public CleanupStatus update(Protos.TaskState state) {
-        return create(state, id, slaveId, executorId, message);
+        if (isFinished()) {
+            return this;
+        } else {
+            return create(state, id, slaveId, executorId, message);
+        }
     }
 
     @Override

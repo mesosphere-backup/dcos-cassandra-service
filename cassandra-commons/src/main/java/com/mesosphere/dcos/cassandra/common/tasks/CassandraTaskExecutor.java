@@ -32,7 +32,6 @@ public class CassandraTaskExecutor {
         private int diskMb;
         private int heapMb;
         private int apiPort;
-        private int adminPort;
         private List<URI> uris;
         private String javaHome;
         private final boolean metricsEnable;
@@ -46,7 +45,6 @@ public class CassandraTaskExecutor {
 
         private Builder(CassandraTaskExecutor executor) {
 
-            this.adminPort = executor.adminPort;
             this.frameworkId = executor.frameworkId;
             this.id = executor.id;
             this.command = executor.command;
@@ -67,15 +65,6 @@ public class CassandraTaskExecutor {
             this.metricsFlushPeriodUnit = executor.metricsFlushPeriodUnit;
             this.metricsHost = executor.metricsHost;
             this.metricsPort = executor.metricsPort;
-        }
-
-        public int getAdminPort() {
-            return adminPort;
-        }
-
-        public Builder setAdminPort(int adminPort) {
-            this.adminPort = adminPort;
-            return this;
         }
 
         public int getApiPort() {
@@ -188,7 +177,6 @@ public class CassandraTaskExecutor {
                     diskMb,
                     heapMb,
                     apiPort,
-                    adminPort,
                     uris,
                     javaHome,
                     metricsEnable,
@@ -212,7 +200,6 @@ public class CassandraTaskExecutor {
             int diskMb,
             int heapMb,
             int apiPort,
-            int adminPort,
             List<URI> uris,
             String javaHome,
             boolean metricsEnable,
@@ -234,7 +221,6 @@ public class CassandraTaskExecutor {
                 diskMb,
                 heapMb,
                 apiPort,
-                adminPort,
                 uris,
                 javaHome,
                 metricsEnable,
@@ -272,11 +258,10 @@ public class CassandraTaskExecutor {
                 (int) getTotalReservedDisk(resources,
                         role,
                         principal),
-                Integer.parseInt(env.get("JVM_OPTS")
+                Integer.parseInt(env.get("JAVA_OPTS")
                         .replace("-Xmx", "")
                         .replace("M", "")),
                 Integer.parseInt(env.get("EXECUTOR_API_PORT")),
-                Integer.parseInt(env.get("EXECUTOR_ADMIN_PORT")),
                 info.getCommand().getUrisList().stream().map(uri ->
                         uri.getValue()).map(URI::create).collect(
                         Collectors.toList()),
@@ -294,27 +279,26 @@ public class CassandraTaskExecutor {
 
     @JsonCreator
     public static CassandraTaskExecutor createJson(
-            @JsonProperty("frameworkId") String frameworkId,
+            @JsonProperty("framework_id") String frameworkId,
             @JsonProperty("id") String id,
             @JsonProperty("command") String command,
             @JsonProperty("arguments") List<String> arguments,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb,
-            @JsonProperty("heapMb") int heapMb,
-            @JsonProperty("apiPort") int apiPort,
-            @JsonProperty("adminPort") int adminPort,
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb,
+            @JsonProperty("heap_mb") int heapMb,
+            @JsonProperty("api_port") int apiPort,
             @JsonProperty("uris") List<String> uris,
             @JsonProperty("javaHome") String javaHome,
-            @JsonProperty("metricsEnable") boolean metricsEnable,
-            @JsonProperty("metricsCollector") String metricsCollector,
-            @JsonProperty("metricsPrefix") String metricsPrefix,
-            @JsonProperty("metricsPrefixIncludeHostname") boolean
+            @JsonProperty("metrics_enable") boolean metricsEnable,
+            @JsonProperty("metrics_collector") String metricsCollector,
+            @JsonProperty("metrics_prefix") String metricsPrefix,
+            @JsonProperty("metrics_prefix_include_hostname") boolean
                     metricsPrefixIncludeHostname,
-            @JsonProperty("metricsFlushPeriod") int metricsFlushPeriod,
-            @JsonProperty("metricsFlushPeriodUnit") String metricsFlushPeriodUnit,
-            @JsonProperty("metricsHost") String metricsHost,
-            @JsonProperty("metricsPort") int metricsPort) {
+            @JsonProperty("metrics_flush_period") int metricsFlushPeriod,
+            @JsonProperty("metrics_flush_period_unit") String metricsFlushPeriodUnit,
+            @JsonProperty("metrics_host") String metricsHost,
+            @JsonProperty("metrics_port") int metricsPort) {
 
         return create(
                 frameworkId,
@@ -326,7 +310,6 @@ public class CassandraTaskExecutor {
                 diskMb,
                 heapMb,
                 apiPort,
-                adminPort,
                 uris.stream().map(URI::create).collect(Collectors.toList()),
                 javaHome,
                 metricsEnable,
@@ -339,7 +322,7 @@ public class CassandraTaskExecutor {
                 metricsPort);
     }
 
-    @JsonProperty("frameworkId")
+    @JsonProperty("framework_id")
     private final String frameworkId;
     @JsonProperty("id")
     private final String id;
@@ -349,34 +332,32 @@ public class CassandraTaskExecutor {
     private final List<String> arguments;
     @JsonProperty("cpus")
     private final double cpus;
-    @JsonProperty("memoryMb")
+    @JsonProperty("memory_mb")
     private final int memoryMb;
-    @JsonProperty("diskMb")
+    @JsonProperty("disk_mb")
     private final int diskMb;
-    @JsonProperty("heapMb")
+    @JsonProperty("heap_mb")
     private final int heapMb;
-    @JsonProperty("apiPort")
+    @JsonProperty("api_port")
     private final int apiPort;
-    @JsonProperty("adminPort")
-    private final int adminPort;
     private final List<URI> uris;
-    @JsonProperty("javaHome")
+    @JsonProperty("java_home")
     private final String javaHome;
-    @JsonProperty("metricsEnable")
+    @JsonProperty("metrics_enable")
     private final boolean metricsEnable;
-    @JsonProperty("metricsCollector")
+    @JsonProperty("metrics_collector")
     private final String metricsCollector;
-    @JsonProperty("metricsPrefix")
+    @JsonProperty("metrics_prefix")
     private final String metricsPrefix;
-    @JsonProperty("metricsPrefixIncludeHostname")
+    @JsonProperty("metrics_prefix_include_hostname")
     private final boolean metricsPrefixIncludeHostname;
-    @JsonProperty("metricsFlushPeriod")
+    @JsonProperty("metrics_flush_period")
     private final int metricsFlushPeriod;
-    @JsonProperty("metricsFlushPeriodUnit")
+    @JsonProperty("metrics_flush_period_unit")
     private final String metricsFlushPeriodUnit;
-    @JsonProperty("metricsHost")
+    @JsonProperty("metrics_host")
     private final String metricsHost;
-    @JsonProperty("metricsPort")
+    @JsonProperty("metrics_port")
     private final int metricsPort;
 
     public CassandraTaskExecutor(
@@ -389,7 +370,6 @@ public class CassandraTaskExecutor {
             int diskMb,
             int heapMb,
             int apiPort,
-            int adminPort,
             List<URI> uris,
             String javaHome,
             boolean metricsEnable,
@@ -400,7 +380,6 @@ public class CassandraTaskExecutor {
             String metricsFlushPeriodUnit,
             String metricsHost,
             int metricsPort) {
-        this.adminPort = adminPort;
         this.frameworkId = frameworkId;
         this.id = id;
         this.command = command;
@@ -431,9 +410,6 @@ public class CassandraTaskExecutor {
     }
 
 
-    public int getAdminPort() {
-        return adminPort;
-    }
 
     public int getApiPort() {
         return apiPort;
@@ -515,14 +491,11 @@ public class CassandraTaskExecutor {
                                 .newBuilder().setName("JAVA_HOME")
                                 .setValue(javaHome).build(),
                         Protos.Environment.Variable
-                                .newBuilder().setName("JVM_OPTS")
+                                .newBuilder().setName("JAVA_OPTS")
                                 .setValue("-Xmx" + heapMb + "M").build(),
                         Protos.Environment.Variable
                                 .newBuilder().setName("EXECUTOR_API_PORT")
                                 .setValue(Integer.toString(apiPort)).build(),
-                        Protos.Environment.Variable
-                                .newBuilder().setName("EXECUTOR_ADMIN_PORT")
-                                .setValue(Integer.toString(adminPort)).build(),
                         Protos.Environment.Variable
                                 .newBuilder().setName("EXECUTOR_METRICS_ENABLE")
                                 .setValue(Boolean.toString(metricsEnable))
@@ -593,7 +566,6 @@ public class CassandraTaskExecutor {
                 getDiskMb() == that.getDiskMb() &&
                 getHeapMb() == that.getHeapMb() &&
                 getApiPort() == that.getApiPort() &&
-                getAdminPort() == that.getAdminPort() &&
                 Objects.equals(getFrameworkId(), that.getFrameworkId()) &&
                 Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getCommand(), that.getCommand()) &&
@@ -617,7 +589,7 @@ public class CassandraTaskExecutor {
     public int hashCode() {
         return Objects.hash(getFrameworkId(), getId(), getCommand(),
                 getArguments(), getCpus(), getMemoryMb(), getDiskMb(),
-                getHeapMb(), getApiPort(), getAdminPort(), uris, getJavaHome(),
+                getHeapMb(), getApiPort(), uris, getJavaHome(),
                 isMetricsEnable(), getMetricsCollector(), getMetricsPrefix(),
                 getMetricsPrefixIncludeHostname(), getMetricsFlushPeriod(),
                 getMetricsFlushPeriodUnit(), getMetricsHost(), getMetricsPort());

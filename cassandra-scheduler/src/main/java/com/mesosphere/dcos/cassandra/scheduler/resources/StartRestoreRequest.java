@@ -4,19 +4,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class StartRestoreRequest {
-    @JsonProperty("name")
+    @JsonProperty("backup_name")
     @NotEmpty
     private String name;
 
-    @JsonProperty("external-location")
+    @JsonProperty("external_location")
     @NotEmpty
     private String externalLocation;
 
-    @JsonProperty("s3-access-key")
+    @JsonProperty("s3_access_key")
     @NotEmpty
     private String s3AccessKey;
 
-    @JsonProperty("s3-secret-key")
+    @JsonProperty("s3_secret_key")
     @NotEmpty
     private String s3SecretKey;
 
@@ -50,5 +50,10 @@ public class StartRestoreRequest {
 
     public void setS3SecretKey(String s3SecretKey) {
         this.s3SecretKey = s3SecretKey;
+    }
+
+    public boolean isValid(){
+        return name != null && externalLocation != null &&
+                s3AccessKey != null && s3SecretKey != null;
     }
 }

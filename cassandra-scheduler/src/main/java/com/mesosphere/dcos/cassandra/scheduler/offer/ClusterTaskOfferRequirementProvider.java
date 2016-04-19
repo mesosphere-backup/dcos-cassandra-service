@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.PlacementStrategy;
+import org.apache.mesos.offer.VolumeRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
             ClusterTaskOfferRequirementProvider.class);
     private IdentityManager identityManager;
     private CassandraTasks cassandraTasks;
+    private static VolumeRequirement MODE_NONE_TYPE_ROOT = VolumeRequirement.create();
 
     @Inject
     public ClusterTaskOfferRequirementProvider(
@@ -51,7 +53,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
                 Arrays.asList(taskInfo),
                 agentsToAvoid,
                 agentsToColocate,
-                OfferRequirement.VolumeMode.NONE,
+                MODE_NONE_TYPE_ROOT,
                 OfferRequirement.ExecutorMode.EXISTING
         );
     }
@@ -66,7 +68,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
                 Arrays.asList(taskInfo),
                 placementStrategy.getAgentsToAvoid(taskInfo),
                 placementStrategy.getAgentsToColocate(taskInfo),
-                OfferRequirement.VolumeMode.NONE,
+                MODE_NONE_TYPE_ROOT,
                 OfferRequirement.ExecutorMode.EXISTING);
     }
 
@@ -85,7 +87,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
                 Arrays.asList(taskInfo),
                 null,
                 null,
-                OfferRequirement.VolumeMode.NONE,
+                MODE_NONE_TYPE_ROOT,
                 OfferRequirement.ExecutorMode.EXISTING);
     }
 }

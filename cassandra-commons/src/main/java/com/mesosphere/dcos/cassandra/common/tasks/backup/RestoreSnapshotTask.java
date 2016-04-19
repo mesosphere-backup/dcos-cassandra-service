@@ -8,6 +8,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import org.apache.mesos.Protos;
+import org.apache.mesos.offer.VolumeRequirement;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -207,39 +208,39 @@ public class RestoreSnapshotTask extends CassandraTask {
         }
     }
 
-    @JsonProperty("backupName")
+    @JsonProperty("backup_name")
     private final String backupName;
 
-    @JsonProperty("localLocation")
+    @JsonProperty("local_location")
     private final String localLocation;
 
-    @JsonProperty("externalLocation")
+    @JsonProperty("external_location")
     private final String externalLocation;
 
-    @JsonProperty("s3AccessKey")
+    @JsonProperty("s3_access_key")
     private final String s3AccessKey;
 
-    @JsonProperty("s3SecretKey")
+    @JsonProperty("s3_secret_key")
     private final String s3SecretKey;
 
     @JsonCreator
     public static RestoreSnapshotTask create(
             @JsonProperty("id") String id,
-            @JsonProperty("slaveId") String slaveId,
+            @JsonProperty("slave_id") String slaveId,
             @JsonProperty("hostname") String hostname,
             @JsonProperty("executor") CassandraTaskExecutor executor,
             @JsonProperty("name") String name,
             @JsonProperty("role") String role,
             @JsonProperty("principal") String principal,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memoryMb") int memoryMb,
-            @JsonProperty("diskMb") int diskMb,
+            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("status") RestoreSnapshotStatus status,
-            @JsonProperty("backupName") String backupName,
-            @JsonProperty("externalLocation") String externalLocation,
-            @JsonProperty("s3AccessKey") String s3AccessKey,
-            @JsonProperty("s3SecretKey") String s3SecretKey,
-            @JsonProperty("localLocation") String localLocation) {
+            @JsonProperty("backup_name") String backupName,
+            @JsonProperty("external_location") String externalLocation,
+            @JsonProperty("s3_access_key") String s3AccessKey,
+            @JsonProperty("s3_secret_key") String s3SecretKey,
+            @JsonProperty("local_location") String localLocation) {
         return new RestoreSnapshotTask(id,
                 slaveId,
                 hostname,
@@ -286,6 +287,7 @@ public class RestoreSnapshotTask extends CassandraTask {
                 cpus,
                 memoryMb,
                 diskMb,
+                VolumeRequirement.VolumeType.ROOT,
                 status);
 
         this.backupName = backupName;

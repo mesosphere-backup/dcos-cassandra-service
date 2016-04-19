@@ -10,14 +10,14 @@ import org.apache.mesos.Protos;
 
 import java.util.Optional;
 
-public class RepairStatus extends CassandraTaskStatus{
+public class RepairStatus extends CassandraTaskStatus {
 
     @JsonCreator
     public static RepairStatus create(
             @JsonProperty("state") Protos.TaskState state,
             @JsonProperty("id") String id,
-            @JsonProperty("slaveId") String slaveId,
-            @JsonProperty("executorId") String executorId,
+            @JsonProperty("slave_id") String slaveId,
+            @JsonProperty("executor_id") String executorId,
             @JsonProperty("message") Optional<String> message) {
         return new RepairStatus(state, id, slaveId, executorId, message);
     }
@@ -37,7 +37,11 @@ public class RepairStatus extends CassandraTaskStatus{
 
     @Override
     public RepairStatus update(Protos.TaskState state) {
-        return create(state, id, slaveId, executorId, message);
+        if (isFinished()) {
+            return this;
+        } else {
+            return create(state, id, slaveId, executorId, message);
+        }
     }
 
     @Override
