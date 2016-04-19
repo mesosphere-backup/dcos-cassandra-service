@@ -125,7 +125,7 @@ Sample JSON options file named `sample-cassandra.json`:
 ```
 {
     "nodes": {
-        "nodes": 10,
+        "count": 10,
         "seeds": 3
     }
 }
@@ -146,7 +146,7 @@ As with the default installation, you must ensure that ports 7000, 7001,7 199, 9
 
 **Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
 
-To start a minimal cluster with a single node, create a JSON options file named `sample-cassandra-minimal.json`:
+To start a minimal cluster with a single node, create a JSON options file that contains the following:
 
 ```
 {
