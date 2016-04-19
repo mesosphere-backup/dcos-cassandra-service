@@ -287,11 +287,11 @@ Uninstalling a cluster is straightforward. Replace `cassandra` with the name of 
 $ dcos package uninstall --app-id=cassandra
 ```
 
-Then, use the [framework cleaner script](https://github.com/mesosphere/framework-cleaner) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
+Then, use the [framework cleaner script](https://docs.mesosphere.com/framework_cleaner/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
 
 - `framework-role` is `<service-name>-role`.
 - `framework-principle` is `<service-name>-principal`.
-= `zk_path` is `<name>`.
+- `zk_path` is `<name>`.
 
 # Configuring
 
