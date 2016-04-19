@@ -35,7 +35,11 @@ public class DownloadSnapshotStatus extends CassandraTaskStatus {
 
     @Override
     public DownloadSnapshotStatus update(Protos.TaskState state) {
-        return create(state, id, slaveId, executorId, message);
+        if (isFinished()) {
+            return this;
+        } else {
+            return create(state, id, slaveId, executorId, message);
+        }
     }
 
     @Override

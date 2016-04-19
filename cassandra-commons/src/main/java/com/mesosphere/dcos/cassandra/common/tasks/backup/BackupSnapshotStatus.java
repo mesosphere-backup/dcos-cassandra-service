@@ -35,7 +35,11 @@ public class BackupSnapshotStatus extends CassandraTaskStatus {
 
     @Override
     public BackupSnapshotStatus update(Protos.TaskState state) {
-        return create(state, id, slaveId, executorId, message);
+        if (isFinished()) {
+            return this;
+        } else {
+            return create(state, id, slaveId, executorId, message);
+        }
     }
 
     @Override

@@ -57,6 +57,7 @@ public abstract class CassandraTaskStatus {
         return Protos.TaskState.TASK_RUNNING.equals(state);
     }
 
+
     public static boolean isLaunching(final Protos.TaskState state){
         switch (state) {
             case TASK_STARTING:
@@ -65,6 +66,10 @@ public abstract class CassandraTaskStatus {
             default:
                 return false;
         }
+    }
+
+    public static boolean isFinished(final Protos.TaskState state) {
+        return Protos.TaskState.TASK_FINISHED.equals(state);
     }
 
     public static CassandraTaskStatus parse(Protos.TaskStatus status)
@@ -252,6 +257,9 @@ public abstract class CassandraTaskStatus {
     public boolean isLaunching(){
         return isLaunching(state);
     }
+
+    @JsonIgnore
+    public boolean isFinished() {return isFinished(state);}
 
     @Override
     public boolean equals(Object o) {
