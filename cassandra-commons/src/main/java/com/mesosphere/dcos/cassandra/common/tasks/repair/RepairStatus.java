@@ -10,7 +10,7 @@ import org.apache.mesos.Protos;
 
 import java.util.Optional;
 
-public class RepairStatus extends CassandraTaskStatus{
+public class RepairStatus extends CassandraTaskStatus {
 
     @JsonCreator
     public static RepairStatus create(
@@ -37,7 +37,11 @@ public class RepairStatus extends CassandraTaskStatus{
 
     @Override
     public RepairStatus update(Protos.TaskState state) {
-        return create(state, id, slaveId, executorId, message);
+        if (isFinished()) {
+            return this;
+        } else {
+            return create(state, id, slaveId, executorId, message);
+        }
     }
 
     @Override

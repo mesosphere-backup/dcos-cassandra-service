@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
@@ -48,7 +49,15 @@ public class RestoreManager {
                 RestoreContext context = loadedContext.get();
                 // Recovering from failure
                 if (context != null) {
-                    startRestore(context);
+                    this.download = new DownloadSnapshotPhase(
+                            context,
+                            cassandraTasks,
+                            provider);
+                    this.restore = new RestoreSnapshotPhase(
+                            context,
+                            cassandraTasks,
+                            provider);
+                    this.context = context;
                 }
             }
         } catch (PersistenceException e) {
@@ -64,6 +73,16 @@ public class RestoreManager {
         if (canStartRestore()) {
             LOGGER.info("Starting restore");
             try {
+                if(isComplete()){
+                    for(String name:
+                            cassandraTasks.getDownloadSnapshotTasks().keySet()){
+                        cassandraTasks.remove(name);
+                    }
+                    for(String name:
+                            cassandraTasks.getRestoreSnapshotTasks().keySet()){
+                        cassandraTasks.remove(name);
+                    }
+                }
                 persistentContext.store(context);
                 this.download = new DownloadSnapshotPhase(
                         context,

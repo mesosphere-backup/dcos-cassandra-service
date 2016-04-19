@@ -48,7 +48,10 @@ public class CleanupManager {
                 CleanupContext cleanup = loaded.get();
                 // Recovering from failure
                 if (cleanup != null) {
-                    startCleanup(cleanup);
+                    this.phase = new CleanupPhase(cleanup, cassandraTasks,
+                            provider);
+
+                    this.context = cleanup;
                 }
             }
 
@@ -67,6 +70,11 @@ public class CleanupManager {
 
         if (canStartCleanup()) {
             try {
+                if(isComplete()) {
+                    for(String name: cassandraTasks.getCleanupTasks().keySet()) {
+                        cassandraTasks.remove(name);
+                    }
+                }
                 persistent.store(context);
                 this.phase = new CleanupPhase(context, cassandraTasks,
                         provider);
@@ -79,19 +87,6 @@ public class CleanupManager {
 
             }
         }
-    }
-
-    public void stopCleanup() {
-        LOGGER.info("Stopping cleanup");
-        try {
-            this.persistent.delete();
-        } catch (PersistenceException e) {
-            LOGGER.error(
-                    "Error deleting cleanup context from persistence store. " +
-                            "Reason: {}",
-                    e);
-        }
-        this.context = null;
     }
 
     public boolean canStartCleanup() {

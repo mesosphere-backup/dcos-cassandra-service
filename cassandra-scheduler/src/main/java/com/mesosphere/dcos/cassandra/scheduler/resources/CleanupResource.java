@@ -44,7 +44,6 @@ public class CleanupResource {
             if(!request.isValid()){
                 return Response.status(Response.Status.BAD_REQUEST).build();
             }  else if (manager.canStartCleanup()) {
-
                 manager.startCleanup(CleanupContext.create(
                        new ArrayList<>(getNodes(request)),
                         request.getKeySpaces(),
