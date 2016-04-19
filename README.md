@@ -146,7 +146,7 @@ As with the default installation, you must ensure that ports 7000, 7001,7 199, 9
 
 **Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
 
-To start a minimal cluster with a single node, create a JSON options file named `sample-cassandra-minimal.json`:
+To start a minimal cluster with a single node, create a JSON options file that contains the following:
 
 ```
 {
@@ -178,30 +178,6 @@ To start a minimal cluster with a single node, create a JSON options file named 
 }
 ```
 This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DCOS Cassandra Service executor and 128 Mb for clusters tasks. The DCOS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
-
-### Custom Installation
-
-If you are ready to ship into production, you will likely need to customize the deployment to suite the workload requirements of application(s). You can customize the default deployment by creating a JSON file. Then pass it to `dcos package install` using the `--options` parameter.
-
-Sample JSON options file named `sample-cassandra.json`:
-
-```
-{
-    "nodes": {
-        "nodes": 10,
-        "seeds": 3
-    }
-}
-```
-
-The command below creates a cluster using `sample-cassandra.json`:
-
-```
-$ dcos package install --options=sample-cassandra.json cassandra
-```
-
-This cluster will have 10 nodes and 3 seeds instead of the default values of 3 nodes and 2 seeds.
-See [Configuration Options](#configuration-options) for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
 
 ## Multiple Cassandra Cluster Installation
 
