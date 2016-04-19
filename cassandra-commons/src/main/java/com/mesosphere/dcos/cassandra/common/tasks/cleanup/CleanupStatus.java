@@ -37,7 +37,11 @@ public class CleanupStatus extends CassandraTaskStatus{
 
     @Override
     public CleanupStatus update(Protos.TaskState state) {
-        return create(state, id, slaveId, executorId, message);
+        if (isFinished()) {
+            return this;
+        } else {
+            return create(state, id, slaveId, executorId, message);
+        }
     }
 
     @Override

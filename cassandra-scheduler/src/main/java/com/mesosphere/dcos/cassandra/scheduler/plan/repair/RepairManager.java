@@ -48,7 +48,9 @@ public class RepairManager {
                 RepairContext repair = loaded.get();
                 // Recovering from failure
                 if (repair != null) {
-                    startRepair(repair);
+                    this.phase = new RepairPhase(repair, cassandraTasks,
+                            provider);
+                    this.context = repair;
                 }
             }
 
@@ -65,6 +67,11 @@ public class RepairManager {
 
         if (canStartRepair()) {
             try {
+                if(isComplete()){
+                    for(String name: cassandraTasks.getRepairTasks().keySet()) {
+                        cassandraTasks.remove(name);
+                    }
+                }
                 persistent.store(context);
                 this.phase = new RepairPhase(context, cassandraTasks,
                         provider);
