@@ -116,43 +116,6 @@ This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot s
 
 All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a service name, the CLI assumes the default value, `cassandra`.
 
-### Minimal Installation
-You may wish to install Cassandra on a local DCOS cluster. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
-As with the default installation, you must ensure that ports 7000,7001,7199,9042, and 9160 are available. Note that this configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
-
-To start a minimal cluster with a single node, create a JSON options file named `sample-cassandra-minimal.json`:
-
-```
-{
-    "service" : {
-       "cpus": 0.1,
-       "mem": 512,
-       "heap": 256
-    },
-    "nodes": {
-        "cpus": 0.5,
-        "mem": 2048,
-        "disk": 4096,
-        "heap": {
-            "size": 1024,
-            "new": 100
-        },
-        "count": 1,
-        "seeds": 1
-    },
-    "executor" : {
-       "cpus": 0.1,
-       "mem": 512,
-       "heap": 256
-    },
-    "task" : {
-       "cpus": 0.1,
-       "mem": 128,
-    }
-}
-```
-This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DCOS Cassandra Service executor and 128 Mb for clusters tasks. The DCOS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
-
 ### Custom Installation
 
 If you are ready to ship into production, you will likely need to customize the deployment to suite the workload requirements of application(s). You can customize the default deployment by creating a JSON file. Then pass it to `dcos package install` using the `--options` parameter.
@@ -176,6 +139,42 @@ $ dcos package install --options=sample-cassandra.json cassandra
 
 This cluster will have 10 nodes and 3 seeds instead of the default values of 3 nodes and 2 seeds.
 See [Configuration Options](#configuration-options) for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
+
+### Minimal Installation
+You may wish to install Cassandra on a local DCOS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
+As with the default installation, you must ensure that ports 7000, 7001, 7199, 9042, and 9160 are available. Note that this configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
+
+To start a minimal cluster with a single node, create a JSON options file that contains the following:
+
+    {
+        "service" : {
+           "cpus": 0.1,
+           "mem": 512,
+           "heap": 256
+        },
+        "nodes": {
+            "cpus": 0.5,
+            "mem": 2048,
+            "disk": 4096,
+            "heap": {
+                "size": 1024,
+                "new": 100
+            },
+            "count": 1,
+            "seeds": 1
+        },
+        "executor" : {
+           "cpus": 0.1,
+           "mem": 512,
+           "heap": 256
+        },
+        "task" : {
+           "cpus": 0.1,
+           "mem": 128,
+        }
+    }
+
+This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DCOS Cassandra Service executor and 128 Mb for clusters tasks. The DCOS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 ## Multiple Cassandra Cluster Installation
 
