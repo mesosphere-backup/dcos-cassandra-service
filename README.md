@@ -396,6 +396,11 @@ The response will look similar to this:
 
 If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
 
+```
+$ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+```
+
+
 If you query the plan again, the response will look like this (notice `status: "Waiting"`):
 
 ```
@@ -452,6 +457,10 @@ If you query the plan again, the response will look like this (notice `status: "
 **Note:** The interrupt command can’t stop a block that is `InProgress`, but it will stop the change on the subsequent blocks.
 
 Enter the `continue` command to resume the update process.
+
+```
+$ curl -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
+```
 
 After you execute the continue operation, the plan will look like this:
 
