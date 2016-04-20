@@ -309,8 +309,8 @@ $ dcos package uninstall --app-id=cassandra
 
 Then, use the [framework cleaner script](https://docs.mesosphere.com/framework_cleaner/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
 
-- `framework-role` is `<service-name>-role`.
-- `framework-principle` is `<service-name>-principal`.
+- `framework_role` is `<service-name>_role`.
+- `framework_principle` is `<service-name>_principal`.
 - `zk_path` is `<name>`.
 
 # Configuring
