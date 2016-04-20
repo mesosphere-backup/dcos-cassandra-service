@@ -278,7 +278,7 @@ $ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X PUT http://<dcos_url>/service/cassandra/v1/plan/proceed
+$ curl -X PUT http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 ## Uninstall
