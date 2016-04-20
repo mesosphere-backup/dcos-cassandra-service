@@ -255,7 +255,13 @@ When the DCOS Cassandra service is initially installed it will generate an insta
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
 ```
-$ curl http:/<dcos_url>/service/cassandra/v1/plan
+$ curl http://<dcos_url>/service/cassandra/v1/plan
+```
+
+If you are using Enterprise DC/OS, use the following command to view the installation plan:
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan/
 ```
 
 #### Plan Errors
