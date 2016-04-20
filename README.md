@@ -1495,7 +1495,7 @@ This JSON array contains a list of valid nodes that the client can use to connec
 The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X PUT -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+$ curl -X POST -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
 ### Resume Installation
