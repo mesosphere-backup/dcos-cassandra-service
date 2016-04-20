@@ -13,10 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from dcos_cassandra import cassandra_utils as cu
 from dcos import http
+from dcos_cassandra import cassandra_utils as cu
 
 
 def status():
@@ -31,5 +29,5 @@ def start_restore(name, external_location, s3_access_key, s3_secret_key):
         's3_secret_key': s3_secret_key
     }
     return http.put(cu.api_url("/restore/start"),
-        json=req,
-        headers={'Content-Type':'application/json'})
+                    json=req,
+                    headers={'Content-Type': 'application/json'})
