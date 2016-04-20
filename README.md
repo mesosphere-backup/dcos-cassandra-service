@@ -32,7 +32,7 @@ DCOS Cassandra provides the following features:
 
 ## Quick Start
 
-Install a Cassandra cluster using DCOS CLI:
+* Step 1. Install a Cassandra cluster using DCOS CLI:
 
 **Note:** Your cluster must have at least 3 private nodes.
 
@@ -40,48 +40,54 @@ Install a Cassandra cluster using DCOS CLI:
 $ dcos package install cassandra
 ```
 
-Once the cluster is installed, retrieve connection information by running the `connection` command:
+* Step 2. Once the cluster is installed, retrieve connection information by running the `connection` command:
 
 ```
 $ dcos cassandra connection
 {
-    "nodes": [
+    "address": [
         "10.0.2.136:9042",
         "10.0.2.138:9042",
         "10.0.2.137:9042"
+    ],
+    "dns": [
+         "node-0.cassandra.mesos:9042",
+         "node-1.cassandra.mesos:9042",
+         "node-2.cassandra.mesos:9042"
     ]
+   
 }
 ```
 
-Let's [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
+* Step 3. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
 
 ```
 $ dcos node ssh --master-proxy --leader
 core@ip-10-0-6-153 ~ $
 ```
 
-We are now inside our DC/OS cluster and can connect to our Cassandra cluster directly.
+Now that you are inside your DC/OS cluster, you can connect to your Cassandra cluster directly.
 
-Launch a docker container containing `cqlsh` to connect to our cassandra cluster. We'll use one of the hosts we retrieved from the `connection` command that we ran previously:
+* Step 4. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
 
 ```
 core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh 10.0.2.136
 cqlsh>
 ```
 
-We are now connected to our Cassandra cluster. Create a sample keyspace called `demo`:
+* Step 5. You are now connected to your Cassandra cluster. Create a sample keyspace called `demo`:
 
 ```
 cqlsh> CREATE KEYSPACE demo WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
 ```
 
-Next, create a sample table called `map` in our `demo` keyspace:
+* Step 6. Create a sample table called `map` in our `demo` keyspace:
 
 ```
 cqlsh> USE demo;CREATE TABLE map (key varchar, value varchar, PRIMARY KEY(key));
 ```
 
-Now, insert some data in the table:
+* Step 7. Insert some data in the table:
 
 ```
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Cassandra', 'Rocks!');
@@ -89,7 +95,7 @@ cqlsh> INSERT INTO demo.map(key, value) VALUES('StaticInfrastructure', 'BeGone!'
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Buzz', 'DC/OS is the new black!');
 ```    
 
-Now that you have inserted some data, query it back to make sure it's persisted correctly:
+* Step 8. Query the data back to make sure it persisted correctly:
 
 ```
 cqlsh> SELECT * FROM demo.map;
@@ -98,9 +104,9 @@ cqlsh> SELECT * FROM demo.map;
 ## Install and Customize
 
 ### Default Installation
-Prior to installing a default cluster, ensure that your DCOS cluster has at least 3 DCOS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000,7001,7199,9042, and 9160 are available.
+Prior to installing a default cluster, ensure that your DCOS cluster has at least 3 DCOS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
 
-To start a the default cluster, run the following command on the DCOS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes, and it may be scaled to a production deployment.
+To start a the default cluster, run the following command on the DCOS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
 
 ```
 $ dcos package install cassandra
@@ -108,45 +114,18 @@ $ dcos package install cassandra
 
 This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `name` at install time](#custom-installation) for each additional instance.
 
-All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a framework name, the CLI assumes the default value, `cassandra`. The default value for `--name` can be customized via the DCOS CLI configuration.
-
-```
-$ dcos config set cassandra.framework_name new_default_name
-```
-
-### Minimal Installation
-You may wish to install Cassandra on a local DCOS cluster. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
-As with the default installation, you must ensure that ports 7000,7001,7199,9042, and 9160 are available. Note that this configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
-
-To start a minimal cluster with a single node, create a JSON options file named `sample-cassandra-minimal.json`:
-
-```
-{
-    "nodes": {
-        "cpus": 0.5,
-        "mem": 2048,
-        "disk": 4096,
-        "heap": {
-            "size": 1024,
-            "new": 100
-        },
-        "count": 1,
-        "seeds": 1
-    }
-}
-```
-This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an addition 3 Gb of memory for the DCOS Cassandra Framework itself. Also, cluster operations will require an addition 512 Mb of memory.
+If you have more than one Cassandra cluster, use the `--name` argument after install time to specify which Cassandra instance to query. All `dcos cassandra` CLI commands accept the `--name` argument. If you do not specify a service name, the CLI assumes the default value, `cassandra`.
 
 ### Custom Installation
 
-If you are ready to ship into production, you will likely need to customize the deployment to suite the workload requirements of application(s). You can customize the default deployment by creating a JSON file. Then pass it to `dcos package install` using the `--options` parameter.
+If you are ready to ship into production, you will likely need to customize the deployment to suite the workload requirements of your application(s). Customize the default deployment by creating a JSON file, then pass it to `dcos package install` using the `--options` parameter.
 
 Sample JSON options file named `sample-cassandra.json`:
 
 ```
 {
-    "node": {
-        "nodes": 10,
+    "nodes": {
+        "count": 10,
         "seeds": 3
     }
 }
@@ -160,6 +139,45 @@ $ dcos package install --options=sample-cassandra.json cassandra
 
 This cluster will have 10 nodes and 3 seeds instead of the default values of 3 nodes and 2 seeds.
 See [Configuration Options](#configuration-options) for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
+
+### Minimal Installation
+You may wish to install Cassandra on a local DCOS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
+As with the default installation, you must ensure that ports 7000, 7001,7 199, 9042, and 9160 are available.
+
+**Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
+
+To start a minimal cluster with a single node, create a JSON options file that contains the following:
+
+```
+{
+    "service" : {
+       "cpus": 0.1,
+       "mem": 512,
+       "heap": 256
+    },
+    "nodes": {
+        "cpus": 0.5,
+        "mem": 2048,
+        "disk": 4096,
+        "heap": {
+            "size": 1024,
+            "new": 100
+        },
+        "count": 1,
+        "seeds": 1
+    },
+    "executor" : {
+       "cpus": 0.1,
+       "mem": 512,
+       "heap": 256
+    },
+    "task" : {
+       "cpus": 0.1,
+       "mem": 128,
+    }
+}
+```
+This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DCOS Cassandra Service executor and 128 Mb for clusters tasks. The DCOS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 ## Multiple Cassandra Cluster Installation
 
@@ -237,7 +255,13 @@ When the DCOS Cassandra service is initially installed it will generate an insta
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
 ```
-$ curl http:/<dcos_url>/service/cassandra/v1/plan
+$ curl http://<dcos_url>/service/cassandra/v1/plan
+```
+
+If you are using Enterprise DC/OS, use the following command to view the installation plan:
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan/
 ```
 
 #### Plan Errors
@@ -271,11 +295,11 @@ Uninstalling a cluster is straightforward. Replace `cassandra` with the name of 
 $ dcos package uninstall --app-id=cassandra
 ```
 
-Then, use the [framework cleaner script](https://github.com/mesosphere/framework-cleaner) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your framework name:
+Then, use the [framework cleaner script](https://docs.mesosphere.com/framework_cleaner/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
 
-- `framework-role` is `<name>-role`.
-- `framework-principle` is `<name>-principal`.
-= `zk_path` is `<name>`.
+- `framework-role` is `<service-name>-role`.
+- `framework-principle` is `<service-name>-principal`.
+- `zk_path` is `<name>`.
 
 # Configuring
 
@@ -484,7 +508,11 @@ The service configuration object contains properties that MUST be specified duri
         "name": "cassandra2",
         "role": "cassandra_role",
         "principal": "cassandra_principal",
-        "secret" : "/path/to/secret_file"
+        "secret" : "/path/to/secret_file",
+        "cpus" : 0.5,
+        "mem" : 2048,
+        "heap" : 1024,
+        "api_port" : 9000
     }
 }
 ```
@@ -495,22 +523,28 @@ The service configuration object contains properties that MUST be specified duri
     <th>Type</th>
     <th>Description</th>
   </tr>
+
   <tr>
     <td>name</td>
     <td>string</td>
     <td>The name of the Cassandra cluster.</td>
   </tr>
-  
+
   <tr>
-  	<td>role</td>
+    <td>user</td>
     <td>string</td>
-    <td>The authentication and resource role of the Cassandra cluster.</td>
+    <td>The name of the operating system user account Cassandra tasks run as.</td>
   </tr>
   
-   <tr>
+  <tr>
     <td>principal</td>
     <td>string</td>
     <td>The authentication principal for the Cassandra cluster.</td>
+  </tr>
+  <tr>
+    <td>placement_strategy</td>
+    <td>string</td>
+    <td>The name of the placement strategy of the Cassandra nodes.</td>
   </tr>
   
   <tr>
@@ -519,10 +553,34 @@ The service configuration object contains properties that MUST be specified duri
     <td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DCOS cluster. This parameter is optional, and should be omitted unless the DCOS deployment is specifically configured for authentication.</td>
   </tr>
   
+   <tr>
+      <td>cpus</td>
+      <td>number</td>
+      <td>The number of CPU shares allocated to the DCOS Cassandra Service scheduler. </td>
+    </tr>
+    
+    <tr>
+      <td>mem</td>
+      <td>integer</td>
+      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
+    </tr>
+    
+    <tr>
+      <td>heap</td>
+      <td>integer</td>
+      <td>The amount of heap, in MB, allocated for the DCOS Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
+    </tr>
+    
+    <tr>
+      <td>api_port</td>
+      <td>integer</td>
+      <td>The port that the scheduler will accept API requests on.</td>
+    </tr>
+  
 </table>
 
 - **In the DCOS CLI, options.json**: `name` = string (default: `cassandra`)
-- **In Marathon**: The framework name cannot be changed after the cluster has started.
+- **In Marathon**: The service name cannot be changed after the cluster has started.
 
 ### Node Configuration
 
@@ -597,6 +655,86 @@ Example node configuration:
   
 </table>
 
+### Executor Configuration
+The executor configuration object allows you modify the resources associated with the DCOS Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
+Example executor configuration:
+```
+{
+    "executor": {
+        "cpus": 0.5,
+        "mem": 1024,
+        "heap" : 768,
+        "disk": 1024,
+        "api_port": 9001
+    }
+}
+```
+
+<table class="table">
+    <tr>
+    <th>Property</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+   <tr>
+      <td>cpus</td>
+      <td>number</td>
+      <td>The number of CPU shares allocated to the DCOS Cassandra Service executor. </td>
+    </tr>
+    
+    <tr>
+      <td>mem</td>
+      <td>integer</td>
+      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
+    </tr>
+    
+    <tr>
+      <td>heap</td>
+      <td>integer</td>
+      <td>The amount of heap, in MB, allocated for the DCOS Cassandra Service executor.</td>
+    </tr>
+    
+    <tr>
+      <td>disk</td>
+      <td>integer</td>
+      <td>The amount of disk, in MB, allocated for the DCOS Cassandra Service executor.</td>
+    </tr>
+    
+    <tr>
+      <td>api_port</td>
+      <td>integer</td>
+      <td>The port that the executor will accept API requests on.</td>
+    </tr>
+  
+</table>
+### Task Configuration
+The task configuration object allows you to modify the resources associated with management operations.  Again, These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
+Example executor configuration:
+```
+{
+    "task": {
+        "cpus": 1.0,
+        "mem": 256
+    }
+}
+```
+<table class="table">
+    <tr>
+    <th>Property</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+   <tr>
+      <td>cpus</td>
+      <td>number</td>
+      <td>The number of CPU shares allocated to the DCOS Cassandra Service tasks. </td>
+    </tr>
+    <tr>
+      <td>mem</td>
+      <td>integer</td>
+      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service tasks.</td>
+    </tr>
+</table>
 ### Cassandra Application Configuration
 
 The Cassandra application is configured via the Cassandra JSON object. **You should not modify these settings without strong reason and an advanced knowledge of Cassandra internals and cluster operations.** The available configuration items are included for advanced users who need to tune the default configuration for specific workloads.
@@ -698,7 +836,7 @@ The DCOS Cassandra service only supports the commitlog_sync model for configurin
   </tr>
   
    <tr>
-    <td>commitlog_sync_periodInMs</td>
+    <td>commitlog_sync_period_in_ms</td>
     <td>integer</td>
     <td>The time, in ms, between successive calls to the fsync system call. This defines the maximum window between write acknowledgement and a potential data loss.</td>
   </tr>
@@ -915,8 +1053,8 @@ The only supported client for the DSOC Cassandra Service is the Datastax Java CQ
 
 The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
-``` bash
-dcos cassandra --name=<framework-name> connection
+```
+dcos cassandra --name=<service-name> connection
 ```
 
 ### Connection Info Response
@@ -1011,8 +1149,8 @@ Increase the `NODES` value via Marathon as described in the [Configuration Updat
 
 It is sometimes useful to retrieve information about a Cassandra node for troubleshooting or to examine the node's properties. Use the following CLI command to request that a node report its status:
 
-```bash
-dcos cassandra --name=<framework-name> node status <nodeid>
+```
+$ dcos cassandra --name=<service-name> node status <nodeid>
 ```
 
 This command queries the node status directly from the node. If the command fails to return, it may indicate that the node is troubled. Here, `nodeid` is the the sequential integer identifier of the node (e.g. 0, 1, 2 , ..., n).
@@ -1114,8 +1252,8 @@ Result:
 ### Node Info
 
 To view general information about a node, the following command my be run from the CLI.
-```bash
-dcos cassandra --name=<framework-name> node describe <nodeid>
+```
+$ dcos cassandra --name=<service-name> node describe <nodeid>
 ```
 In contrast to the status command, this command requests information from the DCOS Cassandra Service and not the Cassandra node.
 
@@ -1188,8 +1326,8 @@ Cleanup can be a CPU- and disk-intensive operation, so you may want to delay run
 
 To perform a cleanup from the CLI, enter the following command:
 
-``` bash
-dcos cassandra --name=<framework-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+```
+$ dcos cassandra --name=<service-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup, `<key_spaces>` is an optional comma-separated list of the key spaces to cleanup, and `<column-families>` is an optional comma-separated list of the column-families to cleanup.
@@ -1197,12 +1335,12 @@ If no arguments are specified a cleanup will be performed for all nodes, key spa
 
 ## Repair
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed. 
-Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra framework will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
+Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra Service will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
 To perform a repair from the CLI, enter the following command:
 
-``` bash
-dcos cassandra --name=<framework-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+```
+$ dcos cassandra --name=<service-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
@@ -1220,8 +1358,8 @@ You can take a complete snapshot of your DCOS Cassandra ring and upload the arti
 
 To perform a backup, enter the following command on the DCOS CLI:
 
-``` bash
-dcos cassandra --name=<framework-name> backup start \
+```
+$ dcos cassandra --name=<service-name> backup start \
     --backup_name=<backup-name> \
     --external_location=s3://<bucket-name> \
     --s3_access_key=<s3-access-key> \
@@ -1230,8 +1368,8 @@ dcos cassandra --name=<framework-name> backup start \
 
 Check status of the backup:
 
-``` bash
-dcos cassandra --name=<framework-name> backup status
+```
+$ dcos cassandra --name=<service-name> backup status
 ```
 
 ### Restore
@@ -1240,8 +1378,8 @@ You can restore your DCOS Cassandra snapshots on a new Cassandra ring.
 
 To restore, enter the following command on the DCOS CLI:
 
-``` bash
-dcos cassandra --name=<framework-name> restore start \
+```
+$ dcos cassandra --name=<service-name> restore start \
     --backup_name=<backup-name> \
     --external_location=s3://<bucket-name> \
     --s3_access_key=<s3-access-key> \
@@ -1250,8 +1388,8 @@ dcos cassandra --name=<framework-name> restore start \
 
 Check the status of the restore:
 
-``` bash
-dcos cassandra --name=<framework-name> restore status
+```
+$ dcos cassandra --name=<service-name> restore status
 ```
 
 # Troubleshooting
@@ -1314,8 +1452,8 @@ To proceed with the installation or configuration update fix the indicated error
 ## Replacing a Permanently Failed Node
 The DCOS Cassandra Service is resilient to temporary node failures. However, if a DCOS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server.
 
-``` bash
-dcos cassandra --name=<framework-name> node replace <node_id>
+```
+$ dcos cassandra --name=<service-name> node replace <node_id>
 ```
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
@@ -1357,7 +1495,7 @@ This JSON array contains a list of valid nodes that the client can use to connec
 The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X PUT -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+$ curl -X POST -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
 ### Resume Installation
@@ -1436,7 +1574,7 @@ First, create the request payload, for example, in a file `backup.json`:
 
 ```
 {
-    "name":"<backup-name>",
+    "backup_name":"<backup-name>",
     "external_location":"s3://<bucket-name>",
     "s3_access_key":"<s3-access-key>",
     "s3_secret_key":"<s3-secret-key>"
@@ -1464,7 +1602,7 @@ Next, create the request payload, for example, in a file `restore.json`:
 
 ```
 {
-    "name":"<backup-name-to-restore>",
+    "backup_name":"<backup-name-to-restore>",
     "external_location":"s3://<bucket-name-where-backups-are-stored>",
     "s3_access_key":"<s3-access-key>",
     "s3_secret_key":"<s3-secret-key>"

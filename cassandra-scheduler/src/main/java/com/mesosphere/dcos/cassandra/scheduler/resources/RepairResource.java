@@ -46,7 +46,8 @@ public class RepairResource {
             } else if (manager.canStartRepair()) {
 
                 manager.startRepair(RepairContext.create(
-                        new ArrayList<>(request.getNodes()),
+                        new ArrayList<>(
+                                getNodes(request)),
                         request.getKeySpaces(),
                         request.getColumnFamiles()
                 ));

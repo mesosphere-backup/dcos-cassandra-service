@@ -52,7 +52,15 @@ public class BackupManager {
                 BackupContext backupContext = loadedBackupContext.get();
                 // Recovering from failure
                 if (backupContext != null) {
-                    startBackup(backupContext);
+                    this.backup = new BackupSnapshotPhase(
+                            backupContext,
+                            cassandraTasks,
+                            provider);
+                    this.upload = new UploadBackupPhase(
+                            backupContext,
+                            cassandraTasks,
+                            provider);
+                    this.backupContext = backupContext;
                 }
             }
 
@@ -70,6 +78,14 @@ public class BackupManager {
 
         if (canStartBackup()) {
             try {
+                if (isComplete()) {
+                    for (String name : cassandraTasks.getBackupSnapshotTasks().keySet()) {
+                        cassandraTasks.remove(name);
+                    }
+                    for (String name : cassandraTasks.getBackupUploadTasks().keySet()) {
+                        cassandraTasks.remove(name);
+                    }
+                }
                 persistentBackupContext.store(context);
                 this.backup = new BackupSnapshotPhase(
                         context,

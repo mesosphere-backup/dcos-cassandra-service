@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class StartBackupRequest {
-    @JsonProperty("name")
+    @JsonProperty("backup_name")
     @NotEmpty
     private String name;
 
