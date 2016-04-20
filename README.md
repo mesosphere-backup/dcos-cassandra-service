@@ -271,14 +271,14 @@ The second phase of the installation is the deploy phase. This phase will deploy
 In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+$ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 #### Resuming Installation
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X PUT http://<dcos_url>/service/cassandra/v1/plan?cmd=proceed
+$ curl -X PUT http://<dcos_url>/service/cassandra/v1/plan/proceed
 ```
 
 ## Uninstall
