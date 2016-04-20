@@ -258,6 +258,12 @@ The plan can be viewed from the API via the REST endpoint. A curl example is pro
 $ curl http:/<dcos_url>/service/cassandra/v1/plan
 ```
 
+If you are using the Enterprise Edition of DCOS with Authentication enabled you will need to include the token in the POST command.
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan
+```
+
 #### Plan Errors
 If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress. See the [Troubleshooting](#troubleshooting) section for information on resolving errors.
 
@@ -271,14 +277,26 @@ The second phase of the installation is the deploy phase. This phase will deploy
 In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+$ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+```
+
+If you are using the Enterprise Edition of DCOS with Authentication enabled you will need to include the token in the POST command.
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POST http://<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 #### Resuming Installation
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X PUT http://<dcos_url>/service/cassandra/v1/plan/continue
+$ curl -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
+```
+
+If you are using the Enterprise Edition of DCOS with Authentication enabled you will need to include the token in the POST command.
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 ## Uninstall
