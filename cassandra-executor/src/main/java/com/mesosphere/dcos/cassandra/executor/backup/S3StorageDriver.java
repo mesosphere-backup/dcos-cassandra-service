@@ -97,6 +97,30 @@ public class S3StorageDriver implements BackupStorageDriver {
 
             @Override
             public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                int numberOfTriesLeft = 3;
+                while (true) {
+                    try {
+                        return sendOneFile(path, numberOfTriesLeft);
+                    } catch (Exception e) {
+                        numberOfTriesLeft--;
+                        if (numberOfTriesLeft == 0) {
+                            LOGGER.error("Failed uploading file {}", path);
+                            throw new IOException("Failed uploading file" + path);
+                        }
+                        LOGGER.info("Retry visitFile... ");
+                    }
+
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+
+            }
+
+            private FileVisitResult sendOneFile(Path path, int num) throws Exception {
+
                 final File file = path.toFile();
                 LOGGER.info("Visiting file: {}", file.getAbsolutePath());
                 if (file.isFile()) {
@@ -140,7 +164,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                             final PartETag partETag = uploadPartResult.getPartETag();
                             if (!partETag.getETag().equals(new String(Hex.encodeHex(digest)))) {
                                 LOGGER.error("Error matching hex");
-                                // TODO: Add retry logic
+                                throw new Exception();
                             }
                             partETags.add(partETag);
                         }
@@ -153,7 +177,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                     } catch (Exception e) {
                         LOGGER.error("Error uploading file: {}", e);
                         amazonS3Client.abortMultipartUpload(new AbortMultipartUploadRequest(bucketName, fileKey, uploadResult.getUploadId()));
-                        // TODO: Add retry logic
+                        throw e;
                     } finally {
                         IOUtils.closeQuietly(inputStream);
                         IOUtils.closeQuietly(compress);
