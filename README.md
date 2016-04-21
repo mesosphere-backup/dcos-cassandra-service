@@ -114,11 +114,11 @@ $ dcos package install cassandra
 
 This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `name` at install time](#custom-installation) for each additional instance.
 
-All `dcos cassandra` CLI commands have a `--name` argument that allows the user to specify which Cassandra instance to query. If you do not specify a service name, the CLI assumes the default value, `cassandra`.
+If you have more than one Cassandra cluster, use the `--name` argument after install time to specify which Cassandra instance to query. All `dcos cassandra` CLI commands accept the `--name` argument. If you do not specify a service name, the CLI assumes the default value, `cassandra`.
 
 ### Custom Installation
 
-If you are ready to ship into production, you will likely need to customize the deployment to suite the workload requirements of application(s). You can customize the default deployment by creating a JSON file. Then pass it to `dcos package install` using the `--options` parameter.
+If you are ready to ship into production, you will likely need to customize the deployment to suite the workload requirements of your application(s). Customize the default deployment by creating a JSON file, then pass it to `dcos package install` using the `--options` parameter.
 
 Sample JSON options file named `sample-cassandra.json`:
 
@@ -255,7 +255,13 @@ When the DCOS Cassandra service is initially installed it will generate an insta
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
 ```
-$ curl http:/<dcos_url>/service/cassandra/v1/plan
+$ curl http://<dcos_url>/service/cassandra/v1/plan
+```
+
+If you are using Enterprise DC/OS, use the following command to view the installation plan:
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan/
 ```
 
 If you are using the Enterprise Edition of DCOS with Authentication enabled you will need to include the token in the POST command.
@@ -1516,7 +1522,7 @@ This JSON array contains a list of valid nodes that the client can use to connec
 The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X PUT -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+$ curl -X POST -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
 ### Resume Installation
