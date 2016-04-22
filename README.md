@@ -630,6 +630,17 @@ Example node configuration:
   </tr>
   
   <tr>
+    <td>disk_type</td>
+    <td>string</td>
+    <td>The type of disk to use for storing Cassandra data. Possible values: <b>ROOT</b> (default) and <b>MOUNT</b>. <b>Note:</b> Once this value is configured, it can not be changed.
+    <ul>
+    <li><b>ROOT:</b> Cassandra data is stored on the same volume as the agent work directory. And, the Cassandra node tasks will use the configured amount of <i>disk</i> space.</li>
+    <li><b>MOUNT:</b> Cassandra data will be stored on a dedicated volume attached to the agent. Dedicated MOUNT volumes have performance advantages and a disk error on these MOUNT volumes will be correctly reported to Cassandra.</li>
+    </ul>
+    </td>
+  </tr>
+  
+  <tr>
     <td>heap.size</td>
     <td>integer</td>
     <td>The maximum and minimum heap size used by the Cassandra process in MB. This value SHOULD be at least 2 GB, and it SHOULD be no larger than 80% of the allocated memory for the container. Specifying very large heaps, greater than 8 GB, is currently not a supported configuration.</td>
