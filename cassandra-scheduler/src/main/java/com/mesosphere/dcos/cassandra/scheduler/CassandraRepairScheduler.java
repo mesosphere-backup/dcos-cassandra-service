@@ -64,8 +64,7 @@ public class CassandraRepairScheduler {
                         cloned.getId());
                 acceptedOffers = offerAccepter.accept(driver,
                         recommendations);
-                if (acceptedOffers.size() != 0 &&
-                        cloned.getConfig().getReplaceIp().isEmpty()) {
+                if (acceptedOffers.size() != 0) {
                     cassandraTasks.update(cloned);
                     LOGGER.info("Accepted {} offer", acceptedOffers.size());
                 }
