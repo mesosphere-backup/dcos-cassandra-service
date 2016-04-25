@@ -13,17 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from dcos_cassandra import cassandra_utils as cu
 from dcos import http
+from dcos_cassandra import cassandra_utils as cu
 
 
 def status():
     return cu.to_json(http.get(cu.api_url("/plan"), headers={}))
 
 
-def start_repair(nodes, keyspaces=None, column_families= None):
+def start_repair(nodes, keyspaces=None, column_families=None):
     req = {'nodes': nodes}
     if keyspaces is not None:
         req['key_spaces'] = keyspaces
@@ -31,4 +29,4 @@ def start_repair(nodes, keyspaces=None, column_families= None):
         req['column_families'] = column_families
     return http.put(cu.api_url("/repair/start"),
                     json=req,
-                    headers={'Content-Type':'application/json'})
+                    headers={'Content-Type': 'application/json'})

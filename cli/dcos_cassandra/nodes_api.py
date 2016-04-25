@@ -13,10 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from dcos_cassandra import cassandra_utils as cu
 from dcos import http
+from dcos_cassandra import cassandra_utils as cu
 
 
 def list():
@@ -24,21 +22,24 @@ def list():
 
 
 def describe(id):
-    return cu.to_json(http.get(cu.api_url("/nodes/node-{}/info".format(str(id))), headers={}))
+    url = "/nodes/node-{}/info".format(str(id))
+    return cu.to_json(http.get(cu.api_url(url), headers={}))
 
 
 def status(id):
-    return cu.to_json(http.get(cu.api_url("/nodes/node-{}/status".format(str(id))), headers={}))
+    url = "/nodes/node-{}/status".format(str(id))
+    return cu.to_json(http.get(cu.api_url(url), headers={}))
 
 
 def restart(id):
-    response = http.put(cu.api_url("/nodes/restart?node=node-{}".format(str(id))), headers={})
+    url = "/nodes/restart?node=node-{}".format(str(id))
+    response = http.put(cu.api_url(url), headers={})
     return response.status_code % 200 < 100
 
 
 def replace(id):
-    response = http.put(cu.api_url("/nodes/replace?node=node-{}".format(str(
-            id))), headers={})
+    url = "/nodes/replace?node=node-{}".format(str(id))
+    response = http.put(cu.api_url(url), headers={})
     return response.status_code % 200 < 100
 
 

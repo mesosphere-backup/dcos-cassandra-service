@@ -21,7 +21,9 @@ __fwk = None
 
 
 def get_fwk_name():
-    return __fwk or util.get_config().get('cassandra.service_name') or "cassandra"
+    return __fwk \
+        or util.get_config().get('cassandra.service_name') \
+        or "cassandra"
 
 
 def set_fwk_name(name):
@@ -54,4 +56,7 @@ def to_json(responseObj):
 
 
 def print_json(jsonObj):
-    print(json.dumps(jsonObj, sort_keys=True, indent=4, separators=(',', ': ')))
+    print(json.dumps(jsonObj,
+                     sort_keys=True,
+                     indent=4,
+                     separators=(',', ': ')))

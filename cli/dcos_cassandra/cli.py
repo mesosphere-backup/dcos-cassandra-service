@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """DCOS Cassandra"""
+
 import click
-import sys
 import pkg_resources
 from dcos_cassandra import cassandra_utils as cu
-from dcos_cassandra import nodes_api, seeds_api, backup_api, restore_api, \
-    cleanup_api, repair_api
+from dcos_cassandra import (backup_api, cleanup_api, nodes_api, repair_api,
+                            restore_api, seeds_api)
 
 
 @click.group()
@@ -29,7 +29,9 @@ def cli():
 @cli.group(invoke_without_command=True)
 @click.option('--info/--no-info', default=False)
 @click.option('--name', help='Name of the Cassandra instance to query.')
-@click.option('--config-schema', help='Prints the config schema for Cassandra.', is_flag=True)
+@click.option('--config-schema',
+              help='Prints the config schema for Cassandra.',
+              is_flag=True)
 def cassandra(info, name, config_schema):
     if info:
         print("Deploy and manage Cassandra clusters")
@@ -37,7 +39,7 @@ def cassandra(info, name, config_schema):
         cu.set_fwk_name(name)
     if config_schema:
         print_schema()
-        
+
 
 def print_schema():
     schema = pkg_resources.resource_string(
@@ -162,56 +164,57 @@ def replace(node_id):
                 str(node_id)))
 
 
-@backup.command()
+@backup.command('start')
 @click.option('--backup_name', help='Name of the snapshot')
 @click.option('--external_location',
               help='External location where the snapshot should be stored.')
 @click.option('--s3_access_key', help='S3 access key')
 @click.option('--s3_secret_key', help='S3 secret key')
-def start(backup_name, external_location, s3_access_key, s3_secret_key):
+def backup_start(backup_name, external_location, s3_access_key, s3_secret_key):
     """Perform cluster backup via snapshot mechanism"""
     response = backup_api.start_backup(backup_name, external_location,
                                        s3_access_key,
                                        s3_secret_key)
 
     if response.status_code % 200 < 100:
-        print(
-                "Successfully started backup. Please check the backup status using the status sub-command.")
+        print("Successfully started backup. " +
+              "Please check the backup status using the status sub-command.")
     else:
         cu.print_json(response)
 
 
-@backup.command()
-def status():
+@backup.command('status')
+def backup_status():
     """Displays the status of the restore"""
     cu.print_json(backup_api.status())
 
 
-@restore.command()
+@restore.command('start')
 @click.option('--backup_name', help='Name of the snapshot to restore')
 @click.option('--external_location',
               help='External location where the snapshot is stored.')
 @click.option('--s3_access_key', help='S3 access key')
 @click.option('--s3_secret_key', help='S3 secret key')
-def start(backup_name, external_location, s3_access_key, s3_secret_key):
+def restore_start(backup_name, external_location,
+                  s3_access_key, s3_secret_key):
     """Restores cluster to a snapshot"""
     response = restore_api.start_restore(backup_name, external_location,
                                          s3_access_key, s3_secret_key)
 
     if response.status_code % 200 < 100:
-        print(
-                "Successfully started restore. Please check the restore status using the status sub-command.")
+        print("Successfully started restore. " +
+              "Please check the restore status using the status sub-command.")
     else:
         cu.print_json(response)
 
 
-@restore.command()
-def status():
+@restore.command('status')
+def restore_status():
     """Displays the status of the restore"""
     cu.print_json(restore_api.status())
 
 
-@cleanup.command()
+@cleanup.command('start')
 @click.option('--nodes',
               help='A list of the nodes to cleanup or * for all.',
               default='*')
@@ -219,7 +222,7 @@ def status():
               default=None)
 @click.option('--column_families', help='The column families to cleanup.',
               default=None)
-def start(nodes, key_spaces, column_families):
+def cleanup_start(nodes, key_spaces, column_families):
     """Perform cluster cleanup of deleted or moved keys"""
     if nodes == '*':
         node_ids = ['*']
@@ -234,7 +237,7 @@ def start(nodes, key_spaces, column_families):
         cu.print_json(response)
 
 
-@repair.command()
+@repair.command('start')
 @click.option('--nodes',
               help='A list of the nodes to repair or * for all.',
               default='*')
@@ -242,7 +245,7 @@ def start(nodes, key_spaces, column_families):
               default=None)
 @click.option('--column_families', help='The column families to repair.',
               default=None)
-def start(nodes, key_spaces, column_families):
+def repair_start(nodes, key_spaces, column_families):
     """Perform primary range anti-entropy repair"""
     if nodes == '*':
         node_ids = ['*']

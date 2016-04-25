@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from dcos_cassandra import cassandra_utils as cu
 from dcos import http
+from dcos_cassandra import cassandra_utils as cu
+
 
 def seeds():
     seeds_url = cu.api_url("/seeds")
