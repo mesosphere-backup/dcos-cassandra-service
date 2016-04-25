@@ -56,8 +56,8 @@ public class ConfigurationManager implements Managed {
             int servers = serversOption.get();
             if (this.servers < servers) {
                 String error = String.format("The number of configured " +
-                                "servers (%d) is less than the previous " +
-                                "number of configured servers (%d).",
+                                "nodes (%d) is less than the previous " +
+                                "number of configured nodes (%d).",
                         this.servers,
                         servers);
                 this.servers = servers;
@@ -71,8 +71,8 @@ public class ConfigurationManager implements Managed {
         if (seeds > servers) {
             String error = String.format("The number of configured " +
                             "seeds (%d) is greater than the current number " +
-                            "of configured servers (%d). Reduce the " +
-                            "number of seeds or increase the number of servers",
+                            "of configured nodes (%d). Reduce the " +
+                            "number of seeds or increase the number of nodes",
                     seeds,
                     servers);
             LOGGER.error(error);
@@ -522,16 +522,7 @@ public class ConfigurationManager implements Managed {
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {
         String id = task.getName() + "_" + UUID.randomUUID().toString();
-        return task.mutable()
-                .setId(id)
-                .setStatus(
-                        CassandraDaemonStatus.create(
-                                Protos.TaskState.TASK_STAGING,
-                                id,
-                                task.getSlaveId(),
-                                task.getName(),
-                                Optional.empty(),
-                                CassandraMode.STARTING)).build();
+        return task.mutable().setId(id).build();
 
     }
 

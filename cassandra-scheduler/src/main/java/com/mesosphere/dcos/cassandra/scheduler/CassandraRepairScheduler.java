@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
@@ -45,15 +46,15 @@ public class CassandraRepairScheduler {
         if (terminatedOption.isPresent()) {
             try {
                 CassandraDaemonTask terminated = terminatedOption.get();
-                CassandraDaemonTask cloned = cassandraTasks.cloneDaemon(
-                        terminated);
+                terminated = cassandraTasks.replaceDaemon(terminated);
+
                 OfferRequirement offerReq =
-                        (cloned.getConfig().getReplaceIp().isEmpty()) ?
+                        (terminated.getConfig().getReplaceIp()
+                                .isEmpty()) ?
                                 offerRequirementProvider.getReplacementOfferRequirement(
-                                        cloned.toProto())
+                                        terminated.toProto())
                                 : offerRequirementProvider.getNewOfferRequirement(
-                                cloned
-                                        .toProto());
+                                terminated.toProto());
                 OfferEvaluator offerEvaluator = new OfferEvaluator(
                         offerReq);
                 List<OfferRecommendation> recommendations =
@@ -61,13 +62,10 @@ public class CassandraRepairScheduler {
                 LOGGER.debug(
                         "Got recommendations: {} for terminated task: {}",
                         recommendations,
-                        cloned.getId());
+                        terminated.getId());
                 acceptedOffers = offerAccepter.accept(driver,
                         recommendations);
-                if (acceptedOffers.size() != 0) {
-                    cassandraTasks.update(cloned);
-                    LOGGER.info("Accepted {} offer", acceptedOffers.size());
-                }
+
 
             } catch (PersistenceException ex) {
                 LOGGER.error(
