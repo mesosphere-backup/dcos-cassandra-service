@@ -52,20 +52,18 @@ public class ConfigurationManager implements Managed {
 
         Optional<Integer> serversOption = serversRef.load();
 
-
-        LOGGER.info("Configuration update requested");
-
         if (serversOption.isPresent()) {
             int servers = serversOption.get();
             if (this.servers < servers) {
                 String error = String.format("The number of configured " +
-                                "servers (%d) is less than the current " +
-                                "number of configured servers (%d). Reduce the " +
-                                "number of servers by removing them from the cluster",
+                                "nodes (%d) is less than the previous " +
+                                "number of configured nodes (%d).",
                         this.servers,
                         servers);
+                this.servers = servers;
                 LOGGER.error(error);
                 errors.add(error);
+                return;
             }
 
         }
@@ -73,12 +71,66 @@ public class ConfigurationManager implements Managed {
         if (seeds > servers) {
             String error = String.format("The number of configured " +
                             "seeds (%d) is greater than the current number " +
-                            "of configured servers (%d). Reduce the " +
-                            "number of seeds or increase the number of servers",
+                            "of configured nodes (%d). Reduce the " +
+                            "number of seeds or increase the number of nodes",
                     seeds,
                     servers);
             LOGGER.error(error);
             errors.add(error);
+            return;
+        }
+
+        Optional<CassandraConfig> configOption = cassandraRef.load();
+
+
+
+        if (configOption.isPresent()) {
+            LOGGER.info("Loaded persistent configuration");
+
+            CassandraConfig persistedConfig = configOption.get();
+
+
+            if (!persistedConfig.getDiskType().equals(
+                    cassandraConfig.getDiskType())) {
+
+                String error = String.format("The configured disk type can " +
+                                "not be changed. Persisted disk type is (%s). " +
+                                "Configured disk type is (%s)",
+                        persistedConfig.getDiskType(),
+                        cassandraConfig.getDiskType());
+
+                LOGGER.error(error);
+                errors.add(error);
+                cassandraConfig = persistedConfig;
+                return;
+            }
+
+            if (persistedConfig.getDiskMb() != cassandraConfig.getDiskMb()) {
+                String error = String.format("The configured disk size can " +
+                                "not be changed. Persisted disk size is " +
+                                "(%d) Mb. Configured disk size is (%d) Mb",
+                        persistedConfig.getDiskMb(),
+                        cassandraConfig.getDiskMb());
+
+                LOGGER.error(error);
+                errors.add(error);
+                cassandraConfig = persistedConfig;
+                return;
+            }
+
+            if (persistedConfig.getVolume().getSizeMb()
+                    != cassandraConfig.getVolume().getSizeMb()) {
+                String error = String.format("The configured volume size can" +
+                                " not be changed. Persisted volume size is " +
+                                "(%d) Mb. Configured volume size is (%d) Mb",
+                        persistedConfig.getVolume().getSizeMb(),
+                        cassandraConfig.getVolume().getSizeMb());
+
+                LOGGER.error(error);
+                errors.add(error);
+                cassandraConfig = persistedConfig;
+                return;
+            }
         }
 
         serversRef.store(servers);
@@ -470,16 +522,7 @@ public class ConfigurationManager implements Managed {
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {
         String id = task.getName() + "_" + UUID.randomUUID().toString();
-        return task.mutable()
-                .setId(id)
-                .setStatus(
-                        CassandraDaemonStatus.create(
-                                Protos.TaskState.TASK_STAGING,
-                                id,
-                                task.getSlaveId(),
-                                task.getName(),
-                                Optional.empty(),
-                                CassandraMode.STARTING)).build();
+        return task.mutable().setId(id).build();
 
     }
 

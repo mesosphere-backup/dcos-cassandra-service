@@ -19,7 +19,7 @@ cluster_task:
 cassandra:
   cpus: ${CASSANDRA_CPUS:-0.5}
   memory_mb: ${CASSANDRA_MEMORY_MB:-4096}
-  disk_mb: ${CASSANRA_DISK_MB:-10240}
+  disk_mb: ${CASSANDRA_DISK_MB:-10240}
   disk_type: ${CASSANDRA_DISK_TYPE:-ROOT}
   version: ${CASSANDRA_VERSION:-2.2.5}
   heap:
@@ -116,9 +116,9 @@ identity:
   name : ${FRAMEWORK_NAME:-"cassandra"}
   version : ${FRAMEWORK_VERSION:-"0.1.0"}
   user : ${FRAMEWORK_USER:-"root"}
-  cluster : "${FRAMEWORK_CLUSTER:-${FRAMEWORK_NAME:-cassandra}_cluster}"
-  role : "${FRAMEWORK_ROLE:-${FRAMEWORK_NAME:-cassandra}_role}"
-  principal : "${FRAMEWORK_PRINCIPAL:-${FRAMEWORK_NAME:-cassandra}_principal}"
+  cluster : "${FRAMEWORK_CLUSTER:-${FRAMEWORK_NAME:-cassandra}-cluster}"
+  role : "${FRAMEWORK_ROLE:-${FRAMEWORK_NAME:-cassandra}-role}"
+  principal : "${FRAMEWORK_PRINCIPAL:-${FRAMEWORK_NAME:-cassandra}-principal}"
   secret: ${FRAMEWORK_SECRET_FILE:-""}
   failover_timeout_s : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
   checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
