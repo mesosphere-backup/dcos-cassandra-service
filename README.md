@@ -28,6 +28,7 @@ DCOS Cassandra provides the following features:
 
 - [DCOS Spark](https://docs.mesosphere.com/manage-service/spark)
 
+<a name="getting started"></a>
 # Getting Started
 
 ## Quick Start
@@ -301,6 +302,7 @@ Then, use the [framework cleaner script](https://docs.mesosphere.com/framework_c
 - `framework-principle` is `<service-name>-principal`.
 - `zk_path` is `<name>`.
 
+<a name="configuring"></a>
 # Configuring
 
 ## Changing Configuration at Runtime
@@ -1140,6 +1142,7 @@ try {
 }
 ```
 
+<a name="managing"></a>
 # Managing
 
 ## Add a Node
@@ -1392,6 +1395,7 @@ Check the status of the restore:
 $ dcos cassandra --name=<service-name> restore status
 ```
 
+<a name="troubleshooting"></a>
 # Troubleshooting
 
 ## Configuration Update Errors
@@ -1458,6 +1462,7 @@ $ dcos cassandra --name=<service-name> node replace <node_id>
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
 
+<a name="api-reference"></a>
 # API Reference
 The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token. 
 The <dcos_url> parameter referenced below indicates the base URL of the DCOS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
@@ -1622,6 +1627,7 @@ Check status of the restore:
 $ curl -X -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/restore/status
 ```
 
+<a name="limitations"></a>
 # Limitations
 
 - Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, DCOS Cassandra could allow for a user-specified degree of parallelism when taking backups.
