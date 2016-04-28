@@ -28,78 +28,79 @@ DC/OS Cassandra provides the following features:
 
 - [DC/OS Spark](https://docs.mesosphere.com/manage-service/spark)
 
+<a name="getting-started"></a>
 # Getting Started
 
 ## Quick Start
 
-* Step 1. Install a Cassandra cluster using DC/OS CLI:
+1. Install a Cassandra cluster using DC/OS CLI:
 
 **Note:** Your cluster must have at least 3 private nodes.
 
-```
-$ dcos package install cassandra
-```
+        
+        $ dcos package install cassandra
+        
 
-* Step 2. Once the cluster is installed, retrieve connection information by running the `connection` command:
+1. Once the cluster is installed, retrieve connection information by running the `connection` command:
 
-```
-$ dcos cassandra connection
-{
-    "address": [
-        "10.0.2.136:9042",
-        "10.0.2.138:9042",
-        "10.0.2.137:9042"
-    ],
-    "dns": [
-         "node-0.cassandra.mesos:9042",
-         "node-1.cassandra.mesos:9042",
-         "node-2.cassandra.mesos:9042"
-    ]
-   
-}
-```
+        
+        $ dcos cassandra connection
+        {
+            "address": [
+                "10.0.2.136:9042",
+                "10.0.2.138:9042",
+                "10.0.2.137:9042"
+            ],
+            "dns": [
+                 "node-0.cassandra.mesos:9042",
+                 "node-1.cassandra.mesos:9042",
+                 "node-2.cassandra.mesos:9042"
+            ]
+           
+        }
+        
 
-* Step 3. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
+1. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
 
-```
-$ dcos node ssh --master-proxy --leader
-core@ip-10-0-6-153 ~ $
-```
+        
+        $ dcos node ssh --master-proxy --leader
+        core@ip-10-0-6-153 ~ $
+        
 
 Now that you are inside your DC/OS cluster, you can connect to your Cassandra cluster directly.
 
-* Step 4. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
+1. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
 
-```
-core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh 10.0.2.136
-cqlsh>
-```
+        
+        core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh 10.0.2.136
+        cqlsh>
+        
 
-* Step 5. You are now connected to your Cassandra cluster. Create a sample keyspace called `demo`:
+1. You are now connected to your Cassandra cluster. Create a sample keyspace called `demo`:
 
-```
-cqlsh> CREATE KEYSPACE demo WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
-```
+        
+        cqlsh> CREATE KEYSPACE demo WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+        
 
-* Step 6. Create a sample table called `map` in our `demo` keyspace:
+1. Create a sample table called `map` in our `demo` keyspace:
 
-```
-cqlsh> USE demo;CREATE TABLE map (key varchar, value varchar, PRIMARY KEY(key));
-```
+        
+        cqlsh> USE demo;CREATE TABLE map (key varchar, value varchar, PRIMARY KEY(key));
+        
 
-* Step 7. Insert some data in the table:
+1. Insert some data in the table:
 
-```
-cqlsh> INSERT INTO demo.map(key, value) VALUES('Cassandra', 'Rocks!');
-cqlsh> INSERT INTO demo.map(key, value) VALUES('StaticInfrastructure', 'BeGone!');
-cqlsh> INSERT INTO demo.map(key, value) VALUES('Buzz', 'DC/OS is the new black!');
-```    
+        
+        cqlsh> INSERT INTO demo.map(key, value) VALUES('Cassandra', 'Rocks!');
+        cqlsh> INSERT INTO demo.map(key, value) VALUES('StaticInfrastructure', 'BeGone!');
+        cqlsh> INSERT INTO demo.map(key, value) VALUES('Buzz', 'DC/OS is the new black!');
+            
 
-* Step 8. Query the data back to make sure it persisted correctly:
-
-```
-cqlsh> SELECT * FROM demo.map;
-```    
+1. Query the data back to make sure it persisted correctly:
+    
+        
+        cqlsh> SELECT * FROM demo.map;
+            
 
 ## Install and Customize
 
@@ -108,9 +109,9 @@ Prior to installing a default cluster, ensure that your DC/OS cluster has at lea
 
 To start a the default cluster, run the following command on the DC/OS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
 
-```
-$ dcos package install cassandra
-```
+    
+    $ dcos package install cassandra
+    
 
 This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `name` at install time](#custom-installation) for each additional instance.
 
@@ -122,20 +123,20 @@ If you are ready to ship into production, you will likely need to customize the 
 
 Sample JSON options file named `sample-cassandra.json`:
 
-```
-{
-    "nodes": {
-        "count": 10,
-        "seeds": 3
+    
+    {
+        "nodes": {
+            "count": 10,
+            "seeds": 3
+        }
     }
-}
-```
+    
 
 The command below creates a cluster using `sample-cassandra.json`:
-
-```
-$ dcos package install --options=sample-cassandra.json cassandra
-```
+    
+    
+    $ dcos package install --options=sample-cassandra.json cassandra
+    
 
 This cluster will have 10 nodes and 3 seeds instead of the default values of 3 nodes and 2 seeds.
 See [Configuration Options](#configuration-options) for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
@@ -148,51 +149,52 @@ As with the default installation, you must ensure that ports 7000, 7001,7 199, 9
 
 To start a minimal cluster with a single node, create a JSON options file that contains the following:
 
-```
-{
-    "service" : {
-       "cpus": 0.1,
-       "mem": 512,
-       "heap": 256
-    },
-    "nodes": {
-        "cpus": 0.5,
-        "mem": 2048,
-        "disk": 4096,
-        "heap": {
-            "size": 1024,
-            "new": 100
+    
+    {
+        "service" : {
+           "cpus": 0.1,
+           "mem": 512,
+           "heap": 256
         },
-        "count": 1,
-        "seeds": 1
-    },
-    "executor" : {
-       "cpus": 0.1,
-       "mem": 512,
-       "heap": 256
-    },
-    "task" : {
-       "cpus": 0.1,
-       "mem": 128,
+        "nodes": {
+            "cpus": 0.5,
+            "mem": 2048,
+            "disk": 4096,
+            "heap": {
+                "size": 1024,
+                "new": 100
+            },
+            "count": 1,
+            "seeds": 1
+        },
+        "executor" : {
+           "cpus": 0.1,
+           "mem": 512,
+           "heap": 256
+        },
+        "task" : {
+           "cpus": 0.1,
+           "mem": 128,
+        }
     }
-}
-```
+    
+
 This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DC/OS Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 ## Multiple Cassandra Cluster Installation
 
 Installing multiple Cassandra clusters is identical to installing a Cassandra cluster with a custom configuration as described above. Use a JSON options file to specify a unique `name` for each installation:
 
-```
-$ cat cassandra1.json
-{
-   "service": {
-       "name": "cassandra1"
-   }
-}
-
-$ dcos package install cassandra --options=cassandra1.json
-```
+    
+    $ cat cassandra1.json
+    {
+       "service": {
+           "name": "cassandra1"
+       }
+    }
+    
+    $ dcos package install cassandra --options=cassandra1.json
+    
 
 In order to avoid port conflicts, by default you cannot collocate more than one Cassandra instance on the same node.
 
@@ -200,69 +202,69 @@ In order to avoid port conflicts, by default you cannot collocate more than one 
 
 When the DC/OS Cassandra service is initially installed it will generate an installation plan as shown below. 
 
-```
-{
-    "errors": [],
-    "phases": [
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
-                    "message": "Reconciliation complete",
-                    "name": "Reconciliation",
-                    "status": "Complete"
-                }
-            ],
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
-            "name": "Reconciliation",
-            "status": "Complete"
-        },
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
-                    "message": "Deploying Cassandra node node-0",
-                    "name": "node-0",
-                    "status": "Complete"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
-                    "message": "Deploying Cassandra node node-1",
-                    "name": "node-1",
-                    "status": "InProgress"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
-                    "message": "Deploying Cassandra node node-2",
-                    "name": "node-2",
-                    "status": "Pending"
-                }
-            ],
-            "id": "c4f61c72-038d-431c-af73-6a9787219233",
-            "name": "Deploy",
-            "status": "InProgress"
-        }
-    ],
-    "status": "InProgress"
-}
-```
+    
+    {
+        "errors": [],
+        "phases": [
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                        "message": "Reconciliation complete",
+                        "name": "Reconciliation",
+                        "status": "Complete"
+                    }
+                ],
+                "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+                "name": "Reconciliation",
+                "status": "Complete"
+            },
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                        "message": "Deploying Cassandra node node-0",
+                        "name": "node-0",
+                        "status": "Complete"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                        "message": "Deploying Cassandra node node-1",
+                        "name": "node-1",
+                        "status": "InProgress"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                        "message": "Deploying Cassandra node node-2",
+                        "name": "node-2",
+                        "status": "Pending"
+                    }
+                ],
+                "id": "c4f61c72-038d-431c-af73-6a9787219233",
+                "name": "Deploy",
+                "status": "InProgress"
+            }
+        ],
+        "status": "InProgress"
+    }
+    
 
 #### Viewing the Installation Plan
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
-```
-$ curl http://<dcos_url>/service/cassandra/v1/plan
-```
+    
+    $ curl http://<dcos_url>/service/cassandra/v1/plan
+    
 
 If you are using Enterprise DC/OS, use the following command to view the installation plan:
 
-```
-curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan/
-```
+    
+    curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan/
+    
 
 #### Plan Errors
 If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress. See the [Troubleshooting](#troubleshooting) section for information on resolving errors.
@@ -276,24 +278,24 @@ The second phase of the installation is the deploy phase. This phase will deploy
 #### Pausing Installation
 In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
 
-```
-$ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
-```
+    
+    $ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+    
 
 #### Resuming Installation
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
-```
-$ curl -X PUT http://<dcos_url>/service/cassandra/v1/plan?cmd=proceed
-```
+    
+    $ curl -X PUT http://<dcos_url>/service/cassandra/v1/plan?cmd=proceed
+    
 
 ## Uninstall
 
 Uninstalling a cluster is straightforward. Replace `cassandra` with the name of the Cassandra instance to be uninstalled.
 
-```
-$ dcos package uninstall --app-id=cassandra
-```
+    
+    $ dcos package uninstall --app-id=cassandra
+    
 
 Then, use the [framework cleaner script](https://docs.mesosphere.com/framework_cleaner/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
 
@@ -301,6 +303,7 @@ Then, use the [framework cleaner script](https://docs.mesosphere.com/framework_c
 - `framework-principle` is `<service-name>-principal`.
 - `zk_path` is `<name>`.
 
+<a name="configuring"></a>
 # Configuring
 
 ## Changing Configuration at Runtime
@@ -325,117 +328,117 @@ This configuration update strategy is analogous to the installation procedure ab
 
 Make the REST request below to view the current plan:
 
-```
-$ curl -v http://<dcos_url>/service/cassandra/v1/plan
-```
+    
+    $ curl -v http://<dcos_url>/service/cassandra/v1/plan
+    
 
 The response will look similar to this:
 
-```
-{
-    "errors": [],
-    "phases": [
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
-                    "message": "Reconciliation complete",
-                    "name": "Reconciliation",
-                    "status": "Complete"
-                }
-            ],
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
-            "name": "Reconciliation",
-            "status": "Complete"
-        },
-        {
-            "blocks": [
-                {
-                    "has_decision_point": true,
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
-                    "message": "Deploying Cassandra node node-0",
-                    "name": "node-0",
-                    "status": "Pending"
-                },
-                {
-                    "has_decision_point": true,
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
-                    "message": "Deploying Cassandra node node-1",
-                    "name": "node-1",
-                    "status": "Pending"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
-                    "message": "Deploying Cassandra node node-2",
-                    "name": "node-2",
-                    "status": "Pending"
-                }
-            ],
-            "id": "c4f61c72-038d-431c-af73-6a9787219233",
-            "name": "Deploy",
-            "status": "Pending"
-        }
-    ],
-    "status": "InProgress"
-}
-```
+    
+    {
+        "errors": [],
+        "phases": [
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                        "message": "Reconciliation complete",
+                        "name": "Reconciliation",
+                        "status": "Complete"
+                    }
+                ],
+                "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+                "name": "Reconciliation",
+                "status": "Complete"
+            },
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": true,
+                        "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                        "message": "Deploying Cassandra node node-0",
+                        "name": "node-0",
+                        "status": "Pending"
+                    },
+                    {
+                        "has_decision_point": true,
+                        "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                        "message": "Deploying Cassandra node node-1",
+                        "name": "node-1",
+                        "status": "Pending"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                        "message": "Deploying Cassandra node node-2",
+                        "name": "node-2",
+                        "status": "Pending"
+                    }
+                ],
+                "id": "c4f61c72-038d-431c-af73-6a9787219233",
+                "name": "Deploy",
+                "status": "Pending"
+            }
+        ],
+        "status": "InProgress"
+    }
+    
 
 If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
 
 If you query the plan again, the response will look like this (notice `status: "Waiting"`):
 
-```
-{
-    "errors": [],
-    "phases": [
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
-                    "message": "Reconciliation complete",
-                    "name": "Reconciliation",
-                    "status": "Complete"
-                }
-            ],
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
-            "name": "Reconciliation",
-            "status": "Complete"
-        },
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
-                    "message": "Deploying Cassandra node node-0",
-                    "name": "node-0",
-                    "status": "Complete"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
-                    "message": "Deploying Cassandra node node-1",
-                    "name": "node-1",
-                    "status": "Pending"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
-                    "message": "Deploying Cassandra node node-2",
-                    "name": "node-2",
-                    "status": "InProgress"
-                }
-            ],
-            "id": "c4f61c72-038d-431c-af73-6a9787219233",
-            "name": "Deploy",
-            "status": "Waiting"
-        }
-    ],
-    "status": "Waiting"
-}
-```
+    
+    {
+        "errors": [],
+        "phases": [
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                        "message": "Reconciliation complete",
+                        "name": "Reconciliation",
+                        "status": "Complete"
+                    }
+                ],
+                "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+                "name": "Reconciliation",
+                "status": "Complete"
+            },
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                        "message": "Deploying Cassandra node node-0",
+                        "name": "node-0",
+                        "status": "Complete"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                        "message": "Deploying Cassandra node node-1",
+                        "name": "node-1",
+                        "status": "Pending"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                        "message": "Deploying Cassandra node node-2",
+                        "name": "node-2",
+                        "status": "InProgress"
+                    }
+                ],
+                "id": "c4f61c72-038d-431c-af73-6a9787219233",
+                "name": "Deploy",
+                "status": "Waiting"
+            }
+        ],
+        "status": "Waiting"
+    }
+    
 
 **Note:** The interrupt command can’t stop a block that is `InProgress`, but it will stop the change on the subsequent blocks.
 
@@ -443,56 +446,56 @@ Enter the `continue` command to resume the update process.
 
 After you execute the continue operation, the plan will look like this:
 
-```
-{
-    "errors": [],
-    "phases": [
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
-                    "message": "Reconciliation complete",
-                    "name": "Reconciliation",
-                    "status": "Complete"
-                }
-            ],
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
-            "name": "Reconciliation",
-            "status": "Complete"
-        },
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
-                    "message": "Deploying Cassandra node node-0",
-                    "name": "node-0",
-                    "status": "Complete"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
-                    "message": "Deploying Cassandra node node-1",
-                    "name": "node-1",
-                    "status": "Complete"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
-                    "message": "Deploying Cassandra node node-2",
-                    "name": "node-2",
-                    "status": "Pending"
-                }
-            ],
-            "id": "c4f61c72-038d-431c-af73-6a9787219233",
-            "name": "Deploy",
-            "status": "Pending"
-        }
-    ],
-    "status": "InProgress"
-}
-```
+    
+    {
+        "errors": [],
+        "phases": [
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                        "message": "Reconciliation complete",
+                        "name": "Reconciliation",
+                        "status": "Complete"
+                    }
+                ],
+                "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+                "name": "Reconciliation",
+                "status": "Complete"
+            },
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                        "message": "Deploying Cassandra node node-0",
+                        "name": "node-0",
+                        "status": "Complete"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                        "message": "Deploying Cassandra node node-1",
+                        "name": "node-1",
+                        "status": "Complete"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                        "message": "Deploying Cassandra node node-2",
+                        "name": "node-2",
+                        "status": "Pending"
+                    }
+                ],
+                "id": "c4f61c72-038d-431c-af73-6a9787219233",
+                "name": "Deploy",
+                "status": "Pending"
+            }
+        ],
+        "status": "InProgress"
+    }
+    
 
 ## Configuration Options
 
@@ -501,21 +504,21 @@ The following describes the most commonly used features of DC/OS Cassandra and h
 ### Service Configuration
 
 The service configuration object contains properties that MUST be specified during installation and CANNOT be modified after installation is in progress. This configuration object is similar across all DC/OS Infinity services. Service configuration example:
-
-```
-{
-    "service": {
-        "name": "cassandra2",
-        "role": "cassandra_role",
-        "principal": "cassandra_principal",
-        "secret" : "/path/to/secret_file",
-        "cpus" : 0.5,
-        "mem" : 2048,
-        "heap" : 1024,
-        "api_port" : 9000
+    
+    
+    {
+        "service": {
+            "name": "cassandra2",
+            "role": "cassandra_role",
+            "principal": "cassandra_principal",
+            "secret" : "/path/to/secret_file",
+            "cpus" : 0.5,
+            "mem" : 2048,
+            "heap" : 1024,
+            "api_port" : 9000
+        }
     }
-}
-```
+    
 
 <table class="table">
   <tr>
@@ -587,21 +590,21 @@ The service configuration object contains properties that MUST be specified duri
 The node configuration object corresponds to the configuration for Cassandra nodes in the Cassandra cluster. Node configuration MUST be specified during installation and MAY be modified during configuration updates. All of the properties except for `disk` MAY be modified during the configuration update process.
 
 Example node configuration:
-```
-{
-    "nodes": {
-        "cpus": 0.5,
-        "mem": 4096,
-        "disk": 10240,
-        "heap": {
-            "size": 2048,
-            "new": 400
+    
+    {
+        "nodes": {
+            "cpus": 0.5,
+            "mem": 4096,
+            "disk": 10240,
+            "heap": {
+                "size": 2048,
+                "new": 400
+            }
+            "count": 3,
+            "seeds": 2
         }
-        "count": 3,
-        "seeds": 2
     }
-}
-```
+    
 
 <table class="table">
 
@@ -669,17 +672,18 @@ Example node configuration:
 ### Executor Configuration
 The executor configuration object allows you modify the resources associated with the DC/OS Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
 Example executor configuration:
-```
-{
-    "executor": {
-        "cpus": 0.5,
-        "mem": 1024,
-        "heap" : 768,
-        "disk": 1024,
-        "api_port": 9001
+
+    
+    {
+        "executor": {
+            "cpus": 0.5,
+            "mem": 1024,
+            "heap" : 768,
+            "disk": 1024,
+            "api_port": 9001
+        }
     }
-}
-```
+    
 
 <table class="table">
     <tr>
@@ -721,14 +725,16 @@ Example executor configuration:
 ### Task Configuration
 The task configuration object allows you to modify the resources associated with management operations.  Again, These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
 Example executor configuration:
-```
-{
-    "task": {
-        "cpus": 1.0,
-        "mem": 256
+
+    
+    {
+        "task": {
+            "cpus": 1.0,
+            "mem": 256
+        }
     }
-}
-```
+    
+    
 <table class="table">
     <tr>
     <th>Property</th>
@@ -746,55 +752,56 @@ Example executor configuration:
       <td>The amount of memory, in MB, allocated for the DC/OS Cassandra Service tasks.</td>
     </tr>
 </table>
+
 ### Cassandra Application Configuration
 
 The Cassandra application is configured via the Cassandra JSON object. **You should not modify these settings without strong reason and an advanced knowledge of Cassandra internals and cluster operations.** The available configuration items are included for advanced users who need to tune the default configuration for specific workloads.
 
 Example Cassandra configuration:
-
-```
-{
-    "cassandra": {
-        "jmx_port": 7199,
-        "hinted_handoff_enabled": true,
-        "max_hint_window_in_ms": 10800000,
-        "hinted_handoff_throttle_in_kb": 1024,
-        "max_hints_delivery_threads": 2,
-        "batchlog_replay_throttle_in_kb": 1024,
-        "key_cache_save_period": 14400,
-        "row_cache_size_in_mb": 0,
-        "row_cache_save_period": 0,
-        "commitlog_sync_period_in_ms": 10000,
-        "commitlog_segment_size_in_mb": 32,
-        "concurrent_reads": 16,
-        "concurrent_writes": 32,
-        "concurrent_counter_writes": 16,
-        "memtable_allocation_type": "heap_buffers",
-        "index_summary_resize_interval_in_minutes": 60,
-        "storage_port": 7000,
-        "start_native_transport": true,
-        "native_transport_port": 9042,
-        "tombstone_warn_threshold": 1000,
-        "tombstone_failure_threshold": 100000,
-        "column_index_size_in_kb": 64,
-        "batch_size_warn_threshold_in_kb": 5,
-        "batch_size_fail_threshold_in_kb": 50,
-        "compaction_throughput_mb_per_sec": 16,
-        "sstable_preemptive_open_interval_in_mb": 50,
-        "read_request_timeout_in_ms": 5000,
-        "range_request_timeout_in_ms": 10000,
-        "write_request_timeout_in_ms": 2000,
-        "counter_write_request_timeout_in_ms": 5000,
-        "cas_contention_timeout_in_ms": 1000,
-        "truncate_request_timeout_in_ms": 60000,
-        "request_timeout_in_ms": 1000,
-        "dynamic_snitch_update_interval_in_ms": 100,
-        "dynamic_snitch_reset_interval_in_ms": 600000,
-        "dynamic_snitch_badness_threshold": 0.1,
-        "internode_compression": "all"
+    
+    
+    {
+        "cassandra": {
+            "jmx_port": 7199,
+            "hinted_handoff_enabled": true,
+            "max_hint_window_in_ms": 10800000,
+            "hinted_handoff_throttle_in_kb": 1024,
+            "max_hints_delivery_threads": 2,
+            "batchlog_replay_throttle_in_kb": 1024,
+            "key_cache_save_period": 14400,
+            "row_cache_size_in_mb": 0,
+            "row_cache_save_period": 0,
+            "commitlog_sync_period_in_ms": 10000,
+            "commitlog_segment_size_in_mb": 32,
+            "concurrent_reads": 16,
+            "concurrent_writes": 32,
+            "concurrent_counter_writes": 16,
+            "memtable_allocation_type": "heap_buffers",
+            "index_summary_resize_interval_in_minutes": 60,
+            "storage_port": 7000,
+            "start_native_transport": true,
+            "native_transport_port": 9042,
+            "tombstone_warn_threshold": 1000,
+            "tombstone_failure_threshold": 100000,
+            "column_index_size_in_kb": 64,
+            "batch_size_warn_threshold_in_kb": 5,
+            "batch_size_fail_threshold_in_kb": 50,
+            "compaction_throughput_mb_per_sec": 16,
+            "sstable_preemptive_open_interval_in_mb": 50,
+            "read_request_timeout_in_ms": 5000,
+            "range_request_timeout_in_ms": 10000,
+            "write_request_timeout_in_ms": 2000,
+            "counter_write_request_timeout_in_ms": 5000,
+            "cas_contention_timeout_in_ms": 1000,
+            "truncate_request_timeout_in_ms": 60000,
+            "request_timeout_in_ms": 1000,
+            "dynamic_snitch_update_interval_in_ms": 100,
+            "dynamic_snitch_reset_interval_in_ms": 600000,
+            "dynamic_snitch_badness_threshold": 0.1,
+            "internode_compression": "all"
+        }
     }
-}
-```
+    
 
 ### Communication Configuration
 
@@ -1064,29 +1071,29 @@ The only supported client for the DSOC Cassandra Service is the Datastax Java CQ
 
 The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
-```
-dcos cassandra --name=<service-name> connection
-```
+    
+    dcos cassandra --name=<service-name> connection
+    
 
 ### Connection Info Response
 
 The response is as below.
 
-```
-{
-    "address": [
-        "10.0.0.47:9042",
-        "10.0.0.50:9042",
-        "10.0.0.49:9042"
-    ],
-    "dns": [
-         "node-0.cassandra.mesos:9042",
-         "node-1.cassandra.mesos:9042",
-         "node-2.cassandra.mesos:9042"
-    ]
     
-}
-```
+    {
+        "address": [
+            "10.0.0.47:9042",
+            "10.0.0.50:9042",
+            "10.0.0.49:9042"
+        ],
+        "dns": [
+             "node-0.cassandra.mesos:9042",
+             "node-1.cassandra.mesos:9042",
+             "node-2.cassandra.mesos:9042"
+        ]
+        
+    }
+    
 
 This address JSON array contains a list of valid nodes addresses for nodes in the cluster. 
 The dns JSON array contains valid MesosDNS names for the same nodes. For availability 
@@ -1116,41 +1123,42 @@ connected even if a node moves.
 ### Configuring the CQL Driver
 #### Adding the Driver to Your Application
 
-```
-<dependency>
-  <groupId>com.datastax.cassandra</groupId>
-  <artifactId>cassandra-driver-core</artifactId>
-  <version>3.0.0</version>
-</dependency>
-```
+    
+    <dependency>
+      <groupId>com.datastax.cassandra</groupId>
+      <artifactId>cassandra-driver-core</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+    
 
 The snippet above is the correct dependency for CQL driver to use with the DC/OS Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
 
 #### Connecting the CQL Driver.
 The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query.
 
-```
-Cluster cluster = null;
-try {
+    
+    Cluster cluster = null;
+    try {
+    
+       List<InetSocketAddress> addresses = Arrays.asList(
+           new InetSocketAddress("10.0.0.47", 9042),
+           new InetSocketAddress("10.0.0.48", 9042),
+           new InetSocketAddress("10.0.0.45", 9042));
+    
+        cluster = Cluster.builder()                                                    
+                .addContactPointsWithPorts(addresses)
+                .build();
+        Session session = cluster.connect();                                           
+    
+        ResultSet rs = session.execute("select release_version from system.local");   
+        Row row = rs.one();
+        System.out.println(row.getString("release_version"));                          
+    } finally {
+        if (cluster != null) cluster.close();                                          
+    }
+    
 
-   List<InetSocketAddress> addresses = Arrays.asList(
-       new InetSocketAddress("10.0.0.47", 9042),
-       new InetSocketAddress("10.0.0.48", 9042),
-       new InetSocketAddress("10.0.0.45", 9042));
-
-    cluster = Cluster.builder()                                                    
-            .addContactPointsWithPorts(addresses)
-            .build();
-    Session session = cluster.connect();                                           
-
-    ResultSet rs = session.execute("select release_version from system.local");   
-    Row row = rs.one();
-    System.out.println(row.getString("release_version"));                          
-} finally {
-    if (cluster != null) cluster.close();                                          
-}
-```
-
+<a name="managing"></a>
 # Managing
 
 ## Add a Node
@@ -1160,29 +1168,29 @@ Increase the `NODES` value via Marathon as described in the [Configuration Updat
 
 It is sometimes useful to retrieve information about a Cassandra node for troubleshooting or to examine the node's properties. Use the following CLI command to request that a node report its status:
 
-```
-$ dcos cassandra --name=<service-name> node status <nodeid>
-```
+    
+    $ dcos cassandra --name=<service-name> node status <nodeid>
+    
 
 This command queries the node status directly from the node. If the command fails to return, it may indicate that the node is troubled. Here, `nodeid` is the the sequential integer identifier of the node (e.g. 0, 1, 2 , ..., n).
 
 Result:
 
-```
-{
-    "data_center": "dc1",
-    "endpoint": "10.0.3.64",
-    "gossip_initialized": true,
-    "gossip_running": true,
-    "host_id": "32bed59f-3100-40fc-8512-a82aef65abb3",
-    "joined": true,
-    "mode": "NORMAL",
-    "native_transport_running": true,
-    "rack": "rac1",
-    "token_count": 256,
-    "version": "2.2.5"
-}
-```
+    
+    {
+        "data_center": "dc1",
+        "endpoint": "10.0.3.64",
+        "gossip_initialized": true,
+        "gossip_running": true,
+        "host_id": "32bed59f-3100-40fc-8512-a82aef65abb3",
+        "joined": true,
+        "mode": "NORMAL",
+        "native_transport_running": true,
+        "rack": "rac1",
+        "token_count": 256,
+        "version": "2.2.5"
+    }
+    
 
 <table class="table">
 
@@ -1263,25 +1271,27 @@ Result:
 ### Node Info
 
 To view general information about a node, the following command my be run from the CLI.
-```
-$ dcos cassandra --name=<service-name> node describe <nodeid>
-```
+
+    
+    $ dcos cassandra --name=<service-name> node describe <nodeid>
+    
+
 In contrast to the status command, this command requests information from the DC/OS Cassandra Service and not the Cassandra node.
 
 In contrast to the `status` command, `node describe` requests information from the DC/OS Cassandra Service and not the Cassandra node. 
 
 Result:
-
-```
-{
-    "hostname": "10.0.3.64",
-    "id": "node-0_2db151cb-e837-4fef-b17b-fbdcd25fadcc",
-    "name": "node-0",
-    "mode": "NORMAL",
-    "slave_id": "8a22d1e9-bfc6-4969-a6bf-6d54c9d41ee3-S4",
-    "state": "TASK_RUNNING"
-}
-```
+    
+    
+    {
+        "hostname": "10.0.3.64",
+        "id": "node-0_2db151cb-e837-4fef-b17b-fbdcd25fadcc",
+        "name": "node-0",
+        "mode": "NORMAL",
+        "slave_id": "8a22d1e9-bfc6-4969-a6bf-6d54c9d41ee3-S4",
+        "state": "TASK_RUNNING"
+    }
+    
 
 <table class="table">
 
@@ -1337,9 +1347,9 @@ Cleanup can be a CPU- and disk-intensive operation, so you may want to delay run
 
 To perform a cleanup from the CLI, enter the following command:
 
-```
-$ dcos cassandra --name=<service-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
-```
+    
+    $ dcos cassandra --name=<service-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+    
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup, `<key_spaces>` is an optional comma-separated list of the key spaces to cleanup, and `<column-families>` is an optional comma-separated list of the column-families to cleanup.
 If no arguments are specified a cleanup will be performed for all nodes, key spaces, and column families.
@@ -1350,9 +1360,9 @@ Like cleanup, repair can be a CPU and disk intensive operation. When possible, i
 
 To perform a repair from the CLI, enter the following command:
 
-```
-$ dcos cassandra --name=<service-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
-```
+    
+    $ dcos cassandra --name=<service-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+    
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
 If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
@@ -1368,20 +1378,20 @@ Cassandra takes a snapshot your tables and ships them to a remote location. Once
 You can take a complete snapshot of your DC/OS Cassandra ring and upload the artifacts to S3.
 
 To perform a backup, enter the following command on the DC/OS CLI:
-
-```
-$ dcos cassandra --name=<service-name> backup start \
-    --backup_name=<backup-name> \
-    --external_location=s3://<bucket-name> \
-    --s3_access_key=<s3-access-key> \
-    --s3_secret_key=<s3-secret-key>
-```
+    
+    
+    $ dcos cassandra --name=<service-name> backup start \
+        --backup_name=<backup-name> \
+        --external_location=s3://<bucket-name> \
+        --s3_access_key=<s3-access-key> \
+        --s3_secret_key=<s3-secret-key>
+    
 
 Check status of the backup:
 
-```
-$ dcos cassandra --name=<service-name> backup status
-```
+    
+    $ dcos cassandra --name=<service-name> backup status
+    
 
 ### Restore
 
@@ -1389,86 +1399,89 @@ You can restore your DC/OS Cassandra snapshots on a new Cassandra ring.
 
 To restore, enter the following command on the DC/OS CLI:
 
-```
-$ dcos cassandra --name=<service-name> restore start \
-    --backup_name=<backup-name> \
-    --external_location=s3://<bucket-name> \
-    --s3_access_key=<s3-access-key> \
-    --s3_secret_key=<s3-secret-key>
-```
+    
+    $ dcos cassandra --name=<service-name> restore start \
+        --backup_name=<backup-name> \
+        --external_location=s3://<bucket-name> \
+        --s3_access_key=<s3-access-key> \
+        --s3_secret_key=<s3-secret-key>
+    
 
 Check the status of the restore:
 
-```
-$ dcos cassandra --name=<service-name> restore status
-```
+    
+    $ dcos cassandra --name=<service-name> restore status
+    
 
+<a name="troubleshooting"></a>
 # Troubleshooting
 
 ## Configuration Update Errors
 The plan below shows shows contains a configuration error that will not allow the installation or configuration update to progress.
 
-```
-{
-    "errors": ["The number of seeds is greater than the number of nodes."],
-    "phases": [
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
-                    "message": "Reconciliation complete",
-                    "name": "Reconciliation",
-                    "status": "Complete"
-                }
-            ],
-            "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
-            "name": "Reconciliation",
-            "status": "Complete"
-        },
-        {
-            "blocks": [
-                {
-                    "has_decision_point": false,
-                    "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
-                    "message": "Deploying Cassandra node node-0",
-                    "name": "node-0",
-                    "status": "Pending"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
-                    "message": "Deploying Cassandra node node-1",
-                    "name": "node-1",
-                    "status": "Pending"
-                },
-                {
-                    "has_decision_point": false,
-                    "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
-                    "message": "Deploying Cassandra node node-2",
-                    "name": "node-2",
-                    "status": "Pending"
-                }
-            ],
-            "id": "c4f61c72-038d-431c-af73-6a9787219233",
-            "name": "Deploy",
-            "status": "Pending"
-        }
-    ],
-    "status": "Error"
-}
-```
+    
+    {
+        "errors": ["The number of seeds is greater than the number of nodes."],
+        "phases": [
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
+                        "message": "Reconciliation complete",
+                        "name": "Reconciliation",
+                        "status": "Complete"
+                    }
+                ],
+                "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
+                "name": "Reconciliation",
+                "status": "Complete"
+            },
+            {
+                "blocks": [
+                    {
+                        "has_decision_point": false,
+                        "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
+                        "message": "Deploying Cassandra node node-0",
+                        "name": "node-0",
+                        "status": "Pending"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
+                        "message": "Deploying Cassandra node node-1",
+                        "name": "node-1",
+                        "status": "Pending"
+                    },
+                    {
+                        "has_decision_point": false,
+                        "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
+                        "message": "Deploying Cassandra node node-2",
+                        "name": "node-2",
+                        "status": "Pending"
+                    }
+                ],
+                "id": "c4f61c72-038d-431c-af73-6a9787219233",
+                "name": "Deploy",
+                "status": "Pending"
+            }
+        ],
+        "status": "Error"
+    }
+    
+
 To proceed with the installation or configuration update fix the indicated errors by updating the configuration as detailed in the [Configuration Update](#configuration-update) section.
 
 ## Replacing a Permanently Failed Node
 The DC/OS Cassandra Service is resilient to temporary node failures. However, if a DC/OS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server.
 
-```
-$ dcos cassandra --name=<service-name> node replace <node_id>
-```
+    
+    $ dcos cassandra --name=<service-name> node replace <node_id>
+    
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
 
+<a name="api-reference"></a>
 # API Reference
 The DC/OS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DC/OS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token. 
 The <dcos_url> parameter referenced below indicates the base URL of the DC/OS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
@@ -1477,27 +1490,27 @@ The <dcos_url> parameter referenced below indicates the base URL of the DC/OS cl
 
 ### View the Installation Plan
 
-```
-$ curl -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan
-```
+    
+    $ curl -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan
+    
 
 ### Retrieve Connection Info
 
-```
-$ curl -H "Authorization:token=<auth_token>" <dcos_url>/cassandra/v1/nodes/connect
-```
+    
+    $ curl -H "Authorization:token=<auth_token>" <dcos_url>/cassandra/v1/nodes/connect
+    
 
 You will see a response similar to the following:
 
-```
-{
-    "nodes": [
-        "10.0.0.47:9042",
-        "10.0.0.50:9042",
-        "10.0.0.49:9042"
-    ]
-}
-```
+    
+    {
+        "nodes": [
+            "10.0.0.47:9042",
+            "10.0.0.50:9042",
+            "10.0.0.49:9042"
+        ]
+    }
+    
 
 This JSON array contains a list of valid nodes that the client can use to connect to the Cassandra cluster. For availability reasons, it is best to specify multiple nodes in the CQL Driver configuration used by the application.
 
@@ -1505,105 +1518,107 @@ This JSON array contains a list of valid nodes that the client can use to connec
 
 The installation will pause after completing installation of the current node and wait for user input.
 
-```
-$ curl -X POST -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
-```
+    
+    $ curl -X POST -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+    
 
 ### Resume Installation
 
 The REST API request below will resume installation at the next pending node.
 
-```
-$ curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
-```
+    
+    $ curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
+    
 
 ## Managing
 
 ### Node Status
 Retrieve the status of a node by sending a GET request to `/v1/nodes/status`:
 
-```
-$ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/status
-```
+    
+    $ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/status
+    
 
 ### Node Info
 Retrieve node information by sending a GET request to `/v1/nodes/info`:
 
-```
-$ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/status
-```
+    
+    $ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/status
+    
+    
 ### Cleanup
 
 First, create the request payload, for example, in a file `cleanup.json`:
 
-```
-{
-    "nodes":["*"],
-    "key_spaces":["my_keyspace"],
-    "column_families":["my_cf_1", "my_cf_w"]
-}
-```
+    
+    {
+        "nodes":["*"],
+        "key_spaces":["my_keyspace"],
+        "column_families":["my_cf_1", "my_cf_w"]
+    }
+    
 
 In the above, the nodes list indicates the nodes on which cleanup will be performed. The value [*], indicates to perform the cleanup cluster wide. key_spaces and column_families indicate the key spaces and column families on which cleanup will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The json below shows the request payload for a cluster wide cleanup operation of all key spaces and column families.
 
-```
-{
-    "nodes":["*"]
-}
-```
+    
+    {
+        "nodes":["*"]
+    }
+    
 
-```
-$ curl -X PUT -H "Content-Type:application/json" -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
-```
+    
+    $ curl -X PUT -H "Content-Type:application/json" -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
+    
 
 ### Repair
 
 First, create the request payload, for example, in a file `repair.json`:
 
-```
-{
-    "nodes":["*"],
-    "key_spaces":["my_keyspace"],
-    "column_families":["my_cf_1", "my_cf_w"]
-}
-```
+    
+    {
+        "nodes":["*"],
+        "key_spaces":["my_keyspace"],
+        "column_families":["my_cf_1", "my_cf_w"]
+    }
+    
+    
 In the above, the nodes list indicates the nodes on which the repair will be performed. The value [*], indicates to perform the repair cluster wide. key_spaces and column_families indicate the key spaces and column families on which repair will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The json below shows the request payload for a cluster wide repair operation of all key spaces and column families.
+    
+    
+    {
+        "nodes":["*"]
+    }
+    
 
-```
-{
-    "nodes":["*"]
-}
-```
-
-```
-curl -X PUT -H "Content-Type:application/json" -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/repair/start --data @repair.json
-```
+    
+    curl -X PUT -H "Content-Type:application/json" -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/repair/start --data @repair.json
+    
 
 ### Backup
 
 First, create the request payload, for example, in a file `backup.json`:
 
-```
-{
-    "backup_name":"<backup-name>",
-    "external_location":"s3://<bucket-name>",
-    "s3_access_key":"<s3-access-key>",
-    "s3_secret_key":"<s3-secret-key>"
-}
-```
+    
+    {
+        "backup_name":"<backup-name>",
+        "external_location":"s3://<bucket-name>",
+        "s3_access_key":"<s3-access-key>",
+        "s3_secret_key":"<s3-secret-key>"
+    }
+    
 
 Then, submit the request payload via `PUT` request to `/v1/backup/start`
 
-```
-$ curl -X PUT -H "Content-Type: application/json" -H "Authorization:token=<auth_token>" -d @backup.json <dcos_url>/service/cassandra/v1/backup/start
-{"status":"started", message:""}
-```
+    
+    $ curl -X PUT -H "Content-Type: application/json" -H "Authorization:token=<auth_token>" -d @backup.json <dcos_url>/service/cassandra/v1/backup/start
+    {"status":"started", message:""}
+    
 
 Check status of the backup:
 
-```
-$ curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
-```
+    
+    $ curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
+    
 
 ### Restore
 
@@ -1611,28 +1626,29 @@ First, bring up a new instance of your Cassandra cluster with the same number of
 
 Next, create the request payload, for example, in a file `restore.json`:
 
-```
-{
-    "backup_name":"<backup-name-to-restore>",
-    "external_location":"s3://<bucket-name-where-backups-are-stored>",
-    "s3_access_key":"<s3-access-key>",
-    "s3_secret_key":"<s3-secret-key>"
-}
-```
+    
+    {
+        "backup_name":"<backup-name-to-restore>",
+        "external_location":"s3://<bucket-name-where-backups-are-stored>",
+        "s3_access_key":"<s3-access-key>",
+        "s3_secret_key":"<s3-secret-key>"
+    }
+    
 
 Next, submit the request payload via `PUT` request to `/v1/restore/start`
 
-```
-$ curl -X PUT -H "Content-Type: application/json" -H "Authorization:token=<auth_token>" -d @restore.json <dcos_url>/service/cassandra/v1/restore/start
-{"status":"started", message:""}
-```
+    
+    $ curl -X PUT -H "Content-Type: application/json" -H "Authorization:token=<auth_token>" -d @restore.json <dcos_url>/service/cassandra/v1/restore/start
+    {"status":"started", message:""}
+    
 
 Check status of the restore:
 
-```
-$ curl -X -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/restore/status
-```
+    
+    $ curl -X -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/restore/status
+    
 
+<a name="limitations"></a>
 # Limitations
 
 - Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, DC/OS Cassandra could allow for a user-specified degree of parallelism when taking backups.
