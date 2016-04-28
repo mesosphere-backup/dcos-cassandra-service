@@ -1687,6 +1687,7 @@ $ curl -X -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/
 - All nodes in each data center MUST be reachable by the configured network addresses.
 - All DCOS Cassandra deployments participating in the cluster MUST be configured to belong to the same cluster.
 - Each DCOS Cassandra deployment participating in the cluster MUST be configured to belong to different data center's.
+
 ##Installing the Initial Data Center
 
 Installation of the initial cluster proceeds as indicated in the [Installation](#installation) section. If all virtual data centers in the Cassandra cluster will reside in the same DCOS cluster, no additional configuration is necessary. If, however, the cluster will span multiple DCOS clusters the `service.data_center_url` property of the cluster must be set to an address that is reachable and resolvable by the nodes in all subsequently installed deployments. Depending on the configuration of your DCOS deployment, a good choice for this value may be the service router endpoint for the DCOS Cassandra Service (i.e. <dcos_url>/service/cassandra/v1/datacenter>). If all data centers in the cluster reside in the same DCOS cluster, the `service.data_center_url` will automatically be set to the MesosDNS address of the cluster (i.e. http://<service.name>.marathon.mesos:<api_port>/v1/datacenter) if left blank. For example, if the default service name and api port are used the URL is set to http://cassandra.marathon.mesos:9000/v1/datacenter.
