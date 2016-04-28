@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
+import com.mesosphere.dcos.cassandra.common.config.Location;
 import com.mesosphere.dcos.cassandra.common.tasks.Volume;
 import org.apache.mesos.offer.VolumeRequirement;
 
@@ -149,6 +150,8 @@ public class CassandraConfigParser {
     private HeapConfig heap;
     @JsonProperty("jmx_port")
     private int jmxPort;
+    @JsonProperty("location")
+    private Location location;
 
     public CassandraConfigParser() {
         cpus = CassandraConfig.DEFAULT.getCpus();
@@ -314,7 +317,7 @@ public class CassandraConfigParser {
                 diskType,
                 "",
                 heap,
-                CassandraConfig.DEFAULT.getLocation(),
+                location,
                 jmxPort,
                 Volume.create(
                         CassandraConfig.DEFAULT.getVolume().getPath(),
@@ -857,5 +860,14 @@ public class CassandraConfigParser {
 
     public void setWriteRequestTimeoutInMs(int writeRequestTimeoutInMs) {
         this.writeRequestTimeoutInMs = writeRequestTimeoutInMs;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public CassandraConfigParser setLocation(Location location) {
+        this.location = location;
+        return this;
     }
 }

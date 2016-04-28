@@ -74,12 +74,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                     byId.put(task.getId(), name);
                 });
                 LOGGER.info("Loaded tasks: {}", tasks);
-                long max = getDaemons().values().stream().map(task ->
-                        Integer.parseInt(
-                                task.getName().replace(
-                                        CassandraDaemonTask.NAME_PREFIX, "")
-                        )).max(Integer::compare).orElse(0);
-
             }
         } catch (PersistenceException e) {
             LOGGER.error("Error loading tasks. Reason: {}", e);

@@ -9,7 +9,11 @@ import io.dropwizard.client.HttpClientConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CassandraSchedulerConfiguration extends Configuration {
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -22,7 +26,6 @@ public class CassandraSchedulerConfiguration extends Configuration {
     private int servers;
     private int seeds;
     private String placementStrategy;
-    private String planStrategy;
     private CassandraConfigParser cassandraConfig;
     private ClusterTaskConfig clusterTaskConfig;
     private int apiPort;
@@ -42,6 +45,9 @@ public class CassandraSchedulerConfiguration extends Configuration {
                     Optional.empty(),
                     250L);
     private String seedsUrl;
+    private long externalDcSyncMs;
+    private String externalDcs;
+    private String dcUrl;
 
     @JsonProperty("framework_version")
     public String getVersion() {
@@ -130,7 +136,8 @@ public class CassandraSchedulerConfiguration extends Configuration {
     }
 
     @JsonProperty("cluster_task")
-    public CassandraSchedulerConfiguration setClusterTaskConfig(ClusterTaskConfig clusterTaskConfig) {
+    public CassandraSchedulerConfiguration setClusterTaskConfig(
+            ClusterTaskConfig clusterTaskConfig) {
         this.clusterTaskConfig = clusterTaskConfig;
         return this;
     }
@@ -215,9 +222,55 @@ public class CassandraSchedulerConfiguration extends Configuration {
         return this;
     }
 
+    @JsonProperty("dc_sync_ms")
+    public long getExternalDcSyncMs() {
+        return externalDcSyncMs;
+    }
+
+    @JsonProperty("dc_sync_ms")
+    public CassandraSchedulerConfiguration setExternalDcSyncMs(long externalDcSyncMs) {
+        this.externalDcSyncMs = externalDcSyncMs;
+        return this;
+    }
+
+    @JsonProperty("dc_url")
+    public String getDcUrl() {
+        return dcUrl;
+    }
+
+    @JsonProperty("dc_url")
+    public CassandraSchedulerConfiguration setDcUrl(String dcUrl) {
+        this.dcUrl = dcUrl;
+        return this;
+    }
+
+    @JsonProperty("external_dcs")
+    public String getExternalDcs() {
+        return externalDcs;
+    }
+
+    @JsonProperty("external_dcs")
+    public CassandraSchedulerConfiguration setExternalDcs(String externalDcs) {
+        this.externalDcs = externalDcs;
+        return this;
+    }
+
+    @JsonIgnore
+    public List<String> getExternalDcsList() {
+        if (externalDcs == null || externalDcs.isEmpty())
+            return Collections.emptyList();
+        else {
+            return Arrays.asList(externalDcs.split(","))
+                    .stream()
+                    .filter(dc -> !dc.isEmpty())
+                    .collect(Collectors.toList());
+        }
+    }
+
     @JsonIgnore
     public CassandraConfig getCassandraConfig() {
-        return cassandraConfig.getCassandraConfig(name, getSeedsUrl());
+        return cassandraConfig.getCassandraConfig(identity.getCluster(),
+                getSeedsUrl());
     }
 
 

@@ -4,7 +4,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerializer;
@@ -15,7 +14,9 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
+import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
+import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
@@ -26,9 +27,11 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.setup.Environment;
+import org.apache.http.client.HttpClient;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
@@ -36,7 +39,10 @@ import org.apache.mesos.scheduler.plan.StageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class SchedulerModule extends AbstractModule {
     private final static Logger LOGGER = LoggerFactory.getLogger(
@@ -97,11 +103,25 @@ public class SchedulerModule extends AbstractModule {
         bind(new TypeLiteral<Serializer<RepairContext>>() {
         }).toInstance(RepairContext.JSON_SERIALIZER);
 
+        bind(new TypeLiteral<Serializer<DataCenterInfo>>() {
+        }).toInstance(
+                DataCenterInfo.JSON_SERIALIZER
+        );
+
         bind(MesosConfig.class).toInstance(configuration.getMesosConfig());
 
         bindConstant().annotatedWith(Names.named("SeedsUrl")).to(
                 configuration.getSeedsUrl()
         );
+        bindConstant().annotatedWith(Names.named("ConfiguredSyncDelayMs")).to(
+                configuration.getExternalDcSyncMs()
+        );
+        bindConstant().annotatedWith(Names.named("ConfiguredDcUrl")).to(
+                configuration.getDcUrl()
+        );
+        bind(new TypeLiteral<List<String>>() {})
+                .annotatedWith(Names.named("ConfiguredExternalDcs"))
+                .toInstance(configuration.getExternalDcsList());
         bind(Identity.class).annotatedWith(
                 Names.named("ConfiguredIdentity")).toInstance(
                 configuration.getIdentity());
@@ -127,16 +147,18 @@ public class SchedulerModule extends AbstractModule {
                 Names.named("ConfiguredPhaseStrategy")).to(
                 configuration.getPhaseStrategy()
         );
+
+        bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(
+                configuration.getHttpClientConfiguration())
+                .build("http-client"));
+        bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
+        bind(ScheduledExecutorService.class).toInstance(
+                Executors .newScheduledThreadPool(8));
         bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
                 .asEagerSingleton();
         bind(StageManager.class).to(CassandraStageManager.class)
                 .asEagerSingleton();
-        bind(ExecutorClient.class).toInstance(ExecutorClient.create(
-                new HttpClientBuilder(environment).using(
-                        configuration.getHttpClientConfiguration())
-                        .build("executor-http-client"),
-                Executors.newCachedThreadPool()
-        ));
+        bind(SchedulerClient.class).asEagerSingleton();
         bind(IdentityManager.class).asEagerSingleton();
         bind(ConfigurationManager.class).asEagerSingleton();
         bind(PersistentOfferRequirementProvider.class);
@@ -148,5 +170,6 @@ public class SchedulerModule extends AbstractModule {
         bind(RestoreManager.class).asEagerSingleton();
         bind(CleanupManager.class).asEagerSingleton();
         bind(RepairManager.class).asEagerSingleton();
+        bind(SeedsManager.class).asEagerSingleton();
     }
 }

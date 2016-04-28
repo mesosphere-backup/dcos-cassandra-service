@@ -219,6 +219,12 @@ When the DCOS Cassandra service is initially installed it will generate an insta
             "status": "Complete"
         },
         {
+	        "id": "e90ad90b-fd71-4a1d-a63b-599003ea46f5",
+	         "name": "Sync Data Center",
+	         "blocks": [],
+	         "status": "Complete"
+        },
+        {
             "blocks": [
                 {
                     "has_decision_point": false,
@@ -350,6 +356,12 @@ The response will look similar to this:
             "status": "Complete"
         },
         {
+	        "id": "e90ad90b-fd71-4a1d-a63b-599003ea46f5",
+	         "name": "Sync Data Center",
+	         "blocks": [],
+	         "status": "Complete"
+        },
+        {
             "blocks": [
                 {
                     "has_decision_point": true,
@@ -403,6 +415,12 @@ If you query the plan again, the response will look like this (notice `status: "
             "id": "0836a986-835a-4811-afea-b6cb9ddcd929",
             "name": "Reconciliation",
             "status": "Complete"
+        },
+        {
+	        "id": "e90ad90b-fd71-4a1d-a63b-599003ea46f5",
+	         "name": "Sync Data Center",
+	         "blocks": [],
+	         "status": "Complete"
         },
         {
             "blocks": [
@@ -462,6 +480,12 @@ After you execute the continue operation, the plan will look like this:
             "status": "Complete"
         },
         {
+	        "id": "e90ad90b-fd71-4a1d-a63b-599003ea46f5",
+	         "name": "Sync Data Center",
+	         "blocks": [],
+	         "status": "Complete"
+        },
+        {
             "blocks": [
                 {
                     "has_decision_point": false,
@@ -506,13 +530,17 @@ The service configuration object contains properties that MUST be specified duri
 {
     "service": {
         "name": "cassandra2",
+        "cluster" : "dcos_cluster",
         "role": "cassandra_role",
+        "data_center" : "dc2",
         "principal": "cassandra_principal",
         "secret" : "/path/to/secret_file",
         "cpus" : 0.5,
         "mem" : 2048,
         "heap" : 1024,
-        "api_port" : 9000
+        "api_port" : 9000,
+        "data_center_url":"http://cassandra2.marathon.mesos:9000/v1/cassandra/datacenter"
+        "external_data_centers":"http://cassandra.marathon.mesos:9000/v1/cassandra/datacenter"
     }
 }
 ```
@@ -527,7 +555,20 @@ The service configuration object contains properties that MUST be specified duri
   <tr>
     <td>name</td>
     <td>string</td>
-    <td>The name of the Cassandra cluster.</td>
+    <td>The name of the Cassandra service installation. This must be unique for each DCOS Cassandra service instance deployed on a DCOS cluster.</td>
+  </tr>
+  
+  <tr>
+    <td>cluster</td>
+    <td>string</td>
+    <td>The cluster that the Cassandra service installation belongs to. Multiple DCOS Cassandra service instances may belong to the same cluster.</td>
+  </tr>
+  
+  <tr>
+    <td>data_center</td>
+    <td>string</td>
+    <td>The identifier of the data center that the DCOS Cassandra service will deploy. This MUST be unique for deployments supporting multiple data centers. This 
+    MAY be identical for multiple deployments on the same DCOS cluster that support different clusters.</td>
   </tr>
 
   <tr>
@@ -576,6 +617,26 @@ The service configuration object contains properties that MUST be specified duri
       <td>integer</td>
       <td>The port that the scheduler will accept API requests on.</td>
     </tr>
+    
+    <tr>
+    <td>data_center_url</td>
+    <td>string</td>
+    <td>This specifies the URL that the DCOS Cassandra service instance will advertise to other instances in the cluster. 
+    If you are not configuring a multi data center deployment this should be omitted. 
+    If you are configuring a multiple data center deployment inside the same DCOS cluster, this should be omitted. 
+    If you are configuring a multiple data center deployment inside diffrent DCOS clusters, this value MUST be set to a URL that 
+    is reachable and resolvable by the DCOS Cassandra instances in the remote data centers. A good choice for this value is the admin 
+    router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
+    </tr>
+    <tr>
+    <td>data_center_url</td>
+    <td>string</td>
+    <td>This specifies the URLs of the external data centers that contain a cluster the DCOS Cassandra service will join as a comma separated list. 
+    This value should only be included when your deploying a DCOS Cassandra service instance that will extend an existing cluster. Otherwise, this 
+    value should be omitted. If this value is specified, the URLs contained in the comma separated list MUST be resolvable and reachable from the deployed cluster.
+    In practice, they should be identical to the values specified in data_center_url configuration parameter for the instance whose cluster will be extended. 
+    </td>
+  </tr>
   
 </table>
 
@@ -1621,10 +1682,88 @@ Check status of the restore:
 ```
 $ curl -X -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/restore/status
 ```
+#Multi-Data Center Deployments
+##Requirements
+- All nodes in each data center MUST be reachable by the configured network addresses.
+- All DCOS Cassandra deployments participating in the cluster MUST be configured to belong to the same cluster.
+- Each DCOS Cassandra deployment participating in the cluster MUST be configured to belong to different data center's.
+##Installing the Initial Data Center
+
+Installation of the initial cluster proceeds as indicated in the [Installation](#installation) section. If all virtual data centers in the Cassandra cluster will reside in the same DCOS cluster, no additional configuration is necessary. If, however, the cluster will span multiple DCOS clusters the `service.data_center_url` property of the cluster must be set to an address that is reachable and resolvable by the nodes in all subsequently installed deployments. Depending on the configuration of your DCOS deployment, a good choice for this value may be the service router endpoint for the DCOS Cassandra Service (i.e. <dcos_url>/service/cassandra/v1/datacenter>). If all data centers in the cluster reside in the same DCOS cluster, the `service.data_center_url` will automatically be set to the MesosDNS address of the cluster (i.e. http://<service.name>.marathon.mesos:<api_port>/v1/datacenter) if left blank. For example, if the default service name and api port are used the URL is set to http://cassandra.marathon.mesos:9000/v1/datacenter.
+
+##Installing Additional Data-Centers
+Prior to installing additional data centers, you MUST wait until at least one node per data center is active, and you SHOULD wait until at least the number of configured seed nodes is active.
+
+Installation of a second data center requires that `service.external_dcs` parameter be set to include the values set in the `servie.data_center_url` property of all prior installations for the cluster. If you have installed one data center than only this should be included. If you have installed two data centers, then the URLs of both should be included as a comma separated list. Note that the `service.cluster` property MUST be identical for all data centers in the same cluster, and the `service.data_center` MUST be unique for all data centers in the cluster. As with the initial installation, if the cluster will span multiple DCOS clusters, the `service.data_center_url` must be configured to a URL that is reachable and resolvable by the nodes in all previous deployments.
+During the installation of additional data centers, you will see a plan generated as below.
+
+```
+{
+	"phases": [{
+		"id": "72b91214-ad7e-4450-92cd-cc841fe531ad",
+		"name": "Reconciliation",
+		"blocks": [{
+			"id": "89771069-d209-4a96-8dce-badcb2bc1abb",
+			"status": "Complete",
+			"name": "Reconciliation",
+			"message": "Reconciliation complete",
+			"has_decision_point": false
+		}],
+		"status": "Complete"
+	}, {
+		"id": "9be9c790-dd2e-4258-8ea6-5a4efb8b4eb3",
+		"name": "Sync DataCenter",
+		"blocks": [{
+			"id": "bc1d0f6b-d2da-4680-aa96-580d740c04e9",
+			"status": "Complete",
+			"name": "Sync DataCenter",
+			"message": "Syncing data center @ http://cassandra.marathon.mesos:9000/v1/datacenter",
+			"has_decision_point": false
+		}],
+		"status": "Complete"
+	}, {
+		"id": "c3d48cb5-cb5e-4885-821b-63371ab668ec",
+		"name": "Deploy",
+		"blocks": [{
+			"id": "8a6e6799-c518-478c-a429-2b8215af4573",
+			"status": "Complete",
+			"name": "node-0",
+			"message": "Deploying Cassandra node node-0",
+			"has_decision_point": false
+		}, {
+			"id": "07a3800e-ddaf-4f56-ac36-d607ca9fc46b",
+			"status": "Complete",
+			"name": "node-1",
+			"message": "Deploying Cassandra node node-1",
+			"has_decision_point": false
+		}, {
+			"id": "91405f22-fbe8-40c3-b236-8a8725d746bf",
+			"status": "Complete",
+			"name": "node-2",
+			"message": "Deploying Cassandra node node-2",
+			"has_decision_point": false
+		}],
+		"status": "Complete"
+	}],
+	"errors": [],
+	"status": "Complete"
+}
+```
+In the above, the Sync DataCenters phase will contain a Block for each data center that 
+contains a DCOS Cassandra service deployment containing a partition of the cluster. During the execution of each Block, the DCOS Cassandra Service will register its
+local endpoint with the data center indicated by the URL in the Block's message, and, it 
+will retrieve the current seed nodes for that data center. 
+Once the Installation plan progresses to deployment, it will provide the seeds from the 
+external data centers to the nodes it deploys, allowing the cluster to span multiple 
+datacenters.
+After the Sync DataCenter Block completes, both data centers will periodically poll each 
+other for modifications to the seed set.
 
 # Limitations
 
-- Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, DCOS Cassandra could allow for a user-specified degree of parallelism when taking backups.
+- Cluster backup and restore can only be performed sequentially across the entire data center. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, DCOS Cassandra could allow for a user-specified degree of parallelism when taking backups.
 - Cluster restore can only restore a cluster of the same size as, or larger than, the cluster from which the backup was taken.
 - While nodes can be replaced, there is currently no way to shrink the size of the cluster. Future releases will contain decommissions and remove operations.
-- Anti-entropy repair can only be performed sequentially, for the primary range of each node, across the entire cluster. There are use cases where one might wish to repair an individual node, but running the repair procedure as implemented is always sufficient to repair the cluster.
+- Anti-entropy repair can only be performed sequentially, for the primary range of each node, across and entire data center. There are use cases where one might wish to repair an individual node, but running the repair procedure as implemented is always sufficient to repair the cluster.
+- Once a cluster is configured to span multiple data centers, there is no way to shrink 
+the cluster back to a single data center.
