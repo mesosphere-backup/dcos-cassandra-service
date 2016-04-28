@@ -1,10 +1,10 @@
 # Overview
 
-DCOS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DCOS. DCOS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation] (http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DCOS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DCOS Cassandra in moments. Multiple Cassandra clusters can be installed on DCOS and managed independently, so you can offer Cassandra as a managed service to your organization.
+DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation] (http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
 ## Benefits
 
-DCOS Cassandra offers the following benefits:
+DC/OS Cassandra offers the following benefits:
 
 - Easy installation
 - Multiple Cassandra clusters
@@ -15,7 +15,7 @@ DCOS Cassandra offers the following benefits:
 
 ## Features
 
-DCOS Cassandra provides the following features:
+DC/OS Cassandra provides the following features:
 
 - Single command installation for rapid provisioning
 - Persistent storage volumes for enhanced data durability
@@ -26,13 +26,13 @@ DCOS Cassandra provides the following features:
 
 ## Related Services
 
-- [DCOS Spark](https://docs.mesosphere.com/manage-service/spark)
+- [DC/OS Spark](https://docs.mesosphere.com/manage-service/spark)
 
 # Getting Started
 
 ## Quick Start
 
-* Step 1. Install a Cassandra cluster using DCOS CLI:
+* Step 1. Install a Cassandra cluster using DC/OS CLI:
 
 **Note:** Your cluster must have at least 3 private nodes.
 
@@ -104,9 +104,9 @@ cqlsh> SELECT * FROM demo.map;
 ## Install and Customize
 
 ### Default Installation
-Prior to installing a default cluster, ensure that your DCOS cluster has at least 3 DCOS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
+Prior to installing a default cluster, ensure that your DC/OS cluster has at least 3 DC/OS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
 
-To start a the default cluster, run the following command on the DCOS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
+To start a the default cluster, run the following command on the DC/OS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
 
 ```
 $ dcos package install cassandra
@@ -141,7 +141,7 @@ This cluster will have 10 nodes and 3 seeds instead of the default values of 3 n
 See [Configuration Options](#configuration-options) for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
 
 ### Minimal Installation
-You may wish to install Cassandra on a local DCOS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
+You may wish to install Cassandra on a local DC/OS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
 As with the default installation, you must ensure that ports 7000, 7001,7 199, 9042, and 9160 are available.
 
 **Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
@@ -177,7 +177,7 @@ To start a minimal cluster with a single node, create a JSON options file that c
     }
 }
 ```
-This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DCOS Cassandra Service executor and 128 Mb for clusters tasks. The DCOS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
+This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DC/OS Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 ## Multiple Cassandra Cluster Installation
 
@@ -198,7 +198,7 @@ In order to avoid port conflicts, by default you cannot collocate more than one 
 
 ### Installation Plan
 
-When the DCOS Cassandra service is initially installed it will generate an installation plan as shown below. 
+When the DC/OS Cassandra service is initially installed it will generate an installation plan as shown below. 
 
 ```
 {
@@ -268,7 +268,7 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http:/
 If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress. See the [Troubleshooting](#troubleshooting) section for information on resolving errors.
 
 #### Reconciliation Phase
-The first phase of the installation plan is the reconciliation phase. This phase ensures that the DCOS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DCOS Cassandra Service and occurs each time the service starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
+The first phase of the installation plan is the reconciliation phase. This phase ensures that the DC/OS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DC/OS Cassandra Service and occurs each time the service starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
 
 #### Deploy Phase
 The second phase of the installation is the deploy phase. This phase will deploy the requested number of Cassandra nodes. Each block in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
@@ -496,11 +496,11 @@ After you execute the continue operation, the plan will look like this:
 
 ## Configuration Options
 
-The following describes the most commonly used features of DCOS Cassandra and how to configure them via the DCOS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DCOS command line (See the [Installation section](#installation)) or via modification to the Service Scheduler’s Marathon environment at runtime (See the [Configuration Update section](#configuration-update)). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DCOS scheduler.
+The following describes the most commonly used features of DC/OS Cassandra and how to configure them via the DC/OS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DC/OS command line (See the [Installation section](#installation)) or via modification to the Service Scheduler’s Marathon environment at runtime (See the [Configuration Update section](#configuration-update)). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DC/OS scheduler.
 
 ### Service Configuration
 
-The service configuration object contains properties that MUST be specified during installation and CANNOT be modified after installation is in progress. This configuration object is similar across all DCOS Infinity services. Service configuration example:
+The service configuration object contains properties that MUST be specified during installation and CANNOT be modified after installation is in progress. This configuration object is similar across all DC/OS Infinity services. Service configuration example:
 
 ```
 {
@@ -550,25 +550,25 @@ The service configuration object contains properties that MUST be specified duri
   <tr>
     <td>secret</td>
     <td>string</td>
-    <td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DCOS cluster. This parameter is optional, and should be omitted unless the DCOS deployment is specifically configured for authentication.</td>
+    <td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DC/OS cluster. This parameter is optional, and should be omitted unless the DC/OS deployment is specifically configured for authentication.</td>
   </tr>
   
    <tr>
       <td>cpus</td>
       <td>number</td>
-      <td>The number of CPU shares allocated to the DCOS Cassandra Service scheduler. </td>
+      <td>The number of CPU shares allocated to the DC/OS Cassandra Service scheduler. </td>
     </tr>
     
     <tr>
       <td>mem</td>
       <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
+      <td>The amount of memory, in MB, allocated for the DC/OS Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
     </tr>
     
     <tr>
       <td>heap</td>
       <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DCOS Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
+      <td>The amount of heap, in MB, allocated for the DC/OS Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
     </tr>
     
     <tr>
@@ -579,7 +579,7 @@ The service configuration object contains properties that MUST be specified duri
   
 </table>
 
-- **In the DCOS CLI, options.json**: `name` = string (default: `cassandra`)
+- **In the DC/OS CLI, options.json**: `name` = string (default: `cassandra`)
 - **In Marathon**: The service name cannot be changed after the cluster has started.
 
 ### Node Configuration
@@ -667,7 +667,7 @@ Example node configuration:
 </table>
 
 ### Executor Configuration
-The executor configuration object allows you modify the resources associated with the DCOS Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
+The executor configuration object allows you modify the resources associated with the DC/OS Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
 Example executor configuration:
 ```
 {
@@ -690,25 +690,25 @@ Example executor configuration:
    <tr>
       <td>cpus</td>
       <td>number</td>
-      <td>The number of CPU shares allocated to the DCOS Cassandra Service executor. </td>
+      <td>The number of CPU shares allocated to the DC/OS Cassandra Service executor. </td>
     </tr>
     
     <tr>
       <td>mem</td>
       <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
+      <td>The amount of memory, in MB, allocated for the DC/OS Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
     </tr>
     
     <tr>
       <td>heap</td>
       <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DCOS Cassandra Service executor.</td>
+      <td>The amount of heap, in MB, allocated for the DC/OS Cassandra Service executor.</td>
     </tr>
     
     <tr>
       <td>disk</td>
       <td>integer</td>
-      <td>The amount of disk, in MB, allocated for the DCOS Cassandra Service executor.</td>
+      <td>The amount of disk, in MB, allocated for the DC/OS Cassandra Service executor.</td>
     </tr>
     
     <tr>
@@ -738,12 +738,12 @@ Example executor configuration:
    <tr>
       <td>cpus</td>
       <td>number</td>
-      <td>The number of CPU shares allocated to the DCOS Cassandra Service tasks. </td>
+      <td>The number of CPU shares allocated to the DC/OS Cassandra Service tasks. </td>
     </tr>
     <tr>
       <td>mem</td>
       <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service tasks.</td>
+      <td>The amount of memory, in MB, allocated for the DC/OS Cassandra Service tasks.</td>
     </tr>
 </table>
 ### Cassandra Application Configuration
@@ -836,7 +836,7 @@ The IP address of the Cassandra node is determined automatically by the service 
 
 ### Commit Log Configuration
 
-The DCOS Cassandra service only supports the commitlog_sync model for configuring the Cassandra commit log. In this model a node responds to write requests after writing the request to file system and replicating to the configured number of nodes, but prior to synchronizing the commit log file to storage media. Cassandra will synchronize the data to storage media after a configurable time period. If all nodes in the cluster should fail, at the Operating System level or below, during this window the acknowledged writes will be lost. Note that, even if the JVM crashes, the data will still be available on the nodes persistent volume when the service recovers the node.The configuration parameters below control the window in which data remains acknowledged but has not been written to storage media.
+The DC/OS Cassandra service only supports the commitlog_sync model for configuring the Cassandra commit log. In this model a node responds to write requests after writing the request to file system and replicating to the configured number of nodes, but prior to synchronizing the commit log file to storage media. Cassandra will synchronize the data to storage media after a configurable time period. If all nodes in the cluster should fail, at the Operating System level or below, during this window the acknowledged writes will be lost. Note that, even if the JVM crashes, the data will still be available on the nodes persistent volume when the service recovers the node.The configuration parameters below control the window in which data remains acknowledged but has not been written to storage media.
 
 <table class="table">
 
@@ -1124,7 +1124,7 @@ connected even if a node moves.
 </dependency>
 ```
 
-The snippet above is the correct dependency for CQL driver to use with the DCOS Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
+The snippet above is the correct dependency for CQL driver to use with the DC/OS Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
 
 #### Connecting the CQL Driver.
 The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query.
@@ -1243,13 +1243,13 @@ Result:
   <tr>
     <td>rack</td>
     <td>string</td>
-    <td>The rack assigned to the Cassandra node. This property is important for topology-aware replication strategies. For the DCOS Cassandra service all nodes in the cluster should report the same value.</td>
+    <td>The rack assigned to the Cassandra node. This property is important for topology-aware replication strategies. For the DC/OS Cassandra service all nodes in the cluster should report the same value.</td>
   </tr>
   
   <tr>
     <td>token_count</td>
     <td>integer</td>
-    <td>The number of tokens assigned to the node. The Cassandra DCOS service only supports virtual node-based deployments. Because the resources allocated to each instance are homogenous, the number of tokens assigned to each node is identical and should always be 256.</td>
+    <td>The number of tokens assigned to the node. The Cassandra DC/OS service only supports virtual node-based deployments. Because the resources allocated to each instance are homogenous, the number of tokens assigned to each node is identical and should always be 256.</td>
   </tr>
   
    <tr>
@@ -1266,9 +1266,9 @@ To view general information about a node, the following command my be run from t
 ```
 $ dcos cassandra --name=<service-name> node describe <nodeid>
 ```
-In contrast to the status command, this command requests information from the DCOS Cassandra Service and not the Cassandra node.
+In contrast to the status command, this command requests information from the DC/OS Cassandra Service and not the Cassandra node.
 
-In contrast to the `status` command, `node describe` requests information from the DCOS Cassandra Service and not the Cassandra node. 
+In contrast to the `status` command, `node describe` requests information from the DC/OS Cassandra Service and not the Cassandra node. 
 
 Result:
 
@@ -1294,13 +1294,13 @@ Result:
    <tr>
     <td>hostname</td>
     <td>string</td>
-    <td>The hostname or IP address of the DCOS agent on which the node is running.</td>
+    <td>The hostname or IP address of the DC/OS agent on which the node is running.</td>
   </tr>
   
   <tr>
     <td>id</td>
     <td>string</td>
-    <td>The DCOS identifier of the task for the Cassandra node.</td>
+    <td>The DC/OS identifier of the task for the Cassandra node.</td>
   </tr>
   
    <tr>
@@ -1312,13 +1312,13 @@ Result:
   <tr>
     <td>mode</td>
     <td>string</td>
-    <td>The operating mode of the Cassandra node as recorded by the DCOS Cassandra service. This value should be eventually consistent with the mode returned by the status command.</td>
+    <td>The operating mode of the Cassandra node as recorded by the DC/OS Cassandra service. This value should be eventually consistent with the mode returned by the status command.</td>
   </tr>
   
    <tr>
     <td>slave_id</td>
     <td>string</td>
-    <td>The identifier of the DCOS slave agent where the node is running.</td>
+    <td>The identifier of the DC/OS slave agent where the node is running.</td>
   </tr>
   
   <tr>
@@ -1333,7 +1333,7 @@ Result:
 
 When nodes are added or removed from the ring, a node can lose part of its partition range. Cassandra does not automatically remove data when this happens. You can tube cleanup to remove the unnecessary data.
 
-Cleanup can be a CPU- and disk-intensive operation, so you may want to delay running cleanup until off-peak hours. The DCOS Cassandra service will minimize the aggregate CPU and disk utilization for the cluster by performing cleanup for each selected node sequentially.
+Cleanup can be a CPU- and disk-intensive operation, so you may want to delay running cleanup until off-peak hours. The DC/OS Cassandra service will minimize the aggregate CPU and disk utilization for the cluster by performing cleanup for each selected node sequentially.
 
 To perform a cleanup from the CLI, enter the following command:
 
@@ -1346,7 +1346,7 @@ If no arguments are specified a cleanup will be performed for all nodes, key spa
 
 ## Repair
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed. 
-Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra Service will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
+Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DC/OS Cassandra Service will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
 To perform a repair from the CLI, enter the following command:
 
@@ -1359,15 +1359,15 @@ If no arguments are specified a repair will be performed for all nodes, key spac
  
 ## Backup and Restore
 
-DCOS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
+DC/OS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
 
 Cassandra takes a snapshot your tables and ships them to a remote location. Once the snapshots have been uploaded to a remote location, you can restore the data to a new cluster, in the event of a disaster, or restore them to an existing cluster, in the event that a user error has caused a data loss.
 
 ### Backup
 
-You can take a complete snapshot of your DCOS Cassandra ring and upload the artifacts to S3.
+You can take a complete snapshot of your DC/OS Cassandra ring and upload the artifacts to S3.
 
-To perform a backup, enter the following command on the DCOS CLI:
+To perform a backup, enter the following command on the DC/OS CLI:
 
 ```
 $ dcos cassandra --name=<service-name> backup start \
@@ -1385,9 +1385,9 @@ $ dcos cassandra --name=<service-name> backup status
 
 ### Restore
 
-You can restore your DCOS Cassandra snapshots on a new Cassandra ring.
+You can restore your DC/OS Cassandra snapshots on a new Cassandra ring.
 
-To restore, enter the following command on the DCOS CLI:
+To restore, enter the following command on the DC/OS CLI:
 
 ```
 $ dcos cassandra --name=<service-name> restore start \
@@ -1461,7 +1461,7 @@ The plan below shows shows contains a configuration error that will not allow th
 To proceed with the installation or configuration update fix the indicated errors by updating the configuration as detailed in the [Configuration Update](#configuration-update) section.
 
 ## Replacing a Permanently Failed Node
-The DCOS Cassandra Service is resilient to temporary node failures. However, if a DCOS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server.
+The DC/OS Cassandra Service is resilient to temporary node failures. However, if a DC/OS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server.
 
 ```
 $ dcos cassandra --name=<service-name> node replace <node_id>
@@ -1470,8 +1470,8 @@ $ dcos cassandra --name=<service-name> node replace <node_id>
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
 
 # API Reference
-The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token. 
-The <dcos_url> parameter referenced below indicates the base URL of the DCOS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
+The DC/OS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DC/OS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token. 
+The <dcos_url> parameter referenced below indicates the base URL of the DC/OS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
 
 ## Configuration
 
@@ -1635,7 +1635,7 @@ $ curl -X -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/
 
 # Limitations
 
-- Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, DCOS Cassandra could allow for a user-specified degree of parallelism when taking backups.
+- Cluster backup and restore can only be performed sequentially across the entire cluster. While this makes cluster backup and restore time consuming, it also ensures that taking backups and restoring them will not overwhelm the cluster or the network. In the future, DC/OS Cassandra could allow for a user-specified degree of parallelism when taking backups.
 - Cluster restore can only restore a cluster of the same size as, or larger than, the cluster from which the backup was taken.
 - While nodes can be replaced, there is currently no way to shrink the size of the cluster. Future releases will contain decommissions and remove operations.
 - Anti-entropy repair can only be performed sequentially, for the primary range of each node, across the entire cluster. There are use cases where one might wish to repair an individual node, but running the repair procedure as implemented is always sufficient to repair the cluster.
