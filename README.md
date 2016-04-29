@@ -270,6 +270,12 @@ If you are using Enterprise DC/OS, use the following command to view the install
 curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan/
 ```
 
+If you are using the Enterprise Edition of DCOS with Authentication enabled you will need to include the token in the POST command.
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan
+```
+
 #### Plan Errors
 If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress. See the [Troubleshooting](#troubleshooting) section for information on resolving errors.
 
@@ -283,14 +289,26 @@ The second phase of the installation is the deploy phase. This phase will deploy
 In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X PUT http:/<dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+$ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+```
+
+If you are using the Enterprise Edition of DCOS with Authentication enabled you will need to include the token in the POST command.
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POST http://<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 #### Resuming Installation
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X PUT http://<dcos_url>/service/cassandra/v1/plan?cmd=proceed
+$ curl -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
+```
+
+If you are using the Enterprise Edition of DCOS with Authentication enabled you will need to include the token in the POST command.
+
+```
+curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 ## Uninstall
@@ -303,9 +321,9 @@ $ dcos package uninstall --app-id=cassandra
 
 Then, use the [framework cleaner script](https://docs.mesosphere.com/framework_cleaner/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
 
-- `framework-role` is `<service-name>-role`.
-- `framework-principle` is `<service-name>-principal`.
-- `zk_path` is `<name>`.
+- `framework_role` is `<service-name>_role`.
+- `framework_principal` is `<service-name>_principal`.
+- `zk_path` is `<service-name>`.
 
 # Configuring
 
@@ -396,6 +414,11 @@ The response will look similar to this:
 
 If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
 
+```
+$ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+```
+
+
 If you query the plan again, the response will look like this (notice `status: "Waiting"`):
 
 ```
@@ -458,6 +481,10 @@ If you query the plan again, the response will look like this (notice `status: "
 **Note:** The interrupt command can’t stop a block that is `InProgress`, but it will stop the change on the subsequent blocks.
 
 Enter the `continue` command to resume the update process.
+
+```
+$ curl -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
+```
 
 After you execute the continue operation, the plan will look like this:
 
@@ -688,6 +715,17 @@ Example node configuration:
     <td>disk</td>
     <td>integer</td>
     <td>The amount of disk, in MB, allocated to a Cassandra node in the cluster. **Note:** Once this value is configured, it can not be changed.</td>
+  </tr>
+  
+  <tr>
+    <td>disk_type</td>
+    <td>string</td>
+    <td>The type of disk to use for storing Cassandra data. Possible values: <b>ROOT</b> (default) and <b>MOUNT</b>. <b>Note:</b> Once this value is configured, it can not be changed.
+    <ul>
+    <li><b>ROOT:</b> Cassandra data is stored on the same volume as the agent work directory. And, the Cassandra node tasks will use the configured amount of <i>disk</i> space.</li>
+    <li><b>MOUNT:</b> Cassandra data will be stored on a dedicated volume attached to the agent. Dedicated MOUNT volumes have performance advantages and a disk error on these MOUNT volumes will be correctly reported to Cassandra.</li>
+    </ul>
+    </td>
   </tr>
   
   <tr>
