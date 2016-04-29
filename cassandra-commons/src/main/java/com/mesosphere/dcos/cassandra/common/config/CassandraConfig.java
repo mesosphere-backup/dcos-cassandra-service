@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2015 Mesosphere
+ * Copyright 2016 Mesosphere
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,16 +30,14 @@ import java.io.IOException;
 import java.util.Objects;
 
 /**
- * CassandraConfig aggregates the configuration properties for a Cassandra
- * servers. It includes the version of the distribution, the cpus, memory,
- * and disk to allocate, the heap configuration, the location configuration,
- * the JMX port, the persistent volume configuration, and the configuration
- * of the Cassandra application.
- * The class is immutable, but it provides a mutable Builder allowing for
- * construction of a new instance from an existing instance.
+ * CassandraConfig is the configuration object for a Cassandra node. It is
+ * serializable to both JSON and Protocol Buffers.
  */
 public class CassandraConfig {
 
+    /**
+     * The default configuration object.
+     */
     public static final CassandraConfig DEFAULT =
             CassandraConfig.create(
                     "2.2.5",
@@ -73,6 +71,10 @@ public class CassandraConfig {
         private Volume volume;
         private CassandraApplicationConfig application;
 
+        /**
+         * Constructs a new Builder by copying the properties of config.
+         * @param config The CassandraConfig that will be copied.
+         */
         private Builder(CassandraConfig config) {
 
             this.version = config.version;
@@ -88,45 +90,89 @@ public class CassandraConfig {
             this.application = config.application;
         }
 
+        /**
+         * Constructs a new Builder from the default config.
+         */
         private Builder() {
             this(DEFAULT);
         }
 
+        /**
+         * Gets the application configuration.
+         * @return The application configuration.
+         */
         public CassandraApplicationConfig getApplication() {
             return application;
         }
 
+        /**
+         * Sets the application configuration.
+         * @param application The application configuration.
+         * @return The Builder instance.
+         */
         public Builder setApplication(CassandraApplicationConfig application) {
             this.application = application;
             return this;
         }
 
+        /**
+         * Gets the cpu shares for the node.
+         * @return The cpu shares for the node.
+         */
         public double getCpus() {
             return cpus;
         }
 
+        /**
+         * Set the cpu shares for the node
+         * @param cpus The cpu shares for the node.
+         * @return The cpu shares for the node.
+         */
         public Builder setCpus(double cpus) {
             this.cpus = cpus;
             return this;
         }
 
+        /**
+         * Get the disk size for the node in Mb.
+         * @return The disk size for the node in Mb.
+         */
         public int getDiskMb() {
             return diskMb;
         }
 
+        /**
+         * Set the disk size for the node in Mb.
+         * @param diskMb The disk size for the node in Mb.
+         * @return The Builder instance.
+         */
         public Builder setDiskMb(int diskMb) {
             this.diskMb = diskMb;
             return this;
         }
 
+        /**
+         * Get the disk type for the node.
+         * @return The disk type for the node.
+         */
         public VolumeRequirement.VolumeType getDiskType() {
             return diskType;
         }
 
-        public void setDiskType(VolumeRequirement.VolumeType diskType) {
+        /**
+         * Set the disk type for the node.
+         * @param diskType The disk type for the node.
+         * @return The Builder instance.
+         */
+        public Builder setDiskType(VolumeRequirement.VolumeType diskType) {
             this.diskType = diskType;
+            return this;
         }
 
+        /**
+         * Get the heap configuration for the node.
+         * @return The heap configuration for the node.
+         */
         public HeapConfig getHeap() {
             return heap;
         }
@@ -441,7 +487,8 @@ public class CassandraConfig {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getVersion(), getCpus(), getMemoryMb(), getDiskMb(), getDiskType(),
+        return Objects.hash(getVersion(), getCpus(), getMemoryMb(), getDiskMb(),
+                getDiskType(),
                 getReplaceIp(), getHeap(), getLocation(), getJmxPort(),
                 getApplication());
     }

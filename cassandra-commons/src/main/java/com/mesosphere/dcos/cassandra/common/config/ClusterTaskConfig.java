@@ -16,8 +16,6 @@ public class ClusterTaskConfig {
                     1,
                     256,
                     0);
-
-
     /**
      * Builder class allows for fluent construction of a new ClusterTaskConfig
      * or construction of a new instance from the properties of an existing

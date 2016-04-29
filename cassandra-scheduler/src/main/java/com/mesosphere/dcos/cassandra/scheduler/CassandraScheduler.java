@@ -168,42 +168,50 @@ public class CassandraScheduler implements Scheduler, Managed {
         logOffers(offers);
         reconciler.reconcile(driver);
 
-        if (identityManager.isRegistered()) {
+        try {
+            if (identityManager.isRegistered()) {
 
-            List<Protos.OfferID> acceptedOffers = new ArrayList<>();
+                List<Protos.OfferID> acceptedOffers = new ArrayList<>();
 
-            final Block currentBlock = stageManager.getCurrentBlock();
+                final Block currentBlock = stageManager.getCurrentBlock();
 
-            LOGGER.info("Current execution block = {}",
-                    (currentBlock != null) ? currentBlock.toString() :
-                            "No block");
+                LOGGER.info("Current execution block = {}",
+                        (currentBlock != null) ? currentBlock.toString() :
+                                "No block");
 
-            if (currentBlock == null) {
-                LOGGER.info("Current plan {} interrupted.",
-                        (stageManager.isInterrupted()) ? "is" : "is not");
+                if (currentBlock == null) {
+                    LOGGER.info("Current plan {} interrupted.",
+                            (stageManager.isInterrupted()) ? "is" : "is not");
+                }
+                acceptedOffers.addAll(
+                        planScheduler.resourceOffers(driver, offers,
+                                currentBlock));
+
+                // Perform any required repairs
+                List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(
+                        offers,
+                        acceptedOffers);
+                acceptedOffers.addAll(
+                        repairScheduler.resourceOffers(
+                                driver,
+                                unacceptedOffers,
+                                (currentBlock != null) ?
+                                        ImmutableSet.of(
+                                                currentBlock.getName()) :
+                                        Collections.emptySet()));
+
+                declineOffers(driver, acceptedOffers, offers);
+            } else {
+
+                LOGGER.info("Declining all offers : registered = {}, " +
+                                "reconciled = {}",
+                        identityManager.isRegistered(),
+                        reconciler.isReconciled());
+                declineOffers(driver, Collections.emptyList(), offers);
             }
-            acceptedOffers.addAll(
-                    planScheduler.resourceOffers(driver, offers, currentBlock));
+        } catch (Throwable t){
 
-            // Perform any required repairs
-            List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(offers,
-                    acceptedOffers);
-            acceptedOffers.addAll(
-                    repairScheduler.resourceOffers(
-                            driver,
-                            unacceptedOffers,
-                            (currentBlock != null) ?
-                                    ImmutableSet.of(currentBlock.getName()) :
-                                    Collections.emptySet()));
-
-            declineOffers(driver, acceptedOffers, offers);
-        } else {
-
-            LOGGER.info("Declining all offers : registered = {}, " +
-                            "reconciled = {}",
-                    identityManager.isRegistered(),
-                    reconciler.isReconciled());
-            declineOffers(driver, Collections.emptyList(), offers);
+            LOGGER.error("Error in offer acceptance cycle", t);
         }
     }
 
