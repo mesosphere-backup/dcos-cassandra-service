@@ -7,11 +7,11 @@ Setup
 #. Make sure you meet requirements for installing packages_
 #. Clone git repo for the dcos cassandra cli::
 
-    git clone git@github.com:mesosphere/dcos-cassandra-cli.git
+    git clone git@github.com:mesosphere/dcos-cassandra-service.git
 
 #. Change directory to the repo directory::
 
-    cd dcos-cassandra-cli
+    cd dcos-cassandra-service/cli
 
 #. Make sure that you have virtualenv installed. If not type::
 
@@ -21,19 +21,13 @@ Setup
 
     make env
 
-Configure Environment and Run
------------------------------
-
-#. TODO: Talk about how to configure the root dcos cli
-
-#. :code:`source` the setup file to add the :code:`dcos-cassandra-cli` command line interface to your
-   :code:`PATH`::
+#. Enter the project env::
 
     source env/bin/activate
 
-#. Get started by calling the DCOS Cassandra CLI's help::
+#. Call the CLI code directly::
 
-    dcos cassandra help
+    python dcos_cassandra/cli.py cassandra connection
 
 Running Tests:
 --------------

@@ -13,22 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from dcos_cassandra import cassandra_utils as cu
 from dcos import http
+from dcos_cassandra import cassandra_utils as cu
 
 
 def status():
     return cu.to_json(http.get(cu.api_url("/plan"), headers={}))
 
 
-def start_cleanup(nodes, keyspaces=None, column_families= None):
+def start_cleanup(nodes, keyspaces=None, column_families=None):
     req = {'nodes': nodes}
     if keyspaces is not None:
         req['key_spaces'] = keyspaces
     if column_families is not None:
         req['column_families'] = column_families
     return http.put(cu.api_url("/cleanup/start"),
-                json=req,
-                headers={'Content-Type':'application/json'})
+                    json=req,
+                    headers={'Content-Type': 'application/json'})
