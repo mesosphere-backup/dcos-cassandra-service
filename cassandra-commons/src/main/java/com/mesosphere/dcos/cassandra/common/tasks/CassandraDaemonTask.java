@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.common.tasks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
@@ -257,6 +258,10 @@ public class CassandraDaemonTask extends CassandraTask {
     public CassandraConfig getConfig() {
         return config;
     }
+    
+    @JsonIgnore
+    public int getNativeTransportPort() { return config.getApplication().getNativeTransportPort(); }
+
 
     @Override
     public CassandraProtos.CassandraTaskData getTaskData() {
@@ -403,4 +408,28 @@ public class CassandraDaemonTask extends CassandraTask {
     public int hashCode() {
         return Objects.hash(config);
     }
+
+
+    @Override
+    public Protos.TaskInfo toProto() {
+        Protos.DiscoveryInfo.Builder discovery = Protos.DiscoveryInfo.newBuilder();
+        Protos.Ports.Builder discoveryPorts = Protos.Ports.newBuilder();
+        discoveryPorts.addPorts(0, Protos.Port.newBuilder().setNumber(getNativeTransportPort()).setName("NativeTransport"));
+        discovery.setPorts(discoveryPorts);
+        discovery.setVisibility(Protos.DiscoveryInfo.Visibility.EXTERNAL);
+        discovery.setName(config.getApplication().getClusterName() + "." + name );
+
+        return Protos.TaskInfo.newBuilder()
+                .setTaskId(Protos.TaskID.newBuilder().setValue(id))
+                .setSlaveId(Protos.SlaveID.newBuilder().setValue(slaveId))
+                .setName(name)
+                .setData(getTaskData().toByteString())
+                .addAllResources(getReserveResources())
+                .addAllResources(getCreateResources())
+                .addAllResources(getLaunchResources())
+                .setExecutor(executor.toExecutorInfo(role, principal))
+                .setDiscovery(discovery.build())
+                .build();
+    }
+
 }
