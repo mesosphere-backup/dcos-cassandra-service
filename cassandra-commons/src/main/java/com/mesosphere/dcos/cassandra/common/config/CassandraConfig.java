@@ -73,6 +73,7 @@ public class CassandraConfig {
 
         /**
          * Constructs a new Builder by copying the properties of config.
+         *
          * @param config The CassandraConfig that will be copied.
          */
         private Builder(CassandraConfig config) {
@@ -99,6 +100,7 @@ public class CassandraConfig {
 
         /**
          * Gets the application configuration.
+         *
          * @return The application configuration.
          */
         public CassandraApplicationConfig getApplication() {
@@ -107,6 +109,7 @@ public class CassandraConfig {
 
         /**
          * Sets the application configuration.
+         *
          * @param application The application configuration.
          * @return The Builder instance.
          */
@@ -117,6 +120,7 @@ public class CassandraConfig {
 
         /**
          * Gets the cpu shares for the node.
+         *
          * @return The cpu shares for the node.
          */
         public double getCpus() {
@@ -125,6 +129,7 @@ public class CassandraConfig {
 
         /**
          * Set the cpu shares for the node
+         *
          * @param cpus The cpu shares for the node.
          * @return The cpu shares for the node.
          */
@@ -135,6 +140,7 @@ public class CassandraConfig {
 
         /**
          * Get the disk size for the node in Mb.
+         *
          * @return The disk size for the node in Mb.
          */
         public int getDiskMb() {
@@ -143,6 +149,7 @@ public class CassandraConfig {
 
         /**
          * Set the disk size for the node in Mb.
+         *
          * @param diskMb The disk size for the node in Mb.
          * @return The Builder instance.
          */
@@ -153,6 +160,7 @@ public class CassandraConfig {
 
         /**
          * Get the disk type for the node.
+         *
          * @return The disk type for the node.
          */
         public VolumeRequirement.VolumeType getDiskType() {
@@ -161,6 +169,7 @@ public class CassandraConfig {
 
         /**
          * Set the disk type for the node.
+         *
          * @param diskType The disk type for the node.
          * @return The Builder instance.
          */
@@ -171,26 +180,45 @@ public class CassandraConfig {
 
         /**
          * Get the heap configuration for the node.
+         *
          * @return The heap configuration for the node.
          */
         public HeapConfig getHeap() {
             return heap;
         }
 
+        /**
+         * Sets the heap configuration for the node.
+         * @param heap The heap configuration for the node.
+         * @return The Builder instance.
+         */
         public Builder setHeap(HeapConfig heap) {
             this.heap = heap;
             return this;
         }
 
+        /**
+         * Gets the JMX port for the node.
+         * @return The JMX port for the node.
+         */
         public int getJmxPort() {
             return jmxPort;
         }
 
+        /**
+         * Sets the JMX port for the node
+         * @param jmxPort The JMX port for the node
+         * @return The Builder instance.
+         */
         public Builder setJmxPort(int jmxPort) {
             this.jmxPort = jmxPort;
             return this;
         }
 
+        /**
+         * Gets the Location configuration for the node.
+         * @return The location configuration for the node.
+         */
         public Location getLocation() {
             return location;
         }
