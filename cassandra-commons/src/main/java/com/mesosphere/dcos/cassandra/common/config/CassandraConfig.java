@@ -217,53 +217,102 @@ public class CassandraConfig {
 
         /**
          * Gets the Location configuration for the node.
-         * @return The location configuration for the node.
+         * @return The Location configuration for the node.
          */
         public Location getLocation() {
             return location;
         }
 
+        /**
+         * Sets the Location configuration for the node.
+         * @param location The Location configuration for the node.
+         * @return The Builder instance.
+         */
         public Builder setLocation(Location location) {
             this.location = location;
             return this;
         }
 
+        /**
+         * Gets the memory allocated to the node in Mb.
+         * @return The memory allocated to the node in Mb.
+         */
         public int getMemoryMb() {
             return memoryMb;
         }
 
+        /**
+         * Sets the memory allocated to the node in Mb.
+         * @param memoryMb The memory allocated to the node in Mb.
+         * @return The memory allocated to the node in Mb.
+         */
         public Builder setMemoryMb(int memoryMb) {
             this.memoryMb = memoryMb;
             return this;
         }
 
+        /**
+         * Gets the IP address of the node that the deployed node will
+         * replace in the ring.
+         * @return The IP address of the node that the deployed node will
+         * replace in the ring.
+         */
         public String getReplaceIp() {
             return replaceIp;
         }
 
+        /**
+         * Sets the IP address of the node that the deployed node will replace
+         * in the ring.
+         * @param replaceIp The IP address of the node that the deployed node
+         *                  will replace in the ring.
+         * @return The Builder instance.
+         */
         public Builder setReplaceIp(String replaceIp) {
             this.replaceIp = replaceIp;
             return this;
         }
 
+        /**
+         * Gets the Cassandra version of the node.
+         * @return The Cassandra version of the node.
+         */
         public String getVersion() {
             return version;
         }
 
+        /**
+         * Sets the Cassandra version of the node.
+         * @param version The Cassandra version of the node.
+         * @return The Builder instance.
+         */
         public Builder setVersion(String version) {
             this.version = version;
             return this;
         }
 
+        /**
+         * Gets the volume configuration of the node.
+         * @return The volume configuration of the node.
+         */
         public Volume getVolume() {
             return volume;
         }
 
+        /**
+         * Sets the Volume configuration of the node.
+         * @param volume The Volume configuration of the node.
+         * @return The Builder instance.
+         */
         public Builder setVolume(Volume volume) {
             this.volume = volume;
             return this;
         }
 
+        /**
+         * Creates a CassandraConfig with the properties of the Builder.
+         * @return A
+         */
         public CassandraConfig build() {
 
             return create(
