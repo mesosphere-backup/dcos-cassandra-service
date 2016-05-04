@@ -119,9 +119,10 @@ public class ConfigurationManagerTest {
         assertEquals("http://cassandra.marathon.mesos:8080/v1/seeds",
                 config.getSeedsUrl());
         assertEquals("cassandra", config.getIdentity().getName());
-        assertEquals("cassandra_role", config.getIdentity().getRole());
-        assertEquals("cassandra_cluster", config.getIdentity().getCluster());
-        assertEquals("cassandra_principal", config.getIdentity().getPrincipal());
+        assertEquals("cassandra-role", config.getIdentity().getRole());
+        assertEquals("cassandra-cluster", config.getIdentity().getCluster());
+        assertEquals("cassandra-principal",
+                config.getIdentity().getPrincipal());
         assertEquals("", config.getIdentity().getSecret());
 
         manager.start();

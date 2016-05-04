@@ -388,15 +388,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     }
 
-    public CassandraDaemonTask cloneDaemon(CassandraDaemonTask task)
-            throws PersistenceException {
-        synchronized (persistent) {
-            final CassandraDaemonTask updated =
-                    configuration.replaceDaemon(task);
-            return updated;
-        }
-    }
-
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task)
             throws PersistenceException {
         synchronized (persistent) {

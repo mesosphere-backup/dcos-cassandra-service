@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.apache.mesos.protobuf.ResourceBuilder.*;
@@ -337,7 +338,13 @@ public class CassandraDaemonTask extends CassandraTask {
                 memoryMb,
                 diskMb,
                 config,
-                (CassandraDaemonStatus) status);
+                CassandraDaemonStatus.create(
+                        Protos.TaskState.TASK_STAGING,
+                        id,
+                        offer.getSlaveId().getValue(),
+                        name,
+                        Optional.empty(),
+                        CassandraMode.STARTING));
     }
 
     @Override
