@@ -1547,17 +1547,17 @@ $ curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 ## Managing
 
 ### Node Status
-Retrieve the status of a node by sending a GET request to `/v1/nodes/status`:
+Retrieve the status of a node by sending a GET request to `/v1/nodes/<node-#>/status`:
 
 ```
-$ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/status
+$ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/nodes/<node-#>/status
 ```
 
 ### Node Info
-Retrieve node information by sending a GET request to `/v1/nodes/info`:
+Retrieve node information by sending a GET request to `/v1/nodes/<node-#>/info`:
 
 ```
-$ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/status
+$ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/nodes/</node-#>/info
 ```
 ### Cleanup
 
