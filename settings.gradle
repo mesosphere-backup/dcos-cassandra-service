@@ -14,5 +14,4 @@ rootProject.name = 'dcos-cassandra-service'
 include "cassandra-commons"
 include "cassandra-scheduler"
 include "cassandra-executor"
-include "dcos-commons"
 include "seedprovider"

@@ -43,6 +43,9 @@ configure(subprojects - project('seedprovider')) {
     repositories {
         mavenLocal()
         mavenCentral()
+        maven {
+          url "https://s3.amazonaws.com/downloads.mesosphere.io/maven/"
+        }        
     }
 
     ext {
@@ -95,4 +98,3 @@ configure(project(':seedprovider')) {
 
     }
 }
-
