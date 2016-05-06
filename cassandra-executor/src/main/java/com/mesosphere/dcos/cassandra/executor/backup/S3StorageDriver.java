@@ -24,9 +24,6 @@ import java.util.*;
 public class S3StorageDriver implements BackupStorageDriver {
     private static final Logger LOGGER = LoggerFactory.getLogger(S3StorageDriver.class);
 
-    protected final Set<String> SKIP_KEYSPACES = ImmutableSet.of("system");
-    protected final Map<String, List<String>> SKIP_COLUMN_FAMILIES = ImmutableMap.of();
-
     public static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
     public static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
