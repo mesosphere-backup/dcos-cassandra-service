@@ -655,7 +655,7 @@ Example node configuration:
   <tr>
     <td>page_cache</td>
     <td>integer</td>
-    <td>The amount of memory, in MB, allocated to the container for `page_cache`.</td>
+    <td>The amount of memory, in MB, allocated to the container for page_cache.</td>
   </tr>
   
   <tr>
