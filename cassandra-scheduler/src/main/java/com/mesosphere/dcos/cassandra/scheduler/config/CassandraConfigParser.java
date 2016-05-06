@@ -17,6 +17,8 @@ public class CassandraConfigParser {
     private double cpus;
     @JsonProperty("memory_mb")
     private int memoryMb;
+    @JsonProperty("page_cache_mb")
+    private int pageCacheMb;
     @JsonProperty("disk_mb")
     private int diskMb;
     @JsonProperty("disk_type")
@@ -310,6 +312,7 @@ public class CassandraConfigParser {
                 version,
                 cpus,
                 memoryMb,
+                pageCacheMb,
                 diskMb,
                 diskType,
                 "",

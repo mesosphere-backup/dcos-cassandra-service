@@ -388,7 +388,7 @@ public class CassandraDaemonTask extends CassandraTask {
     @Override
     public List<Resource> getLaunchResources() {
         return Arrays.asList(reservedCpus(cpus, role, principal),
-                reservedMem(memoryMb, role, principal));
+                reservedMem(memoryMb + config.getPageCacheMb(), role, principal));
     }
 
     @Override

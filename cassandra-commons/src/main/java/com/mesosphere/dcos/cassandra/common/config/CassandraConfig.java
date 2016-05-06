@@ -45,6 +45,7 @@ public class CassandraConfig {
                     "2.2.5",
                     0.2,
                     4096,
+                    256,
                     10240,
                     VolumeRequirement.VolumeType.ROOT,
                     "",
@@ -64,6 +65,7 @@ public class CassandraConfig {
         private String version;
         private double cpus;
         private int memoryMb;
+        private int pageCacheMb;
         private int diskMb;
         private VolumeRequirement.VolumeType diskType;
         private String replaceIp;
@@ -78,6 +80,7 @@ public class CassandraConfig {
             this.version = config.version;
             this.cpus = config.cpus;
             this.memoryMb = config.memoryMb;
+            this.pageCacheMb = config.pageCacheMb;
             this.diskMb = config.diskMb;
             this.diskType = config.diskType;
             this.replaceIp = config.replaceIp;
@@ -163,6 +166,14 @@ public class CassandraConfig {
             return this;
         }
 
+        public int getPageCacheMb() {
+            return pageCacheMb;
+        }
+
+        public void setPageCacheMb(int pageCacheMb) {
+            this.pageCacheMb = pageCacheMb;
+        }
+
         public String getReplaceIp() {
             return replaceIp;
         }
@@ -196,6 +207,7 @@ public class CassandraConfig {
                     version,
                     cpus,
                     memoryMb,
+                    pageCacheMb,
                     diskMb,
                     diskType,
                     replaceIp,
@@ -246,6 +258,7 @@ public class CassandraConfig {
             @JsonProperty("version") String version,
             @JsonProperty("cpus") double cpus,
             @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("page_cache_mb") int pageCacheMb,
             @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("disk_type") VolumeRequirement.VolumeType diskType,
             @JsonProperty("replace_ip") String replaceIp,
@@ -260,6 +273,7 @@ public class CassandraConfig {
                 version,
                 cpus,
                 memoryMb,
+                pageCacheMb,
                 diskMb,
                 diskType,
                 replaceIp,
@@ -277,6 +291,7 @@ public class CassandraConfig {
                 config.getVersion(),
                 config.getCpus(),
                 config.getMemoryMb(),
+                config.getPageCacheMb(),
                 config.getDiskMb(),
                 VolumeRequirement.VolumeType.valueOf(config.getDiskType()),
                 (config.hasReplaceIp()) ? config.getReplaceIp() : "",
@@ -301,6 +316,9 @@ public class CassandraConfig {
 
     @JsonProperty("memory_mb")
     private final int memoryMb;
+
+    @JsonProperty("page_cache_mb")
+    private final int pageCacheMb;
 
     @JsonProperty("disk_mb")
     private final int diskMb;
@@ -329,6 +347,7 @@ public class CassandraConfig {
     public CassandraConfig(final String version,
                            final double cpus,
                            final int memoryMb,
+                           final int pageCacheMb,
                            final int diskMb,
                            final VolumeRequirement.VolumeType diskType,
                            final String replaceIp,
@@ -340,6 +359,7 @@ public class CassandraConfig {
         this.version = version;
         this.cpus = cpus;
         this.memoryMb = memoryMb;
+        this.pageCacheMb = pageCacheMb;
         this.diskMb = diskMb;
         this.diskType = diskType;
         this.replaceIp = (replaceIp != null) ? replaceIp : "";
@@ -390,6 +410,10 @@ public class CassandraConfig {
         return memoryMb;
     }
 
+    public int getPageCacheMb() {
+        return pageCacheMb;
+    }
+
     public Volume getVolume() {
         return volume;
     }
@@ -405,6 +429,7 @@ public class CassandraConfig {
                         .setDiskMb(diskMb)
                         .setDiskType(diskType.name())
                         .setMemoryMb(memoryMb)
+                        .setPageCacheMb(pageCacheMb)
                         .setReplaceIp(replaceIp)
                         .setHeap(heap.toProto())
                         .setLocation(location.toProto())
@@ -429,6 +454,7 @@ public class CassandraConfig {
         CassandraConfig that = (CassandraConfig) o;
         return Double.compare(that.getCpus(), getCpus()) == 0 &&
                 getMemoryMb() == that.getMemoryMb() &&
+                getPageCacheMb() == that.getPageCacheMb() &&
                 getDiskMb() == that.getDiskMb() &&
                 getDiskType() == that.getDiskType() &&
                 getJmxPort() == that.getJmxPort() &&
@@ -441,7 +467,7 @@ public class CassandraConfig {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getVersion(), getCpus(), getMemoryMb(), getDiskMb(), getDiskType(),
+        return Objects.hash(getVersion(), getCpus(), getMemoryMb(), getPageCacheMb(), getDiskMb(), getDiskType(),
                 getReplaceIp(), getHeap(), getLocation(), getJmxPort(),
                 getApplication());
     }

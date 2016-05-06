@@ -19,6 +19,7 @@ cluster_task:
 cassandra:
   cpus: ${CASSANDRA_CPUS:-0.5}
   memory_mb: ${CASSANDRA_MEMORY_MB:-4096}
+  page_cache_mb: ${CASSANDRA_PAGE_CACHE_MB:-256}
   disk_mb: ${CASSANDRA_DISK_MB:-10240}
   disk_type: ${CASSANDRA_DISK_TYPE:-ROOT}
   version: ${CASSANDRA_VERSION:-2.2.5}
