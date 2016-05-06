@@ -653,6 +653,12 @@ Example node configuration:
   </tr>
   
   <tr>
+    <td>page_cache</td>
+    <td>integer</td>
+    <td>The amount of memory, in MB, allocated to the container for `page_cache`.</td>
+  </tr>
+  
+  <tr>
     <td>disk</td>
     <td>integer</td>
     <td>The amount of disk, in MB, allocated to a Cassandra node in the cluster. **Note:** Once this value is configured, it can not be changed.</td>
