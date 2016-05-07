@@ -47,7 +47,7 @@ message CassandraConfig{
 
     optional string diskType = 11;
 
-    optional int32 pageCacheMb = 12;
+    optional int32 totalMemoryMb = 12;
 }
 
 message CassandraTaskData{

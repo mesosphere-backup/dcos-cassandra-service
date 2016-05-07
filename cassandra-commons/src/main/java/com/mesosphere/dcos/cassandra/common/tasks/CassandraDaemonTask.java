@@ -189,7 +189,7 @@ public class CassandraDaemonTask extends CassandraTask {
             @JsonProperty("role") String role,
             @JsonProperty("principal") String principal,
             @JsonProperty("cpus") double cpus,
-            @JsonProperty("memory_mb") int memoryMb,
+            @JsonProperty("jvm_memory_mb") int memoryMb,
             @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("config") CassandraConfig config,
             @JsonProperty("status") CassandraDaemonStatus status) {
@@ -388,7 +388,7 @@ public class CassandraDaemonTask extends CassandraTask {
     @Override
     public List<Resource> getLaunchResources() {
         return Arrays.asList(reservedCpus(cpus, role, principal),
-                reservedMem(memoryMb + config.getPageCacheMb(), role, principal));
+                reservedMem(config.getTotalMemoryMb(), role, principal));
     }
 
     @Override
