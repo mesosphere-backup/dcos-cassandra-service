@@ -45,7 +45,7 @@ public class CassandraConfig {
                     "2.2.5",
                     0.2,
                     4096,
-                    256,
+                    4352,
                     10240,
                     VolumeRequirement.VolumeType.ROOT,
                     "",
