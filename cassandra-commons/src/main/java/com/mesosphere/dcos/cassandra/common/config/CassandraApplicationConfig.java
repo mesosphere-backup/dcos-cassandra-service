@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mesosphere
+ * Copyright 2016 Mesosphere
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package com.mesosphere.dcos.cassandra.common.config;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -221,16 +222,41 @@ public class CassandraApplicationConfig {
                     "keystore", "conf/.keystore",
                     "keystore_password", "cassandra");
 
+    /**
+     * Parses a configuration from bytes.
+     *
+     * @param bytes A byte array containing a JSON representation of the
+     *              configuration.
+     * @return A CassandraApplicationConfig parsed from bytes.
+     * @throws IOException if a configuration can not be parsed from bytes.
+     */
     public static CassandraApplicationConfig parse(byte[] bytes)
             throws IOException {
         return MAPPER.readValue(bytes, CassandraApplicationConfig.class);
     }
 
+    /**
+     * Parses a configuration from bytes.
+     *
+     * @param bytes A ByteString containing a JSON representation of the
+     *              configuration.
+     * @return A CassandraApplicationConfig parsed from bytes.
+     * @throws IOException if a configuration can not be parsed from bytes.
+     */
     public static CassandraApplicationConfig parse(ByteString bytes)
             throws IOException {
         return parse(bytes.toByteArray());
     }
 
+    /**
+     * Creates a configuration for a SimpleSeedProvider for a Cassandra
+     * instance.
+     *
+     * @param seeds A string representation of the IP addresses of the Cassandra
+     *              seed nodes list.
+     * @return A Configuration object containing a SimpleSeedProvider
+     * configuration that lists seeds as the seeds for the node.
+     */
     public static List<Map<String, Object>> createSimpleSeedProvider(
             List<String> seeds) {
         return ImmutableList.<Map<String, Object>>of(
@@ -243,6 +269,14 @@ public class CassandraApplicationConfig {
         );
     }
 
+    /**
+     * Creates a DcosSeedProvider configuration for Cassandra.
+     *
+     * @param url The URL of the DCOS Cassandra Service instance that the
+     *            Cassandra node will retrive its seeds from.
+     * @return The A DcosSeedProvider configuration that will retrieve its seeds
+     * from the host indicated by url.
+     */
     public static List<Map<String, Object>> createDcosSeedProvider(String url) {
         return ImmutableList.<Map<String, Object>>of(
                 ImmutableMap.<String, Object>of(

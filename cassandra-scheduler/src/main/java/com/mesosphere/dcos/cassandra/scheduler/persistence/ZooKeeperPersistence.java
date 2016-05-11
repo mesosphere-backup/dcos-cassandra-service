@@ -257,7 +257,7 @@ public class ZooKeeperPersistence implements PersistenceFactory {
     public ZooKeeperPersistence(Identity identity,
                                 CuratorFrameworkConfig config) {
 
-        this.path = "/" + identity.getName() + "/" + identity.getCluster();
+        this.path = "/cassandra/" + identity.getName();
 
         this.curator = CuratorFrameworkFactory.newClient(
                 config.getServers(),

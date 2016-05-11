@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Mesosphere
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mesosphere.dcos.cassandra.common.tasks.repair;
 
 
@@ -18,17 +33,45 @@ import java.util.List;
 
 import static org.apache.mesos.protobuf.ResourceBuilder.*;
 
+/**
+ * RepairTask performs primary range, sequential, single data center
+ * anti-entropy repair on a node. In order to successfully execute, a
+ * CassandraDaemonTask must be running on the slave. If the indicated key
+ * spaces are empty, all non-system key spaces will be repaired. If the column
+ * families are empty, all column families for the selected key spaces will
+ * be repaired.
+ */
 public class RepairTask extends CassandraTask {
+    /**
+     * Prefix for the name of RepairTasks
+     */
     public static final String NAME_PREFIX = "repair-";
 
+
+    /**
+     * Gets the name of a RepairTask for a CassandraDaemonTask.
+     *
+     * @param daemonName The name of the CassandraDaemonTask.
+     * @return The name of the  RepairTask for daemonName.
+     */
     public static final String nameForDaemon(final String daemonName) {
         return NAME_PREFIX + daemonName;
     }
 
+    /**
+     * Gets the name of a RepairTask for a CassandraDaemonTask.
+     *
+     * @param daemon The CassandraDaemonTask for which the snapshot will be
+     *               uploaded.
+     * @return The name of the  RepairTask for daemon.
+     */
     public static final String nameForDaemon(final CassandraDaemonTask daemon) {
         return nameForDaemon(daemon.getName());
     }
 
+    /**
+     * Builder class for fluent style construction and mutation.
+     */
     public static class Builder {
 
         private String id;
@@ -62,60 +105,33 @@ public class RepairTask extends CassandraTask {
             this.keySpaces = task.keySpaces;
         }
 
+        /**
+         * Gets the column families.
+         *
+         * @return The column families that will be repaired. If empty, all
+         * column families for the indicated key spaces will be repaired.
+         */
         public List<String> getColumnFamilies() {
             return columnFamilies;
         }
 
+        /**
+         * Sets the column families.
+         *
+         * @param columnFamilies The column families that will be repaired. If
+         *                       empty, all column families for the indicated
+         *                       key spaces will be repaired.
+         * @return The Builder instance.
+         */
         public Builder setColumnFamilies(List<String> columnFamilies) {
             this.columnFamilies = columnFamilies;
             return this;
         }
 
-        public double getCpus() {
-            return cpus;
-        }
-
-        public Builder setCpus(double cpus) {
-            this.cpus = cpus;
-            return this;
-        }
-
-        public int getDiskMb() {
-            return diskMb;
-        }
-
-        public Builder setDiskMb(int diskMb) {
-            this.diskMb = diskMb;
-            return this;
-        }
-
-        public CassandraTaskExecutor getExecutor() {
-            return executor;
-        }
-
-        public Builder setExecutor(CassandraTaskExecutor executor) {
-            this.executor = executor;
-            return this;
-        }
-
-        public String getHostname() {
-            return hostname;
-        }
-
-        public Builder setHostname(String hostname) {
-            this.hostname = hostname;
-            return this;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public Builder setId(String id) {
-            this.id = id;
-            return this;
-        }
-
+        /**
+         * Gets the key spaces.
+         * @return The key spaces that will be repaired.
+         */
         public List<String> getKeySpaces() {
             return keySpaces;
         }
@@ -125,47 +141,205 @@ public class RepairTask extends CassandraTask {
             return this;
         }
 
+        /**
+         * Sets the cpu shares for the task.
+         *
+         * @return The cpu shares for the task.
+         */
+        public double getCpus() {
+            return cpus;
+        }
+
+        /**
+         * Sets the cpu shares for the task.
+         *
+         * @param cpus The cpu shares for the task.
+         * @return The Builder instance.
+         */
+        public Builder setCpus(double cpus) {
+            this.cpus = cpus;
+            return this;
+        }
+
+        /**
+         * Gets the disk allocation.
+         *
+         * @return The disk allocated for the task in Mb.
+         */
+        public int getDiskMb() {
+            return diskMb;
+        }
+
+        /**
+         * Gets the disk allocation.
+         *
+         * @param diskMb The disk allocated for the task in Mb.
+         * @return The Builder instance.
+         */
+        public Builder setDiskMb(int diskMb) {
+            this.diskMb = diskMb;
+            return this;
+        }
+
+        /**
+         * Gets the executor.
+         *
+         * @return The executor for the slave on which the task will be
+         * launched.
+         */
+        public CassandraTaskExecutor getExecutor() {
+            return executor;
+        }
+
+        /**
+         * Sets the executor.
+         *
+         * @param executor The executor for the slave on which the task will
+         *                 be launched.
+         * @return The Builder instance.
+         */
+        public Builder setExecutor(CassandraTaskExecutor executor) {
+            this.executor = executor;
+            return this;
+        }
+
+        /**
+         * Gets the hostname.
+         *
+         * @return The hostname of the slave on which the task is launched.
+         */
+        public String getHostname() {
+            return hostname;
+        }
+
+        /**
+         * Sets the hostname.
+         *
+         * @param hostname The hostname of the slave on which the task is
+         *                 launched.
+         * @return The Builder instance.
+         */
+        public Builder setHostname(String hostname) {
+            this.hostname = hostname;
+            return this;
+        }
+
+        /**
+         * Gets the unique id.
+         *
+         * @return The unique identifier of the task.
+         */
+        public String getId() {
+            return id;
+        }
+
+        /**
+         * Sets the unique id.
+         *
+         * @param id The unique identifier of the task.
+         * @return The Builder instance.
+         */
+        public Builder setId(String id) {
+            this.id = id;
+            return this;
+        }
+
+        /**
+         * Gets the memory allocation.
+         *
+         * @return The memory allocation for the task in Mb.
+         */
         public int getMemoryMb() {
             return memoryMb;
         }
 
+        /**
+         * Sets the memory allocation.
+         *
+         * @param memoryMb The memory allocation for the task in Mb.
+         * @return The Builder instance.
+         */
         public Builder setMemoryMb(int memoryMb) {
             this.memoryMb = memoryMb;
             return this;
         }
 
+        /**
+         * Gets the name.
+         *
+         * @return The name of the task.
+         */
         public String getName() {
             return name;
         }
 
+        /**
+         * Sets the name.
+         *
+         * @param name The name of the task.
+         * @return The Builder instance.
+         */
         public Builder setName(String name) {
             this.name = name;
             return this;
         }
 
+        /**
+         * Gets the principal
+         *
+         * @return The principal for the task.
+         */
         public String getPrincipal() {
             return principal;
         }
 
+        /**
+         * Sets the principal.
+         *
+         * @param principal The principal for the task.
+         * @return The Builder instance.
+         */
         public Builder setPrincipal(String principal) {
             this.principal = principal;
             return this;
         }
 
+        /**
+         * Gets the role.
+         *
+         * @return The role for the task.
+         */
         public String getRole() {
             return role;
         }
 
+        /**
+         * Sets the role.
+         *
+         * @param role The role for the task.
+         * @return The Builder instance.
+         */
         public Builder setRole(String role) {
             this.role = role;
             return this;
         }
 
-
+        /**
+         * Gets the slave id.
+         *
+         * @return The unique identifier of the slave the task was launched on.
+         */
         public String getSlaveId() {
             return slaveId;
         }
 
+        /**
+         * Sets the slave id.
+         *
+         * @param slaveId The unique identifier of the slave the task was
+         *                launched on.
+         * @return The Builder instance.
+         */
         public Builder setSlaveId(String slaveId) {
             this.slaveId = slaveId;
             return this;
@@ -204,6 +378,26 @@ public class RepairTask extends CassandraTask {
     private final List<String> columnFamilies;
 
 
+    /**
+     * Creates a new RepairTask.
+     *
+     * @param id             The unique identifier of the task.
+     * @param slaveId        The identifier of the slave the task is running on.
+     * @param hostname       The hostname of the slave the task is running on.
+     * @param executor       The executor configuration for the task.
+     * @param name           The name of the task.
+     * @param role           The role for the task.
+     * @param principal      The principal associated with the task.
+     * @param cpus           The cpu shares allocated to the task.
+     * @param memoryMb       The memory allocated to the task in Mb.
+     * @param diskMb         The disk allocated to the task in Mb.
+     * @param status         The status associated with the task.
+     * @param columnFamilies The column families that will be repaired. If
+     *                       empty, all column families will be repaired.
+     * @param keySpaces      The key spaces that will be repaired. If empty, all
+     *                       non-system key spaces will be repaired.
+     * @return A RepairTask constructed from the parameters.
+     */
     @JsonCreator
     public static RepairTask create(
             @JsonProperty("id") String id,
@@ -234,6 +428,25 @@ public class RepairTask extends CassandraTask {
                 columnFamilies);
     }
 
+    /**
+     * Constructs a new RepairTask.
+     *
+     * @param id             The unique identifier of the task.
+     * @param slaveId        The identifier of the slave the task is running on.
+     * @param hostname       The hostname of the slave the task is running on.
+     * @param executor       The executor configuration for the task.
+     * @param name           The name of the task.
+     * @param role           The role for the task.
+     * @param principal      The principal associated with the task.
+     * @param cpus           The cpu shares allocated to the task.
+     * @param memoryMb       The memory allocated to the task in Mb.
+     * @param diskMb         The disk allocated to the task in Mb.
+     * @param status         The status associated with the task.
+     * @param columnFamilies The column families that will be repaired. If
+     *                       empty, all column families will be repaired.
+     * @param keySpaces      The key spaces that will be repaired. If empty, all
+     *                       non-system key spaces will be repaired.
+     */
     protected RepairTask(
             String id,
             String slaveId,
@@ -266,10 +479,20 @@ public class RepairTask extends CassandraTask {
         this.columnFamilies = ImmutableList.copyOf(columnFamilies);
     }
 
+    /**
+     * Gets the column families.
+     * @return The column families that will be repaired. If empty, all
+     * column families for the selected key spaces will be repaired.
+     */
     public List<String> getColumnFamilies() {
         return columnFamilies;
     }
 
+    /**
+     * Gets the key spaces.
+     * @return The key spaces that will be repaired. If empty, all non-system
+     * key spaces will be repaired.
+     */
     public List<String> getKeySpaces() {
         return keySpaces;
     }
@@ -358,6 +581,11 @@ public class RepairTask extends CassandraTask {
         }
     }
 
+    /**
+     * Gets a mutable Builder.
+     * @return A mutable Builder that constructed from the properties of the
+     * RepairTask.
+     */
     public Builder mutable() {
         return new Builder(this);
     }

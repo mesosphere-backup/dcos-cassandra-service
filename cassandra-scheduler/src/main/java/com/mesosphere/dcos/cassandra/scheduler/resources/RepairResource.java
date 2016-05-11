@@ -52,7 +52,7 @@ public class RepairResource {
                         request.getColumnFamiles()
                 ));
 
-                LOGGER.info("Repair started");
+                LOGGER.info("Repair started : ");
                 return Response.accepted().build();
             } else {
                 // Send error back
