@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Mesosphere
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mesosphere.dcos.cassandra.scheduler.config;
 
 
@@ -12,6 +27,15 @@ import org.apache.mesos.offer.VolumeRequirement;
 import static com.mesosphere.dcos.cassandra.common.config
         .CassandraApplicationConfig.*;
 
+/**
+ * ConfigParser parses a CassandraConfig from a yaml configuration file. It
+ * is used to mediate construction of the CassandraConfig such that defaults
+ * and overrides may be applied programatically. The original implementation
+ * used only the defined configuration objects, but a product decision lead
+ * to the introduction of this class in order to not expose certain
+ * configurable items.
+ * @TODO Investigate if this class is still nessecary and potentially remove it.
+ */
 public class CassandraConfigParser {
 
     @JsonProperty("cpus")

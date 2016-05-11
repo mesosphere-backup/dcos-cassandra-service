@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2016 Mesosphere
  *
@@ -330,6 +329,10 @@ public class CassandraConfig {
         }
     }
 
+    /**
+     * Serializer that serializes a CassandraConfig to JSON and deserializes it
+     * from JSON.
+     */
     public static final Serializer<CassandraConfig> JSON_SERIALIZER =
             new Serializer<CassandraConfig>() {
                 @Override
@@ -360,10 +363,34 @@ public class CassandraConfig {
             };
 
 
+    /**
+     * Gets a new Builder for a CassandraConfig.
+     * @return A new Builder instance whose properties are set to the Default
+     * instance.
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Factory method for constructing an CassandraConfig
+     * @param version The Cassanra version of the node.
+     * @param cpus The cpu shares allocated to the node.
+     * @param memoryMb The memory allocated to the node in Mb.
+     * @param diskMb The disk allocated to the node in Mb.
+     * @param diskType The type of disk for the node.
+     * @param replaceIp The IP address of the node that this node will
+     *                  replace in the ring (null or empty if this node will
+     *                  not replace another node).
+     * @param heap The heap configuration for the node.
+     * @param location The location (Rack and Data center) configuration for
+     *                 the node.
+     * @param jmxPort The JMX port the node will listen on.
+     * @param volume The volume configuration for the node.
+     * @param application The Cassandra application configuration for the
+     *                    node (This corresponds to the cassandra.yaml).
+     * @return A CassandraConfig constructed from arguments.
+     */
     @JsonCreator
     public static CassandraConfig create(
             @JsonProperty("version") String version,
@@ -393,6 +420,13 @@ public class CassandraConfig {
                 application);
     }
 
+    /**
+     * Parses a CassandraConfig from a Protocol Buffers format.
+     * @param config The Protocol Buffers serialized instance.
+     * @return A CassandraConfig parsed from config.
+     * @throws IOException If a valid CassandraConfig could not be parsed
+     * from config.
+     */
     public static CassandraConfig parse(CassandraProtos.CassandraConfig config)
             throws IOException {
 
@@ -411,6 +445,14 @@ public class CassandraConfig {
 
     }
 
+    /**
+     * Parses a CassandraConfig from a byte array containing a Protocol Buffers
+     * serialized representation of the configuration.
+     * @param bytes A byte array containing a Protocol Buffers serialized
+     *              representation of a CassandraConfig
+     * @return A CassandraConfig parsed form bytes.
+     * @throws IOException If a CassandraConfig could not be parsed from bytes.
+     */
     public static CassandraConfig parse(byte[] bytes)
             throws IOException {
         return parse(CassandraProtos.CassandraConfig.parseFrom(bytes));
@@ -449,6 +491,24 @@ public class CassandraConfig {
     @JsonProperty("application")
     private final CassandraApplicationConfig application;
 
+    /**
+     * Constructs a CassandraConfig
+     * @param version The Cassanra version of the node.
+     * @param cpus The cpu shares allocated to the node.
+     * @param memoryMb The memory allocated to the node in Mb.
+     * @param diskMb The disk allocated to the node in Mb.
+     * @param diskType The type of disk for the node.
+     * @param replaceIp The IP address of the node that this node will
+     *                  replace in the ring (null or empty if this node will
+     *                  not replace another node).
+     * @param heap The heap configuration for the node.
+     * @param location The location (Rack and Data center) configuration for
+     *                 the node.
+     * @param jmxPort The JMX port the node will listen on.
+     * @param volume The volume configuration for the node.
+     * @param application The Cassandra application configuration for the
+     *                    node (This corresponds to the cassandra.yaml).
+     */
     public CassandraConfig(final String version,
                            final double cpus,
                            final int memoryMb,
@@ -473,50 +533,104 @@ public class CassandraConfig {
         this.application = application;
     }
 
+    /**
+     * Gets the Cassandra version.
+     * @return The Cassandra version for the node.
+     */
     public String getVersion() {
         return version;
     }
 
+    /**
+     * Gets the IP address of the node that will be replaced in the ring.
+     * @return The IP address of the node that will be replaced in the ring or
+     * the empty String if the node does not replace another node.
+     */
     public String getReplaceIp() {
         return replaceIp;
     }
 
+    /**
+     * Gets the Heap configuration for the node.
+     * @return The Heap configuration for the node.
+     */
     public HeapConfig getHeap() {
         return heap;
     }
 
+    /**
+     * Gets the Location configuration for the node.
+     * @return The Location configuration for the node. This indicates the rack
+     * and data center for the node.
+     */
     public Location getLocation() {
         return location;
     }
 
+    /**
+     * Gets the JMX port for the node.
+     * @return The JMX port the node will listen on.
+     */
     public int getJmxPort() {
         return jmxPort;
     }
 
+    /**
+     * Gets the Cassandra application configuration for the node.
+     * @return The Cassandra application configuration for the node. This sets
+     * the properties configured in cassandra.yaml.
+     */
     public CassandraApplicationConfig getApplication() {
         return application;
     }
 
+    /**
+     * Gets the cpu shares allocated to the node.
+     * @return The cpu shares allocated to the node.
+     */
     public double getCpus() {
         return cpus;
     }
 
+    /**
+     * Gets the disk allocated to the node in Mb.
+     * @return The amount of disk allocated to the node in Mb.
+     */
     public int getDiskMb() {
         return diskMb;
     }
 
+    /**
+     * Gets the type of disk that will be used by the node.
+     * @return The type of disk that will be used by the node (either Mount or
+     * Root).
+     */
     public VolumeRequirement.VolumeType getDiskType() {
         return diskType;
     }
 
+    /**
+     * Gets the memory allocated to the node in Mb.
+     * @return The memory allocated to the node in Mb.
+     */
     public int getMemoryMb() {
         return memoryMb;
     }
 
+    /**
+     * Gets the Volume information for the node.
+     * @return The Volume information for the node.
+     */
     public Volume getVolume() {
         return volume;
     }
 
+    /**
+     * Gets a Protocol Buffers representation of the config.
+     * @return A Protocol Buffers representation of the config.
+     * @throws IOException If the config could not be serialized. (This should
+     * not throw).
+     */
     public CassandraProtos.CassandraConfig toProto()
             throws IOException {
         CassandraProtos.CassandraConfig.Builder builder =
@@ -537,10 +651,22 @@ public class CassandraConfig {
         return builder.build();
     }
 
+    /**
+     * Gets a byte array containing a Protocol Buffers serialized
+     * representation of the CassandraConfig.
+     * @return A byte array containing a Protocol Buffers serialized
+     * representation of the CassandraConfig.
+     * @throws IOException
+     */
     public byte[] toByteArray() throws IOException {
         return toProto().toByteArray();
     }
 
+    /**
+     * Gets a Builder representing a Mutable instance of the CassandraConfig.
+     * @return A Builder whose properties are set to the properties of the
+     * CassandraConfig.
+     */
     public Builder mutable() {
         return new Builder(this);
     }

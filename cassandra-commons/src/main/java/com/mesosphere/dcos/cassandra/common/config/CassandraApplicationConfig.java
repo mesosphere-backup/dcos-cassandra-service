@@ -224,6 +224,7 @@ public class CassandraApplicationConfig {
 
     /**
      * Parses a configuration from bytes.
+     *
      * @param bytes A byte array containing a JSON representation of the
      *              configuration.
      * @return A CassandraApplicationConfig parsed from bytes.
@@ -236,6 +237,7 @@ public class CassandraApplicationConfig {
 
     /**
      * Parses a configuration from bytes.
+     *
      * @param bytes A ByteString containing a JSON representation of the
      *              configuration.
      * @return A CassandraApplicationConfig parsed from bytes.
@@ -249,6 +251,7 @@ public class CassandraApplicationConfig {
     /**
      * Creates a configuration for a SimpleSeedProvider for a Cassandra
      * instance.
+     *
      * @param seeds A string representation of the IP addresses of the Cassandra
      *              seed nodes list.
      * @return A Configuration object containing a SimpleSeedProvider
@@ -268,6 +271,7 @@ public class CassandraApplicationConfig {
 
     /**
      * Creates a DcosSeedProvider configuration for Cassandra.
+     *
      * @param url The URL of the DCOS Cassandra Service instance that the
      *            Cassandra node will retrive its seeds from.
      * @return The A DcosSeedProvider configuration that will retrieve its seeds

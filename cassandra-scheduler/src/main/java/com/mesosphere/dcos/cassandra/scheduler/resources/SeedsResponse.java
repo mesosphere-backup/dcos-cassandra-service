@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
@@ -29,10 +30,12 @@ public class SeedsResponse {
         this.isSeed = isSeed;
     }
 
+    @JsonIgnore
     public boolean isSeed(){
         return isSeed;
     }
 
+    @JsonIgnore
     public List<String> getSeeds(){
         return seeds;
     }

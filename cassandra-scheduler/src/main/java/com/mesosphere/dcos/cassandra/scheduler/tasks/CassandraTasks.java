@@ -30,7 +30,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * TaskStore for Cassandra framework tasks.
+ * TaskStore for Cassandra framework tasks. It manages persisting and
+ * retrieving
  */
 public class CassandraTasks implements Managed, TaskStatusProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -498,6 +499,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     @Override
     public Set<Protos.TaskStatus> getTaskStatuses() throws Exception {
-        return get().values().stream().map(task -> task.getStatus().toProto()).collect(Collectors.toSet());
+        return get().values().stream().map(
+                task -> task.getStatus().toProto()).collect(Collectors.toSet());
     }
 }
