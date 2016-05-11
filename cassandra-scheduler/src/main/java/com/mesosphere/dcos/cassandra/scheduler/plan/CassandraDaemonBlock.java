@@ -1,8 +1,8 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
+import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -23,7 +23,7 @@ public class CassandraDaemonBlock implements Block {
     private final UUID id = UUID.randomUUID();
     private final CassandraTasks cassandraTasks;
     private final CassandraOfferRequirementProvider provider;
-    private final ExecutorClient client;
+    private final SchedulerClient client;
     private final String name;
     private boolean terminated = false;
     private volatile Status status = Status.Pending;
@@ -120,7 +120,7 @@ public class CassandraDaemonBlock implements Block {
             final String name,
             final CassandraOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
-            final ExecutorClient client) {
+            final SchedulerClient client) {
 
         return new CassandraDaemonBlock(
                 name,
@@ -133,7 +133,7 @@ public class CassandraDaemonBlock implements Block {
             final String name,
             final CassandraOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
-            final ExecutorClient client) {
+            final SchedulerClient client) {
         this.cassandraTasks = cassandraTasks;
         this.name = name;
         this.provider = provider;
@@ -198,7 +198,7 @@ public class CassandraDaemonBlock implements Block {
                     task.getId());
             return provider.getNewOfferRequirement(task.toProto());
         } else if (task.isTerminated() || task.isLaunching()) {
-            LOGGER.info("Block {} - Replacing task : id = {}" ,
+            LOGGER.info("Block {} - Replacing task : id = {}",
                     getName(),
                     task.getId());
             return replaceTask(task);

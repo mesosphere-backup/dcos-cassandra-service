@@ -107,6 +107,9 @@ public class CassandraTasksTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -114,8 +117,7 @@ public class CassandraTasksTest {
                 IntegerStringSerializer.get()
         );
 
-        path = "/" + config.getIdentity().getName() + "/" +
-                config.getIdentity().getCluster() + "/tasks";
+        path = "/cassandra/" + config.getIdentity().getName() +"/tasks";
     }
 
     @Test

@@ -1,13 +1,14 @@
+
 {
   "id": "/{{service.name}}",
   "cmd": "./scheduler/bin/cassandra-scheduler server ./scheduler/conf/scheduler.yml",
   "instances": 1,
-  "cpus": 0.5,
-  "mem": 2048,
+  "cpus": {{service.cpus}},
+  "mem": {{service.mem}},
   "requirePorts": true,
   "portDefinitions": [
     {
-      "port": 9000,
+      "port": {{service.api_port}},
       "protocol": "tcp",
       "name": "api",
       "labels": {}
@@ -18,14 +19,15 @@
   "{{resource.assets.uris.jre-tar-gz}}"
 ],
 "healthChecks": [
-    {
-      "protocol": "COMMAND",
-      "command": { "value": "curl -f -X GET http://$HOST:9000/admin/healthcheck" },
-      "gracePeriodSeconds": 300,
-      "intervalSeconds": 60,
-      "timeoutSeconds": 60,
-      "maxConsecutiveFailures": 3
-    }
+  {
+    "gracePeriodSeconds": 120,
+    "intervalSeconds": 30,
+    "maxConsecutiveFailures": 0,
+    "path": "/admin/healthcheck",
+    "portIndex": 0,
+    "protocol": "HTTP",
+    "timeoutSeconds": 5
+  }
 ],
 "readinessChecks": [
     {
@@ -51,16 +53,18 @@
 },
 "env":{
 "JAVA_HOME":"./jre"
+,"JAVA_OPTS":"-Xmx{{service.heap}}M"
 ,"FRAMEWORK_NAME":"{{service.name}}"
-,"FRAMEWORK_VERSION":"0.1.0"
+,"FRAMEWORK_VERSION":"1.0.0"
 ,"CASSANDRA_VERSION":"2.2.5"
 ,"CASSANDRA_CPUS":"{{nodes.cpus}}"
 ,"CASSANDRA_MEMORY_MB":"{{nodes.mem}}"
 ,"CASSANDRA_DISK_MB":"{{nodes.disk}}"
+,"CASSANDRA_DISK_TYPE":"{{nodes.disk_type}}"
 ,"CASSANDRA_HEAP_SIZE_MB":"{{nodes.heap.size}}"
 ,"CASSANDRA_HEAP_NEW_MB":"{{nodes.heap.new}}"
 ,"CASSANDRA_JMX_PORT":"{{cassandra.jmx_port}}"
-,"CASSANDRA_VOLUME_SIZE_MB":"{{nodes.volume_size}}"
+,"CASSANDRA_VOLUME_SIZE_MB":"{{nodes.disk}}"
 ,"CASSANDRA_NUM_TOKENS":"{{cassandra.num_tokens}}"
 ,"CASSANDRA_HINTED_HANDOFF_ENABLED":"{{cassandra.hinted_handoff_enabled}}"
 ,"CASSANDRA_MAX_HINT_WINDOW_IN_MS":"{{cassandra.max_hint_window_in_ms}}"
@@ -119,21 +123,21 @@
 ,"CASSANDRA_TRACETYPE_REPAIR_TTL":"604800"
 ,"CASSANDRA_WINDOWS_TIMER_INTERVAL":"1"
 ,"EXECUTOR_COMMAND":"./executor/bin/cassandra-executor server executor/conf/executor.yml"
-,"EXECUTOR_CPUS":"0.5"
-,"EXECUTOR_MEMORY_MB":"768"
-,"EXECUTOR_DISK_MB":"1024"
-,"EXECUTOR_HEAP_MB":"512"
-,"EXECUTOR_API_PORT":"9001"
+,"EXECUTOR_CPUS":"{{executor.cpus}}"
+,"EXECUTOR_MEMORY_MB":"{{executor.mem}}"
+,"EXECUTOR_DISK_MB":"{{executor.disk}}"
+,"EXECUTOR_HEAP_MB":"{{executor.heap}}"
+,"EXECUTOR_API_PORT":"{{executor.api_port}}"
 ,"EXECUTOR_JAVA_HOME":"./jre"
 ,"EXECUTOR_JRE_LOCATION":"{{resource.assets.uris.jre-tar-gz}}"
 ,"EXECUTOR_LOCATION":"{{resource.assets.uris.executor-zip}}"
 ,"EXECUTOR_CASSANDRA_LOCATION":"{{resource.assets.uris.apache-cassandra-bin-tar-gz}}"
-,"CLUSTER_TASK_CPUS":"1.0"
-,"CLUSTER_TASK_MEMORY_MB":"256"
+,"CLUSTER_TASK_CPUS":"{{task.cpus}}"
+,"CLUSTER_TASK_MEMORY_MB":"{{task.mem}}"
 ,"NODES":"{{nodes.count}}"
 ,"SEED_NODES":"{{nodes.seeds}}"
 ,"PLACEMENT_STRATEGY":"{{service.placement_strategy}}"
 ,"PHASE_STRATEGY":"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"
-,"API_PORT":"9000"
+,"API_PORT":"{{service.api_port}}"
 }
 }

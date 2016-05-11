@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
+import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
@@ -18,6 +18,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.MesosSchedulerDriver;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 public class CassandraScheduler implements Scheduler, Managed {
@@ -53,11 +55,13 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final CassandraTasks cassandraTasks;
     private final Reconciler reconciler;
     private final EventBus eventBus;
-    private final ExecutorClient client;
+    private final SchedulerClient client;
     private final BackupManager backup;
     private final RestoreManager restore;
     private final CleanupManager cleanup;
     private final RepairManager repair;
+    private final SeedsManager seeds;
+    private final ExecutorService executor;
 
     @Inject
     public CassandraScheduler(
@@ -68,12 +72,14 @@ public class CassandraScheduler implements Scheduler, Managed {
             final StageManager stageManager,
             final CassandraTasks cassandraTasks,
             final Reconciler reconciler,
-            final ExecutorClient client,
+            final SchedulerClient client,
             final EventBus eventBus,
             final BackupManager backup,
             final RestoreManager restore,
             final CleanupManager cleanup,
-            final RepairManager repair) {
+            final RepairManager repair,
+            final SeedsManager seeds,
+            final ExecutorService executor) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
         this.cassandraTasks = cassandraTasks;
@@ -93,6 +99,8 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.restore = restore;
         this.cleanup = cleanup;
         this.repair = repair;
+        this.seeds = seeds;
+        this.executor = executor;
     }
 
     @Override
@@ -126,7 +134,9 @@ public class CassandraScheduler implements Scheduler, Managed {
                             configurationManager,
                             cassandraTasks,
                             client,
-                            reconciler
+                            reconciler,
+                            seeds,
+                            executor
                     ),
                     backup,
                     restore,
@@ -158,42 +168,50 @@ public class CassandraScheduler implements Scheduler, Managed {
         logOffers(offers);
         reconciler.reconcile(driver);
 
-        if (identityManager.isRegistered()) {
+        try {
+            if (identityManager.isRegistered()) {
 
-            List<Protos.OfferID> acceptedOffers = new ArrayList<>();
+                List<Protos.OfferID> acceptedOffers = new ArrayList<>();
 
-            final Block currentBlock = stageManager.getCurrentBlock();
+                final Block currentBlock = stageManager.getCurrentBlock();
 
-            LOGGER.info("Current execution block = {}",
-                    (currentBlock != null) ? currentBlock.toString() :
-                            "No block");
+                LOGGER.info("Current execution block = {}",
+                        (currentBlock != null) ? currentBlock.toString() :
+                                "No block");
 
-            if (currentBlock == null) {
-                LOGGER.info("Current plan {} interrupted.",
-                        (stageManager.isInterrupted()) ? "is" : "is not");
+                if (currentBlock == null) {
+                    LOGGER.info("Current plan {} interrupted.",
+                            (stageManager.isInterrupted()) ? "is" : "is not");
+                }
+                acceptedOffers.addAll(
+                        planScheduler.resourceOffers(driver, offers,
+                                currentBlock));
+
+                // Perform any required repairs
+                List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(
+                        offers,
+                        acceptedOffers);
+                acceptedOffers.addAll(
+                        repairScheduler.resourceOffers(
+                                driver,
+                                unacceptedOffers,
+                                (currentBlock != null) ?
+                                        ImmutableSet.of(
+                                                currentBlock.getName()) :
+                                        Collections.emptySet()));
+
+                declineOffers(driver, acceptedOffers, offers);
+            } else {
+
+                LOGGER.info("Declining all offers : registered = {}, " +
+                                "reconciled = {}",
+                        identityManager.isRegistered(),
+                        reconciler.isReconciled());
+                declineOffers(driver, Collections.emptyList(), offers);
             }
-            acceptedOffers.addAll(
-                    planScheduler.resourceOffers(driver, offers, currentBlock));
+        } catch (Throwable t){
 
-            // Perform any required repairs
-            List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(offers,
-                    acceptedOffers);
-            acceptedOffers.addAll(
-                    repairScheduler.resourceOffers(
-                            driver,
-                            unacceptedOffers,
-                            (currentBlock != null) ?
-                                    ImmutableSet.of(currentBlock.getName()) :
-                                    Collections.emptySet()));
-
-            declineOffers(driver, acceptedOffers, offers);
-        } else {
-
-            LOGGER.info("Declining all offers : registered = {}, " +
-                            "reconciled = {}",
-                    identityManager.isRegistered(),
-                    reconciler.isReconciled());
-            declineOffers(driver, Collections.emptyList(), offers);
+            LOGGER.error("Error in offer acceptance cycle", t);
         }
     }
 

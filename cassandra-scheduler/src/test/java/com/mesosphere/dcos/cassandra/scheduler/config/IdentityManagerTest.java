@@ -68,8 +68,7 @@ public class IdentityManagerTest {
 
         curator = persistence.getCurator();
 
-        path = "/" + config.getIdentity().getName() + "/" +
-                config.getIdentity().getCluster() + "/identity";
+        path = "/cassandra/" + config.getIdentity().getName() +"/identity";
 
 
     }
