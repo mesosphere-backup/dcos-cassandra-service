@@ -159,7 +159,7 @@ To start a minimal cluster with a single node, create a JSON options file that c
     },
     "nodes": {
         "cpus": 0.5,
-        "mem": 2048,
+        "jvm_mem": 2048,
         "disk": 4096,
         "heap": {
             "size": 1024,
@@ -620,7 +620,7 @@ Example node configuration:
 {
     "nodes": {
         "cpus": 0.5,
-        "mem": 4096,
+        "jvm_mem": 4096,
         "disk": 10240,
         "heap": {
             "size": 2048,
@@ -647,9 +647,15 @@ Example node configuration:
   </tr>
   
   <tr>
-    <td>mem</td>
+    <td>jvm_mem</td>
     <td>integer</td>
-    <td>The amount of memory, in MB, allocated to the container where the Cassandra process resides. This value MUST be larger than the specified max heap size. Make sure to allocate enough space for additional memory used by the JVM and other overhead.</td>
+    <td>The amount of memory, in MB, allocated to the Cassandra JVM process.</td>
+  </tr>
+  
+  <tr>
+    <td>total_mem</td>
+    <td>integer</td>
+    <td>The total amount of memory, in MB, allocated to the container where Cassandra JVM process reside. This value MUST be larger than the specified jvm_mem. Make sure to allocate enough space for additional memory used by the JVM and page cache.</td>
   </tr>
   
   <tr>

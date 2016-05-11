@@ -15,8 +15,10 @@ public class CassandraConfigParser {
 
     @JsonProperty("cpus")
     private double cpus;
-    @JsonProperty("memory_mb")
+    @JsonProperty("jvm_memory_mb")
     private int memoryMb;
+    @JsonProperty("total_memory_mb")
+    private int totalMemoryMb;
     @JsonProperty("disk_mb")
     private int diskMb;
     @JsonProperty("disk_type")
@@ -155,6 +157,7 @@ public class CassandraConfigParser {
         diskMb = CassandraConfig.DEFAULT.getDiskMb();
         diskType = CassandraConfig.DEFAULT.getDiskType();
         memoryMb = CassandraConfig.DEFAULT.getMemoryMb();
+        totalMemoryMb = CassandraConfig.DEFAULT.getTotalMemoryMb();
         version = CassandraConfig.DEFAULT.getVersion();
         numTokens = DEFAULT_NUM_TOKENS;
         hintedHandoffEnabled = DEFAULT_HINTED_HANDOFF_ENABLED;
@@ -310,6 +313,7 @@ public class CassandraConfigParser {
                 version,
                 cpus,
                 memoryMb,
+                totalMemoryMb,
                 diskMb,
                 diskType,
                 "",
@@ -617,6 +621,22 @@ public class CassandraConfigParser {
 
     public void setMemoryMb(int memoryMb) {
         this.memoryMb = memoryMb;
+    }
+
+    public int getTotalMemoryMb() {
+        return totalMemoryMb;
+    }
+
+    public void setTotalMemoryMb(int totalMemoryMb) {
+        this.totalMemoryMb = totalMemoryMb;
+    }
+
+    public VolumeRequirement.VolumeType getDiskType() {
+        return diskType;
+    }
+
+    public void setDiskType(VolumeRequirement.VolumeType diskType) {
+        this.diskType = diskType;
     }
 
     public String getMemtableAllocationType() {

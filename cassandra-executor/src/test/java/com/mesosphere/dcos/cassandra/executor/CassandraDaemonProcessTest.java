@@ -161,7 +161,7 @@ public class CassandraDaemonProcessTest {
 //                "cassandra",
 //                "cassandra",
 //                CassandraConfig.DEFAULT.getCpus(),
-//                CassandraConfig.DEFAULT.getMemoryMb(),
+//                CassandraConfig.DEFAULT.getJvmMemoryMb(),
 //                CassandraConfig.DEFAULT.getDiskMb(),
 //                CassandraConfig.DEFAULT.mutable().setApplication(
 //                        CassandraConfig.DEFAULT.getApplication().toBuilder()
