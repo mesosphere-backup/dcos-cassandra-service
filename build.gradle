@@ -44,10 +44,10 @@ configure(subprojects - project('seedprovider')) {
         mavenLocal()
         mavenCentral()
         maven {
-          url "https://downloads.mesosphere.com/maven/"
+          url "http://downloads.mesosphere.com/maven/"
         }
         maven {
-          url "https://downloads.mesosphere.com/maven-snapshot/"
+          url "http://downloads.mesosphere.com/maven-snapshot/"
         }
     }
 
