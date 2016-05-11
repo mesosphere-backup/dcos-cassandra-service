@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Mesosphere
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mesosphere.dcos.cassandra.executor;
 
 import com.google.inject.Inject;
@@ -5,24 +20,32 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
-import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import com.mesosphere.dcos.cassandra.executor.backup.S3StorageDriver;
 import com.mesosphere.dcos.cassandra.executor.tasks.*;
-import org.apache.cassandra.tools.NodeProbe;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
-
+/**
+ * CassandraExecutor implements the Executor for the framework. It is
+ * responsible for launching the CassandraDaemonProcess and any ClusterTasks
+ * that are executed for the Cassandra node.
+ * Note that, unless the CassandraDaemonProcess is running, Cluster tasks
+ * will not be able to execute.
+ */
 public class CassandraExecutor implements Executor {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraExecutor.class);
@@ -37,6 +60,138 @@ public class CassandraExecutor implements Executor {
         return executorName.substring(0, end);
     }
 
+    private void launchDeamon(
+            final CassandraTask task,
+            final ExecutorDriver driver) throws IOException {
+        if (cassandra != null && cassandra.isOpen()) {
+            Protos.TaskStatus daemonStatus = CassandraDaemonStatus
+                    .create(
+                            Protos.TaskState.TASK_FAILED,
+                            task.getId(),
+                            task.getSlaveId(),
+                            task.getExecutor().getId(),
+                            Optional.of(
+                                    "Cassandra Daemon is already running"),
+                            CassandraMode.DRAINED).toProto();
+
+            driver.sendStatusUpdate(daemonStatus);
+
+            LOGGER.error("Cassandra Daemon is already running " +
+                            "status = {}",
+                    daemonStatus);
+        } else {
+            cassandra = CassandraDaemonProcess.create(
+                    (CassandraDaemonTask) task,
+                    executor,
+                    driver
+            );
+
+            LOGGER.info("Starting Cassandra Daemon: task = {}",
+                    task);
+        }
+    }
+
+    private void launchClusterTask(
+            final CassandraTask cassandraTask,
+            final ExecutorDriver driver) {
+        if (cassandra == null || !cassandra.isOpen()) {
+
+            Protos.TaskInfo info = cassandraTask.toProto();
+            Protos.TaskStatus failed = Protos.TaskStatus
+                    .newBuilder()
+                    .setState(Protos.TaskState.TASK_FAILED)
+                    .setSlaveId(info.getSlaveId())
+                    .setExecutorId(info.getExecutor().getExecutorId())
+                    .setTaskId(info.getTaskId())
+                    .setMessage("Cannot launch cluster task as Cassandra " +
+                            "Daemon is not running")
+                    .build();
+            driver.sendStatusUpdate(failed);
+            LOGGER.error("Failed to launch cluster task because the Cassandra" +
+                    " Daemon is not running: task = {}", failed);
+
+            return;
+        }
+
+        switch (cassandraTask.getType()) {
+            case BACKUP_SNAPSHOT:
+                clusterJobExecutorService.submit(new BackupSnapshot(
+                        driver,
+                        cassandra,
+                        (BackupSnapshotTask) cassandraTask));
+                break;
+
+            case BACKUP_UPLOAD:
+                clusterJobExecutorService.submit(new UploadSnapshot(
+                        driver,
+                        cassandra,
+                        (BackupUploadTask) cassandraTask,
+                        nodeId,
+                        new S3StorageDriver()));
+
+                break;
+
+            case SNAPSHOT_DOWNLOAD:
+                clusterJobExecutorService.submit(new DownloadSnapshot(
+                        driver,
+                        (DownloadSnapshotTask) cassandraTask,
+                        nodeId,
+                        new S3StorageDriver()));
+
+                break;
+
+            case SNAPSHOT_RESTORE:
+
+                clusterJobExecutorService.submit(new RestoreSnapshot(
+                        driver,
+                        (RestoreSnapshotTask) cassandraTask,
+                        nodeId,
+                        cassandra.getTask().getConfig().getVersion()));
+
+                break;
+
+            case CLEANUP:
+                clusterJobExecutorService.submit(
+                        new Cleanup(
+                                driver,
+                                cassandra,
+                                (CleanupTask) cassandraTask));
+
+                break;
+
+            case REPAIR:
+                clusterJobExecutorService.submit(new Repair(
+                        driver,
+                        cassandra,
+                        (RepairTask) cassandraTask));
+
+                break;
+
+            default:
+                Protos.TaskInfo info = cassandraTask.toProto();
+                Protos.TaskStatus failed = Protos.TaskStatus
+                        .newBuilder()
+                        .setState(Protos.TaskState.TASK_FAILED)
+                        .setSlaveId(info.getSlaveId())
+                        .setExecutorId(info.getExecutor().getExecutorId())
+                        .setTaskId(info.getTaskId())
+                        .setMessage(String.format("Task not implemented: type" +
+                                " = %s", cassandraTask.getType()))
+                        .build();
+                driver.sendStatusUpdate(failed);
+                LOGGER.error(String.format("Task not implemented: type" +
+                        " = %s", cassandraTask.getType()));
+        }
+    }
+
+    /**
+     * Constructs a new CassandraExecutor
+     * @param executor The ScheduledExecutorService used by the
+     *                 CassandraDaemonProcess for its watchdog and monitoring
+     *                 tasks.
+     * @param clusterJobExecutorService The ExecutorService used by the
+     *                                  Executor to run ClusterTasks.
+     */
     @Inject
     public CassandraExecutor(final ScheduledExecutorService executor,
                              final ExecutorService clusterJobExecutorService) {
@@ -72,110 +227,11 @@ public class CassandraExecutor implements Executor {
 
             switch (cassandraTask.getType()) {
                 case CASSANDRA_DAEMON:
-                    if (cassandra != null && cassandra.isOpen()) {
-                        Protos.TaskStatus daemonStatus = CassandraDaemonStatus
-                                .create(
-                                        Protos.TaskState.TASK_FAILED,
-                                        cassandraTask.getId(),
-                                        cassandraTask.getSlaveId(),
-                                        cassandraTask.getExecutor().getId(),
-                                        Optional.of(
-                                                "Cassandra Daemon is already running"),
-                                        CassandraMode.DRAINED).toProto();
-
-                        driver.sendStatusUpdate(daemonStatus);
-
-                        LOGGER.error("Cassandra Daemon is already running " +
-                                        "status = {}",
-                                daemonStatus);
-                    } else {
-                        cassandra = CassandraDaemonProcess.create(
-                                (CassandraDaemonTask) cassandraTask,
-                                executor,
-                                driver
-                        );
-
-                        LOGGER.info("Starting Cassandra Daemon: task = {}",
-                                cassandraTask);
-                    }
-                    break;
-
-                case BACKUP_SNAPSHOT:
-                    if (cassandra != null && cassandra.isOpen()) {
-                        final NodeProbe probe = cassandra.getProbe();
-                        final BackupSnapshot backupSnapshot = new BackupSnapshot(
-                                driver, probe, cassandraTask);
-                        clusterJobExecutorService.submit(backupSnapshot);
-                    }
-                    break;
-
-                case BACKUP_UPLOAD:
-                    if (cassandra != null && cassandra.isOpen()) {
-                        final NodeProbe probe = cassandra.getProbe();
-                        final BackupStorageDriver backupStorageDriver = new S3StorageDriver();
-                        final UploadSnapshot uploadSnapshot = new UploadSnapshot(
-                                driver,
-                                probe,
-                                cassandraTask,
-                                nodeId,
-                                backupStorageDriver);
-                        clusterJobExecutorService.submit(uploadSnapshot);
-                    }
-                    break;
-
-                case SNAPSHOT_DOWNLOAD:
-                    if (cassandra != null && cassandra.isOpen()) {
-                        final NodeProbe probe = cassandra.getProbe();
-                        final BackupStorageDriver backupStorageDriver =
-                                new S3StorageDriver();
-                        final DownloadSnapshot downloadSnapshot =
-                                new DownloadSnapshot(
-                                        driver,
-                                        probe,
-                                        cassandraTask,
-                                        nodeId,
-                                        backupStorageDriver);
-                        clusterJobExecutorService.submit(downloadSnapshot);
-                    }
-                    break;
-
-                case SNAPSHOT_RESTORE:
-                    if (cassandra != null && cassandra.isOpen()) {
-                        final NodeProbe probe = cassandra.getProbe();
-                        final RestoreSnapshot restoreSnapshot =
-                                new RestoreSnapshot(
-                                        driver,
-                                        probe,
-                                        cassandraTask,
-                                        nodeId);
-                        clusterJobExecutorService.submit(restoreSnapshot);
-                    }
-                    break;
-
-                case CLEANUP:
-                    if (cassandra != null && cassandra.isOpen()) {
-                        final NodeProbe probe = cassandra.getProbe();
-                        final Cleanup cleanup = new Cleanup(
-                                driver, probe, (CleanupTask) cassandraTask);
-                        clusterJobExecutorService.submit(cleanup);
-                    }
-                    break;
-
-                case REPAIR:
-                    if (cassandra != null && cassandra.isOpen()) {
-                        final NodeProbe probe = cassandra.getProbe();
-                        final Repair repair = new Repair(
-                                driver, probe, (RepairTask) cassandraTask);
-                        clusterJobExecutorService.submit(repair);
-                    }
+                    launchDeamon(cassandraTask, driver);
                     break;
 
                 default:
-                    LOGGER.error("Unhandled task: type = {}",
-                            cassandraTask.getType().name());
-                    throw new NotImplementedException(
-                            "Unsupported task type: {}",
-                            cassandraTask.getType().name());
+                    launchClusterTask(cassandraTask, driver);
             }
 
         } catch (Throwable t) {

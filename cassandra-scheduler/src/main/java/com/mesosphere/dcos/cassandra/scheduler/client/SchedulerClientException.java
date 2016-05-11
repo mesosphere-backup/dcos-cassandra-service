@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package com.mesosphere.dcos.cassandra.common.client;
+package com.mesosphere.dcos.cassandra.scheduler.client;
 
-/**
- * Created by kowens on 2/12/16.
- */
-public class ExecutorClientException extends Exception {
-    public ExecutorClientException() {
+
+public class SchedulerClientException extends Exception {
+    public SchedulerClientException() {
     }
 
-    public ExecutorClientException(Throwable cause) {
+    public SchedulerClientException(Throwable cause) {
         super(cause);
     }
 
-    public ExecutorClientException(String message) {
+    public SchedulerClientException(String message) {
         super(message);
     }
 
-    public ExecutorClientException(String message, Throwable cause) {
+    public SchedulerClientException(String message, Throwable cause) {
         super(message, cause);
     }
 }

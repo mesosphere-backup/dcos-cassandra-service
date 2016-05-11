@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Mesosphere
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mesosphere.dcos.cassandra.executor.metrics;
 
 
@@ -15,6 +30,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * MetricsConfig implements static utility methods to support the
+ * configuration of DCOS metrics collection for Cassandra.
+ */
 public class MetricsConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger
@@ -32,11 +51,20 @@ public class MetricsConfig {
     private MetricsConfig() {
     }
 
+    /***
+     * Tests if metrics collection is enabled.
+     * @return True if metrics collection is enabled.
+     */
     public static boolean metricsEnabled() {
         return System.getenv(STATSD_HOST_ENV) != null &&
                 System.getenv(STATSD_PORT_ENV) != null;
     }
 
+    /**
+     * Writes the metrics configuration file.
+     * @param dir The directory where the configuration file will be written.
+     * @return True if the metrics configuration file was written.
+     */
     public static boolean writeMetricsConfig(final Path dir) {
         if (!metricsEnabled()) {
             LOGGER.info("Metrics is not enabled");
@@ -72,7 +100,8 @@ public class MetricsConfig {
         LOGGER.info("Writing {}", CONFIG_FILE);
         final Yaml yaml = new Yaml();
         final File metricsYaml = dir.resolve(CONFIG_FILE).toFile();
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(metricsYaml))) {
+        try (BufferedWriter bw = new BufferedWriter(
+                new FileWriter(metricsYaml))) {
             yaml.dump(yamlMap, bw);
         } catch (IOException ex) {
             LOGGER.error("Failed to write configuration", ex);
@@ -82,6 +111,12 @@ public class MetricsConfig {
         return true;
     }
 
+    /**
+     * Sets the environment variables that will trigger the Cassandra process
+     * to output metrics to the DCOS collector.
+     * @param env The system environment variables map that will be updated
+     *            to contain the metrics collection configuration parameters.
+     */
     public static void setEnv(final Map<String, String> env) {
         if (metricsEnabled()) {
             env.put(ENV_KEY, ENV_VALUE);

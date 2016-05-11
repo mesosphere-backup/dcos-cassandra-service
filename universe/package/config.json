@@ -6,7 +6,7 @@
 		"service": {
 			"id": "http://cassandra/docs/mesosphere.com/service",
 			"type": "object",
-			"description": "The Cassandra service configuration object.",
+			"description": "DC/OS service configuration properties",
 			"properties": {
 				"name": {
 					"id": "http://cassandra/docs/mesosphere.com/service/name",
@@ -20,31 +20,52 @@
 					"description": "The user that the service will run as.",
 					"default": "root"
 				},
+				"cpus": {
+					"id": "http://cassandra/docs/mesosphere.com/service/cpus",
+					"type": "number",
+					"description": "The cpu shares used by the Cassandra service scheduler.",
+					"default": 0.5
+				},
+				"mem": {
+					"id": "http://cassandra/docs/mesosphere.com/service/mem",
+					"type": "integer",
+					"description": "The memory used by the Cassandra service scheduler in Mb.",
+					"default": 2048
+				},
+				"heap": {
+					"id": "http://cassandra/docs/mesosphere.com/service/heap",
+					"type": "integer",
+					"description": "The JVM heap used by the Cassandra service scheduler in Mb.",
+					"default": 1024
+				},
+				"api_port" : {
+					"id": "http://cassandra/docs/mesosphere.com/service/api_port",
+					"type": "integer",
+					"description": "The port that the Cassandra service API will accept on.",
+					"default": 9000
+				},
 				"placement_strategy": {
 					"id": "http://cassandra/docs/mesosphere.com/service/placement_strategy",
 					"type": "string",
 					"description": "The placement strategy for Cassandra nodes. This should always be NODE.",
 					"default": "NODE"
-				},
-				"plan_strategy": {
-					"id": "http://cassandra/docs/mesosphere.com/service/plan_strategy",
-					"description": "Broker placement strategy. See documentation. [INSTALL, STAGE]",
-					"type": "string",
-					"default": "INSTALL"
 				}
 			},
 			"additionalProperties": false,
 			"required": [
 				"name",
 				"user",
-				"plan_strategy",
+				"cpus",
+				"mem",
+				"heap",
+				"api_port",
 				"placement_strategy"
 			]
 		},
 		"nodes": {
 			"id": "http://cassandra/docs/mesosphere.com/node",
 			"type": "object",
-			"description": "Configuration object for Cassandra nodes",
+			"description": "Cassandra node configuration properties",
 			"properties": {
 				"count": {
 					"id": "http://cassandra/docs/mesosphere.com/node/count",
@@ -69,6 +90,12 @@
 					"type": "integer",
 					"description": "The amount of disk, in MB, allocated to the Cassandra process.",
 					"default": 10240
+				},
+				"disk_type": {
+					"id": "http://cassandra/docs/mesosphere.com/node/diskType",
+					"type": "string",
+					"description": "Disk type to be used for storing Cassandra data. See documentation. [ROOT, MOUNT]",
+					"default": "ROOT"
 				},
 				"heap": {
 					"id": "http://cassandra/docs/mesosphere.com/node/heap",
@@ -95,12 +122,6 @@
 					]
 
 				},
-				"volume_size": {
-					"id": "http://cassandra/docs/mesosphere.com/node/volume_size",
-					"type": "integer",
-					"description": "The size of the persistent volume, in MB, allocated to the Cassandra process.",
-					"default": 9216
-				},
 				"seeds": {
 					"id": "http://cassandra/docs/mesosphere.com/node/seeds",
 					"type": "integer",
@@ -114,13 +135,13 @@
 				"mem",
 				"disk",
 				"heap",
-				"volume_size",
 				"count",
 				"seeds"
 			]
 		},
 		"cassandra": {
 			"id": "http://cassandra/docs/mesosphere.com/cassandra",
+			"description": "Cassandra service configuration properties",
 			"type": "object",
 			"properties": {
 				"jmx_port": {
@@ -429,12 +450,83 @@
 				"dynamic_snitch_badness_threshold",
 				"internode_compression"
 			]
+		},
+		"executor": {
+			"id": "http://cassandra/docs/mesosphere.com/executor",
+			"type": "object",
+			"description": "The Cassandra service executor configuration object.",
+			"properties": {
+				"cpus": {
+					"id": "http://cassandra/docs/mesosphere.com/executor/cpus",
+					"type": "number",
+					"description": "The cpu shares used by the Cassandra service executor.",
+					"default": 0.5
+				},
+				"mem": {
+					"id": "http://cassandra/docs/mesosphere.com/executor/mem",
+					"type": "integer",
+					"description": "The memory used by the Cassandra service executor in Mb.",
+					"default": 1024
+				},
+				"heap": {
+					"id": "http://cassandra/docs/mesosphere.com/executor/heap",
+					"type": "integer",
+					"description": "The JVM heap used by the Cassandra service executor in Mb.",
+					"default": 768
+				},
+				"disk": {
+					"id": "http://cassandra/docs/mesosphere.com/executor/heap",
+					"type": "integer",
+					"description": "The amount of disk used by the Cassandra service executor in Mb.",
+					"default": 1024
+				},
+				"api_port" : {
+					"id": "http://cassandra/docs/mesosphere.com/executor/api_port",
+					"type": "integer",
+					"description": "The port that the Cassandra executor API will accept on.",
+					"default": 9001
+				}
+			},
+			"additionalProperties": false,
+			"required": [
+				"cpus",
+				"mem",
+				"heap",
+				"disk",
+				"api_port"
+			]
+		},
+		"task": {
+			"id": "http://cassandra/docs/mesosphere.com/task",
+			"type": "object",
+			"description": "The Cassandra service cluster task configuration object.",
+			"properties": {
+				"cpus": {
+					"id": "http://cassandra/docs/mesosphere.com/task/cpus",
+					"type": "number",
+					"description": "The cpu shares used by the Cassandra service cluster tasks.",
+					"default": 0.5
+				},
+				"mem": {
+					"id": "http://cassandra/docs/mesosphere.com/executor/mem",
+					"type": "integer",
+					"description": "The memory used by the Cassandra cluster tasks in Mb.",
+					"default": 256
+				}
+			},
+			"additionalProperties": false,
+			"required": [
+				"cpus",
+				"mem"
+			]
 		}
 	},
 	"additionalProperties": false,
 	"required": [
 		"service",
 		"nodes",
-		"cassandra"
+		"cassandra",
+		"executor",
+		"task"
 	]
 }
