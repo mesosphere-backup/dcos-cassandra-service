@@ -12,7 +12,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.0'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.6'
     }
 }
 
@@ -24,9 +24,21 @@ allprojects {
     apply plugin: 'idea'
     apply plugin: 'eclipse'
     apply plugin: 'nebula.provided-base'
-    apply plugin: 'idea'
 }
 
+idea {
+  project {
+    jdkName = '1.8'
+    languageLevel = '1.8'
+    ipr {
+      withXml { provider ->
+        provider.node.component
+          .find { it.@name == 'VcsDirectoryMappings' }
+          .mapping.@vcs = 'Git'
+      }
+    }
+  }
+}
 
 
 configure(subprojects - project('seedprovider')) {
