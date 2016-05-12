@@ -1,3 +1,0 @@
-[submodule "dcos-commons"]
-	path = dcos-commons
-	url = git@github.com:mesosphere/dcos-commons.git
