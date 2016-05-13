@@ -46,6 +46,9 @@ public class ConfigurationManager implements Managed {
     private final String placementStrategy;
     private final String seedsUrl;
     private final List<String> errors = new ArrayList<>();
+    private final String dataCenterUrl;
+    private final List<String> externalDataCenters;
+    private final long dataCenterSyncDelayMs;
 
     private void reconcileConfiguration() throws PersistenceException {
         LOGGER.info("Reconciling remote and persisted configuration");
@@ -150,6 +153,9 @@ public class ConfigurationManager implements Managed {
             @Named("ConfiguredSeeds") int seeds,
             @Named("ConfiguredPlacementStrategy") String placementStrategy,
             @Named("SeedsUrl") String seedsUrl,
+            @Named("ConfiguredDcUrl") String dataCenterUrl,
+            @Named("ConfiguredExternalDcs") List<String> externalDataCenters,
+            @Named("ConfiguredSyncDelayMs") final long dataCenterSyncDelayMs,
             PersistenceFactory persistenceFactory,
             Serializer<CassandraConfig> cassandraConfigSerializer,
             Serializer<ExecutorConfig> executorConfigSerializer,
@@ -178,6 +184,9 @@ public class ConfigurationManager implements Managed {
         this.seeds = seeds;
         this.placementStrategy = placementStrategy;
         this.seedsUrl = seedsUrl;
+        this.dataCenterUrl = dataCenterUrl;
+        this.dataCenterSyncDelayMs = dataCenterSyncDelayMs;
+        this.externalDataCenters = ImmutableList.copyOf(externalDataCenters);
 
         try {
             reconcileConfiguration();
@@ -602,6 +611,18 @@ public class ConfigurationManager implements Managed {
 
     public List<String> getErrors() {
         return ImmutableList.copyOf(errors);
+    }
+
+    public String getDataCenterUrl() {
+        return dataCenterUrl;
+    }
+
+    public long getDataCenterSyncDelayMs() {
+        return dataCenterSyncDelayMs;
+    }
+
+    public List<String> getExternalDataCenters(){
+        return externalDataCenters;
     }
 
     @Override

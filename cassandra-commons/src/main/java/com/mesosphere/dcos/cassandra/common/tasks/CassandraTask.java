@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Mesosphere
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,6 +42,11 @@ import java.util.UUID;
 
 import static org.apache.mesos.offer.ResourceUtils.*;
 
+/**
+ * CassandraTask is the base class from which all framework tasks derive.
+ * When new tasks are added this serializers of this class must be updated to
+ * incorporate the new task type.
+ */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
@@ -51,6 +71,9 @@ import static org.apache.mesos.offer.ResourceUtils.*;
 })
 public abstract class CassandraTask {
 
+    /**
+     * Serializer that serializes CassandraTasks to and from JSON Objects.
+     */
     public static Serializer<CassandraTask> JSON_SERIALIZER = new
             Serializer<CassandraTask>() {
                 @Override
@@ -78,17 +101,47 @@ public abstract class CassandraTask {
                 }
             };
 
-
+    /**
+     * Enumeration of the types of Cassandra Tasks.
+     */
     public enum TYPE {
+        /**
+         * Task that represents the Cassandra daemon.
+         */
         CASSANDRA_DAEMON,
+        /**
+         * Task that backs up column families.
+         */
         BACKUP_SNAPSHOT,
+        /**
+         * Task that uploads column families to remote storage.
+         */
         BACKUP_UPLOAD,
+        /**
+         * Task that downloads snapshotted column families.
+         */
         SNAPSHOT_DOWNLOAD,
+        /**
+         * Task that restores column families to a node.
+         */
         SNAPSHOT_RESTORE,
+        /**
+         * Task that performs cleanup on a node.
+         */
         CLEANUP,
+        /**
+         * Task that performs primary range, local, anti-entropy repair on a
+         * node.
+         */
         REPAIR
     }
 
+    /**
+     * Parses a CassandraTask from a Protocol Buffers representation.
+     * @param info The TaskInfo Protocol Buffer that contains a Cassandra Task.
+     * @return A CassandraTask parsed from info.
+     * @throws IOException If a CassandraTask can not be parsed from info.
+     */
     public static CassandraTask parse(Protos.TaskInfo info)
             throws IOException {
 
@@ -302,6 +355,10 @@ public abstract class CassandraTask {
         }
     }
 
+    /**
+     * Gets a unique identifier.
+     * @return A universally unique identifier.
+     */
     public static String uniqueId() {
         return UUID.randomUUID().toString();
     }
@@ -320,6 +377,22 @@ public abstract class CassandraTask {
     protected final VolumeRequirement.VolumeType diskType;
     protected final CassandraTaskStatus status;
 
+    /**
+     * Constructs the base CassandraTask.
+     * @param type The type of the task.
+     * @param id The unique identifier of the task.
+     * @param slaveId The identifier of the slave the task is running on.
+     * @param hostname The hostname of the slave the task is running on.
+     * @param executor The executor configuration for the task.
+     * @param name The name of the task.
+     * @param role The role for the task.
+     * @param principal The principal associated with the task.
+     * @param cpus The cpu shares allocated to the task.
+     * @param memoryMb The memory allocated to the task in Mb.
+     * @param diskMb The disk allocated to the task in Mb.
+     * @param diskType The type of disk allocated to the task.
+     * @param status The status associated with the task.
+     */
     protected CassandraTask(
             TYPE type,
             String id,
@@ -349,71 +422,130 @@ public abstract class CassandraTask {
         this.status = status;
     }
 
+    /**
+     * Gets the cpu shares allocated to the task.
+     * @return The cpu shares allocated to the task.
+     */
     @JsonProperty("cpus")
     public double getCpus() {
         return cpus;
     }
 
+    /**
+     * Gets the disk allocated to the task.
+     * @return The disk allocated to the task in Mb.
+     */
     @JsonProperty("disk_mb")
     public int getDiskMb() {
         return diskMb;
     }
 
+    /**
+     * Gets the disk type for the task.
+     * @return The disk type for the task.
+     */
     @JsonProperty("disk_type")
     public VolumeRequirement.VolumeType getDiskType() {
         return diskType;
     }
 
+    /**
+     * Gets the memory allocated to the task.
+     * @return The memory allocated to the task in Mb.
+     */
     @JsonProperty("memory_mb")
     public int getMemoryMb() {
         return memoryMb;
     }
 
+    /**
+     * Gets the unique identifier for the task.
+     * @return The universally unique identifier for the task.
+     */
     @JsonProperty("id")
     public String getId() {
         return id;
     }
 
+    /**
+     * Gets the task name.
+     * @return The name of the task.
+     */
     @JsonProperty("name")
     public String getName() {
         return name;
     }
 
+    /**
+     * Gets the tasks principal.
+     * @return The principal associated with the tasks resources.
+     */
     @JsonProperty("principal")
     public String getPrincipal() {
         return principal;
     }
 
+    /**
+     * Gets the task's role.
+     * @return The task's role.
+     */
     @JsonProperty("role")
     public String getRole() {
         return role;
     }
 
+    /**
+     * Gets the task's status.
+     * @return The status associated with the task.
+     */
     @JsonProperty("status")
     public CassandraTaskStatus getStatus() {
         return status;
     }
 
+    /**
+     * Gets the executor for the task.
+     * @return The CassandraTaskExecutor associated with the task.
+     */
     @JsonProperty("executor")
     public CassandraTaskExecutor getExecutor() {
         return executor;
     }
 
+    /**
+     * Gets the hostname of the task. This may be empty if the task has not
+     * yet been launched.
+     * @return The hostname associated with the task.
+     */
     @JsonProperty("hostname")
     public String getHostname() {
         return hostname;
     }
 
+    /**
+     * Gets the id of the slave the task is running on. This may be empty if the
+     * task is not yet launched.
+     * @return The identifier of the slave the task is running on.
+     */
     @JsonProperty("slave_id")
     public String getSlaveId() {
         return slaveId;
     }
 
+    /**
+     * Gets the tasks type.
+     * @return The TYPE of the task.
+     */
     @JsonProperty("type")
     public TYPE getType() {
         return type;
     }
 
+    /**
+     * Gets a Protocol Buffers representation of the task.
+     * @return A TaskInfo containing a Protocol Buffers representation of the
+     * task.
+     */
     public Protos.TaskInfo toProto() {
         return Protos.TaskInfo.newBuilder()
                 .setTaskId(Protos.TaskID.newBuilder().setValue(id))
@@ -427,41 +559,91 @@ public abstract class CassandraTask {
                 .build();
     }
 
+    /**
+     * Tests if the task is terminated.
+     * @return True if the task is terminated.
+     */
     @JsonIgnore
     public boolean isTerminated() {
         return status.isTerminated();
     }
 
+    /**
+     * Tests if the task is running.
+     * @return True if the task is running.
+     */
     @JsonIgnore
     public boolean isRunning() {
         return status.isRunning();
     }
 
+    /**
+     * Tests if the task is launching.
+     * @return True if the task is launching.
+     */
     @JsonIgnore
     public boolean isLaunching() {
         return status.isLaunching();
     }
 
+    /**
+     * Updates the task with the provided offer.
+     * @param offer The Offer that will be used to launch the task.
+     * @return A copy of the task with the hostname and slave id extracted
+     * from offer. The task will be in the staging state.
+     */
     @JsonIgnore
     public abstract CassandraTask update(Protos.Offer offer);
 
+    /**
+     * Updates the task id.
+     * @param id The id for the task.
+     * @return A copy of the task with its id set to id.
+     */
     @JsonIgnore
     public abstract CassandraTask updateId(String id);
 
+    /**
+     * Gets the task data for the task.
+     * @return A Protocol Buffers serializable representation of the task data
+     * associated with the task.
+     */
     @JsonIgnore
     public abstract CassandraProtos.CassandraTaskData getTaskData();
 
+    /**
+     * Updates the tasks status.
+     * @param status The status that will be associated with the task.
+     * @return A copy of the task with its status set to status.
+     */
     @JsonIgnore
     public abstract CassandraTask update(CassandraTaskStatus status);
 
+    /**
+     * Updates the state of the task.
+     * @param state The TaskState associated with the tasks' status.
+     * @return A copy of the task with its status's state set to state.
+     */
     public abstract CassandraTask update(Protos.TaskState state);
 
+    /**
+     * Gets the resource to reserve for the task.
+     * @return A list of resources to reserve for the task.
+     */
     @JsonIgnore
     public abstract List<Resource> getReserveResources();
 
+    /**
+     * Gets the resources to create for the task.
+     * @return A list of resources to create for the task.
+     */
     @JsonIgnore
     public abstract List<Resource> getCreateResources();
 
+    /**
+     * Gets the resources to launch for the task.
+     * @return A list of resources to launch the task with.
+     */
     @JsonIgnore
     public abstract List<Resource> getLaunchResources();
 

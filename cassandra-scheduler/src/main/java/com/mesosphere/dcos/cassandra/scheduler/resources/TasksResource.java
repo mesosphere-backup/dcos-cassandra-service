@@ -18,9 +18,9 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
+import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
@@ -43,7 +43,7 @@ public class TasksResource {
 
     private final CassandraTasks tasks;
     private final IdentityManager id;
-    private final ExecutorClient client;
+    private final SchedulerClient client;
 
     private List<CassandraDaemonTask> getRunningDeamons() {
         return tasks.getDaemons().values().stream()
@@ -79,7 +79,7 @@ public class TasksResource {
     @Inject
     public TasksResource(final CassandraTasks tasks,
                          final IdentityManager id,
-                         final ExecutorClient client) {
+                         final SchedulerClient client) {
         this.tasks = tasks;
         this.client = client;
         this.id = id;
@@ -165,7 +165,7 @@ public class TasksResource {
     @Path("connect")
     public Map<String, List<String>> connect() {
 
-        return ImmutableMap.of(  "address", getRunningAddresses(),
+        return ImmutableMap.of("address", getRunningAddresses(),
                 "dns", getRunningDns());
     }
 

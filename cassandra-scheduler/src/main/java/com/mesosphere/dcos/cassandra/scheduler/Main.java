@@ -88,6 +88,9 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
                 injector.getInstance(CleanupResource.class));
         environment.jersey().register(
                 injector.getInstance(RepairResource.class));
+        environment.jersey().register(
+                injector.getInstance(DataCenterResource.class)
+        );
     }
 
     private void registerManagedObjects(Environment environment, Injector injector) {

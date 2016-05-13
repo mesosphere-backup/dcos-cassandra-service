@@ -81,20 +81,16 @@ public class ConfigurationManagerTest {
 
         curator = persistence.getCurator();
 
-        System.out.println(JsonUtils.MAPPER.writerWithDefaultPrettyPrinter()
-                .writeValueAsString(config));
+        cassandraConfigPath = "/cassandra/" + config.getIdentity().getName() +
+                "/cassandraConfig";
 
-        cassandraConfigPath = "/" + config.getIdentity().getName() + "/" +
-                config.getIdentity().getCluster() + "/cassandraConfig";
+        executorConfigPath = "/cassandra/"  + config.getIdentity().getName()
+                + "/executorConfig";
 
-        executorConfigPath = "/" + config.getIdentity().getName() + "/" +
-                config.getIdentity().getCluster() + "/executorConfig";
+        serversPath = "/cassandra/"  + config.getIdentity().getName()  +
+                "/servers";
 
-        serversPath = "/" + config.getIdentity().getName() + "/" +
-                config.getIdentity().getCluster() + "/servers";
-
-        seedsPath = "/" + config.getIdentity().getName() + "/" +
-                config.getIdentity().getCluster() + "/seeds";
+        seedsPath = "/cassandra/"  + config.getIdentity().getName()  + "/seeds";
 
     }
 
@@ -109,11 +105,15 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
                 ClusterTaskConfig.JSON_SERIALIZER,
                 IntegerStringSerializer.get()
+
         );
 
         assertEquals("http://cassandra.marathon.mesos:8080/v1/seeds",
@@ -165,6 +165,9 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -222,6 +225,9 @@ public class ConfigurationManagerTest {
                 updatedSeeds,
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -269,6 +275,9 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -313,6 +322,9 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -337,6 +349,9 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -381,6 +396,9 @@ public class ConfigurationManagerTest {
                 config.getServers() + 1,
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -404,6 +422,9 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -432,6 +453,9 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -460,6 +484,9 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,
@@ -491,6 +518,9 @@ public class ConfigurationManagerTest {
                 config.getSeeds(),
                 "NODE",
                 config.getSeedsUrl(),
+                config.getDcUrl(),
+                config.getExternalDcsList(),
+                config.getExternalDcSyncMs(),
                 persistence,
                 CassandraConfig.JSON_SERIALIZER,
                 ExecutorConfig.JSON_SERIALIZER,

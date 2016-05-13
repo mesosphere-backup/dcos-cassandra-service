@@ -43,6 +43,12 @@ configure(subprojects - project('seedprovider')) {
     repositories {
         mavenLocal()
         mavenCentral()
+        maven {
+          url "http://downloads.mesosphere.com/maven/"
+        }
+        maven {
+          url "http://downloads.mesosphere.com/maven-snapshot/"
+        }
     }
 
     ext {
@@ -95,4 +101,3 @@ configure(project(':seedprovider')) {
 
     }
 }
-

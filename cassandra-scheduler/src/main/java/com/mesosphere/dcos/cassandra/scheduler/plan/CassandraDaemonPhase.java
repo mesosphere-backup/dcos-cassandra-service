@@ -1,8 +1,8 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.collect.ImmutableList;
-import com.mesosphere.dcos.cassandra.common.client.ExecutorClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -23,7 +23,7 @@ public class CassandraDaemonPhase extends DefaultPhase {
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final CassandraOfferRequirementProvider provider,
-            final ExecutorClient client,
+            final SchedulerClient client,
             final List<CassandraDaemonBlock> blocks,
             final List<String> errors) {
 
@@ -64,7 +64,7 @@ public class CassandraDaemonPhase extends DefaultPhase {
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final CassandraOfferRequirementProvider provider,
-            final ExecutorClient client) {
+            final SchedulerClient client) {
 
         final List<CassandraDaemonBlock> blocks =
                 new ArrayList<>();

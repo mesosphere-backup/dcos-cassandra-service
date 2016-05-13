@@ -33,6 +33,9 @@ cassandra:
   heap:
     size_mb : ${CASSANDRA_HEAP_MB:-2048}
     new_mb : ${CASSANDRA_HEAP_MB:-100}
+  location:
+    rack : ${CASSANDRA_LOCATION_RACK:-"rac1"}
+    data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
   jmx_port: ${CASSANDRA_JMX_PORT:-7199}
   num_tokens : ${CASSANDRA_NUM_TOKENS:-256}
   volume_size_mb : ${CASSANDRA_VOLUME_SIZE_MB:-9216}
@@ -99,6 +102,9 @@ nodes: ${NODES:-3}
 seed_nodes: ${SEED_NODES:-2}
 placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
 api_port : ${API_PORT:-8080}
+dc_sync_ms : ${DC_SYNC_MS:-60000}
+dc_url : "${DC_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/datacenter}"
+external_dcs : ${EXTERNAL_DCS:-""}
 server:
   type: simple
   adminContextPath: /admin

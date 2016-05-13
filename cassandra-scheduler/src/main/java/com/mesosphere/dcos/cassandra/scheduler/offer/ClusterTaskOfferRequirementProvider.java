@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 
-public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequirementProvider {
+public class ClusterTaskOfferRequirementProvider
+        implements CassandraOfferRequirementProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             ClusterTaskOfferRequirementProvider.class);
     private IdentityManager identityManager;
@@ -31,12 +32,14 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
 
     @Override
     public OfferRequirement getNewOfferRequirement(Protos.TaskInfo taskInfo) {
-        LOGGER.info("Getting new offer requirement for nodeId: {}", taskInfo.getTaskId());
+        LOGGER.info("Getting new offer requirement for nodeId: {}",
+                taskInfo.getTaskId());
         return getCreateOfferRequirement(taskInfo);
     }
 
     private OfferRequirement getCreateOfferRequirement(Protos.TaskInfo taskInfo) {
-        final PlacementStrategy placementStrategy = new ClusterTaskPlacementStrategy(cassandraTasks);
+        final PlacementStrategy placementStrategy = new ClusterTaskPlacementStrategy(
+                cassandraTasks);
         final List<Protos.SlaveID> agentsToAvoid =
                 placementStrategy.getAgentsToAvoid(
                         taskInfo);
@@ -61,7 +64,8 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
     @Override
     public OfferRequirement getReplacementOfferRequirement(
             Protos.TaskInfo taskInfo) {
-        LOGGER.info("Getting replacement requirement for task: {}", taskInfo.getTaskId().getValue());
+        LOGGER.info("Getting replacement requirement for task: {}",
+                taskInfo.getTaskId().getValue());
         final PlacementStrategy placementStrategy =
                 new ClusterTaskPlacementStrategy(cassandraTasks);
         return new OfferRequirement(
