@@ -2,19 +2,26 @@ ext {
   aws = "http://downloads.mesosphere.io/"
   basePath = "cassandra/assets/"
   packageVer = "stub-universe" // is replaced
+  cliBase = "dcos-cassandra-"
 }
 
-task packageVersion  << {
+task packageVersion (
+  group: "universe",
+  description: "Provides the release version for the package")  << {
   packageVer = "git describe --tags".execute().text.trim()
   println packageVer
 }
 
-task universe(dependsOn: packageVersion) {
+task universe(
+  dependsOn: packageVersion,
+  group: "universe",
+  description: "Copies universe files to build and modifies there artifact dir") {
   inputs.file file("universe/package")
   // incremental builds might be nice but need to research multiple inputs
   // outputs.dir "$buildDir/universe"
   doLast {
-    if( !packageVer || !(packageVer ==~ /^\d+\.\d+\.\d+\-\d+\.\d+\.\d+/) )
+    if( !((packageVer ==~ /^\d+\.\d+\.\d+\-\d+\.\d+\.\d+/) ||
+    (packageVer ==~ /^\d+\.\d+\.\d+\-\d+\.\d+\.\d+\.\d+/)))
       throw new GradleException("Invalid Release Version: $packageVer")
 
     copy {
@@ -26,11 +33,17 @@ task universe(dependsOn: packageVersion) {
       filter{
         String line -> line.replaceAll("stub-universe", packageVer)
       }
+      // future proof the client
+      filter{
+        String line -> line.replaceAll("dcos-cassandra-0.1.0.tar.gz", cliBase + cliVersion + ".tar.gz")
+      }
     }
   }
 }
 
-task universeDist(type: Zip, dependsOn: universe) {
+task universeDist(type: Zip, dependsOn: universe,
+  group: "universe",
+  description: "Creates a zip of the universe") {
   from "$buildDir/universe"
   baseName = "universe"
   destinationDir = file("$buildDir/universe/")

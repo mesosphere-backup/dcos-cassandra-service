@@ -27,6 +27,10 @@ allprojects {
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 }
 
+ext {
+  cliVersion = "0.1.0"
+}
+
 configure(subprojects - project('seedprovider')) {
 
     repositories {
