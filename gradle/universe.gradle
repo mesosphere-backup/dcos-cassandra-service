@@ -1,0 +1,37 @@
+ext {
+  aws = "http://downloads.mesosphere.io/"
+  basePath = "cassandra/assets/"
+  packageVer = "stub-universe" // is replaced
+}
+
+task packageVersion  << {
+  packageVer = "git describe --tags".execute().text.trim()
+  println packageVer
+}
+
+task universe(dependsOn: packageVersion) {
+  inputs.file file("universe/package")
+  // incremental builds might be nice but need to research multiple inputs
+  // outputs.dir "$buildDir/universe"
+  doLast {
+    if( !packageVer || !(packageVer ==~ /^\d+\.\d+\.\d+\-\d+\.\d+\.\d+/) )
+      throw new GradleException("Invalid Release Version: $packageVer")
+
+    copy {
+      from "universe/package"
+      into "$buildDir/universe"
+      filter{
+        String line -> line.replaceAll("\\{\\{artifact-dir\\}\\}", aws + basePath + packageVer)
+      }
+      filter{
+        String line -> line.replaceAll("stub-universe", packageVer)
+      }
+    }
+  }
+}
+
+task universeDist(type: Zip, dependsOn: universe) {
+  from "$buildDir/universe"
+  baseName = "universe"
+  destinationDir = file("$buildDir/universe/")
+}
