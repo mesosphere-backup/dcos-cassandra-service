@@ -85,3 +85,7 @@ configure(project(':seedprovider')) {
 
     }
 }
+
+task cliVersion << {
+    print cliVersion
+}
