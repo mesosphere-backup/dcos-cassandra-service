@@ -45,6 +45,6 @@ task universeDist(type: Zip, dependsOn: universe,
   group: "universe",
   description: "Creates a zip of the universe") {
   from "$buildDir/universe"
-  baseName = "universe"
+  archiveName = "universe.zip"
   destinationDir = file("$buildDir/universe/")
 }
