@@ -29,6 +29,7 @@ allprojects {
 
 ext {
   cliVersion = "0.1.0"
+  serviceVersion = "2.5.0"
 }
 
 configure(subprojects - project('seedprovider')) {

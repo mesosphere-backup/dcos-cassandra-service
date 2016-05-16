@@ -48,3 +48,13 @@ task universeDist(type: Zip, dependsOn: universe,
   archiveName = "universe.zip"
   destinationDir = file("$buildDir/universe/")
 }
+
+task releaseTag(group: "universe",
+  description: "Executes a git tag using the projectVersion-serviceVersion") << {
+  if (project.hasProperty('serviceVersion')) {
+    println "tagging version: $version-$serviceVersion"
+    println "git tag $version-$serviceVersion".execute().err.text
+  } else {
+    println "serviceVersion is NOT defined"
+  }
+}
