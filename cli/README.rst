@@ -39,14 +39,14 @@ Create Binary:
 
    pip install pyinstaller
 
-#. Create hellworld cli binary::
+#. Create cassandra cli binary::
 
    make binary
 
 Run Binary:
 ###########
 
-#. Update `PATH` to have the dcos-helloworld binary. The created binary is is in folder `dist`::
+#. Update `PATH` to have the dcos-cassandra binary. The created binary is is in folder `dist`::
 
    PATH=/path/to/binary:$PATH
 
