@@ -76,9 +76,9 @@ message CassandraTaskData{
 
     repeated string columnFamilies = 8;
 
-    optional string s3AccessKey = 9;
+    optional string accoundId = 9;
 
-    optional string s3SecretKey = 10;
+    optional string secretKey = 10;
 
     optional string localLocation = 11;
 }

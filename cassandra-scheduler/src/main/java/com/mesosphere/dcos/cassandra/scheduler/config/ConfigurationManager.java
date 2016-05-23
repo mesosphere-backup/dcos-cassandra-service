@@ -380,8 +380,8 @@ public class ConfigurationManager implements Managed {
                 Lists.newArrayList(),
                 context.getName(),
                 context.getExternalLocation(),
-                context.getS3AccessKey(),
-                context.getS3SecretKey());
+                context.getAcccountId(),
+                context.getSecretKey());
     }
 
     public DownloadSnapshotTask createDownloadSnapshotTask(
@@ -408,8 +408,8 @@ public class ConfigurationManager implements Managed {
                         Optional.empty()),
                 context.getName(),
                 context.getExternalLocation(),
-                context.getS3AccessKey(),
-                context.getS3SecretKey(),
+                context.getAcccountId(),
+                context.getSecretKey(),
                 cassandraConfig.getVolume().getPath() +
                         "/data/temp_" + context.getName());
     }
@@ -438,8 +438,8 @@ public class ConfigurationManager implements Managed {
                         Optional.empty()),
                 context.getName(),
                 context.getExternalLocation(),
-                context.getS3AccessKey(),
-                context.getS3SecretKey(),
+                context.getAcccountId(),
+                context.getSecretKey(),
                 cassandraConfig.getVolume().getPath() +
                         "/data/temp_" + context.getName());
     }
@@ -470,8 +470,8 @@ public class ConfigurationManager implements Managed {
                 Lists.newArrayList(),
                 context.getName(),
                 context.getExternalLocation(),
-                context.getS3AccessKey(),
-                context.getS3SecretKey(),
+                context.getAcccountId(),
+                context.getSecretKey(),
                 cassandraConfig.getVolume().getPath() + "/data");
     }
 

@@ -20,6 +20,12 @@ public class StartRestoreRequest {
     @NotEmpty
     private String s3SecretKey;
 
+    @JsonProperty("azure_account")
+    private String azureAccount;
+
+    @JsonProperty("azure_key")
+    private String azureKey;
+
     public String getName() {
         return name;
     }
@@ -52,8 +58,25 @@ public class StartRestoreRequest {
         this.s3SecretKey = s3SecretKey;
     }
 
-    public boolean isValid(){
-        return name != null && externalLocation != null &&
-                s3AccessKey != null && s3SecretKey != null;
+    public String getAzureAccount() {
+      return azureAccount;
+    }
+
+    public void setAzureAccount(String azureAccount) {
+      this.azureAccount = azureAccount;
+    }
+
+    public String getAzureKey() {
+      return azureKey;
+    }
+
+    public void setAzureKey(String azureKey) {
+      this.azureKey = azureKey;
+    }
+
+    public boolean isValid() {
+      return name != null && externalLocation != null &&
+        (s3AccessKey != null && s3SecretKey != null) ||
+        (azureAccount != null && azureKey != null && externalLocation.startsWith("azure:"));
     }
 }
