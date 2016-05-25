@@ -1515,6 +1515,10 @@ $ dcos cassandra --name=<service-name> restore start \
 
 In order to restore from S3, you need to specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
 
+Check the status of the restore:
+
+    $ dcos cassandra --name=<service-name> restore status
+
 #### Azure Restore
 
 To restore, enter the following command on the DCOS CLI:
