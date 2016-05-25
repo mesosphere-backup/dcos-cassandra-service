@@ -1473,6 +1473,10 @@ $ dcos cassandra --name=<service-name> backup start \
 
 In order to upload to S3, you need to specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
 
+Check status of the backup:
+
+    $ dcos cassandra --name=<service-name> backup status
+
 #### Azure Backup
 
 To perform a backup to Azure, enter the following command on the DCOS CLI:
