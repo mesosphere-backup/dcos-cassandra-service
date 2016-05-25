@@ -1461,7 +1461,7 @@ You can take a complete snapshot of your DCOS Cassandra ring and upload the arti
 
 #### S3 Backup
 
-To perform a backup, enter the following command on the DCOS CLI:
+To perform a backup to S3, enter the following command on the DCOS CLI:
 
 ```
 $ dcos cassandra --name=<service-name> backup start \
