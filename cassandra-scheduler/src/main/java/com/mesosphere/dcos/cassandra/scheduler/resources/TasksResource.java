@@ -19,7 +19,6 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -47,32 +46,32 @@ public class TasksResource {
 
     private List<CassandraDaemonTask> getRunningDeamons() {
         return tasks.getDaemons().values().stream()
-                .filter
-                        (daemonTask ->
-                                Protos.TaskState.TASK_RUNNING.equals(
-                                        daemonTask.getStatus().getState())).collect
-                        (Collectors.toList());
+            .filter
+                (daemonTask ->
+                    Protos.TaskState.TASK_RUNNING.equals(
+                        daemonTask.getState())).collect
+                (Collectors.toList());
     }
 
     private List<String> getRunningAddresses() {
 
         return getRunningDeamons().stream().map(daemonTask ->
-                daemonTask.getHostname() +
-                        ":" +
-                        daemonTask.getConfig()
-                                .getApplication()
-                                .getNativeTransportPort())
-                .collect(Collectors.toList());
+            daemonTask.getHostname() +
+                ":" +
+                daemonTask.getConfig()
+                    .getApplication()
+                    .getNativeTransportPort())
+            .collect(Collectors.toList());
     }
 
     private List<String> getRunningDns() {
 
         return getRunningDeamons().stream().map(daemonTask ->
-                daemonTask.getName() +
-                        "." + id.get().getName() + ".mesos:" +
-                        daemonTask.getConfig()
-                                .getApplication()
-                                .getNativeTransportPort()
+            daemonTask.getName() +
+                "." + id.get().getName() + ".mesos:" +
+                daemonTask.getConfig()
+                    .getApplication()
+                    .getNativeTransportPort()
         ).collect(Collectors.toList());
     }
 
@@ -95,14 +94,14 @@ public class TasksResource {
     @Path("/{name}/status")
     @ManagedAsync
     public void getStatus(
-            @PathParam("name") final String name,
-            @Suspended final AsyncResponse response) {
+        @PathParam("name") final String name,
+        @Suspended final AsyncResponse response) {
 
         Optional<CassandraDaemonTask> taskOption =
-                Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(tasks.getDaemons().get(name));
         if (!taskOption.isPresent()) {
             response.resume(
-                    Response.status(Response.Status.NOT_FOUND));
+                Response.status(Response.Status.NOT_FOUND));
         } else {
             CassandraDaemonTask task = taskOption.get();
             client.status(task.getHostname(), task.getExecutor().getApiPort()
@@ -121,7 +120,7 @@ public class TasksResource {
     public DaemonInfo getInfo(@PathParam("name") final String name) {
 
         Optional<CassandraDaemonTask> taskOption =
-                Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(tasks.getDaemons().get(name));
         if (taskOption.isPresent()) {
             return DaemonInfo.create(taskOption.get());
         } else {
@@ -133,11 +132,11 @@ public class TasksResource {
     @Path("/restart")
     public void restart(@QueryParam("node") final String name) {
         Optional<CassandraDaemonTask> taskOption =
-                Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(tasks.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
             client.shutdown(task.getHostname(),
-                    task.getExecutor().getApiPort());
+                task.getExecutor().getApiPort());
         } else {
             throw new NotFoundException();
         }
@@ -146,15 +145,15 @@ public class TasksResource {
     @PUT
     @Path("/replace")
     public void replace(@QueryParam("node") final String name)
-            throws Exception {
+        throws Exception {
         Optional<CassandraDaemonTask> taskOption =
-                Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(tasks.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
             tasks.moveDaemon(task);
-            if (!TaskUtils.isTerminated(task.getStatus().getState())) {
+            if (!task.isTerminated()) {
                 client.shutdown(task.getHostname(),
-                        task.getExecutor().getApiPort());
+                    task.getExecutor().getApiPort());
             }
         } else {
             throw new NotFoundException();
@@ -166,7 +165,7 @@ public class TasksResource {
     public Map<String, List<String>> connect() {
 
         return ImmutableMap.of("address", getRunningAddresses(),
-                "dns", getRunningDns());
+            "dns", getRunningDns());
     }
 
     @GET

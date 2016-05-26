@@ -1,59 +1,296 @@
-/*
- * Copyright 2016 Mesosphere
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.mesosphere.dcos.cassandra.common.util;
 
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.*;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * Contains static utility methods for dealing with tasks.
+ * Created by kowens on 5/19/16.
  */
 public class TaskUtils {
-    private static final Set<Protos.TaskState> TERMINAL_STATES = new HashSet<>(
-            Arrays.asList(
-                    Protos.TaskState.TASK_ERROR,
-                    Protos.TaskState.TASK_FAILED,
-                    Protos.TaskState.TASK_FINISHED,
-                    Protos.TaskState.TASK_KILLED,
-                    Protos.TaskState.TASK_LOST));
 
-    private TaskUtils() {
+    public static final String CPUS = "cpus";
+    public static final String MEM = "mem";
+    public static final String DISK = "disk";
+    public static final String PORTS = "ports";
+
+
+    public static String createVolumeId() {
+        return "volume-" + UUID.randomUUID();
     }
 
-    /**
-     * Tests if the state is terminal.
-     * @param state The state to test.
-     * @return True if the state is terminal.
-     */
-    public static boolean isTerminated(Protos.TaskState state) {
-        return TERMINAL_STATES.contains(state);
+    public static Environment createEnvironment(
+        final Map<String, String> env) {
+        return Environment.newBuilder()
+            .addAllVariables(env.entrySet().stream()
+                .map(entry -> Environment.Variable.newBuilder()
+                    .setName(entry.getKey())
+                    .setValue(entry.getValue()).build())
+                .collect(Collectors.toList()))
+            .build();
     }
 
-    /**
-     * Tests if the task is terminated.
-     * @param task The task to test.
-     * @return True if the task is in a terminal state.
-     */
-    public static boolean isTerminal(CassandraTask task){
+    public static Collection<CommandInfo.URI> createURIs(
+        final List<URI> uris) {
+        return uris.stream()
+            .map(uri -> uri.toString())
+            .map(uri -> CommandInfo.URI.newBuilder()
+                .setCache(false)
+                .setExecutable(false)
+                .setExtract(true)
+                .setValue(uri).build())
+            .collect(Collectors.toList());
+    }
 
-        return isTerminated(task.getStatus().getState());
+    public static Protos.CommandInfo createCommandInfo(
+        final String command,
+        final List<String> arguments,
+        final List<URI> uris,
+        final Map<String, String> environment) {
+        return Protos.CommandInfo.newBuilder()
+            .setValue(command)
+            .addAllArguments(arguments)
+            .addAllUris(createURIs(uris))
+            .setEnvironment(createEnvironment(environment)).build();
+    }
+
+    public static Set<String> toSet(final Collection<CommandInfo.URI> uris) {
+        return uris.stream()
+            .map(uri -> uri.getValue())
+            .collect(Collectors.toSet());
+    }
+
+
+    public static Map<String, String> toMap(final Environment environment) {
+        return environment.getVariablesList().stream()
+            .collect(
+                Collectors.toMap(var -> var.getName(), var -> var.getValue()));
+    }
+
+    public static String getValue(final String name, final Environment env) {
+        return env.getVariablesList().stream()
+            .filter(var -> var.getName().equals(name))
+            .findFirst()
+            .map(var -> var.getValue())
+            .orElse("");
+    }
+
+    public static boolean isCpus(final Resource resource) {
+        return resource.hasName() && resource.getName().equalsIgnoreCase(CPUS);
+    }
+
+    public static boolean isMem(final Resource resource) {
+        return resource.hasName() && resource.getName().equalsIgnoreCase(MEM);
+    }
+
+    public static boolean isDisk(final Resource resource) {
+        return resource.hasName() && resource.getName().equalsIgnoreCase(DISK);
+    }
+
+    public static boolean isPorts(final Resource resource) {
+        return resource.hasName() && resource.getName().equalsIgnoreCase(PORTS);
+    }
+
+    public static Resource createScalar(
+        final String name,
+        final double value,
+        final String role,
+        final String principal) {
+        return Resource.newBuilder()
+            .setName(name)
+            .setRole(role)
+            .setType(Value.Type.SCALAR)
+            .setScalar(Value.Scalar.newBuilder().setValue(value))
+            .setReservation(Resource.ReservationInfo.newBuilder()
+                .setPrincipal(principal))
+            .build();
+    }
+
+    private static Resource.DiskInfo createDiskInfo(
+        final String path) {
+        return Resource.DiskInfo.newBuilder()
+            .setPersistence(Resource.DiskInfo.Persistence.newBuilder()
+                .setId(createVolumeId()))
+            .setVolume(Protos.Volume.newBuilder()
+                .setContainerPath(path)
+                .setMode(Protos.Volume.Mode.RW
+                )).build();
+    }
+
+    public static List<Value.Range> createPortRanges(
+        final Collection<Integer> ports) {
+        final SortedSet<Integer> portSet = new TreeSet<>(ports);
+        final LinkedList<Value.Range> ranges = new LinkedList<>();
+        int[] portsArray = new int[portSet.size()];
+        int i = 0;
+        for (Iterator<Integer> it = portSet.iterator(); it.hasNext(); ) {
+            portsArray[i++] = it.next();
+        }
+        int begin = 0;
+        int end = 0;
+        while (end < portsArray.length) {
+
+            if (end < portsArray.length - 1 &&
+                portsArray[end] + 1 == portsArray[end + 1]) {
+                ++end;
+            } else {
+                ranges.add(Value.Range.newBuilder()
+                    .setBegin(begin)
+                    .setEnd(end)
+                    .build());
+                ++end;
+                begin = end;
+            }
+        }
+        return ranges;
+    }
+
+    public static Resource createRanges(
+        final String name,
+        final Collection<Value.Range> ranges,
+        final String role,
+        final String principal) {
+
+        return Resource.newBuilder()
+            .setType(Value.Type.RANGES)
+            .setName(name)
+            .setRanges(Value.Ranges.newBuilder().addAllRange(ranges))
+            .setRole(role)
+            .setReservation(Resource.ReservationInfo.newBuilder()
+                .setPrincipal(principal)
+                .build())
+            .build();
+    }
+
+    public static Resource createCpus(
+        double cpus,
+        String role,
+        String principal) {
+        return createScalar(CPUS, cpus, role, principal);
+    }
+
+    public static Resource createMemoryMb(
+        int memoryMb,
+        String role,
+        String principal) {
+        return createScalar(MEM, memoryMb, role, principal);
+    }
+
+    public static Resource createDiskMb(
+        final int diskMb,
+        final String role,
+        final String principal) {
+        return createScalar(DISK, diskMb, role, principal);
+    }
+
+    public static Resource createDiskMb(
+        final int diskMb,
+        final String role,
+        final String principal,
+        final String path) {
+        return Resource.newBuilder(createDiskMb(diskMb, role, principal))
+            .setDisk(createDiskInfo(path)).build();
+    }
+
+    public static Resource createPorts(
+        final Collection<Integer> ports,
+        final String role,
+        final String principal) {
+        return createRanges(PORTS, createPortRanges(ports), role, principal);
+    }
+
+
+    public static double getResourceCpus(final List<Resource> resources) {
+        return resources.stream().filter(TaskUtils::isCpus)
+            .map(resource -> resource.getScalar().getValue())
+            .reduce(0.0, Double::sum);
+    }
+
+
+    public static int getResourceMemoryMb(final List<Resource> resources) {
+        return (int) Math.floor(
+            resources.stream().filter(TaskUtils::isCpus)
+                .map(resource -> resource.getScalar().getValue())
+                .reduce(0.0, Double::sum));
+    }
+
+
+    public static int getResourceDiskMb(final List<Resource> resources) {
+        return (int) Math.floor(
+            resources.stream().filter(TaskUtils::isCpus)
+                .map(resource -> resource.getScalar().getValue())
+                .reduce(0.0, Double::sum));
+    }
+
+    public static List<String> getVolumePaths(final List<Resource> resources) {
+        return resources.stream().filter(resource ->
+            isDisk(resource) &&
+                resource.hasDisk() &&
+                resource.getDisk().hasVolume()).map(
+            resource -> resource.getDisk()
+                .getVolume().getContainerPath())
+            .collect(Collectors.toList());
+    }
+
+    public static TaskInfo copyVolumes(
+        final TaskInfo source,
+        final TaskInfo target) {
+
+        List<Resource> sourceDisks = source.getResourcesList().stream()
+            .filter(resource -> isDisk(resource) &&
+                resource.hasDisk())
+            .collect(Collectors.toList());
+
+        List<Resource> minusDisks = target.getResourcesList().stream()
+            .filter(resource -> !isDisk(resource))
+            .collect(Collectors.toList());
+
+        return TaskInfo.newBuilder(target)
+            .clearResources()
+            .addAllResources(minusDisks)
+            .addAllResources(sourceDisks)
+            .build();
+    }
+
+    public static List<Resource> updateResources(
+        final double cpus,
+        final int memoryMb,
+        final List<Resource> resources) {
+        return resources.stream()
+            .map(resource -> {
+                if (isCpus(resource)) {
+                    return Resource.newBuilder(resource)
+                        .setScalar(
+                            Value.Scalar.newBuilder()
+                                .setValue(cpus))
+                        .build();
+                } else if (isMem(resource)) {
+                    return Resource.newBuilder(resource)
+                        .setScalar(
+                            Value.Scalar.newBuilder()
+                                .setValue(memoryMb))
+                        .build();
+                } else {
+                    return resource;
+                }
+            }).collect(Collectors.toList());
+    }
+
+    public static List<Resource> replaceDisks(final String path,
+                                              final List<Resource> resources) {
+        return resources.stream()
+            .map(resource -> {
+                if (isDisk(resource) && resource.hasDisk()) {
+                    return Resource.newBuilder(resource)
+                        .setDisk(createDiskInfo(path))
+                        .build();
+                } else {
+                    return resource;
+                }
+            }).collect(Collectors.toList());
     }
 
 }

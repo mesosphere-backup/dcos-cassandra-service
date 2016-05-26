@@ -30,87 +30,34 @@ import java.util.Optional;
  * daemon in addition to the basic status properties.
  */
 public class CassandraDaemonStatus extends CassandraTaskStatus {
-
-    @JsonProperty("mode")
-    private final CassandraMode mode;
-
     /**
      * Creates a CassandraDaemonStatus
-     * @param state      The state of the task
-     * @param id         The id of the task associated with the status.
-     * @param slaveId    The id of the slave on which the task associated
-     *                   with the status was launched.
-     * @param executorId The id of the executor for the task associated with
-     *                   the status.
-     * @param message    An optional message sent from the executor.
-     * @param mode       The mode of the Cassandra daemon.
+     *
+     * @param status The TaskStatus for the CassandraDaemon.
      * @return A CassandraDaemonStatus constructed from the parameters.
      */
     @JsonCreator
     public static CassandraDaemonStatus create(
-            @JsonProperty("state") Protos.TaskState state,
-            @JsonProperty("id") String id,
-            @JsonProperty("slave_id") String slaveId,
-            @JsonProperty("executor_id") String executorId,
-            @JsonProperty("message") Optional<String> message,
-            @JsonProperty("mode") CassandraMode mode
-    ) {
-        return new CassandraDaemonStatus(state,
-                id,
-                slaveId,
-                executorId,
-                message,
-                mode);
+        final Protos.TaskStatus status) {
+        return new CassandraDaemonStatus(status);
     }
 
     /**
      * Constructs a CassandraDaemonStatus
-     * @param state      The state of the Cassandra daemon.
-     * @param id         The id of the Cassandra daemon.
-     * @param slaveId    The id of the slave on which the Cassandra daemon is
-     *                   running.
-     * @param executorId The id of the executor for the Cassandra daemon.
-     * @param message    An optional message sent from the executor.
-     * @param mode       The mode of the Cassandra daemon.
+     *
+     * @param status The TaskStatus corresponding to the CassandraDaemon.
      */
-    public CassandraDaemonStatus(final Protos.TaskState state,
-                                 final String id,
-                                 final String slaveId,
-                                 final String executorId,
-                                 final Optional<String> message,
-                                 final CassandraMode mode) {
-        super(CassandraTask.TYPE.CASSANDRA_DAEMON,
-                state,
-                id,
-                slaveId,
-                executorId,
-                message);
-        this.mode = mode;
+    protected CassandraDaemonStatus(final Protos.TaskStatus status) {
+        super(status);
     }
 
     /**
      * Gets the mode of the Cassandra daemon.
+     *
      * @return The mode of the Cassandra daemon associated with the status.
      */
     public CassandraMode getMode() {
-        return mode;
-    }
-
-
-    @Override
-    public CassandraDaemonStatus update(Protos.TaskState state) {
-        return create(state, id, slaveId, executorId, message, mode);
-    }
-
-    @Override
-    protected CassandraProtos.CassandraTaskStatusData getData() {
-        CassandraProtos.CassandraTaskStatusData.Builder builder =
-                CassandraProtos.CassandraTaskStatusData.newBuilder()
-                        .setType(CassandraProtos.CassandraTaskData.TYPE
-                                .CASSANDRA_DAEMON)
-                        .setMode(mode.ordinal());
-
-        return builder.build();
+        return getData().getMode();
     }
 
     @Override

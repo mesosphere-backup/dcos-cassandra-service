@@ -29,63 +29,12 @@ import java.util.Optional;
  * Object for the BackupSnapshot task.
  */
 public class BackupSnapshotStatus extends CassandraTaskStatus {
-    /**
-     * Creates a BackupSnapshotStatus
-     * @param state      The state of the task
-     * @param id         The id of the task associated with the status.
-     * @param slaveId    The id of the slave on which the task associated
-     *                   with the status was launched.
-     * @param executorId The id of the executor for the task associated with
-     *                   the status.
-     * @param message    An optional message sent from the executor.
-     * @return A BackupSnapshot constructed from the parameters.
-     */
-    @JsonCreator
-    public static BackupSnapshotStatus create(
-            @JsonProperty("state") Protos.TaskState state,
-            @JsonProperty("id") String id,
-            @JsonProperty("slave_id") String slaveId,
-            @JsonProperty("executor_id") String executorId,
-            @JsonProperty("message") Optional<String> message) {
-        return new BackupSnapshotStatus(state, id, slaveId, executorId, message);
+
+    public static BackupSnapshotStatus create(final Protos.TaskStatus status) {
+        return new BackupSnapshotStatus(status);
     }
 
-    /**
-     * Constructs a BackupSnapshotStatus
-     * @param state      The state of the task
-     * @param id         The id of the task associated with the status.
-     * @param slaveId    The id of the slave on which the task associated
-     *                   with the status was launched.
-     * @param executorId The id of the executor for the task associated with
-     *                   the status.
-     * @param message    An optional message sent from the executor.
-     */
-    protected BackupSnapshotStatus(Protos.TaskState state,
-                                   String id,
-                                   String slaveId,
-                                   String executorId,
-                                   Optional<String> message) {
-        super(CassandraTask.TYPE.BACKUP_SNAPSHOT,
-                state,
-                id,
-                slaveId,
-                executorId,
-                message);
-    }
-
-    @Override
-    public BackupSnapshotStatus update(Protos.TaskState state) {
-        if (isFinished()) {
-            return this;
-        } else {
-            return create(state, id, slaveId, executorId, message);
-        }
-    }
-
-    @Override
-    protected CassandraProtos.CassandraTaskStatusData getData() {
-        return CassandraProtos.CassandraTaskStatusData.newBuilder()
-                .setType(CassandraProtos.CassandraTaskData.TYPE.BACKUP_SNAPSHOT)
-                .build();
+    protected BackupSnapshotStatus(final Protos.TaskStatus status) {
+        super(status);
     }
 }

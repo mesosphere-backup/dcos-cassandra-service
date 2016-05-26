@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
@@ -126,7 +127,7 @@ public class CassandraTasksTest {
         CassandraTasks tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();
@@ -139,7 +140,7 @@ public class CassandraTasksTest {
         assertEquals(task, tasks.get(task.getName()).get());
 
         assertEquals(task,
-                CassandraTask.JSON_SERIALIZER.deserialize(
+                CassandraTask.PROTO_SERIALIZER.deserialize(
                         curator.getData().forPath(path(task.getName()))));
     }
 
@@ -149,7 +150,7 @@ public class CassandraTasksTest {
         CassandraTasks tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();
@@ -162,7 +163,7 @@ public class CassandraTasksTest {
         assertEquals(task, tasks.get(task.getName()).get());
 
         assertEquals(task,
-                CassandraTask.JSON_SERIALIZER.deserialize(
+                CassandraTask.PROTO_SERIALIZER.deserialize(
                         curator.getData().forPath(path(task.getName()))));
 
         tasks.stop();
@@ -170,7 +171,7 @@ public class CassandraTasksTest {
         tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();
@@ -189,7 +190,7 @@ public class CassandraTasksTest {
         CassandraTasks tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();
@@ -199,7 +200,7 @@ public class CassandraTasksTest {
                 .NAME_PREFIX + 1);
         assertEquals(1, tasks.get().size());
 
-        assertEquals(task, CassandraDaemonTask.parse(task.toProto()));
+        assertEquals(task, CassandraDaemonTask.parse(task.getTaskInfo()));
     }
 
 
@@ -209,7 +210,7 @@ public class CassandraTasksTest {
         CassandraTasks tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();
@@ -233,7 +234,7 @@ public class CassandraTasksTest {
         CassandraTasks tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();
@@ -257,7 +258,7 @@ public class CassandraTasksTest {
         CassandraTasks tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();
@@ -290,7 +291,7 @@ public class CassandraTasksTest {
         assertEquals(1, tasks.get().size());
 
 
-        assertEquals(task, CassandraDaemonTask.parse(task.toProto()));
+        assertEquals(task, CassandraDaemonTask.parse(task.getTaskInfo()));
 
         CassandraTask updated = tasks.update(task.getId(), offer).get();
         assertEquals(1, tasks.get().size());
@@ -299,7 +300,7 @@ public class CassandraTasksTest {
 
         assertEquals("localhost", updated.getHostname());
 
-        assertEquals(updated, CassandraTask.JSON_SERIALIZER.deserialize(
+        assertEquals(updated, CassandraTask.PROTO_SERIALIZER.deserialize(
                 curator.getData().forPath(path(task.getName()))));
 
     }
@@ -310,7 +311,7 @@ public class CassandraTasksTest {
         CassandraTasks tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();
@@ -330,7 +331,7 @@ public class CassandraTasksTest {
 
         CassandraTask updatedTask = tasks.get(task.getName()).get();
         assertEquals(Protos.TaskState.TASK_FINISHED,
-                updatedTask.getStatus().getState());
+                updatedTask.getState());
 
     }
 
@@ -340,7 +341,7 @@ public class CassandraTasksTest {
         CassandraTasks tasks = new CassandraTasks(
                 identity,
                 configuration,
-                CassandraTask.JSON_SERIALIZER,
+                CassandraTask.PROTO_SERIALIZER,
                 persistence);
 
         tasks.start();

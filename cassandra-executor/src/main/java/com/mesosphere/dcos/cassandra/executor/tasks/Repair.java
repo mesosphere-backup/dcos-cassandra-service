@@ -15,7 +15,6 @@
  */
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import org.apache.cassandra.repair.RepairParallelism;
@@ -42,48 +41,49 @@ public class Repair implements Runnable {
     private final RepairTask task;
 
     private List<String> getKeySpaces() {
-        if (task.getKeySpaces().isEmpty()) {
+        if (task.getRepairContext().getKeySpaces().isEmpty()) {
             return daemon.getNonSystemKeySpaces();
         } else {
-            return task.getKeySpaces();
+            return task.getRepairContext().getKeySpaces();
         }
     }
 
     private List<String> getColumnFamilies() {
-        return task.getColumnFamilies();
+        return task.getRepairContext().getColumnFamilies();
     }
 
     private void repairKeyspace(String keyspace, List<String> columnFamilies)
-            throws
-            Exception {
+        throws
+        Exception {
         LOGGER.info("Starting repair : keySpace = {}, columnFamilies = {}",
-                keyspace, columnFamilies);
+            keyspace, columnFamilies);
 
         Map<String, String> options = new HashMap<>();
         options.put(RepairOption.PRIMARY_RANGE_KEY, "true");
         options.put(RepairOption.COLUMNFAMILIES_KEY,
-                String.join(",", columnFamilies));
+            String.join(",", columnFamilies));
         options.put(RepairOption.PARALLELISM_KEY,
-                RepairParallelism.SEQUENTIAL.getName());
+            RepairParallelism.SEQUENTIAL.getName());
         options.put(RepairOption.INCREMENTAL_KEY, "false");
 
         String result = daemon.repair(keyspace, options);
 
         LOGGER.info("Repair output = {}", result);
         LOGGER.info("Completed repair : keySpace = {}, columnFamilies = {}",
-                keyspace, columnFamilies);
+            keyspace, columnFamilies);
 
         sendStatus(driver, Protos.TaskState.TASK_RUNNING,
-                String.format(
-                        "Completed repair : keySpace = %s, columnFamilies = %s",
-                        keyspace, columnFamilies));
+            String.format(
+                "Completed repair : keySpace = %s, columnFamilies = %s",
+                keyspace, columnFamilies));
     }
 
     /**
      * Creates a new Repair.
+     *
      * @param driver The ExecutorDriver used to send status updates.
      * @param daemon The CassandraDaemonProcess used to execute the repair.
-     * @param task The RepairTask that will be executed.
+     * @param task   The RepairTask that will be executed.
      */
     public Repair(final ExecutorDriver driver,
                   final CassandraDaemonProcess daemon,
@@ -100,10 +100,10 @@ public class Repair implements Runnable {
             final List<String> keySpaces = getKeySpaces();
             final List<String> columnFamilies = getColumnFamilies();
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
-                    String.format("Starting repair: keySpaces = %s, " +
-                                    "columnFamilies = %s",
-                            keySpaces,
-                            columnFamilies));
+                String.format("Starting repair: keySpaces = %s, " +
+                        "columnFamilies = %s",
+                    keySpaces,
+                    columnFamilies));
 
             for (String keyspace : keySpaces) {
                 repairKeyspace(keyspace, columnFamilies);
@@ -111,10 +111,10 @@ public class Repair implements Runnable {
 
             // Send TASK_FINISHED
             sendStatus(driver, Protos.TaskState.TASK_FINISHED,
-                    String.format("Completed repair: keySpaces = %s, " +
-                                    "columnFamilies = %s",
-                            keySpaces,
-                            columnFamilies));
+                String.format("Completed repair: keySpaces = %s, " +
+                        "columnFamilies = %s",
+                    keySpaces,
+                    columnFamilies));
         } catch (Throwable t) {
             // Send TASK_FAILED
             LOGGER.error("Repair failed", t);
@@ -123,14 +123,11 @@ public class Repair implements Runnable {
     }
 
     private void sendStatus(ExecutorDriver driver,
-                            Protos.TaskState state, String message) {
-        Protos.TaskStatus status = RepairStatus.create(
-                state,
-                task.getId(),
-                task.getSlaveId(),
-                task.getExecutor().getId(),
-                Optional.of(message)
-        ).toProto();
+                            Protos.TaskState state,
+                            String message) {
+        Protos.TaskStatus status = task
+            .createStatus(state, Optional.of(message))
+            .getTaskStatus();
         driver.sendStatusUpdate(status);
     }
 }

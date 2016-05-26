@@ -45,7 +45,7 @@ public class NodePlacementStrategy implements PlacementStrategy {
 
         final List<Protos.TaskInfo> others = daemons.values().stream()
                 .filter(task -> !task.getId().equals(taskIdValue))
-                .map(task -> task.toProto()).collect(Collectors.toList());
+                .map(task -> task.getTaskInfo()).collect(Collectors.toList());
 
         return others;
     }
