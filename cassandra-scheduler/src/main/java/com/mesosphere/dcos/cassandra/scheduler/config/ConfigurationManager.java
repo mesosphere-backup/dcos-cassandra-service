@@ -2,20 +2,18 @@ package com.mesosphere.dcos.cassandra.scheduler.config;
 
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
-import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
@@ -25,13 +23,16 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 
 public class ConfigurationManager implements Managed {
 
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(ConfigurationManager.class);
+        LoggerFactory.getLogger(ConfigurationManager.class);
 
     private final PersistentReference<CassandraConfig> cassandraRef;
     private final PersistentReference<ClusterTaskConfig> clusterTaskRef;
@@ -59,10 +60,10 @@ public class ConfigurationManager implements Managed {
             int servers = serversOption.get();
             if (this.servers < servers) {
                 String error = String.format("The number of configured " +
-                                "nodes (%d) is less than the previous " +
-                                "number of configured nodes (%d).",
-                        this.servers,
-                        servers);
+                        "nodes (%d) is less than the previous " +
+                        "number of configured nodes (%d).",
+                    this.servers,
+                    servers);
                 this.servers = servers;
                 LOGGER.error(error);
                 errors.add(error);
@@ -73,18 +74,17 @@ public class ConfigurationManager implements Managed {
 
         if (seeds > servers) {
             String error = String.format("The number of configured " +
-                            "seeds (%d) is greater than the current number " +
-                            "of configured nodes (%d). Reduce the " +
-                            "number of seeds or increase the number of nodes",
-                    seeds,
-                    servers);
+                    "seeds (%d) is greater than the current number " +
+                    "of configured nodes (%d). Reduce the " +
+                    "number of seeds or increase the number of nodes",
+                seeds,
+                servers);
             LOGGER.error(error);
             errors.add(error);
             return;
         }
 
         Optional<CassandraConfig> configOption = cassandraRef.load();
-
 
 
         if (configOption.isPresent()) {
@@ -94,13 +94,13 @@ public class ConfigurationManager implements Managed {
 
 
             if (!persistedConfig.getDiskType().equals(
-                    cassandraConfig.getDiskType())) {
+                cassandraConfig.getDiskType())) {
 
                 String error = String.format("The configured disk type can " +
-                                "not be changed. Persisted disk type is (%s). " +
-                                "Configured disk type is (%s)",
-                        persistedConfig.getDiskType(),
-                        cassandraConfig.getDiskType());
+                        "not be changed. Persisted disk type is (%s). " +
+                        "Configured disk type is (%s)",
+                    persistedConfig.getDiskType(),
+                    cassandraConfig.getDiskType());
 
                 LOGGER.error(error);
                 errors.add(error);
@@ -110,10 +110,10 @@ public class ConfigurationManager implements Managed {
 
             if (persistedConfig.getDiskMb() != cassandraConfig.getDiskMb()) {
                 String error = String.format("The configured disk size can " +
-                                "not be changed. Persisted disk size is " +
-                                "(%d) Mb. Configured disk size is (%d) Mb",
-                        persistedConfig.getDiskMb(),
-                        cassandraConfig.getDiskMb());
+                        "not be changed. Persisted disk size is " +
+                        "(%d) Mb. Configured disk size is (%d) Mb",
+                    persistedConfig.getDiskMb(),
+                    cassandraConfig.getDiskMb());
 
                 LOGGER.error(error);
                 errors.add(error);
@@ -121,13 +121,13 @@ public class ConfigurationManager implements Managed {
                 return;
             }
 
-            if (persistedConfig.getVolume().getSizeMb()
-                    != cassandraConfig.getVolume().getSizeMb()) {
+            if (persistedConfig.getDiskMb()
+                != cassandraConfig.getDiskMb()) {
                 String error = String.format("The configured volume size can" +
-                                " not be changed. Persisted volume size is " +
-                                "(%d) Mb. Configured volume size is (%d) Mb",
-                        persistedConfig.getVolume().getSizeMb(),
-                        cassandraConfig.getVolume().getSizeMb());
+                        " not be changed. Persisted volume size is " +
+                        "(%d) Mb. Configured volume size is (%d) Mb",
+                    persistedConfig.getDiskMb(),
+                    cassandraConfig.getDiskMb());
 
                 LOGGER.error(error);
                 errors.add(error);
@@ -146,37 +146,37 @@ public class ConfigurationManager implements Managed {
 
     @Inject
     public ConfigurationManager(
-            @Named("ConfiguredCassandraConfig") CassandraConfig cassandraConfig,
-            @Named("ConfiguredClusterTaskConfig") ClusterTaskConfig clusterTaskConfig,
-            @Named("ConfiguredExecutorConfig") ExecutorConfig executorConfig,
-            @Named("ConfiguredServers") int servers,
-            @Named("ConfiguredSeeds") int seeds,
-            @Named("ConfiguredPlacementStrategy") String placementStrategy,
-            @Named("SeedsUrl") String seedsUrl,
-            @Named("ConfiguredDcUrl") String dataCenterUrl,
-            @Named("ConfiguredExternalDcs") List<String> externalDataCenters,
-            @Named("ConfiguredSyncDelayMs") final long dataCenterSyncDelayMs,
-            PersistenceFactory persistenceFactory,
-            Serializer<CassandraConfig> cassandraConfigSerializer,
-            Serializer<ExecutorConfig> executorConfigSerializer,
-            Serializer<ClusterTaskConfig> clusterTaskConfigSerializer,
-            Serializer<Integer> intSerializer) {
+        @Named("ConfiguredCassandraConfig") CassandraConfig cassandraConfig,
+        @Named("ConfiguredClusterTaskConfig") ClusterTaskConfig clusterTaskConfig,
+        @Named("ConfiguredExecutorConfig") ExecutorConfig executorConfig,
+        @Named("ConfiguredServers") int servers,
+        @Named("ConfiguredSeeds") int seeds,
+        @Named("ConfiguredPlacementStrategy") String placementStrategy,
+        @Named("SeedsUrl") String seedsUrl,
+        @Named("ConfiguredDcUrl") String dataCenterUrl,
+        @Named("ConfiguredExternalDcs") List<String> externalDataCenters,
+        @Named("ConfiguredSyncDelayMs") final long dataCenterSyncDelayMs,
+        PersistenceFactory persistenceFactory,
+        Serializer<CassandraConfig> cassandraConfigSerializer,
+        Serializer<ExecutorConfig> executorConfigSerializer,
+        Serializer<ClusterTaskConfig> clusterTaskConfigSerializer,
+        Serializer<Integer> intSerializer) {
         this.cassandraRef = persistenceFactory.createReference(
-                "cassandraConfig",
-                cassandraConfigSerializer);
+            "cassandraConfig",
+            cassandraConfigSerializer);
         this.clusterTaskRef = persistenceFactory.createReference(
-                "clusterTaskConfig",
-                clusterTaskConfigSerializer
+            "clusterTaskConfig",
+            clusterTaskConfigSerializer
         );
         this.executorRef = persistenceFactory.createReference(
-                "executorConfig",
-                executorConfigSerializer);
+            "executorConfig",
+            executorConfigSerializer);
         this.serversRef = persistenceFactory.createReference(
-                "servers",
-                intSerializer);
+            "servers",
+            intSerializer);
         this.seedsRef = persistenceFactory.createReference(
-                "seeds",
-                intSerializer);
+            "seeds",
+            intSerializer);
         this.cassandraConfig = cassandraConfig;
         this.clusterTaskConfig = clusterTaskConfig;
         this.executorConfig = executorConfig;
@@ -192,8 +192,8 @@ public class ConfigurationManager implements Managed {
             reconcileConfiguration();
         } catch (Throwable throwable) {
             throw new IllegalStateException("Failed to reconcile " +
-                    "configuration",
-                    throwable);
+                "configuration",
+                throwable);
         }
     }
 
@@ -218,7 +218,7 @@ public class ConfigurationManager implements Managed {
     }
 
     public void setCassandraConfig(final CassandraConfig cassandraConfig)
-            throws PersistenceException {
+        throws PersistenceException {
 
         synchronized (cassandraRef) {
             cassandraRef.store(cassandraConfig);
@@ -227,8 +227,7 @@ public class ConfigurationManager implements Managed {
     }
 
     public void setExecutorConfig(ExecutorConfig executorConfig)
-            throws PersistenceException {
-
+        throws PersistenceException {
         synchronized (executorRef) {
             executorRef.store(executorConfig);
             this.executorConfig = executorConfig;
@@ -252,353 +251,104 @@ public class ConfigurationManager implements Managed {
     }
 
     public CassandraTaskExecutor updateExecutor(
-            CassandraTask task,
-            String newId) {
-
-        return hasCurrentExecutorConfig(task.getExecutor()) ?
-                task.getExecutor() :
-                createExecutor(task.getExecutor().getFrameworkId(),
-                        newId + "_executor");
+        final CassandraTask task) {
+        return task.getExecutor().matches(getExecutorConfig()) ?
+            task.getExecutor() :
+            task.getExecutor().update(getExecutorConfig());
 
     }
 
     public CassandraTaskExecutor createExecutor(String frameworkId,
-                                                String id) {
-
+                                                String name,
+                                                String role,
+                                                String principal) {
         return CassandraTaskExecutor.create(
-                frameworkId,
-                id,
-                executorConfig.getCommand(),
-                executorConfig.getArguments(),
-                executorConfig.getCpus(),
-                executorConfig.getMemoryMb(),
-                executorConfig.getDiskMb(),
-                executorConfig.getHeapMb(),
-                executorConfig.getApiPort(),
-                Arrays.asList(executorConfig.getJreLocation(),
-                        executorConfig.getExecutorLocation(),
-                        executorConfig.getCassandraLocation()),
-                executorConfig.getJavaHome()
-        );
+            frameworkId,
+            name,
+            role,
+            principal,
+            getExecutorConfig());
     }
 
     public CassandraDaemonTask createDaemon(String frameworkId,
-                                            String slaveId,
-                                            String hostname,
                                             String name,
                                             String role,
                                             String principal) {
 
-        String unique = UUID.randomUUID().toString();
-
-        String id = name + "_" + unique;
-
-        String executor = name + "_" + unique + "_executor";
 
         return CassandraDaemonTask.create(
-                id,
-                slaveId,
-                hostname,
-                createExecutor(frameworkId, executor),
-                name,
-                role,
-                principal,
-                cassandraConfig.getCpus(),
-                cassandraConfig.getMemoryMb(),
-                cassandraConfig.getDiskMb(),
-                cassandraConfig.mutable()
-                        .setVolume(
-                                cassandraConfig.getVolume().withId()).
-                        setApplication(cassandraConfig.getApplication()
-                                .toBuilder().setSeedProvider(
-                                        CassandraApplicationConfig
-                                                .createDcosSeedProvider(
-                                                        seedsUrl))
-                                .build())
-                        .build(),
-                CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
-                        id,
-                        slaveId,
-                        name,
-                        Optional.empty(),
-                        CassandraMode.STARTING)
-
-        );
+            name,
+            createExecutor(name + "_executor", frameworkId, role, principal),
+            cassandraConfig.mutable().setApplication(cassandraConfig
+                .getApplication()
+                .toBuilder().setSeedProvider(
+                    CassandraApplicationConfig
+                        .createDcosSeedProvider(
+                            seedsUrl))
+                .build())
+                .build());
     }
 
     public CassandraDaemonTask moveDaemon(CassandraDaemonTask daemonTask) {
-
-        return CassandraDaemonTask.create(
-                daemonTask.getId(),
-                "",
-                "",
-                daemonTask.getExecutor(),
-                daemonTask.getName(),
-                daemonTask.getRole(),
-                daemonTask.getPrincipal(),
-                cassandraConfig.getCpus(),
-                cassandraConfig.getMemoryMb(),
-                cassandraConfig.getDiskMb(),
-                cassandraConfig.mutable().setReplaceIp(daemonTask.getHostname())
-                        .setVolume(
-                                cassandraConfig.getVolume().withId()).
-                        setApplication(cassandraConfig.getApplication()
-                                .toBuilder().setSeedProvider(
-                                        CassandraApplicationConfig
-                                                .createDcosSeedProvider(
-                                                        seedsUrl))
-                                .build())
-                        .build(),
-                daemonTask.getStatus());
-
-
+        return daemonTask.move();
     }
 
     public BackupSnapshotTask createBackupSnapshotTask(
-            CassandraDaemonTask daemon,
-            BackupContext context) {
-        String name = BackupSnapshotTask.nameForDaemon(daemon);
-        String id = name + "_" + UUID.randomUUID().toString();
-
-        return BackupSnapshotTask.create(
-                id,
-                daemon.getSlaveId(),
-                daemon.getHostname(),
-                daemon.getExecutor(),
-                name,
-                daemon.getRole(),
-                daemon.getPrincipal(),
-                clusterTaskConfig.getCpus(),
-                clusterTaskConfig.getMemoryMb(),
-                clusterTaskConfig.getDiskMb(),
-                BackupSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
-                        id,
-                        daemon.getSlaveId(),
-                        name,
-                        Optional.empty()),
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                context.getName(),
-                context.getExternalLocation(),
-                context.getS3AccessKey(),
-                context.getS3SecretKey());
+        CassandraDaemonTask daemon,
+        BackupContext context) {
+        return BackupSnapshotTask.create(daemon, clusterTaskConfig, context);
     }
 
     public DownloadSnapshotTask createDownloadSnapshotTask(
-            CassandraDaemonTask daemon,
-            RestoreContext context) {
-        String name = DownloadSnapshotTask.nameForDaemon(daemon);
-        String id = name + "_" + UUID.randomUUID().toString();
+        CassandraDaemonTask daemon,
+        RestoreContext context) {
+        return DownloadSnapshotTask.create(daemon, clusterTaskConfig, context);
 
-        return DownloadSnapshotTask.create(
-                id,
-                daemon.getSlaveId(),
-                daemon.getHostname(),
-                daemon.getExecutor(),
-                name,
-                daemon.getRole(),
-                daemon.getPrincipal(),
-                clusterTaskConfig.getCpus(),
-                clusterTaskConfig.getMemoryMb(),
-                clusterTaskConfig.getDiskMb(),
-                DownloadSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
-                        id,
-                        daemon.getSlaveId(),
-                        name,
-                        Optional.empty()),
-                context.getName(),
-                context.getExternalLocation(),
-                context.getS3AccessKey(),
-                context.getS3SecretKey(),
-                cassandraConfig.getVolume().getPath() +
-                        "/data/temp_" + context.getName());
     }
 
     public RestoreSnapshotTask createRestoreSnapshotTask(
-            CassandraDaemonTask daemon,
-            RestoreContext context) {
-        String name = RestoreSnapshotTask.nameForDaemon(daemon);
-        String id = name + "_" + UUID.randomUUID().toString();
-
-        return RestoreSnapshotTask.create(
-                id,
-                daemon.getSlaveId(),
-                daemon.getHostname(),
-                daemon.getExecutor(),
-                name,
-                daemon.getRole(),
-                daemon.getPrincipal(),
-                clusterTaskConfig.getCpus(),
-                clusterTaskConfig.getMemoryMb(),
-                clusterTaskConfig.getDiskMb(),
-                RestoreSnapshotStatus.create(Protos.TaskState.TASK_STAGING,
-                        id,
-                        daemon.getSlaveId(),
-                        name,
-                        Optional.empty()),
-                context.getName(),
-                context.getExternalLocation(),
-                context.getS3AccessKey(),
-                context.getS3SecretKey(),
-                cassandraConfig.getVolume().getPath() +
-                        "/data/temp_" + context.getName());
+        CassandraDaemonTask daemon,
+        RestoreContext context) {
+        return RestoreSnapshotTask.create(daemon, clusterTaskConfig, context);
     }
 
     public BackupUploadTask createBackupUploadTask(
-            CassandraDaemonTask daemon,
-            BackupContext context) {
-        String name = BackupUploadTask.nameForDaemon(daemon);
-        String id = name + "_" + UUID.randomUUID().toString();
-
-        return BackupUploadTask.create(
-                id,
-                daemon.getSlaveId(),
-                daemon.getHostname(),
-                daemon.getExecutor(),
-                name,
-                daemon.getRole(),
-                daemon.getPrincipal(),
-                clusterTaskConfig.getCpus(),
-                clusterTaskConfig.getMemoryMb(),
-                clusterTaskConfig.getDiskMb(),
-                BackupUploadStatus.create(Protos.TaskState.TASK_STAGING,
-                        id,
-                        daemon.getSlaveId(),
-                        name,
-                        Optional.empty()),
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                context.getName(),
-                context.getExternalLocation(),
-                context.getS3AccessKey(),
-                context.getS3SecretKey(),
-                cassandraConfig.getVolume().getPath() + "/data");
+        CassandraDaemonTask daemon,
+        BackupContext context) {
+        return BackupUploadTask.create(daemon, clusterTaskConfig, context);
     }
 
     public CleanupTask createCleanupTask(
-            CassandraDaemonTask daemon,
-            CleanupContext context) {
-        String name = CleanupTask.nameForDaemon(daemon);
-        String id = name + "_" + UUID.randomUUID().toString();
-
-        return CleanupTask.create(
-                id,
-                daemon.getSlaveId(),
-                daemon.getHostname(),
-                daemon.getExecutor(),
-                name,
-                daemon.getRole(),
-                daemon.getPrincipal(),
-                clusterTaskConfig.getCpus(),
-                clusterTaskConfig.getMemoryMb(),
-                clusterTaskConfig.getDiskMb(),
-                CleanupStatus.create(Protos.TaskState.TASK_STAGING,
-                        id,
-                        daemon.getSlaveId(),
-                        name,
-                        Optional.empty()),
-                context.getKeySpaces(),
-                context.getColumnFamilies()
-        );
+        CassandraDaemonTask daemon,
+        CleanupContext context) {
+        return CleanupTask.create(daemon, clusterTaskConfig, context);
     }
 
     public RepairTask createRepairTask(
-            CassandraDaemonTask daemon,
-            RepairContext context) {
-        String name = RepairTask.nameForDaemon(daemon);
-        String id = name + "_" + UUID.randomUUID().toString();
-
-        return RepairTask.create(
-                id,
-                daemon.getSlaveId(),
-                daemon.getHostname(),
-                daemon.getExecutor(),
-                name,
-                daemon.getRole(),
-                daemon.getPrincipal(),
-                clusterTaskConfig.getCpus(),
-                clusterTaskConfig.getMemoryMb(),
-                clusterTaskConfig.getDiskMb(),
-                RepairStatus.create(Protos.TaskState.TASK_STAGING,
-                        id,
-                        daemon.getSlaveId(),
-                        name,
-                        Optional.empty()),
-                context.getKeySpaces(),
-                context.getColumnFamilies()
-        );
+        CassandraDaemonTask daemon,
+        RepairContext context) {
+        return RepairTask.create(daemon,
+            clusterTaskConfig,
+            context);
     }
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {
-        String id = task.getName() + "_" + UUID.randomUUID().toString();
-        return task.mutable().setId(id).build();
-
+       return task.updateId();
     }
 
-    public boolean hasCurrentExecutorConfig(
-            final CassandraTaskExecutor executor) {
-        return executor.getCommand().equals(executorConfig
-                .getCommand()) &&
-                Double.compare(executor.getCpus(),
-                        executorConfig.getCpus()) == 0 &&
-                executor.getDiskMb() == executorConfig.getDiskMb() &&
-                Double.compare(executor.getCpus(),
-                        executorConfig.getCpus()) == 0 &&
-                executor.getDiskMb() ==
-                        executorConfig.getDiskMb() &&
-                executor.getMemoryMb() ==
-                        executorConfig.getMemoryMb() &&
-                executor.getUriStrings().containsAll(
-                        Arrays.asList(
-                                executorConfig.getCassandraLocationString(),
-                                executorConfig.getExecutorLocationString(),
-                                executorConfig.getJreLocationString()
-                        )
-                ) &&
-                executor.getHeapMb() == executorConfig.getHeapMb();
-    }
 
     public boolean hasCurrentConfig(final CassandraDaemonTask task) {
-
-        return hasCurrentExecutorConfig(task.getExecutor()) &&
-                task.getConfig().equals(cassandraConfig);
+        return task.getExecutor().matches(executorConfig) &&
+            task.getConfig().equals(cassandraConfig);
 
     }
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) {
-
-        String id = task.getName() + "_" + UUID.randomUUID().toString();
-        return CassandraDaemonTask.create(
-                id,
-                task.getSlaveId(),
-                task.getHostname(),
-                updateExecutor(task, id),
-                task.getName(),
-                task.getRole(),
-                task.getPrincipal(),
-                cassandraConfig.getCpus(),
-                cassandraConfig.getMemoryMb(),
-                cassandraConfig.getDiskMb(),
-                cassandraConfig.mutable()
-                        .setVolume(task.getConfig().getVolume())
-                        .setApplication(cassandraConfig.getApplication()
-                                .toBuilder().setSeedProvider(
-                                        CassandraApplicationConfig
-                                                .createDcosSeedProvider(
-                                                        seedsUrl))
-                                .build())
-                        .build(),
-                CassandraDaemonStatus.create(Protos.TaskState.TASK_STAGING,
-                        id,
-                        task.getSlaveId(),
-                        task.getName(),
-                        Optional.empty(),
-                        CassandraMode.STARTING));
+        return task.updateConfig(cassandraConfig);
     }
 
     public CassandraTask updateId(CassandraTask task) {
-        return task.updateId(
-                task.getName() + "_" + UUID.randomUUID().toString());
+        return task.updateId();
     }
 
     public List<String> getErrors() {
@@ -613,7 +363,7 @@ public class ConfigurationManager implements Managed {
         return dataCenterSyncDelayMs;
     }
 
-    public List<String> getExternalDataCenters(){
+    public List<String> getExternalDataCenters() {
         return externalDataCenters;
     }
 

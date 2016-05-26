@@ -45,24 +45,14 @@ message CassandraConfig{
 
     optional bytes application = 10;
 
-    optional string diskType = 11;
+    optional int32 diskType = 11;
 }
 
-message CassandraTaskData{
+message CassandraData{
 
-    enum TYPE{
-        CASSANDRA_DAEMON = 1;
-        BACKUP_SNAPSHOT = 2;
-        BACKUP_UPLOAD = 3;
-        SNAPSHOT_DOWNLOAD = 4;
-        SNAPSHOT_RESTORE = 5;
-        CLEANUP = 6;
-        REPAIR = 7;
-    }
+    required int32 type = 1;
 
-    required TYPE type = 1;
-
-    optional string address = 2;
+    optional string hostname = 2;
 
     optional CassandraConfig config = 3;
 
@@ -81,50 +71,14 @@ message CassandraTaskData{
     optional string s3SecretKey = 10;
 
     optional string localLocation = 11;
-}
 
-message CassandraStatus{
+    optional int32 mode = 12;
 
-  optional int32 mode = 1;
+    optional int32 state = 13;
 
-  optional bool joined = 2;
+    optional int32 volumeType = 14;
 
-  optional bool rpcServerRunning = 3;
+    repeated string nodes = 15;
 
-  optional bool nativeTransportRunning = 4;
-
-  optional bool gossipInitialized = 5;
-
-  optional bool gossipRunning = 6;
-
-  optional string hostId = 7;
-
-  optional string endpoint = 8;
-
-  optional int32 tokenCount = 9;
-
-  optional string dataCenter = 10;
-
-  optional string rack = 11;
-
-  optional string version = 12;
-}
-
-message CassandraTaskStatusData{
-
-  required CassandraTaskData.TYPE type = 1;
-
-  optional int32 mode = 2;
-
-  optional CassandraStatus status = 3;
-
-  optional string directory = 4;
-
-  optional string backupName = 5;
-
-  optional string externalLocation = 6;
-
-  repeated string keySpaces = 7;
-
-  repeated string columnFamilies =8;
+    optional string node = 16;
 }

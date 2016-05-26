@@ -56,12 +56,13 @@ public class RestoreResource {
     }
 
     public static RestoreContext from(StartRestoreRequest request) {
-        final RestoreContext context =
-                new RestoreContext();
-        context.setName(request.getName());
-        context.setExternalLocation(request.getExternalLocation());
-        context.setS3AccessKey(request.getS3AccessKey());
-        context.setS3SecretKey(request.getS3SecretKey());
+        final RestoreContext context = RestoreContext.create(
+            "",
+            request.getName(),
+            request.getExternalLocation(),
+            "",
+            request.getS3AccessKey(),
+            request.getS3SecretKey());
         return context;
     }
 }

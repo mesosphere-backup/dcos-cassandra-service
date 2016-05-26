@@ -75,9 +75,9 @@ public class CassandraDaemonBlock implements Block {
 
     private boolean isComplete(final CassandraDaemonTask task) {
         return (Protos.TaskState.TASK_RUNNING.equals(
-                task.getStatus().getState())
+                task.getState())
                 && CassandraMode.NORMAL.equals(
-                task.getStatus().getMode()) &&
+                task.getMode()) &&
                 !cassandraTasks.needsConfigUpdate(task));
     }
 
@@ -89,7 +89,7 @@ public class CassandraDaemonBlock implements Block {
 
         try {
             return provider.getReplacementOfferRequirement(
-                    cassandraTasks.reconfigureDeamon(task).toProto()
+                    cassandraTasks.reconfigureDeamon(task).getTaskInfo()
             );
         } catch (PersistenceException ex) {
             LOGGER.error(
@@ -104,7 +104,7 @@ public class CassandraDaemonBlock implements Block {
     private OfferRequirement replaceTask(final CassandraDaemonTask task) {
         try {
             return provider.getReplacementOfferRequirement(
-                    cassandraTasks.replaceDaemon(task).toProto()
+                    cassandraTasks.replaceDaemon(task).getTaskInfo()
             );
         } catch (PersistenceException ex) {
             LOGGER.error(
@@ -196,7 +196,7 @@ public class CassandraDaemonBlock implements Block {
             LOGGER.info("Block {} - Launching new task : id = {}",
                     getName(),
                     task.getId());
-            return provider.getNewOfferRequirement(task.toProto());
+            return provider.getNewOfferRequirement(task.getTaskInfo());
         } else if (task.isTerminated() || task.isLaunching()) {
             LOGGER.info("Block {} - Replacing task : id = {}",
                     getName(),

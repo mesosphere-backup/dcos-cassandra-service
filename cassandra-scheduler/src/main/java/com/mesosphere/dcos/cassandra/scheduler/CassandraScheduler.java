@@ -142,9 +142,7 @@ public class CassandraScheduler implements Scheduler, Managed {
                     restore,
                     cleanup,
                     repair));
-            reconciler.start(cassandraTasks.get().values().stream().map(
-                    task -> task.getStatus().toProto()
-            ).collect(Collectors.toList()));
+            reconciler.start(cassandraTasks.getTaskStatuses());
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";
@@ -157,9 +155,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void reregistered(SchedulerDriver driver,
                              Protos.MasterInfo masterInfo) {
         LOGGER.info("Re-registered with master: {}", masterInfo);
-        reconciler.start(cassandraTasks.get().values().stream().map(
-                task -> task.getStatus().toProto()
-        ).collect(Collectors.toList()));
+        reconciler.start(cassandraTasks.getTaskStatuses());
     }
 
     @Override

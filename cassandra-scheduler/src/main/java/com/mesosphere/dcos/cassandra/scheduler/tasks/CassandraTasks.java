@@ -13,7 +13,6 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
-import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
@@ -177,11 +176,9 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             PersistenceException {
         CassandraDaemonTask task = configuration.createDaemon(
                 identity.get().getId(),
-                "",
-                "",
-                name,
-                identity.get().getRole(),
-                identity.get().getPrincipal()
+            name,
+            identity.get().getRole(),
+            identity.get().getPrincipal()
         );
 
         synchronized (persistent) {
@@ -469,8 +466,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     public List<CassandraTask> getTerminatedTasks() {
         List<CassandraTask> terminatedTasks = tasks
                 .values().stream()
-                .filter(task -> TaskUtils.isTerminated(
-                        task.getStatus().getState())).collect(
+                .filter(task -> task.isTerminated()).collect(
                         Collectors.toList());
 
         return terminatedTasks;
@@ -494,12 +490,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     private boolean isRunning(CassandraTask task) {
-        return Protos.TaskState.TASK_RUNNING == task.getStatus().getState();
+        return Protos.TaskState.TASK_RUNNING == task.getState();
     }
 
     @Override
-    public Set<Protos.TaskStatus> getTaskStatuses() throws Exception {
+    public Set<Protos.TaskStatus> getTaskStatuses()  {
         return get().values().stream().map(
-                task -> task.getStatus().toProto()).collect(Collectors.toSet());
+                task -> task.getCurrentStatus()).collect(Collectors.toSet());
     }
 }

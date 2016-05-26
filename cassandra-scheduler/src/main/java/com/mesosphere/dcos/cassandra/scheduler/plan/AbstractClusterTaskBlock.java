@@ -2,7 +2,6 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
-import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -32,23 +31,23 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     protected OfferRequirement getOfferRequirement(CassandraTask task) {
         if (Protos.TaskState.TASK_FINISHED.equals(
-                task.getStatus().getState())) {
+                task.getState())) {
             // Task is already finished
             LOGGER.info(
                     "Task {} assigned to this block {}, is already in state: {}",
                     task.getId(),
                     id,
-                    task.getStatus().getState());
+                    task.getState());
             setStatus(Status.Complete);
             return null;
         } else if (task.getSlaveId().isEmpty()) {
             //we have not yet been assigned a slave id - This means that the
             //the task has never been launched
             setStatus(Status.InProgress);
-            return provider.getNewOfferRequirement(task.toProto());
+            return provider.getNewOfferRequirement(task.getTaskInfo());
         } else {
             setStatus(Status.InProgress);
-            return provider.getUpdateOfferRequirement(task.toProto());
+            return provider.getUpdateOfferRequirement(task.getTaskInfo());
 
         }
     }
@@ -97,7 +96,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
         if (taskOption.isPresent()) {
             CassandraTask task = taskOption.get();
             if (Protos.TaskState.TASK_FINISHED.equals(
-                    task.getStatus().getState()
+                    task.getState()
             )) {
                 setStatus(Status.Complete);
             }
@@ -117,12 +116,11 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
             if (taskOption.isPresent()) {
                 CassandraTask task = taskOption.get();
                 if (Protos.TaskState.TASK_FINISHED.equals(
-                        task.getStatus().getState()
+                        task.getState()
                 )) {
                     setStatus(Status.Complete);
                     LOGGER.info("Block {} task finished", getName());
-                } else if (TaskUtils.isTerminated(
-                        task.getStatus().getState())) {
+                } else if (task.isTerminated()) {
                     //need to progress with a new task
                     cassandraTasks.remove(getName());
                     LOGGER.info("Reallocating task {} for block {}",

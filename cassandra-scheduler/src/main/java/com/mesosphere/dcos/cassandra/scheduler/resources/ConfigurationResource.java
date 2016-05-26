@@ -5,7 +5,7 @@ import com.codahale.metrics.annotation.Counted;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.ExecutorConfig;
+import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

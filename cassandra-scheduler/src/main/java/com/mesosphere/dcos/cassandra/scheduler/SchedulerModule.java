@@ -6,6 +6,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
@@ -86,7 +87,7 @@ public class SchedulerModule extends AbstractModule {
         }).toInstance(ExecutorConfig.JSON_SERIALIZER);
 
         bind(new TypeLiteral<Serializer<CassandraTask>>() {
-        }).toInstance(CassandraTask.JSON_SERIALIZER);
+        }).toInstance(CassandraTask.PROTO_SERIALIZER);
 
         bind(new TypeLiteral<Serializer<ClusterTaskConfig>>() {
         }).toInstance(ClusterTaskConfig.JSON_SERIALIZER);

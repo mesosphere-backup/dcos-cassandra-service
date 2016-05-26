@@ -42,13 +42,8 @@ public class DownloadSnapshot implements Runnable {
     private void sendStatus(ExecutorDriver driver,
                             Protos.TaskState state,
                             String message) {
-        Protos.TaskStatus status = DownloadSnapshotStatus.create(
-                state,
-                cassandraTask.getId(),
-                cassandraTask.getSlaveId(),
-                cassandraTask.getExecutor().getId(),
-                Optional.of(message)
-        ).toProto();
+        Protos.TaskStatus status = cassandraTask.createStatus(state,
+            Optional.of(message)).getTaskStatus();
         driver.sendStatusUpdate(status);
     }
 
@@ -68,13 +63,7 @@ public class DownloadSnapshot implements Runnable {
         this.driver = driver;
         this.backupStorageDriver = backupStorageDriver;
         this.cassandraTask = task;
-        this.context = new RestoreContext();
-        context.setNodeId(nodeId);
-        context.setName(this.cassandraTask.getBackupName());
-        context.setExternalLocation(this.cassandraTask.getExternalLocation());
-        context.setLocalLocation(this.cassandraTask.getLocalLocation());
-        context.setS3AccessKey(this.cassandraTask.getS3AccessKey());
-        context.setS3SecretKey(this.cassandraTask.getS3SecretKey());
+        this.context = task.getRestoreContext();
     }
 
     @Override

@@ -15,6 +15,9 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
@@ -30,12 +33,57 @@ import java.util.Objects;
  */
 public class RestoreContext implements ClusterTaskContext {
 
-    private String nodeId;
-    private String name;
-    private String externalLocation;
-    private String localLocation;
-    private String s3AccessKey;
-    private String s3SecretKey;
+    @JsonCreator
+    public static final RestoreContext create(
+        @JsonProperty("node_id")
+        final String nodeId,
+        @JsonProperty("name")
+        final String name,
+        @JsonProperty("external_location")
+        final String externalLocation,
+        @JsonProperty("local_location")
+        final String localLocation,
+        @JsonProperty("s3_access_key")
+        final String s3AccessKey,
+        @JsonProperty("s3_secret_key")
+        final String s3SecretKey) {
+
+        return new RestoreContext(
+            nodeId,
+            name,
+            externalLocation,
+            localLocation,
+            s3AccessKey,
+            s3SecretKey);
+    }
+
+    @JsonProperty("node_id")
+    private final String nodeId;
+    @JsonProperty("name")
+    private final String name;
+    @JsonProperty("external_location")
+    private final String externalLocation;
+    @JsonProperty("local_location")
+    private final String localLocation;
+    @JsonProperty("s3_access_key")
+    private final String s3AccessKey;
+    @JsonProperty("s3_secret_key")
+    private final String s3SecretKey;
+
+    public RestoreContext(final String nodeId,
+                          final String name,
+                          final String externalLocation,
+                          final String localLocation,
+                          final String s3AccessKey,
+                          final String s3SecretKey) {
+        this.nodeId = nodeId;
+        this.externalLocation = externalLocation;
+        this.name = name;
+        this.localLocation = localLocation;
+        this.s3AccessKey = s3AccessKey;
+        this.s3SecretKey = s3SecretKey;
+    }
+
     /**
      * Gets the name of the backup.
      *
@@ -84,70 +132,12 @@ public class RestoreContext implements ClusterTaskContext {
     }
 
     /**
-     * Sets the backup name.
-     *
-     * @param name The name of the backup.
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Sets the external location.
-     *
-     * @param externalLocation The location where the backup files are
-     *                         stored.
-     */
-    public void setExternalLocation(String externalLocation) {
-        this.externalLocation = externalLocation;
-    }
-
-    /**
-     * Sets the local location.
-     *
-     * @param localLocation The location where the keyspace files are
-     *                      read from.
-     */
-    public void setLocalLocation(String localLocation) {
-        this.localLocation = localLocation;
-    }
-
-    /**
-     * Sets the S3 access key.
-     *
-     * @param s3AccessKey The access key for the bucket where the backup
-     *                    files will be stored.
-     */
-    public void setS3AccessKey(String s3AccessKey) {
-        this.s3AccessKey = s3AccessKey;
-    }
-
-    /**
-     * Sets the S3 secret key.
-     *
-     * @param s3SecretKey The secret key for the bucket where teh backup
-     *                    files will be stored.
-     */
-    public void setS3SecretKey(String s3SecretKey) {
-        this.s3SecretKey = s3SecretKey;
-    }
-
-    /**
      * Gets the id of the node for the backup.
      *
      * @return The id of the node for the backup.
      */
     public String getNodeId() {
         return nodeId;
-    }
-
-    /**
-     * Sets the id of the node for the backup.
-     *
-     * @param nodeId The id of the node for the backup.
-     */
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
     }
 
     @Override
@@ -161,48 +151,70 @@ public class RestoreContext implements ClusterTaskContext {
         if (!(o instanceof RestoreContext)) return false;
         RestoreContext that = (RestoreContext) o;
         return Objects.equals(getNodeId(), that.getNodeId()) &&
-                Objects.equals(getName(), that.getName()) &&
-                Objects.equals(getExternalLocation(),
-                        that.getExternalLocation()) &&
-                Objects.equals(getLocalLocation(),
-                        that.getLocalLocation()) &&
-                Objects.equals(getS3AccessKey(), that.getS3AccessKey()) &&
-                Objects.equals(getS3SecretKey(), that.getS3SecretKey());
+            Objects.equals(getName(), that.getName()) &&
+            Objects.equals(getExternalLocation(),
+                that.getExternalLocation()) &&
+            Objects.equals(getLocalLocation(),
+                that.getLocalLocation()) &&
+            Objects.equals(getS3AccessKey(), that.getS3AccessKey()) &&
+            Objects.equals(getS3SecretKey(), that.getS3SecretKey());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getNodeId(), getName(), getExternalLocation(),
-                getLocalLocation(), getS3AccessKey(), getS3SecretKey());
+            getLocalLocation(), getS3AccessKey(), getS3SecretKey());
+    }
+
+    @JsonIgnore
+    public RestoreContext forNode(final String nodeId){
+        return create(
+            nodeId,
+            name,
+            externalLocation,
+            localLocation,
+            s3AccessKey,
+            s3SecretKey);
+    }
+
+    @JsonIgnore
+    public RestoreContext withLocalLocation(final String localLocation){
+        return create(
+            nodeId,
+            name,
+            externalLocation,
+            localLocation,
+            s3AccessKey,
+            s3SecretKey);
     }
 
     /**
      * Serializer that serializes a RestoreContext to and from a JSON object.
      */
     public static final Serializer<RestoreContext> JSON_SERIALIZER =
-            new Serializer<RestoreContext>() {
-                @Override
-                public byte[] serialize(RestoreContext value)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.writeValueAsBytes(value);
-                    } catch (JsonProcessingException ex) {
-                        throw new SerializationException(
-                                "Error writing RestoreContext to JSON",
-                                ex);
-                    }
+        new Serializer<RestoreContext>() {
+            @Override
+            public byte[] serialize(RestoreContext value)
+                throws SerializationException {
+                try {
+                    return JsonUtils.MAPPER.writeValueAsBytes(value);
+                } catch (JsonProcessingException ex) {
+                    throw new SerializationException(
+                        "Error writing RestoreContext to JSON",
+                        ex);
                 }
+            }
 
-                @Override
-                public RestoreContext deserialize(byte[] bytes)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.readValue(bytes,
-                                RestoreContext.class);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Error reading " +
-                                "RestoreContext form JSON", ex);
-                    }
+            @Override
+            public RestoreContext deserialize(byte[] bytes)
+                throws SerializationException {
+                try {
+                    return JsonUtils.MAPPER.readValue(bytes,
+                        RestoreContext.class);
+                } catch (IOException ex) {
+                    throw new SerializationException("Error reading " +
+                        "RestoreContext form JSON", ex);
                 }
-            };
+            }
+        };
 }

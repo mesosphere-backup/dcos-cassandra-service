@@ -1160,17 +1160,20 @@ public class CassandraApplicationConfig {
     }
 
     public void writeDaemonConfiguration(final Path path) throws IOException {
-
         YAML_MAPPER.writeValue(path.toFile(), toMap());
     }
 
-    public byte[] toByteArray() throws JsonProcessingException {
-
-        return MAPPER.writeValueAsBytes(this);
+    public byte[] toByteArray() {
+        try {
+            return MAPPER.writeValueAsBytes(this);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to produce value JSON " +
+                "from application configuration", ex);
+        }
 
     }
 
-    public ByteString toByteString() throws JsonProcessingException {
+    public ByteString toByteString()  {
 
         return ByteString.copyFrom(toByteArray());
     }
