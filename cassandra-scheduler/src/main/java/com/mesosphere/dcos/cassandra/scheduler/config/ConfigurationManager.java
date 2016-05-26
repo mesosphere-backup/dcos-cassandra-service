@@ -336,9 +336,20 @@ public class ConfigurationManager implements Managed {
 
 
     public boolean hasCurrentConfig(final CassandraDaemonTask task) {
-        return task.getExecutor().matches(executorConfig) &&
-            task.getConfig().equals(cassandraConfig);
+        LOGGER.info("ExecutorConfig: " + executorConfig);
+        LOGGER.info("CassandraConfig: " + cassandraConfig);
+        LOGGER.info("Task: ", task);
 
+        boolean executorMatches = task.getExecutor().matches(executorConfig);
+        boolean cassandraConfigMatches = task.getConfig().equals(cassandraConfig);
+
+        LOGGER.info("Executor  matches: " + executorMatches);
+        LOGGER.info("Cassandra matches: " + cassandraConfigMatches);
+
+        return executorMatches && cassandraConfigMatches;
+
+        //return task.getExecutor().matches(executorConfig) &&
+        //    task.getConfig().equals(cassandraConfig);
     }
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) {

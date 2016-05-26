@@ -170,6 +170,7 @@ public class CassandraDaemonBlock implements Block {
 
         try {
             task = getTask();
+            LOGGER.info("Block!!! taskInfo: " + task.toString());
         } catch (PersistenceException ex) {
             LOGGER.error(String.format("Block %s - Failed to get or create a " +
                     "task", getName()), ex);
