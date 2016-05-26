@@ -29,7 +29,7 @@ public class CassandraDaemonBlock implements Block {
     private volatile Status status = Status.Pending;
 
     private void terminate(final CassandraDaemonTask task) {
-        LOGGER.info("Block {} terminating task {}", getName(), task.getId());
+        LOGGER.info("Block '{}' terminating task '{}' on host '{}'", getName(), task.getId(), task.getHostname());
         if (!terminated) {
             try {
                 if (client.shutdown(task.getHostname(),

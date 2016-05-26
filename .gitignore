@@ -15,9 +15,11 @@
 .idea/
 out/
 
-
 # Mac
 .DS_Store
+
+# Vim
+*.swp
 
 # Maven
 log/
