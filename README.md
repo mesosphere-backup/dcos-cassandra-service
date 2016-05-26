@@ -1471,7 +1471,7 @@ $ dcos cassandra --name=<service-name> backup start \
     --s3_secret_key=<s3-secret-key>
 ```
 
-In order to upload to S3, you need to specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
+To upload to S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
 
 Check status of the backup:
 
@@ -1489,7 +1489,7 @@ $ dcos cassandra --name=<service-name> backup start \
     --azure_key=<key>
 ```
 
-In order to upload to Azure, you need to specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
+To upload to Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
 
 Check status of the backup:
 
@@ -1513,7 +1513,7 @@ $ dcos cassandra --name=<service-name> restore start \
     --s3_secret_key=<s3-secret-key>
 ```
 
-In order to restore from S3, you need to specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
+To restore from S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
 
 Check the status of the restore:
 
@@ -1531,7 +1531,7 @@ $ dcos cassandra --name=<service-name> restore start \
     --azure_key=<key>
 ```
 
-In order to restore from Azure, you need to specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
+To restore from Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
 
 Check the status of the restore:
 
