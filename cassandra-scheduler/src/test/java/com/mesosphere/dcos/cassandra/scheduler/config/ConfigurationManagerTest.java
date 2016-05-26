@@ -116,7 +116,8 @@ public class ConfigurationManagerTest {
 
         );
 
-        assertEquals("http://cassandra.marathon.mesos:8080/v1/seeds", config.getSeedsUrl());
+        assertEquals("http://cassandra.marathon.mesos:8080/v1/seeds",
+                config.getSeedsUrl());
         assertEquals("cassandra", config.getIdentity().getName());
         assertEquals("cassandra-role", config.getIdentity().getRole());
         assertEquals("cassandra-cluster", config.getIdentity().getCluster());
@@ -209,7 +210,8 @@ public class ConfigurationManagerTest {
         ExecutorConfig updatedExecutorConfig = new ExecutorConfig("/command/line",
                 new ArrayList<String>(), 1.2, 345, 678, 901, 17, "/java/home",
                 URI.create("/jre/location"), URI.create("/executor/location"),
-                URI.create("/cassandra/location"));
+                URI.create("/cassandra/location"), true, "statsd",
+                "metrics.prefix.", true, 1, "SECOND", "127.0.0.3", 1234);
 
         int updatedServers = config.getServers() + 10;
 
@@ -494,8 +496,8 @@ public class ConfigurationManagerTest {
 
         manager.start();
 
-        CassandraConfig new_config = config.getCassandraConfig().mutable().setJmxPort(13000)
-                .setCpus(2.3).setMemoryMb(1234).build();
+        CassandraConfig new_config = config.getCassandraConfig().mutable()
+                .setJmxPort(13000).setCpus(2.3).setMemoryMb(1234).build();
 
         assertNotSame(new_config, manager.getCassandraConfig());
         manager.setCassandraConfig(new_config);
@@ -528,9 +530,12 @@ public class ConfigurationManagerTest {
 
         manager.start();
 
-        ExecutorConfig new_config = new ExecutorConfig("/command/line", new ArrayList<String>(), 1.2, 345, 678, 901,
-                17, "/java/home", URI.create("/jre/location"), URI.create("/executor/location"),
-                URI.create("/cassandra/location"));
+        ExecutorConfig new_config = new ExecutorConfig("/command/line",
+                new ArrayList<String>(), 1.2, 345, 678, 901, 17,
+                "/java/home", URI.create("/jre/location"),
+                URI.create("/executor/location"),
+                URI.create("/cassandra/location"), true, "statsd",
+                "metrics.prefix.", false, 1, "SECOND", "127.0.0.3", 1234);
 
         assertNotSame(new_config, manager.getExecutorConfig());
         manager.setExecutorConfig(new_config);

@@ -647,6 +647,9 @@ public abstract class CassandraTask {
     @JsonIgnore
     public abstract List<Resource> getLaunchResources();
 
+    @JsonIgnore
+    public int getNativeTransportPort() { return -1; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

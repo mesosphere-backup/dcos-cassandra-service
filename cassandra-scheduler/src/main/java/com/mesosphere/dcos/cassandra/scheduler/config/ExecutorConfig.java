@@ -57,7 +57,15 @@ public class ExecutorConfig {
             String javaHome,
             URI jreLocation,
             URI executorLocation,
-            URI cassandraLocation) {
+            URI cassandraLocation,
+            boolean metricsEnable,
+            String metricsCollector,
+            String metricsPrefix,
+            boolean metricsPrefixIncludeHostname,
+            int metricsFlushPeriod,
+            String metricsFlushPeriodUnit,
+            String metricsHost,
+            int metricsPort) {
 
         return new ExecutorConfig(
                 command,
@@ -70,7 +78,15 @@ public class ExecutorConfig {
                 javaHome,
                 jreLocation,
                 executorLocation,
-                cassandraLocation
+                cassandraLocation,
+                metricsEnable,
+                metricsCollector,
+                metricsPrefix,
+                metricsPrefixIncludeHostname,
+                metricsFlushPeriod,
+                metricsFlushPeriodUnit,
+                metricsHost,
+                metricsPort
         );
     }
 
@@ -86,7 +102,15 @@ public class ExecutorConfig {
             @JsonProperty("java_home") String javaHome,
             @JsonProperty("jre_location") String jreLocation,
             @JsonProperty("executor_location") String executorLocation,
-            @JsonProperty("cassandra_location") String cassandraLocation)
+            @JsonProperty("cassandra_location") String cassandraLocation,
+            @JsonProperty("metrics_enable") boolean metricsEnable,
+            @JsonProperty("metrics_collector") String metricsCollector,
+            @JsonProperty("metrics_prefix") String metricsPrefix,
+            @JsonProperty("metrics_prefix_include_hostname") boolean metricsPrefixIncludeHostname,
+            @JsonProperty("metrics_flush_period") int metricsFlushPeriod,
+            @JsonProperty("metrics_flush_period_unit") String metricsFlushPeriodUnit,
+            @JsonProperty("metrics_host") String metricsHost,
+            @JsonProperty("metrics_port") int metricsPort)
             throws URISyntaxException, UnsupportedEncodingException {
 
         ExecutorConfig config = create(
@@ -100,7 +124,15 @@ public class ExecutorConfig {
                 javaHome,
                 URI.create(jreLocation),
                 URI.create(executorLocation),
-                URI.create(cassandraLocation));
+                URI.create(cassandraLocation),
+                metricsEnable,
+                metricsCollector,
+                metricsPrefix,
+                metricsPrefixIncludeHostname,
+                metricsFlushPeriod,
+                metricsFlushPeriodUnit,
+                metricsHost,
+                metricsPort);
 
         return config;
     }
@@ -119,9 +151,27 @@ public class ExecutorConfig {
     private final int heapMb;
     @JsonProperty("api_port")
     private final int apiPort;
+
     private final URI jreLocation;
     private final URI executorLocation;
     private final URI cassandraLocation;
+
+    @JsonProperty("metrics_enable")
+    private final boolean metricsEnable;
+    @JsonProperty("metrics_collector")
+    private final String metricsCollector;
+    @JsonProperty("metrics_prefix")
+    private final String metricsPrefix;
+    @JsonProperty("metrics_prefix_include_hostname")
+    private final boolean metricsPrefixIncludeHostname;
+    @JsonProperty("metrics_flush_period")
+    private final int metricsFlushPeriod;
+    @JsonProperty("metrics_flush_period_unit")
+    private final String metricsFlushPeriodUnit;
+    @JsonProperty("metrics_host")
+    private final String metricsHost;
+    @JsonProperty("metrics_port")
+    private final int metricsPort;
 
     @JsonProperty("java_home")
     private final String javaHome;
@@ -137,7 +187,15 @@ public class ExecutorConfig {
             String javaHome,
             URI jreLocation,
             URI executorLocation,
-            URI cassandraLocation) {
+            URI cassandraLocation,
+            boolean metricsEnable,
+            String metricsCollector,
+            String metricsPrefix,
+            boolean metricsPrefixIncludeHostname,
+            int metricsFlushPeriod,
+            String metricsFlushPeriodUnit,
+            String metricsHost,
+            int metricsPort) {
 
         this.command = command;
         this.arguments = arguments;
@@ -146,10 +204,18 @@ public class ExecutorConfig {
         this.diskMb = diskMb;
         this.heapMb = heapMb;
         this.apiPort = apiPort;
+        this.javaHome = javaHome;
         this.jreLocation = jreLocation;
         this.executorLocation = executorLocation;
         this.cassandraLocation = cassandraLocation;
-        this.javaHome = javaHome;
+        this.metricsEnable = metricsEnable;
+        this.metricsCollector = metricsCollector;
+        this.metricsPrefix = metricsPrefix;
+        this.metricsPrefixIncludeHostname = metricsPrefixIncludeHostname;
+        this.metricsFlushPeriod = metricsFlushPeriod;
+        this.metricsFlushPeriodUnit = metricsFlushPeriodUnit;
+        this.metricsHost = metricsHost;
+        this.metricsPort = metricsPort;
     }
 
 
@@ -212,6 +278,38 @@ public class ExecutorConfig {
         return cassandraLocation.toString();
     }
 
+    public boolean getMetricsEnable() {
+        return metricsEnable;
+    }
+
+    public String getMetricsCollector() {
+        return metricsCollector;
+    }
+
+    public String getMetricsPrefix() {
+        return metricsPrefix;
+    }
+
+    public boolean getMetricsPrefixIncludeHostname() {
+        return metricsPrefixIncludeHostname;
+    }
+
+    public int getMetricsFlushPeriod() {
+        return metricsFlushPeriod;
+    }
+
+    public String getMetricsFlushPeriodUnit() {
+        return metricsFlushPeriodUnit;
+    }
+
+    public String getMetricsHost() {
+        return metricsHost;
+    }
+
+    public int getMetricsPort() {
+        return metricsPort;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -229,7 +327,18 @@ public class ExecutorConfig {
                         that.getExecutorLocation()) &&
                 Objects.equals(getCassandraLocation(),
                         that.getCassandraLocation()) &&
-                Objects.equals(getJavaHome(), that.getJavaHome());
+                Objects.equals(getJavaHome(), that.getJavaHome()) &&
+                getMetricsEnable() == that.getMetricsEnable() &&
+                Objects.equals(getMetricsCollector(),
+                        that.getMetricsCollector()) &&
+                Objects.equals(getMetricsPrefix(), that.getMetricsPrefix()) &&
+                getMetricsPrefixIncludeHostname() ==
+                        that.getMetricsPrefixIncludeHostname() &&
+                getMetricsFlushPeriod() == that.getMetricsFlushPeriod() &&
+                Objects.equals(getMetricsFlushPeriodUnit(),
+                        that.getMetricsFlushPeriodUnit()) &&
+                Objects.equals(getMetricsHost(), that.getMetricsHost()) &&
+                getMetricsPort() == that.getMetricsPort();
     }
 
     @Override
@@ -238,7 +347,10 @@ public class ExecutorConfig {
                 getMemoryMb(),
                 getDiskMb(), getHeapMb(), getApiPort(),
                 getJreLocation(), getExecutorLocation(), getCassandraLocation(),
-                getJavaHome());
+                getJavaHome(), getMetricsEnable(), getMetricsCollector(),
+                getMetricsPrefix(), getMetricsPrefixIncludeHostname(),
+                getMetricsFlushPeriod(), getMetricsFlushPeriodUnit(),
+                getMetricsHost(), getMetricsPort());
     }
 
     @Override

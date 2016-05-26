@@ -265,7 +265,8 @@ public class CassandraDaemonProcess {
     private final NodeProbe probe;
     private final CompletableFuture<Object> closeFuture =
             new CompletableFuture<>();
-    private boolean metricsEnabled = MetricsConfig.metricsEnabled();
+    private final MetricsConfig metricsConfig;
+    private boolean metricsEnabled;
 
     private String getReplaceIp() throws UnknownHostException {
         if (task.getConfig().getReplaceIp().trim().isEmpty()) {
@@ -295,7 +296,7 @@ public class CassandraDaemonProcess {
                 "JMX_PORT",
                 Integer.toString(task.getConfig().getJmxPort()));
         if (metricsEnabled) {
-            MetricsConfig.setEnv(builder.environment());
+            metricsConfig.setEnv(builder.environment());
         }
         return builder.start();
     }
@@ -361,8 +362,10 @@ public class CassandraDaemonProcess {
                 .setRpcAddress(getListenAddress())
                 .build().writeDaemonConfiguration(paths.cassandraConfig());
 
+        this.metricsConfig = new MetricsConfig(task.getExecutor());
+        metricsEnabled = metricsConfig.metricsEnabled();
         if (metricsEnabled) {
-            metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());
+            metricsEnabled = metricsConfig.writeMetricsConfig(paths.conf());
         }
 
         process = createDaemon();
