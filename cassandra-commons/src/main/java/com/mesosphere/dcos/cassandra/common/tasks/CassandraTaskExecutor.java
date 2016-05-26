@@ -18,10 +18,14 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
-import org.apache.mesos.Protos;
 
 import java.net.URI;
 import java.util.*;
+
+import org.apache.mesos.Protos;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
 
@@ -34,6 +38,8 @@ import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
  */
 public class CassandraTaskExecutor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(
+            CassandraTaskExecutor.class);
 
     public static Protos.ExecutorID createId(final String name) {
         return Protos.ExecutorID.newBuilder()
@@ -267,12 +273,29 @@ public class CassandraTaskExecutor {
     }
 
     public boolean matches(final ExecutorConfig config) {
-        return Double.compare(getCpus(), config.getCpus()) == 0 &&
-            Objects.equals(getCommand(), config.getCommand()) &&
-            Sets.difference(getURIs(), new HashSet<>(config.getURIs()))
-                .isEmpty() &&
-            getHeapMb() == config.getHeapMb() &&
-            getHeapMb() == config.getHeapMb();
+        boolean cpusEqual = Double.compare(getCpus(), config.getCpus()) == 0;
+        LOGGER.info("local cpus: " + getCpus() + "config cpus: " + config.getCpus());
+        boolean commandEqual = Objects.equals(getCommand(), config.getCommand());
+        LOGGER.info("local command: " + getCommand() + "config command: " + config.getCommand());
+        boolean urisEqual = Sets.difference(getURIs(), new HashSet<>(config.getURIs())).isEmpty();
+        LOGGER.info("local uris: " + getURIs() + "config uris: " + config.getURIs());
+        boolean heapsEqual = getHeapMb() == config.getHeapMb();
+        LOGGER.info("local heap: " + getHeapMb() + "config heap: " + config.getHeapMb());
+
+        LOGGER.info("cpusEqual: " + cpusEqual);
+        LOGGER.info("commandEqual: " + commandEqual);
+        LOGGER.info("urisEqual: " + urisEqual);
+        LOGGER.info("heapsEqual: " + heapsEqual);
+
+        return cpusEqual && commandEqual && urisEqual && heapsEqual;
+
+
+        //return Double.compare(getCpus(), config.getCpus()) == 0 &&
+        //    Objects.equals(getCommand(), config.getCommand()) &&
+        //    Sets.difference(getURIs(), new HashSet<>(config.getURIs()))
+        //        .isEmpty() &&
+        //    getHeapMb() == config.getHeapMb() &&
+        //    getHeapMb() == config.getHeapMb();
     }
 
     public CassandraTaskExecutor update(final ExecutorConfig config) {
