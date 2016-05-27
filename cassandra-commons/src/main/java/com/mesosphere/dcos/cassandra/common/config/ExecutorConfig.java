@@ -14,7 +14,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Objects;
 
 public class ExecutorConfig {
@@ -215,8 +217,13 @@ public class ExecutorConfig {
     }
 
     @JsonIgnore
-    public List<URI> getURIs() {
-        return Arrays.asList(executorLocation,cassandraLocation,jreLocation);
+    public Set<String> getURIs() {
+        Set<String> uris = new HashSet<String>();
+        uris.add(executorLocation.toString());
+        uris.add(cassandraLocation.toString());
+        uris.add(jreLocation.toString());
+
+        return uris;
     }
 
     @Override

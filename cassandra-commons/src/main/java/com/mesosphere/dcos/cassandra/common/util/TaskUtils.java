@@ -34,9 +34,8 @@ public class TaskUtils {
     }
 
     public static Collection<CommandInfo.URI> createURIs(
-        final List<URI> uris) {
+        final Set<String> uris) {
         return uris.stream()
-            .map(uri -> uri.toString())
             .map(uri -> CommandInfo.URI.newBuilder()
                 .setCache(false)
                 .setExecutable(false)
@@ -48,7 +47,7 @@ public class TaskUtils {
     public static Protos.CommandInfo createCommandInfo(
         final String command,
         final List<String> arguments,
-        final List<URI> uris,
+        final Set<String> uris,
         final Map<String, String> environment) {
         return Protos.CommandInfo.newBuilder()
             .setValue(command)

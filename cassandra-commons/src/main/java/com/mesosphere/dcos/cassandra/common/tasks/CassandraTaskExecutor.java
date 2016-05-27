@@ -117,7 +117,7 @@ public class CassandraTaskExecutor {
         int diskMb,
         int heapMb,
         int apiPort,
-        List<URI> uris,
+        Set<String> uris,
         String javaHome) {
 
         this.info = Protos.ExecutorInfo.newBuilder()
