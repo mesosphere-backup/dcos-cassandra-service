@@ -17,6 +17,7 @@ package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
+import org.apache.mesos.offer.VolumeRequirement;
 import org.apache.mesos.Protos;
 
 import java.util.Collections;
@@ -89,7 +90,8 @@ public class BackupUploadTask extends CassandraTask {
             config.getCpus(),
             config.getMemoryMb(),
             config.getDiskMb(),
-            "",
+            VolumeRequirement.VolumeMode.NONE,
+            null,
             Collections.emptyList(),
             CassandraData.createBackupUploadData("",
                 context.forNode(name).withLocalLocation(localLocation)));

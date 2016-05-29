@@ -5,11 +5,15 @@ import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.PlacementStrategy;
 import org.apache.mesos.offer.ResourceUtils;
+import org.apache.mesos.offer.TaskRequirement;
 import org.apache.mesos.offer.VolumeRequirement;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +44,18 @@ public class PersistentOfferRequirementProvider implements CassandraOfferRequire
         return getCreateOfferRequirement(taskInfo);
     }
 
+    @Override
+    public OfferRequirement getReplacementOfferRequirement(Protos.TaskInfo taskInfo) {
+        LOGGER.info("Getting replacement requirement for task: {}", taskInfo.getTaskId().getValue());
+        return getExistingOfferRequirement(taskInfo);
+    }
+
+    @Override
+    public OfferRequirement getUpdateOfferRequirement(Protos.TaskInfo taskInfo) {
+        LOGGER.info("Getting updated requirement for task: {}", taskInfo.getTaskId().getValue());
+        return getExistingOfferRequirement(taskInfo);
+    }
+
     private OfferRequirement getCreateOfferRequirement(Protos.TaskInfo taskInfo) {
         final PlacementStrategy placementStrategy =
                 PlacementStrategyManager.getPlacementStrategy(
@@ -58,45 +74,19 @@ public class PersistentOfferRequirementProvider implements CassandraOfferRequire
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
         volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.CREATE);
         volumeRequirement.setVolumeType(configurationManager.getCassandraConfig().getDiskType());
-        return new OfferRequirement(
-                identity.getRole(),
-                identity.getPrincipal(),
-                Arrays.asList(taskInfo),
-                agentsToAvoid,
-                agentsToColocate,
-                volumeRequirement
-        );
-    }
 
-    @Override
-    public OfferRequirement getReplacementOfferRequirement(
-            Protos.TaskInfo taskInfo) {
-        LOGGER.info("Getting replacement requirement for task: {}", taskInfo.getTaskId().getValue());
-        if (hasVolume(taskInfo)) {
-            LOGGER.info("Task has a volume, taskId: {}, reusing existing requirement", taskInfo.getTaskId().getValue());
-            return getExistingOfferRequirement(taskInfo);
-        } else {
-            LOGGER.info("Task doesn't has a volume, taskId: {}, creating a new requirement", taskInfo.getTaskId().getValue());
-            final PlacementStrategy placementStrategy =
-                    PlacementStrategyManager.getPlacementStrategy(
-                            configurationManager,
-                            cassandraTasks);
+        ExecutorInfo execInfo = taskInfo.getExecutor();
+        taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
+        try {
             return new OfferRequirement(
                     Arrays.asList(taskInfo),
-                    placementStrategy.getAgentsToAvoid(taskInfo),
-                    placementStrategy.getAgentsToColocate(taskInfo));
-        }
-    }
-
-    @Override
-    public OfferRequirement getUpdateOfferRequirement(Protos.TaskInfo taskInfo) {
-        if (hasVolume(taskInfo)) {
-            LOGGER.info("Task has a volume, taskId: {}, reusing existing requirement", taskInfo.getTaskId().getValue());
-            return getExistingOfferRequirement(taskInfo);
-        } else {
-            LOGGER.info("Task doesn't has a volume, taskId: {}, creating a new requirement", taskInfo.getTaskId().getValue());
-            return getCreateOfferRequirement(taskInfo);
+                    execInfo,
+                    agentsToAvoid,
+                    agentsToColocate);
+        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
         }
     }
 
@@ -107,18 +97,19 @@ public class PersistentOfferRequirementProvider implements CassandraOfferRequire
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
         volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.EXISTING);
         volumeRequirement.setVolumeType(configurationManager.getCassandraConfig().getDiskType());
-        return new OfferRequirement(
-                identity.getRole(),
-                identity.getPrincipal(),
-                Arrays.asList(taskInfo),
-                null,
-                null,
-                volumeRequirement);
-    }
 
-    private boolean hasVolume(Protos.TaskInfo taskInfo) {
-        String containerPath = ResourceUtils.getVolumeContainerPath(
-                taskInfo.getResourcesList());
-        return containerPath != null;
+        ExecutorInfo execInfo = taskInfo.getExecutor();
+        taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
+
+        try {
+            return new OfferRequirement(
+                    Arrays.asList(taskInfo),
+                    execInfo,
+                    null,
+                    null);
+        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
     }
 }

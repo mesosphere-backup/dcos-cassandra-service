@@ -18,6 +18,7 @@ package com.mesosphere.dcos.cassandra.common.tasks.cleanup;
 
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
+import org.apache.mesos.offer.VolumeRequirement;
 import org.apache.mesos.Protos;
 
 import java.util.Collections;
@@ -94,7 +95,8 @@ public class CleanupTask extends CassandraTask {
             config.getCpus(),
             config.getMemoryMb(),
             config.getDiskMb(),
-            "",
+            VolumeRequirement.VolumeMode.NONE,
+            null,
             Collections.emptyList(),
             CassandraData.createCleanupData("", context));
     }

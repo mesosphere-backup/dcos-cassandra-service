@@ -88,7 +88,8 @@ public class RestoreSnapshotTask extends CassandraTask {
             config.getCpus(),
             config.getMemoryMb(),
             config.getDiskMb(),
-            "",
+            VolumeRequirement.VolumeMode.NONE,
+            null,
             Collections.emptyList(),
             CassandraData.createSnapshotDownloadData("",
                 context.forNode(name).withLocalLocation(localLocation)));
