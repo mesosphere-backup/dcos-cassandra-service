@@ -5,8 +5,10 @@ import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.PlacementStrategy;
+import org.apache.mesos.offer.TaskRequirement;
 import org.apache.mesos.offer.VolumeRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,15 +52,20 @@ public class ClusterTaskOfferRequirementProvider
         LOGGER.info("Avoiding agents: {}", agentsToAvoid);
         LOGGER.info("Colocating with agents: {}", agentsToColocate);
         final Identity identity = identityManager.get();
-        return new OfferRequirement(
-                identity.getRole(),
-                identity.getPrincipal(),
-                Arrays.asList(taskInfo),
-                agentsToAvoid,
-                agentsToColocate,
-                MODE_NONE_TYPE_ROOT,
-                OfferRequirement.ExecutorMode.EXISTING
-        );
+
+        ExecutorInfo execInfo = taskInfo.getExecutor();
+        taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
+
+        try {
+            return new OfferRequirement(
+                    Arrays.asList(taskInfo),
+                    execInfo,
+                    agentsToAvoid,
+                    agentsToColocate);
+        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
     }
 
     @Override
@@ -68,12 +75,21 @@ public class ClusterTaskOfferRequirementProvider
                 taskInfo.getTaskId().getValue());
         final PlacementStrategy placementStrategy =
                 new ClusterTaskPlacementStrategy(cassandraTasks);
-        return new OfferRequirement(
-                Arrays.asList(taskInfo),
-                placementStrategy.getAgentsToAvoid(taskInfo),
-                placementStrategy.getAgentsToColocate(taskInfo),
-                MODE_NONE_TYPE_ROOT,
-                OfferRequirement.ExecutorMode.EXISTING);
+
+        ExecutorInfo execInfo = taskInfo.getExecutor();
+        taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
+
+        try {
+            return new OfferRequirement(
+                    Arrays.asList(taskInfo),
+                    execInfo,
+                    placementStrategy.getAgentsToAvoid(taskInfo),
+                    placementStrategy.getAgentsToColocate(taskInfo));
+        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
+
     }
 
     @Override
@@ -85,13 +101,19 @@ public class ClusterTaskOfferRequirementProvider
             Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
         final Identity identity = identityManager.get();
-        return new OfferRequirement(
-                identity.getRole(),
-                identity.getPrincipal(),
-                Arrays.asList(taskInfo),
-                null,
-                null,
-                MODE_NONE_TYPE_ROOT,
-                OfferRequirement.ExecutorMode.EXISTING);
+
+        ExecutorInfo execInfo = taskInfo.getExecutor();
+        taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
+
+        try {
+            return new OfferRequirement(
+                    Arrays.asList(taskInfo),
+                    execInfo,
+                    null,
+                    null);
+        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
     }
 }

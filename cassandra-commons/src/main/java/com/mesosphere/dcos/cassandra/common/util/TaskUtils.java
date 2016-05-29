@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.common.util;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.*;
+import org.apache.mesos.util.Algorithms;
 
 import java.net.URI;
 import java.util.*;
@@ -119,32 +120,8 @@ public class TaskUtils {
                 )).build();
     }
 
-    public static List<Value.Range> createPortRanges(
-        final Collection<Integer> ports) {
-        final SortedSet<Integer> portSet = new TreeSet<>(ports);
-        final LinkedList<Value.Range> ranges = new LinkedList<>();
-        int[] portsArray = new int[portSet.size()];
-        int i = 0;
-        for (Iterator<Integer> it = portSet.iterator(); it.hasNext(); ) {
-            portsArray[i++] = it.next();
-        }
-        int begin = 0;
-        int end = 0;
-        while (end < portsArray.length) {
-
-            if (end < portsArray.length - 1 &&
-                portsArray[end] + 1 == portsArray[end + 1]) {
-                ++end;
-            } else {
-                ranges.add(Value.Range.newBuilder()
-                    .setBegin(begin)
-                    .setEnd(end)
-                    .build());
-                ++end;
-                begin = end;
-            }
-        }
-        return ranges;
+    public static List<Value.Range> createPortRanges(final Collection<Integer> ports) {
+        return Algorithms.createRanges(ports);
     }
 
     public static Resource createRanges(

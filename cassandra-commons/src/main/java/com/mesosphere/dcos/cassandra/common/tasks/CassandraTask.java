@@ -15,7 +15,10 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
+import com.google.inject.Inject;
 
+import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import org.apache.mesos.offer.VolumeRequirement;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
@@ -24,10 +27,12 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
-import org.apache.mesos.Protos;
 
 import java.io.IOException;
 import java.util.*;
+
+import org.apache.mesos.Protos;
+import org.apache.mesos.offer.ResourceUtils;
 
 import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
 
@@ -180,15 +185,21 @@ public abstract class CassandraTask {
         this.info = info;
     }
 
+
+    @Inject
     protected CassandraTask(
         final String name,
         final CassandraTaskExecutor executor,
         final double cpus,
         final int memoryMb,
         final int diskMb,
-        final String volumePath,
+        final VolumeRequirement.VolumeMode volumeMode,
+        final VolumeRequirement.VolumeType volumeType,
         final Collection<Integer> ports,
         final CassandraData data) {
+
+        String role = executor.getRole();
+        String principal = executor.getPrincipal();
 
         Protos.TaskInfo.Builder builder = Protos.TaskInfo.newBuilder()
             .setTaskId(createId(name))
@@ -196,27 +207,22 @@ public abstract class CassandraTask {
             .setSlaveId(EMPTY_SLAVE_ID)
             .setExecutor(executor.getExecutorInfo())
             .addAllResources(Arrays.asList(
-                createCpus(cpus, executor.getRole(), executor.getPrincipal()),
-                createMemoryMb(memoryMb, executor.getRole(),
-                    executor.getPrincipal()),
-                createDiskMb(diskMb, executor.getRole(), executor
-                    .getPrincipal())))
+                ResourceUtils.getDesiredScalar(role, principal, "cpus", cpus),
+                ResourceUtils.getDesiredScalar(role, principal, "mem", memoryMb)))
             .setData(data.getBytes());
+
+        if (!volumeMode.equals(VolumeRequirement.VolumeMode.NONE)) {
+            if (volumeType.equals(VolumeRequirement.VolumeType.MOUNT)) {
+                builder.addResources(ResourceUtils.getDesiredMountVolume(role, principal, diskMb, CassandraConfig.VOLUME_PATH));
+            } else {
+                builder.addResources(ResourceUtils.getDesiredRootVolume(role, principal, diskMb, CassandraConfig.VOLUME_PATH));
+            }
+        }
+
         if (!ports.isEmpty()) {
-            builder.addResources(createPorts(ports, executor.getRole(),
-                executor.getPrincipal()));
+            builder.addResources(createPorts(ports, role, principal));
         }
-        if (!volumePath.isEmpty()) {
-            builder.addResources(
-                createDiskMb(diskMb,
-                    executor.getRole(),
-                    executor.getPrincipal(),
-                    volumePath));
-        } else {
-            builder.addResources(createDiskMb(diskMb,
-                executor.getRole(),
-                executor.getPrincipal()));
-        }
+
         info = builder.build();
     }
 

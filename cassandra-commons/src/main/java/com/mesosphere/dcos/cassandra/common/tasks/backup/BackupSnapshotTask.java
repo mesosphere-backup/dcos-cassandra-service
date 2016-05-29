@@ -102,7 +102,8 @@ public class BackupSnapshotTask extends CassandraTask {
             config.getCpus(),
             config.getMemoryMb(),
             config.getDiskMb(),
-            "",
+            VolumeRequirement.VolumeMode.NONE,
+            null,
             Collections.emptyList(),
             CassandraData.createBackupSnapshotData("",
                 context.forNode(name)

@@ -18,6 +18,7 @@ package com.mesosphere.dcos.cassandra.common.tasks.repair;
 
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
+import org.apache.mesos.offer.VolumeRequirement;
 import org.apache.mesos.Protos;
 
 import java.util.Collections;
@@ -89,7 +90,8 @@ public class RepairTask extends CassandraTask {
             config.getCpus(),
             config.getMemoryMb(),
             config.getDiskMb(),
-            "",
+            VolumeRequirement.VolumeMode.NONE,
+            null,
             Collections.emptyList(),
             CassandraData.createRepairData("", context));
     }
