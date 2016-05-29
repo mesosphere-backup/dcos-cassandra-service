@@ -159,15 +159,9 @@ public abstract class CassandraTask {
         return Protos.TaskInfo.newBuilder(info);
     }
 
-    protected Protos.TaskStatus.Builder getStatusBuilder() {
-        return Protos.TaskStatus.newBuilder()
-            .setSlaveId(getTaskInfo().getSlaveId())
-            .setExecutorId(getTaskInfo().getExecutor().getExecutorId())
-            .setSource(Protos.TaskStatus.Source.SOURCE_EXECUTOR);
-    }
-
     public Protos.TaskStatus getCurrentStatus() {
         return getStatusBuilder()
+            .setTaskId(info.getTaskId())
             .setData(getData().getBytes())
             .setState(getData()
                 .getState()).build();
@@ -302,6 +296,7 @@ public abstract class CassandraTask {
         Protos.TaskStatus.Builder builder = Protos.TaskStatus.newBuilder()
             .setSlaveId(info.getSlaveId())
             .setTaskId(info.getTaskId())
+            .setState(state)
             .setData(getData().withState(state).getBytes())
             .setExecutorId(info.getExecutor().getExecutorId())
             .setSource(Protos.TaskStatus.Source.SOURCE_EXECUTOR);
@@ -309,6 +304,12 @@ public abstract class CassandraTask {
         return builder;
     }
 
+    protected Protos.TaskStatus.Builder getStatusBuilder() {
+        return Protos.TaskStatus.newBuilder()
+                .setSlaveId(getTaskInfo().getSlaveId())
+                .setExecutorId(getTaskInfo().getExecutor().getExecutorId())
+                .setSource(Protos.TaskStatus.Source.SOURCE_EXECUTOR);
+    }
 
     /**
      * Gets the executor for the task.
