@@ -143,7 +143,7 @@ public class CassandraDaemonTask extends CassandraTask {
     public CassandraDaemonStatus createStatus(Protos.TaskState state,
                                               CassandraMode mode,
                                               Optional<String> message) {
-        return CassandraDaemonStatus.create(getStatusBuilder()
+        return CassandraDaemonStatus.create(getStatusBuilder(state, message)
             .setData(CassandraData.createDaemonStatusData(mode).getBytes())
             .build());
     }
