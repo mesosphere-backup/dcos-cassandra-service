@@ -175,7 +175,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     public CassandraDaemonTask createDaemon(String name) throws
             PersistenceException {
         CassandraDaemonTask task = configuration.createDaemon(
-                identity.get().getId(),
+            identity.get().getId(),
             name,
             identity.get().getRole(),
             identity.get().getPrincipal()
@@ -404,11 +404,11 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             throws PersistenceException {
         synchronized (persistent) {
             if (byId.containsKey(taskId)) {
-                CassandraTask updated = tasks.get(byId.get(taskId)).update(
-                        offer);
+                CassandraTask updated = tasks.get(byId.get(taskId)).update(offer);
                 update(updated);
                 return Optional.of(updated);
             } else {
+                LOGGER.warn("Attempted to update unknown TaskID: " + taskId);
                 return Optional.empty();
             }
         }
