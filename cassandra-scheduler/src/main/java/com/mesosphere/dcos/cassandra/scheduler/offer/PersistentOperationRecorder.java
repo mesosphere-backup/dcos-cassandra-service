@@ -27,7 +27,7 @@ public class PersistentOperationRecorder implements OperationRecorder {
                 LOGGER.debug("Recording operation: {} for task: {}", operation, taskInfo);
 
                 try {
-                    cassandraTasks.update(taskInfo.getTaskId().getValue(), offer);
+                    cassandraTasks.update(taskInfo);
                 } catch (Throwable throwable) {
                     LOGGER.error(String.format(
                             "Error updating task in recorder: " +

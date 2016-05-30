@@ -253,59 +253,6 @@ public class CassandraTasksTest {
     }
 
     @Test
-    public void updateTaskWithOffer() throws Exception {
-
-        CassandraTasks tasks = new CassandraTasks(
-                identity,
-                configuration,
-                CassandraTask.PROTO_SERIALIZER,
-                persistence);
-
-        tasks.start();
-
-        Protos.Offer offer = TestData.createOffer(
-                TestData.randomId(),
-                "slave",
-                config.getIdentity().getName(),
-                "localhost",
-                Arrays.asList(
-                        ResourceBuilder.reservedCpus(
-                                config.getCassandraConfig().getCpus(),
-                                config.getIdentity().getRole(),
-                                config.getIdentity().getPrincipal()),
-                        ResourceBuilder.reservedMem(
-                                config.getCassandraConfig().getDiskMb(),
-                                config.getIdentity().getRole(),
-                                config.getIdentity().getPrincipal()),
-                        ResourceBuilder.reservedDisk(
-                                config.getCassandraConfig().getDiskMb(),
-                                config.getIdentity().getRole(),
-                                config.getIdentity().getPrincipal())
-                )
-        );
-
-        assertEquals(0, tasks.get().size());
-        CassandraDaemonTask task = tasks.createDaemon(
-                CassandraDaemonTask.NAME_PREFIX + 0
-        );
-        assertEquals(1, tasks.get().size());
-
-
-        assertEquals(task, CassandraDaemonTask.parse(task.getTaskInfo()));
-
-        CassandraTask updated = tasks.update(task.getId(), offer).get();
-        assertEquals(1, tasks.get().size());
-
-        assertEquals("slave", updated.getSlaveId());
-
-        assertEquals("localhost", updated.getHostname());
-
-        assertEquals(updated, CassandraTask.PROTO_SERIALIZER.deserialize(
-                curator.getData().forPath(path(task.getName()))));
-
-    }
-
-    @Test
     public void updateTaskWithStatus() throws Exception {
 
         CassandraTasks tasks = new CassandraTasks(
