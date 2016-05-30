@@ -20,6 +20,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentMap;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -389,11 +390,11 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                 .build();
     }
 
-    public void update(Protos.TaskInfo taskInfo) {
+    public void update(Protos.TaskInfo taskInfo, Offer offer) {
         try {
             final CassandraTask task = CassandraTask.parse(taskInfo);
             synchronized (persistent) {
-                update(task);
+                update(task.update(offer));
             }
         } catch (Exception e) {
             LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
