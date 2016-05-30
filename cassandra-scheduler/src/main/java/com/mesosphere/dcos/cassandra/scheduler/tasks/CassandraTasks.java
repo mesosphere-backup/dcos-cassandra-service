@@ -148,28 +148,18 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public CassandraDaemonTask createDaemon(String name) throws
             PersistenceException {
-        CassandraDaemonTask task = configuration.createDaemon(
+        return configuration.createDaemon(
             identity.get().getId(),
             name,
             identity.get().getRole(),
             identity.get().getPrincipal()
         );
-
-        synchronized (persistent) {
-            update(task);
-        }
-
-        return task;
     }
 
     public CassandraDaemonTask moveDaemon(
             CassandraDaemonTask daemon
     ) throws PersistenceException {
-        CassandraDaemonTask updated = configuration.moveDaemon(daemon);
-        synchronized (persistent) {
-            update(updated);
-        }
-        return updated;
+        return configuration.moveDaemon(daemon);
     }
 
 
@@ -177,75 +167,39 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             CassandraDaemonTask daemon,
             BackupContext context) throws PersistenceException {
 
-        BackupSnapshotTask task = configuration.createBackupSnapshotTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
-        }
-        return task;
+        return configuration.createBackupSnapshotTask(daemon, context);
     }
 
     public BackupUploadTask createBackupUploadTask(
             CassandraDaemonTask daemon,
             BackupContext context) throws PersistenceException {
 
-        BackupUploadTask task = configuration.createBackupUploadTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
-        }
-        return task;
+        return configuration.createBackupUploadTask(daemon, context);
     }
 
     public DownloadSnapshotTask createDownloadSnapshotTask(
             CassandraDaemonTask daemon,
             RestoreContext context) throws PersistenceException {
 
-        DownloadSnapshotTask task = configuration.createDownloadSnapshotTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
-        }
-        return task;
+        return configuration.createDownloadSnapshotTask(daemon, context);
     }
 
     public RestoreSnapshotTask createRestoreSnapshotTask(
             CassandraDaemonTask daemon,
             RestoreContext context) throws PersistenceException {
-        RestoreSnapshotTask task = configuration.createRestoreSnapshotTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
-        }
-        return task;
+        return configuration.createRestoreSnapshotTask(daemon, context);
     }
 
     public CleanupTask createCleanupTask(
             CassandraDaemonTask daemon,
             CleanupContext context) throws PersistenceException {
-        CleanupTask task = configuration.createCleanupTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
-        }
-        return task;
+        return configuration.createCleanupTask(daemon, context);
     }
 
     public RepairTask createRepairTask(
             CassandraDaemonTask daemon,
             RepairContext context) throws PersistenceException {
-        RepairTask task = configuration.createRepairTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
-        }
-        return task;
+        return configuration.createRepairTask(daemon, context);
     }
 
     public CassandraDaemonTask getOrCreateDaemon(String name) throws
@@ -342,35 +296,17 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         return !configuration.hasCurrentConfig(daemon);
     }
 
-    public CassandraTask replaceTask(CassandraTask task)
-            throws PersistenceException {
-
-        synchronized (persistent) {
-            final CassandraDaemonTask updated =
-                    configuration.replaceDaemon((CassandraDaemonTask) task);
-            update(updated);
-            return updated;
-        }
-
-    }
-
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task)
             throws PersistenceException {
         synchronized (persistent) {
-            final CassandraDaemonTask updated =
-                    configuration.replaceDaemon(task);
-            update(updated);
-            return updated;
+            return configuration.replaceDaemon(task);
         }
     }
 
     public CassandraDaemonTask reconfigureDeamon(
             final CassandraDaemonTask daemon) throws PersistenceException {
         synchronized (persistent) {
-            final CassandraDaemonTask updated = configuration.updateConfig(
-                    daemon);
-            update(updated);
-            return updated;
+            return configuration.updateConfig(daemon);
         }
     }
 
@@ -379,6 +315,13 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         if (tasks.containsKey(task.getName())) {
             byId.remove(tasks.get(task.getName()).getId());
         }
+
+        if (!task.getId().contains("__")) {
+            LOGGER.error(
+                    "Encountered malformed TaskID: " + task.getId(),
+                    new PersistenceException("Encountered malformed TaskID: " + task.getId()));
+        }
+
         byId.put(task.getId(), task.getName());
         tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
                 tasks.entrySet().stream()
