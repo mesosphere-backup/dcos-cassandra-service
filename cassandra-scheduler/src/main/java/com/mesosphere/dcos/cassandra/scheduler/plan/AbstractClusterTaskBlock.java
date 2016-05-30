@@ -67,7 +67,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
                 return null;
             } else {
-
+                LOGGER.info("Block has task: " + task);
                 return getOfferRequirement(task.get());
             }
 
