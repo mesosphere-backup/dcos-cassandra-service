@@ -81,33 +81,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         }
     }
 
-    public void update(CassandraTask task) throws PersistenceException {
-        persistent.put(task.getName(), task);
-        if (tasks.containsKey(task.getName())) {
-            byId.remove(tasks.get(task.getName()).getId());
-        }
-        byId.put(task.getId(), task.getName());
-        tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
-                tasks.entrySet().stream()
-                        .filter(entry -> !entry.getKey().equals(task.getName()))
-                        .collect(Collectors.toMap(
-                                entry -> entry.getKey(),
-                                entry -> entry.getValue())))
-                .put(task.getName(), task)
-                .build();
-    }
-
-
-    public void update(Protos.TaskInfo taskInfo) {
-        try {
-            final CassandraTask task = CassandraTask.parse(taskInfo);
-            synchronized (persistent) {
-                update(task);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
-        }
-    }
 
     private void removeTask(String name) throws PersistenceException {
         persistent.remove(name);
@@ -400,17 +373,30 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         }
     }
 
-    public Optional<CassandraTask> update(String taskId, Protos.Offer offer)
-            throws PersistenceException {
-        synchronized (persistent) {
-            if (byId.containsKey(taskId)) {
-                CassandraTask updated = tasks.get(byId.get(taskId)).update(offer);
-                update(updated);
-                return Optional.of(updated);
-            } else {
-                LOGGER.warn("Attempted to update unknown TaskID: " + taskId);
-                return Optional.empty();
+    public void update(CassandraTask task) throws PersistenceException {
+        persistent.put(task.getName(), task);
+        if (tasks.containsKey(task.getName())) {
+            byId.remove(tasks.get(task.getName()).getId());
+        }
+        byId.put(task.getId(), task.getName());
+        tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
+                tasks.entrySet().stream()
+                        .filter(entry -> !entry.getKey().equals(task.getName()))
+                        .collect(Collectors.toMap(
+                                entry -> entry.getKey(),
+                                entry -> entry.getValue())))
+                .put(task.getName(), task)
+                .build();
+    }
+
+    public void update(Protos.TaskInfo taskInfo) {
+        try {
+            final CassandraTask task = CassandraTask.parse(taskInfo);
+            synchronized (persistent) {
+                update(task);
             }
+        } catch (Exception e) {
+            LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
         }
     }
 
