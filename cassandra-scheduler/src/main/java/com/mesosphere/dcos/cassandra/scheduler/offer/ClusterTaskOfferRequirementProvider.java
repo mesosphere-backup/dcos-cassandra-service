@@ -51,7 +51,6 @@ public class ClusterTaskOfferRequirementProvider
 
         LOGGER.info("Avoiding agents: {}", agentsToAvoid);
         LOGGER.info("Colocating with agents: {}", agentsToColocate);
-        final Identity identity = identityManager.get();
 
         ExecutorInfo execInfo = taskInfo.getExecutor();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
