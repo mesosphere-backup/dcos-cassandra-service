@@ -21,6 +21,9 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentMap;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.offer.MesosResource;
+import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,6 +147,54 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                 .getType() == CassandraTask.TYPE.REPAIR).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
                         (RepairTask) entry.getValue())));
+    }
+
+    public List<String> getExpectedResourceIds() {
+        List<String> resourceIds = new ArrayList<>();
+
+        for (Map.Entry<String, CassandraDaemonTask> entry : getDaemons().entrySet()) {
+            resourceIds.addAll(getExpectedResourceIds(entry.getValue().getTaskInfo().getResourcesList()));
+            resourceIds.addAll(getExpectedResourceIds(entry.getValue().getTaskInfo().getExecutor().getResourcesList()));
+        }
+
+        return resourceIds;
+    }
+
+    public List<String> getExpectedPersistenceIds() {
+        List<String> persistenceIds = new ArrayList<String>();
+
+        for (Map.Entry<String, CassandraDaemonTask> entry : getDaemons().entrySet()) {
+            persistenceIds.addAll(getExpectedPersistenceIds(entry.getValue().getTaskInfo().getResourcesList()));
+            persistenceIds.addAll(getExpectedPersistenceIds(entry.getValue().getTaskInfo().getExecutor().getResourcesList()));
+        }
+
+        return persistenceIds;
+    }
+
+    private List<String> getExpectedResourceIds(Collection<Resource> resources) {
+        List<String> resourceIds = new ArrayList<>();
+
+        for (Resource resource : resources) {
+            String resourceId = new MesosResource(resource).getResourceId();
+            if (resourceId != null) {
+                resourceIds.add(resourceId);
+            }
+        }
+
+        return resourceIds;
+    }
+
+    private List<String> getExpectedPersistenceIds(Collection<Resource> resources) {
+        List<String> persistenceIds = new ArrayList<String>();
+
+        for (Resource resource : resources) {
+            String persistenceId = ResourceUtils.getPersistenceId(resource);
+            if (persistenceId != null) {
+                persistenceIds.add(persistenceId);
+            }
+        }
+
+        return persistenceIds;
     }
 
     public CassandraDaemonTask createDaemon(String name) throws

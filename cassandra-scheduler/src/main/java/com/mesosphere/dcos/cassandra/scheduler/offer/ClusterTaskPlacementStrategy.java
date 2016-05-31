@@ -29,9 +29,9 @@ public class ClusterTaskPlacementStrategy implements PlacementStrategy {
     @Override
     public List<Protos.SlaveID> getAgentsToColocate(Protos.TaskInfo taskInfo) {
         List<Protos.SlaveID> agentsToColocate = new ArrayList<>();
-        // Colocate this task with the corresponding Cassandra node task
+        // Collocate this task with the corresponding Cassandra node task
         Arrays.asList(taskInfo.getSlaveId());
-        LOGGER.info("Colocating task: {} with agent: {}",
+        LOGGER.info("Collocating task: {} with agent: {}",
                 taskInfo.getTaskId().getValue(), agentsToColocate);
         return agentsToColocate;
     }
