@@ -22,7 +22,6 @@ public class ClusterTaskOfferRequirementProvider
             ClusterTaskOfferRequirementProvider.class);
     private IdentityManager identityManager;
     private CassandraTasks cassandraTasks;
-    private static VolumeRequirement MODE_NONE_TYPE_ROOT = VolumeRequirement.create();
 
     @Inject
     public ClusterTaskOfferRequirementProvider(
@@ -43,11 +42,9 @@ public class ClusterTaskOfferRequirementProvider
         final PlacementStrategy placementStrategy = new ClusterTaskPlacementStrategy(
                 cassandraTasks);
         final List<Protos.SlaveID> agentsToAvoid =
-                placementStrategy.getAgentsToAvoid(
-                        taskInfo);
+                placementStrategy.getAgentsToAvoid(taskInfo);
         final List<Protos.SlaveID> agentsToColocate =
-                placementStrategy.getAgentsToColocate(
-                        taskInfo);
+                placementStrategy.getAgentsToColocate(taskInfo);
 
         LOGGER.info("Avoiding agents: {}", agentsToAvoid);
         LOGGER.info("Colocating with agents: {}", agentsToColocate);

@@ -21,16 +21,22 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.lifecycle.Managed;
+
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
+
 import org.apache.mesos.offer.OfferAccepter;
+import org.apache.mesos.offer.ResourceCleaner;
+import org.apache.mesos.offer.ResourceCleanerScheduler;
+
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.DefaultStageScheduler;
 import org.apache.mesos.scheduler.plan.StageManager;
 import org.apache.mesos.scheduler.plan.StageScheduler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,6 +202,11 @@ public class CassandraScheduler implements Scheduler, Managed {
                                                 currentBlock.getName()) :
                                         Collections.emptySet()));
 
+                ResourceCleanerScheduler cleanerScheduler = getCleanerScheduler();
+                if (cleanerScheduler != null) {
+                    acceptedOffers.addAll(getCleanerScheduler().resourceOffers(driver, offers));
+                }
+
                 declineOffers(driver, acceptedOffers, offers);
             } else {
 
@@ -208,6 +219,18 @@ public class CassandraScheduler implements Scheduler, Managed {
         } catch (Throwable t){
 
             LOGGER.error("Error in offer acceptance cycle", t);
+        }
+    }
+
+    private ResourceCleanerScheduler getCleanerScheduler() {
+        try {
+            ResourceCleaner cleaner = new ResourceCleaner(
+                    cassandraTasks.getExpectedResourceIds(),
+                    cassandraTasks.getExpectedPersistenceIds());
+            return new ResourceCleanerScheduler(cleaner, offerAccepter);
+        } catch (Exception ex) {
+            LOGGER.error("Failed to construct ResourceCleaner with exception:", ex);
+            return null;
         }
     }
 
