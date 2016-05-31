@@ -2,9 +2,10 @@ package com.mesosphere.dcos.cassandra.executor.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobInputStream;
+import com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.BlobOutputStream;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudPageBlob;
@@ -13,6 +14,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xerial.snappy.SnappyInputStream;
+import org.xerial.snappy.SnappyOutputStream;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -131,46 +134,27 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
   private void uploadFile(CloudBlobContainer container, String fileKey, File sourceFile) {
 
-    BlobOutputStream blobOutputStream = null;
+    PageBlobOutputStream pageBlobOutputStream = null;
+    SnappyOutputStream compress = null;
+    BufferedOutputStream bufferedOutputStream = null;
     try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(sourceFile))) {
 
       logger.info("Initiating upload for file: {} | key: {}",
         sourceFile.getAbsolutePath(), fileKey);
 
       final CloudPageBlob blob = container.getPageBlobReference(fileKey);
-      long sourceFileOriginalLength = sourceFile.length();
-      long sourceFilePageSized = roundToPageBlobSize(sourceFileOriginalLength);
+      pageBlobOutputStream = new PageBlobOutputStream(blob);
+      bufferedOutputStream = new BufferedOutputStream(pageBlobOutputStream);
 
-      int buffSize = DEFAULT_PART_SIZE_UPLOAD;
-      if (buffSize > sourceFilePageSized) {
-        logger.debug("Buffer size downgraded to rounded source length of {}", sourceFilePageSized);
-        buffSize = (int) sourceFilePageSized;
-      }
-      byte[] buffer = new byte[buffSize];
-
-      blobOutputStream = blob.openWriteNew(sourceFilePageSized);
-      long leftToWrite = sourceFilePageSized;
-      while ((inputStream.read(buffer)) != -1) {
-        // normally we would use the bytes read, however we need to page align
-        int writeCount = (int) Math.min(buffSize, leftToWrite);
-        leftToWrite -= writeCount;
-
-        // the writecount could be greater than what was read but the buffer is initialized with 0 (perfect!)
-        blobOutputStream.write(buffer, 0, writeCount);
-        buffer = new byte[buffSize];
-      }
-
-      logger.info("For file {} wrote: {} bytes for original file size of {}",
-        fileKey, sourceFilePageSized, sourceFileOriginalLength);
-
-      // file size on azure will be page sized.  we need to return to the actual file size... metadata FTW!
-      blob.setMetadata(fileMetaData(sourceFileOriginalLength));
-      blob.uploadMetadata();
+      compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
+      IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
 
     } catch (StorageException | URISyntaxException | IOException e) {
       logger.error("Unable to store blob", e);
     } finally {
-      IOUtils.closeQuietly(blobOutputStream);
+      IOUtils.closeQuietly(compress);  // super important that the compress close is called first in order to flush
+      IOUtils.closeQuietly(bufferedOutputStream);
+      IOUtils.closeQuietly(pageBlobOutputStream);
     }
   }
 
@@ -206,7 +190,6 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
     logger.info("Downloading |  Local location {} | fileKey: {} | Size: {}", localLocation, fileKey, originalSize);
 
-    InputStream inputStream = null;
     final String fileLocation = localLocation + File.separator + fileKey;
     File file = new File(fileLocation);
     // Only create parent directory once, if it doesn't exist.
@@ -215,29 +198,23 @@ public class AzureStorageDriver implements BackupStorageDriver {
       return;
     }
 
+    InputStream inputStream = null;
+    SnappyInputStream compress = null;
+
     try (
       FileOutputStream fileOutputStream = new FileOutputStream(file, true);
       BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream)) {
 
       final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
-      inputStream = pageBlobReference.openInputStream();
+      inputStream = new PageBlobInputStream(pageBlobReference);
+      compress = new SnappyInputStream(inputStream);
 
-      int buffSize = DEFAULT_PART_SIZE_DOWNLOAD;
-      if (buffSize > originalSize) {
-        logger.debug("Buffer size downgraded to rounded source length of {}", originalSize);
-        buffSize = (int) originalSize;
-      }
+      IOUtils.copy(compress, bos, DEFAULT_PART_SIZE_DOWNLOAD);
 
-      final byte[] buffer = new byte[buffSize];
-      long leftToWrite = originalSize;
-      while ((inputStream.read(buffer, 0, buffSize)) != -1) {
-        int writeCount = (int) Math.min(buffSize, leftToWrite);
-        leftToWrite -= writeCount;
-        bos.write(buffer, 0, writeCount);
-      }
     } catch (Exception e) {
       logger.error("Unable to write file: {}", fileKey, e);
     } finally {
+      IOUtils.closeQuietly(compress);
       IOUtils.closeQuietly(inputStream);
     }
   }
