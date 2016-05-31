@@ -127,17 +127,19 @@ public class DownloadSnapshotTask extends CassandraTask {
     }
 
     @Override
-    public DownloadSnapshotStatus createStatus(Protos.TaskState state,
-                                               Optional<String> message) {
+    public DownloadSnapshotStatus createStatus(
+            Protos.TaskState state,
+            Optional<String> message) {
+
         Protos.TaskStatus.Builder builder = getStatusBuilder();
         if (message.isPresent()) {
             builder.setMessage(message.get());
         }
+
         return DownloadSnapshotStatus.create(builder
-            .setData(
-                CassandraData.createSnapshotDownlaodStatusData()
-                    .getBytes())
-            .build());
+                .setData(CassandraData.createSnapshotDownloadStatusData().getBytes())
+                .setState(state)
+                .build());
     }
 
     public RestoreContext getRestoreContext() {

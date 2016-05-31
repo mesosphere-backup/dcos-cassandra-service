@@ -54,7 +54,7 @@ public class CassandraData {
             context.getColumnFamilies());
     }
 
-    public static final CassandraData createReapirStatusData() {
+    public static final CassandraData createRepairStatusData() {
         return new CassandraData(CassandraTask.TYPE.REPAIR);
     }
 
@@ -127,7 +127,7 @@ public class CassandraData {
             context.getS3SecretKey());
     }
 
-    public static final CassandraData createSnapshotDownlaodStatusData() {
+    public static final CassandraData createSnapshotDownloadStatusData() {
         return new CassandraData(CassandraTask.TYPE.SNAPSHOT_DOWNLOAD);
     }
 
@@ -145,7 +145,7 @@ public class CassandraData {
             context.getS3SecretKey());
     }
 
-    public static final CassandraData createRestoreSnaphshotStatusData() {
+    public static final CassandraData createRestoreSnapshotStatusData() {
         return new CassandraData(CassandraTask.TYPE.SNAPSHOT_RESTORE);
     }
 
