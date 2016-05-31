@@ -127,17 +127,19 @@ public class BackupUploadTask extends CassandraTask {
     }
 
     @Override
-    public BackupUploadStatus createStatus(Protos.TaskState state,
-                                           Optional<String> message) {
+    public BackupUploadStatus createStatus(
+            Protos.TaskState state,
+            Optional<String> message) {
+
         Protos.TaskStatus.Builder builder = getStatusBuilder();
         if (message.isPresent()) {
             builder.setMessage(message.get());
         }
+
         return BackupUploadStatus.create(builder
-            .setData(
-                CassandraData.createBackupUploadStatusData()
-                    .getBytes())
-            .build());
+                .setData(CassandraData.createBackupUploadStatusData().getBytes())
+                .setState(state)
+                .build());
     }
 
 

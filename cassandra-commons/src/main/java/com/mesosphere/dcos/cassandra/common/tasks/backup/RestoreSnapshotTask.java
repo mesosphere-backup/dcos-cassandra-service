@@ -91,7 +91,7 @@ public class RestoreSnapshotTask extends CassandraTask {
             VolumeRequirement.VolumeMode.NONE,
             null,
             Collections.emptyList(),
-            CassandraData.createSnapshotDownloadData("",
+            CassandraData.createRestoreSnapshotData("",
                 context.forNode(name).withLocalLocation(localLocation)));
     }
 
@@ -125,17 +125,19 @@ public class RestoreSnapshotTask extends CassandraTask {
     }
 
     @Override
-    public RestoreSnapshotStatus createStatus(Protos.TaskState state,
-                                               Optional<String> message) {
+    public RestoreSnapshotStatus createStatus(
+            Protos.TaskState state,
+            Optional<String> message) {
+
         Protos.TaskStatus.Builder builder = getStatusBuilder();
         if (message.isPresent()) {
             builder.setMessage(message.get());
         }
+
         return RestoreSnapshotStatus.create(builder
-            .setData(
-                CassandraData.createSnapshotDownlaodStatusData()
-                    .getBytes())
-            .build());
+                .setData(CassandraData.createRestoreSnapshotStatusData().getBytes())
+                .setState(state)
+                .build());
     }
 
     public RestoreContext getRestoreContext() {

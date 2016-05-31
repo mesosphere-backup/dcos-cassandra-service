@@ -126,18 +126,19 @@ public class RepairTask extends CassandraTask {
     }
 
     @Override
-    public RepairStatus createStatus(Protos.TaskState state,
-                                     Optional<String> message) {
+    public RepairStatus createStatus(
+            Protos.TaskState state,
+            Optional<String> message) {
+
         Protos.TaskStatus.Builder builder = getStatusBuilder();
         if (message.isPresent()) {
             builder.setMessage(message.get());
         }
+
         return RepairStatus.create(builder
-            .setData(
-                CassandraData
-                    .createReapirStatusData()
-                    .getBytes())
-            .build());
+                .setData(CassandraData.createRepairStatusData().getBytes())
+                .setState(state)
+                .build());
     }
 
 

@@ -306,6 +306,7 @@ public abstract class CassandraTask {
 
     protected Protos.TaskStatus.Builder getStatusBuilder() {
         return Protos.TaskStatus.newBuilder()
+                .setTaskId(getTaskInfo().getTaskId())
                 .setSlaveId(getTaskInfo().getSlaveId())
                 .setExecutorId(getTaskInfo().getExecutor().getExecutorId())
                 .setSource(Protos.TaskStatus.Source.SOURCE_EXECUTOR);

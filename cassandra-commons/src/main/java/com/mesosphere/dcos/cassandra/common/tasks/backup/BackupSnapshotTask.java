@@ -131,17 +131,19 @@ public class BackupSnapshotTask extends CassandraTask {
     }
 
     @Override
-    public BackupSnapshotStatus createStatus(Protos.TaskState state,
-                                      Optional<String> message) {
+    public BackupSnapshotStatus createStatus(
+            Protos.TaskState state,
+            Optional<String> message) {
+
         Protos.TaskStatus.Builder builder = getStatusBuilder();
         if (message.isPresent()) {
             builder.setMessage(message.get());
         }
+
         return BackupSnapshotStatus.create(builder
-            .setData(
-                CassandraData.createBackupSnapshotStatusData()
-                    .getBytes())
-            .build());
+                .setData(CassandraData.createBackupSnapshotStatusData().getBytes())
+                .setState(state)
+                .build());
     }
 
 

@@ -131,16 +131,18 @@ public class CleanupTask extends CassandraTask {
     }
 
     @Override
-    public CleanupStatus createStatus(Protos.TaskState state,
-                                      Optional<String> message) {
+    public CleanupStatus createStatus(
+            Protos.TaskState state,
+            Optional<String> message) {
+
         Protos.TaskStatus.Builder builder = getStatusBuilder();
         if (message.isPresent()) {
             builder.setMessage(message.get());
         }
+
         return CleanupStatus.create(builder
-            .setData(
-                CassandraData.createCleanupStatusData()
-                    .getBytes())
+            .setData(CassandraData.createCleanupStatusData().getBytes())
+            .setState(state)
             .build());
     }
 
