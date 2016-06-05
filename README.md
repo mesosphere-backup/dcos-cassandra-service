@@ -1,4 +1,4 @@
-# Overview
+# The Overview
 
 [![Build Status](http://velocity.mesosphere.com/service/velocity/buildStatus/icon?job=infinity-cassandra)](http://velocity.mesosphere.com/service/velocity/job/infinity-cassandra/)
 
