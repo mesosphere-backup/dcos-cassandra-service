@@ -29,6 +29,27 @@ Setup
 
     python dcos_cassandra/cli.py cassandra connection
 
+Binary:
+-----------
+
+Create Binary:
+##############
+
+#. Install pyinstaller::
+
+   pip install pyinstaller
+
+#. Create cassandra cli binary::
+
+   make binary
+
+Run Binary:
+###########
+
+#. Update `PATH` to have the dcos-cassandra binary. The created binary is is in folder `dist`::
+
+   PATH=/path/to/binary:$PATH
+
 Running Tests:
 --------------
 
