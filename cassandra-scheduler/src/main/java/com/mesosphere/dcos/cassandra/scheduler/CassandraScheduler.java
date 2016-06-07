@@ -71,7 +71,6 @@ public class CassandraScheduler implements Scheduler, Managed {
             final ConfigurationManager configurationManager,
             final IdentityManager identityManager,
             final MesosConfig mesosConfig,
-            final CuratorFrameworkConfig curatorConfig,
             final PersistentOfferRequirementProvider offerRequirementProvider,
             final StageManager stageManager,
             final CassandraTasks cassandraTasks,
@@ -92,7 +91,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.offerRequirementProvider = offerRequirementProvider;
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
-                new PersistentOperationRecorder(identityManager, curatorConfig, cassandraTasks)));
+                new PersistentOperationRecorder(identityManager, cassandraTasks)));
         planScheduler = new DefaultStageScheduler(offerAccepter);
         repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
                 offerAccepter, cassandraTasks);

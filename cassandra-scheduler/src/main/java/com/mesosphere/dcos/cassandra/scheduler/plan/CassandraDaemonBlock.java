@@ -56,19 +56,6 @@ public class CassandraDaemonBlock implements Block {
         }
     }
 
-    private void updateConfig(final CassandraDaemonTask task) {
-        try {
-            CassandraDaemonTask updated =
-                    cassandraTasks.reconfigureDeamon(task);
-            LOGGER.info("Block {} reconfiguring task : id = {}",
-                    getName(),
-                    updated.getId());
-        } catch (PersistenceException ex) {
-            LOGGER.error(String.format("Block %s - Failed to get or " +
-                    "reconfigure task", getName()), ex);
-        }
-    }
-
     private CassandraDaemonTask getTask() throws PersistenceException {
         return cassandraTasks.getOrCreateDaemon(name);
     }
