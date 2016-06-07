@@ -22,7 +22,7 @@ import java.util.HashMap;
 public class PageBlobOutputStream extends FilterOutputStream {
 
   private static final int PAGE_BLOB_PAGE_SIZE = 512;
-  private static final String ORIGINAL_SIZE_KEY = "originalSize";
+  public static final String ORIGINAL_SIZE_KEY = "originalSize";
 
   private CloudPageBlob pageBlob;
 

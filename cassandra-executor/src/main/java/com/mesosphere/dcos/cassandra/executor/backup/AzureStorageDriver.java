@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream.ORIGINAL_SIZE_KEY;
+
 /**
  * Implements a BackupStorageDriver that provides upload and download
  * functionality to an Azure Storage using Page Blobs.
@@ -41,9 +43,6 @@ import java.util.Optional;
 public class AzureStorageDriver implements BackupStorageDriver {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  private static final int PAGE_BLOB_PAGE_SIZE = 512;
-  private static final String File_SIZE_KEY = "size";
 
   private static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
   private static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
@@ -227,7 +226,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     CloudBlobContainer container = null;
 
     if (StringUtils.isNotBlank(containerName)) {
-      final String storageConnectionString = "DefaultEndpointsProtocol=http"
+      final String storageConnectionString = "DefaultEndpointsProtocol=https"
         + ";AccountName=" + accountName
         + ";AccountKey=" + accountKey;
 
@@ -257,16 +256,6 @@ public class AzureStorageDriver implements BackupStorageDriver {
     return true;
   }
 
-  private static long roundToPageBlobSize(long size) {
-    return (size + PAGE_BLOB_PAGE_SIZE - 1) & ~(PAGE_BLOB_PAGE_SIZE - 1);
-  }
-
-  private HashMap<String, String> fileMetaData(long sourceFileOriginalLength) {
-    HashMap<String, String> metadata = new HashMap<>(1);
-    metadata.put(File_SIZE_KEY, sourceFileOriginalLength + "");
-    return metadata;
-  }
-
   private Map<String, Long> getSnapshotFileKeys(CloudBlobContainer container, String keyPrefix) {
     Map<String, Long> snapshotFiles = new HashMap<>();
 
@@ -292,7 +281,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     HashMap<String, String> map = pageBlobReference.getMetadata();
     if (map != null && map.size() > 0) {
       try {
-        size = Long.parseLong(map.get(File_SIZE_KEY));
+        size = Long.parseLong(map.get(ORIGINAL_SIZE_KEY));
       } catch (Exception e) {
         logger.error("File size metadata missing or is not a number.");
       }

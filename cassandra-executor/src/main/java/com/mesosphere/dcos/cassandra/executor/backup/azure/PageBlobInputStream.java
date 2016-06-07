@@ -1,12 +1,15 @@
 package com.mesosphere.dcos.cassandra.executor.backup.azure;
 
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudPageBlob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
+
+import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream.ORIGINAL_SIZE_KEY;
 
 /**
  * InputStream for working with Azure PageBlob.  PageBlobs stores everything in 512 pages.
@@ -20,9 +23,8 @@ public class PageBlobInputStream extends FilterInputStream {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private static final String ORIGINAL_SIZE_KEY = "originalSize";
   private static final int EOF = -1;
-  private CloudPageBlob pageBlob;
+  private CloudBlob pageBlob;
 
   // it is expected that the EOF is saved in the metadata
   // if not, then read until out of pages.
@@ -41,7 +43,7 @@ public class PageBlobInputStream extends FilterInputStream {
    *                 or <code>null</code> if this instance is to be created without
    *                 an underlying stream.
    */
-  public PageBlobInputStream(CloudPageBlob pageBlob) throws StorageException {
+  public PageBlobInputStream(CloudBlob pageBlob) throws StorageException {
     super(pageBlob.openInputStream());
     this.pageBlob = pageBlob;
     setOriginalNonPageAlignedStreamSize();
