@@ -59,7 +59,7 @@ public class PersistentOperationRecorder implements OperationRecorder {
                 LOGGER.debug("Recording operation: {} for task: {}", operation, taskInfo);
 
                 try {
-                    stateStore.storeTasks(Arrays.asList(taskInfo), taskInfo.getExecutor().getExecutorId());
+                    stateStore.storeTasks(Arrays.asList(taskInfo), taskInfo.getExecutor().getName());
                     cassandraTasks.update(taskInfo, offer);
                 } catch (Exception e) {
                     LOGGER.error("Error updating task in recorder with exception: ", e);

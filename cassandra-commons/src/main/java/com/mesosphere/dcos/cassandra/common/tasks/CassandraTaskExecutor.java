@@ -125,6 +125,7 @@ public class CassandraTaskExecutor {
                 .setValue(frameworkId))
             .setName(name)
             .setExecutorId(createId(name))
+            .setName(name)
             .setCommand(createCommandInfo(command,
                 arguments,
                 uris,
