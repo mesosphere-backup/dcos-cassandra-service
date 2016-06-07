@@ -14,17 +14,23 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentMap;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.offer.MesosResource;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,16 +54,33 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     private volatile Map<String, CassandraTask> tasks = Collections.emptyMap();
     // Maps TaskId -> Task Name
     private final Map<String, String> byId = new HashMap<>();
+    private StateStore stateStore;
 
     @Inject
     public CassandraTasks(
             final IdentityManager identity,
             final ConfigurationManager configuration,
+            final CuratorFrameworkConfig curatorConfig,
             final Serializer<CassandraTask> serializer,
             final PersistenceFactory persistence) {
         this.persistent = persistence.createMap("tasks", serializer);
         this.identity = identity;
         this.configuration = configuration;
+
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        this.stateStore = new CuratorStateStore(
+                "/cassandra/" + identity.get().getName(),
+                curatorConfig.getServers(),
+                retryPolicy);
+
         loadTasks();
     }
 
@@ -387,6 +410,8 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     public void update(Protos.TaskInfo taskInfo, Offer offer) {
         try {
             final CassandraTask task = CassandraTask.parse(taskInfo);
+            stateStore.storeTasks(Arrays.asList(taskInfo), taskInfo.getExecutor().getName());
+
             synchronized (persistent) {
                 update(task.update(offer));
             }
@@ -412,6 +437,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                 }
 
                 update(updated);
+
+                stateStore.storeStatus(
+                        status,
+                        updated.getTaskInfo().getName(),
+                        updated.getExecutor().getName());
+
                 LOGGER.info("Updated task {}", updated);
             } else {
                 LOGGER.info("Received status update for unrecorded task: " +
