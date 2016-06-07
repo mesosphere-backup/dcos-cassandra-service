@@ -5,10 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
+import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
@@ -74,6 +71,7 @@ public class CassandraScheduler implements Scheduler, Managed {
             final ConfigurationManager configurationManager,
             final IdentityManager identityManager,
             final MesosConfig mesosConfig,
+            final CuratorFrameworkConfig curatorConfig,
             final PersistentOfferRequirementProvider offerRequirementProvider,
             final StageManager stageManager,
             final CassandraTasks cassandraTasks,
@@ -94,7 +92,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.offerRequirementProvider = offerRequirementProvider;
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
-                new PersistentOperationRecorder(cassandraTasks)));
+                new PersistentOperationRecorder(identityManager, curatorConfig, cassandraTasks)));
         planScheduler = new DefaultStageScheduler(offerAccepter);
         repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
                 offerAccepter, cassandraTasks);
