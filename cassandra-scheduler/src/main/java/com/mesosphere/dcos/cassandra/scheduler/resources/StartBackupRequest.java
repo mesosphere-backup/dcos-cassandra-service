@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class StartBackupRequest {
@@ -73,8 +74,8 @@ public class StartBackupRequest {
   }
 
   public boolean isValid() {
-    return name != null && externalLocation != null &&
-      (s3AccessKey != null && s3SecretKey != null) ||
-      (azureAccount != null && azureKey != null && externalLocation.startsWith("azure:"));
+    return (StringUtils.isNotBlank(name) && externalLocation != null) &&
+      ((s3AccessKey != null && s3SecretKey != null && externalLocation.startsWith("s3:")) ||
+        (azureAccount != null && azureKey != null && externalLocation.startsWith("azure:")));
   }
 }
