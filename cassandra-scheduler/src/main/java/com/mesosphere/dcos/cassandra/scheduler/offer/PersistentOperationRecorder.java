@@ -44,7 +44,7 @@ public class PersistentOperationRecorder implements OperationRecorder {
         this.identityManager = identityManager;
         this.cassandraTasks = cassandraTasks;
         this.stateStore = new CuratorStateStore(
-                identityManager.get().getName(),
+                "/cassandra/" + identityManager.get().getName(),
                 curatorConfig.getServers(),
                 retryPolicy);
     }
@@ -61,13 +61,9 @@ public class PersistentOperationRecorder implements OperationRecorder {
                 try {
                     stateStore.storeTasks(Arrays.asList(taskInfo), taskInfo.getExecutor().getExecutorId());
                     cassandraTasks.update(taskInfo, offer);
-                } catch (Throwable throwable) {
-                    LOGGER.error(String.format(
-                            "Error updating task in recorder: " +
-                                    "operation = %s, " +
-                                    "task = %s",
-                            operation,
-                            taskInfo));
+                } catch (Exception e) {
+                    LOGGER.error("Error updating task in recorder with exception: ", e);
+                    throw e;
                 }
             }
         }
