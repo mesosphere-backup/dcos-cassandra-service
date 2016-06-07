@@ -120,7 +120,8 @@ public class SchedulerModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named("ConfiguredDcUrl")).to(
                 configuration.getDcUrl()
         );
-        bind(new TypeLiteral<List<String>>() {})
+        bind(new TypeLiteral<List<String>>() {
+        })
                 .annotatedWith(Names.named("ConfiguredExternalDcs"))
                 .toInstance(configuration.getExternalDcsList());
         bind(Identity.class).annotatedWith(
@@ -153,6 +154,7 @@ public class SchedulerModule extends AbstractModule {
                 configuration.getHttpClientConfiguration())
                 .build("http-client"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
+        bind(CuratorFrameworkConfig.class).toInstance(configuration.getCuratorConfig());
         bind(ScheduledExecutorService.class).toInstance(
                 Executors .newScheduledThreadPool(8));
         bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
