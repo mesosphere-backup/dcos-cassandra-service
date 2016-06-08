@@ -11,5 +11,33 @@
     "icon-small": "https://downloads.mesosphere.com/cassandra-mesos/assets/cassandra-small.png",
     "icon-medium": "https://downloads.mesosphere.com/cassandra-mesos/assets/cassandra-medium.png",
     "icon-large": "https://downloads.mesosphere.com/cassandra-mesos/assets/cassandra-large.png"
+  },
+  "cli":{
+    "binaries":{
+      "darwin":{
+        "x86-64":{
+          "contentHash":[
+            {
+              "algo":"sha256",
+              "value":"{{cli-darwin-sha256q}}"
+            }
+          ],
+          "kind":"executable",
+          "url":"{{artifact-dir}}/cli/darwin/dcos-cassandra"
+        }
+      },
+      "linux":{
+        "x86-64":{
+          "contentHash":[
+            {
+              "algo":"sha256",
+              "value":"{{cli-linux-sha256}}"
+            }
+          ],
+          "kind":"executable",
+          "url":"{{artifact-dir}}/cli/linux/dcos-cassandra"
+        }
+      }
+    }
   }
 }
