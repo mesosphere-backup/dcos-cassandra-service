@@ -23,7 +23,7 @@
             }
           ],
           "kind":"executable",
-          "url":"{{artifact-dir}}/cli/darwin/dcos-cassandra"
+          "url":"{{artifact-dir}}/cli/darwin/dcos_cassandra"
         }
       },
       "linux":{
@@ -35,7 +35,7 @@
             }
           ],
           "kind":"executable",
-          "url":"{{artifact-dir}}/cli/linux/dcos-cassandra"
+          "url":"{{artifact-dir}}/cli/linux/dcos_cassandra"
         }
       }
     }
