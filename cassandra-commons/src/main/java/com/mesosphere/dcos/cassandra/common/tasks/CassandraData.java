@@ -22,6 +22,10 @@ public class CassandraData {
         return new CassandraData(bytes);
     }
 
+    public static final CassandraData createTemplateData() {
+        return new CassandraData();
+    }
+
     public static final CassandraData createDaemonData(
         final String hostname,
         final CassandraMode mode,
@@ -230,6 +234,12 @@ public class CassandraData {
             .setState(Protos.TaskState.TASK_STAGING.ordinal())
             .build();
 
+    }
+
+    private CassandraData() {
+        data = CassandraProtos.CassandraData.newBuilder()
+                .setType(CassandraTask.TYPE.TEMPLATE.ordinal())
+                .build();
     }
 
     private CassandraProtos.CassandraData.Builder getBuilder() {

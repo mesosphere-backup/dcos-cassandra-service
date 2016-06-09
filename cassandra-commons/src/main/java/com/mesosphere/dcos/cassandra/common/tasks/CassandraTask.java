@@ -104,7 +104,11 @@ public abstract class CassandraTask {
          * Task that performs primary range, local, anti-entropy repair on a
          * node.
          */
-        REPAIR
+        REPAIR,
+        /**
+         * Place holder for pre-reserving resources for Cluster Tasks
+         */
+        TEMPLATE
     }
 
     /**
