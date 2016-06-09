@@ -435,7 +435,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                 .build();
     }
 
-    public void update(Protos.TaskInfo taskInfo, Offer offer) {
+    public void update(Protos.TaskInfo taskInfo, Offer offer) throws Exception {
         try {
             final CassandraTask task = CassandraTask.parse(taskInfo);
             stateStore.storeTasks(Arrays.asList(taskInfo), taskInfo.getExecutor().getName());
@@ -445,6 +445,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             }
         } catch (Exception e) {
             LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
+            throw e;
         }
     }
 
