@@ -7,10 +7,12 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.scheduler.TestData;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTemplateTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
+import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -21,18 +23,10 @@ import io.dropwizard.validation.BaseValidator;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
-import org.apache.mesos.protobuf.ResourceBuilder;
-import org.apache.zookeeper.KeeperException;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Created by kowens on 2/8/16.
@@ -40,24 +34,27 @@ import static org.junit.Assert.assertEquals;
 public class CassandraTasksTest {
 
     private static TestingServer server;
-
     private static CuratorFramework curator;
-
     private static ZooKeeperPersistence persistence;
-
     private static CassandraSchedulerConfiguration config;
-
     private static IdentityManager identity;
-
     private static ConfigurationManager configuration;
-
+    private static CuratorFrameworkConfig curatorConfig;
+    private static ClusterTaskConfig clusterTaskConfig;
     private static String path;
+    private static String testDaemonName = "test-daemon-name";
+    private CassandraTasks cassandraTasks;
 
-    private static String path(String id) {
-
-        return path + "/" + id;
+    @Before
+    public void beforeEach() throws Exception {
+        cassandraTasks = new CassandraTasks(
+                identity,
+                configuration,
+                curatorConfig,
+                clusterTaskConfig,
+                CassandraTask.PROTO_SERIALIZER,
+                persistence);
     }
-
 
     @BeforeClass
     public static void beforeAll() throws Exception {
@@ -83,13 +80,17 @@ public class CassandraTasksTest {
 
         Identity initial = config.getIdentity();
 
+        curatorConfig = CuratorFrameworkConfig.create(server.getConnectString(),
+                10000L,
+                10000L,
+                Optional.empty(),
+                250L);
+
+        clusterTaskConfig = config.getClusterTaskConfig();
+
         persistence = (ZooKeeperPersistence) ZooKeeperPersistence.create(
                 initial,
-                CuratorFrameworkConfig.create(server.getConnectString(),
-                        10000L,
-                        10000L,
-                        Optional.empty(),
-                        250L));
+                curatorConfig);
 
         curator = persistence.getCurator();
 
@@ -133,11 +134,42 @@ public class CassandraTasksTest {
 
     @AfterClass
     public static void afterAll() throws Exception {
-
         persistence.stop();
-
         server.close();
-
         server.stop();
+    }
+
+    @Test
+    public void testCassandraContainerCreate() throws Exception {
+        CassandraContainer container = getTestCassandraContainer();
+        Assert.assertNotNull(container);
+    }
+
+    @Test
+    public void testGetContainerTaskInfos() throws Exception {
+        CassandraContainer container = getTestCassandraContainer();
+        Collection<Protos.TaskInfo> taskInfos = container.getTaskInfos();
+        Assert.assertNotNull(taskInfos);
+    }
+
+    @Test
+    public void testGetContainerExecutorInfo() throws Exception {
+        CassandraContainer container = getTestCassandraContainer();
+        Protos.ExecutorInfo execInfo = container.getExecutorInfo();
+        Assert.assertNotNull(execInfo);
+    }
+
+    @Test
+    public void testCreateCassandraContainer() throws PersistenceException {
+        Assert.assertNotNull(cassandraTasks.getOrCreateContainer("test_name"));
+    }
+
+    private CassandraContainer getTestCassandraContainer() throws Exception{
+        CassandraDaemonTask daemonTask = cassandraTasks.createDaemon(testDaemonName);
+        CassandraTemplateTask clusterTemplateTask = CassandraTemplateTask.create(
+                "test_role",
+                "test_principal",
+                config.getClusterTaskConfig());
+        return CassandraContainer.create(daemonTask, clusterTemplateTask);
     }
 }

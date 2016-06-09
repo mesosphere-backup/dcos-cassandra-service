@@ -1,9 +1,11 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
@@ -22,7 +24,7 @@ public class CassandraDaemonBlock implements Block {
 
     private final UUID id = UUID.randomUUID();
     private final CassandraTasks cassandraTasks;
-    private final CassandraOfferRequirementProvider provider;
+    private final PersistentOfferRequirementProvider provider;
     private final SchedulerClient client;
     private final String name;
     private boolean terminated = false;
@@ -56,16 +58,16 @@ public class CassandraDaemonBlock implements Block {
         }
     }
 
-    private CassandraDaemonTask getTask() throws PersistenceException {
-        return cassandraTasks.getOrCreateDaemon(name);
+    private CassandraContainer getTask() throws PersistenceException {
+        return cassandraTasks.getOrCreateContainer(name);
     }
 
-    private boolean isComplete(final CassandraDaemonTask task) {
+    private boolean isComplete(final CassandraContainer container) {
         return (Protos.TaskState.TASK_RUNNING.equals(
-                task.getState())
+                container.getState())
                 && CassandraMode.NORMAL.equals(
-                task.getMode()) &&
-                !cassandraTasks.needsConfigUpdate(task));
+                container.getMode()) &&
+                !cassandraTasks.needsConfigUpdate(container.getDaemonTask()));
     }
 
     private boolean needsConfigUpdate(final CassandraDaemonTask task) {
@@ -105,9 +107,9 @@ public class CassandraDaemonBlock implements Block {
 
     public static CassandraDaemonBlock create(
             final String name,
-            final CassandraOfferRequirementProvider provider,
+            final PersistentOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
-            final SchedulerClient client) {
+            final SchedulerClient client) throws PersistenceException {
 
         return new CassandraDaemonBlock(
                 name,
@@ -118,19 +120,17 @@ public class CassandraDaemonBlock implements Block {
 
     public CassandraDaemonBlock(
             final String name,
-            final CassandraOfferRequirementProvider provider,
+            final PersistentOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
-            final SchedulerClient client) {
+            final SchedulerClient client) throws PersistenceException {
         this.cassandraTasks = cassandraTasks;
         this.name = name;
         this.provider = provider;
         this.client = client;
 
-        if (cassandraTasks.getDaemons().containsKey(name)) {
-            CassandraDaemonTask task = cassandraTasks.getDaemons().get(name);
-            if (!needsConfigUpdate(task) && isComplete(task)) {
-                status = Status.Complete;
-            }
+        CassandraContainer container = cassandraTasks.getOrCreateContainer(name);
+        if (!needsConfigUpdate(container.getDaemonTask()) && isComplete(container)) {
+            status = Status.Complete;
         }
     }
 
@@ -153,43 +153,43 @@ public class CassandraDaemonBlock implements Block {
     @Override
     public OfferRequirement start() {
         LOGGER.info("Starting Block = {}", getName());
-        final CassandraDaemonTask task;
+        final CassandraContainer container;
 
         try {
-            task = getTask();
-            LOGGER.info("Block!!! taskInfo: " + task.toString());
+            container = getTask();
+            LOGGER.info("Block!!! taskInfo: " + container.toString());
         } catch (PersistenceException ex) {
             LOGGER.error(String.format("Block %s - Failed to get or create a " +
-                    "task", getName()), ex);
+                    "container", getName()), ex);
             return null;
         }
 
-        if (isComplete(task)) {
+        if (isComplete(container)) {
             LOGGER.info("Block {} - Task complete : id = {}",
                     getName(),
-                    task.getId());
+                    container.getId());
             setStatus(Status.Complete);
             return null;
-        } else if (needsConfigUpdate(task)) {
+        } else if (needsConfigUpdate(container.getDaemonTask())) {
             LOGGER.info("Block {} - Task requires config update : id = {}",
                     getName(),
-                    task.getId());
-            if (!task.isTerminated()) {
-                terminate(task);
+                    container.getId());
+            if (!container.isTerminated()) {
+                terminate(container.getDaemonTask());
                 return null;
             } else {
-                return reconfigureTask(task);
+                return reconfigureTask(container.getDaemonTask());
             }
-        } else if (task.getSlaveId().isEmpty()) {
-            LOGGER.info("Block {} - Launching new task : id = {}",
+        } else if (container.getAgentId().isEmpty()) {
+            LOGGER.info("Block {} - Launching new container : id = {}",
                     getName(),
-                    task.getId());
-            return provider.getNewOfferRequirement(task.getTaskInfo());
-        } else if (task.isTerminated() || task.isLaunching()) {
-            LOGGER.info("Block {} - Replacing task : id = {}",
+                    container.getId());
+            return provider.getNewOfferRequirement(container);
+        } else if (container.isTerminated() || container.isLaunching()) {
+            LOGGER.info("Block {} - Replacing container : id = {}",
                     getName(),
-                    task.getId());
-            return replaceTask(task);
+                    container.getId());
+            return replaceTask(container.getDaemonTask());
         } else {
             return null;
         }
@@ -200,7 +200,7 @@ public class CassandraDaemonBlock implements Block {
 
         try {
             cassandraTasks.update(status);
-            final CassandraDaemonTask task = getTask();
+            final CassandraContainer task = getTask();
             if (isComplete(task)) {
                 setStatus(Status.Complete);
             } else if (task.isTerminated()) {

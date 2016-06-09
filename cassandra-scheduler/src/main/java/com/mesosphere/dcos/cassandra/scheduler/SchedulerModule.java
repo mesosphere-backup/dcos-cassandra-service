@@ -155,6 +155,7 @@ public class SchedulerModule extends AbstractModule {
                 .build("http-client"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(configuration.getCuratorConfig());
+        bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
         bind(ScheduledExecutorService.class).toInstance(
                 Executors .newScheduledThreadPool(8));
         bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
