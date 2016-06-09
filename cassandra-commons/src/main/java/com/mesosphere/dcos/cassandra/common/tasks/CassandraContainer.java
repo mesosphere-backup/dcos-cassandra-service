@@ -26,7 +26,9 @@ public class CassandraContainer {
     }
 
     public Collection<Protos.TaskInfo> getTaskInfos() {
-        return Arrays.asList(daemonTask.getTaskInfo(), clusterTemplateTask.getTaskInfo());
+        return Arrays.asList(
+                Protos.TaskInfo.newBuilder(daemonTask.getTaskInfo()).clearExecutor().build(),
+                Protos.TaskInfo.newBuilder(clusterTemplateTask.getTaskInfo()).clearExecutor().build());
     }
 
     public Protos.ExecutorInfo getExecutorInfo() {
