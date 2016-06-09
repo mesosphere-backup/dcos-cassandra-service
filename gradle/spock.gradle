@@ -15,7 +15,7 @@ dependencies {
   testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
   testCompile "org.powermock:powermock-module-junit4-rule:$powermockVersion"
   testCompile "org.powermock:powermock-classloading-xstream:$powermockVersion"
-//  testCompile "org.powermock:powermock-api-mockito:$powermockVersion"
+  testCompile "org.powermock:powermock-api-mockito:$powermockVersion"
 }
 
 // for spock to live in test java tree
