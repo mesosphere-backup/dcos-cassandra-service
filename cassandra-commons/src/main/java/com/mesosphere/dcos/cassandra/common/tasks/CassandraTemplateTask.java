@@ -36,6 +36,7 @@ public class CassandraTemplateTask {
                 .setTaskId(EMPTY_TASK_ID)
                 .setName("cluster_task_template")
                 .setSlaveId(EMPTY_SLAVE_ID)
+                .setData(CassandraData.createTemplateData().getBytes())
                 .addAllResources(Arrays.asList(
                         getCpus(),
                         getMem(),
