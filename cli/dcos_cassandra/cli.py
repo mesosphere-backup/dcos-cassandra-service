@@ -170,11 +170,14 @@ def replace(node_id):
               help='External location where the snapshot should be stored.')
 @click.option('--s3_access_key', help='S3 access key')
 @click.option('--s3_secret_key', help='S3 secret key')
-def backup_start(backup_name, external_location, s3_access_key, s3_secret_key):
+@click.option('--azure_account', help='Azure storage account')
+@click.option('--azure_key', help='Azure secret key')
+def backup_start(backup_name, external_location,
+                s3_access_key, s3_secret_key, azure_account, azure_key):
     """Perform cluster backup via snapshot mechanism"""
     response = backup_api.start_backup(backup_name, external_location,
-                                       s3_access_key,
-                                       s3_secret_key)
+                                       s3_access_key, s3_secret_key,
+                                       azure_account, azure_key)
 
     if response.status_code % 200 < 100:
         print("Successfully started backup. " +
@@ -195,11 +198,14 @@ def backup_status():
               help='External location where the snapshot is stored.')
 @click.option('--s3_access_key', help='S3 access key')
 @click.option('--s3_secret_key', help='S3 secret key')
+@click.option('--azure_account', help='Azure storage account')
+@click.option('--azure_key', help='Azure secret key')
 def restore_start(backup_name, external_location,
-                  s3_access_key, s3_secret_key):
+                  s3_access_key, s3_secret_key, azure_account, azure_key):
     """Restores cluster to a snapshot"""
     response = restore_api.start_restore(backup_name, external_location,
-                                         s3_access_key, s3_secret_key)
+                                         s3_access_key, s3_secret_key,
+                                         azure_account, azure_key)
 
     if response.status_code % 200 < 100:
         print("Successfully started restore. " +

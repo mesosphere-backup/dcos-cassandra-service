@@ -57,7 +57,7 @@ $ dcos cassandra connection
          "node-1.cassandra.mesos:9042",
          "node-2.cassandra.mesos:9042"
     ]
-   
+
 }
 ```
 
@@ -200,7 +200,7 @@ In order to avoid port conflicts, by default you cannot collocate more than one 
 
 ### Installation Plan
 
-When the DCOS Cassandra service is initially installed it will generate an installation plan as shown below. 
+When the DCOS Cassandra service is initially installed it will generate an installation plan as shown below.
 
 ```
 {
@@ -344,7 +344,7 @@ The Cassandra scheduler runs as a Marathon process and can be reconfigured by ch
 
 Configuration updates are rolled out through execution of Update Plans. You can configure the way these plans are executed.
 
-#### Configuration Update Plans 
+#### Configuration Update Plans
 This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration. However, the default strategy can be overridden by a strategy the user provides.
 
 ## Configuration Update
@@ -586,17 +586,17 @@ The service configuration object contains properties that MUST be specified duri
     <td>string</td>
     <td>The name of the Cassandra service installation. This must be unique for each DCOS Cassandra service instance deployed on a DCOS cluster.</td>
   </tr>
-  
+
   <tr>
     <td>cluster</td>
     <td>string</td>
     <td>The cluster that the Cassandra service installation belongs to. Multiple DCOS Cassandra service instances may belong to the same cluster.</td>
   </tr>
-  
+
   <tr>
     <td>data_center</td>
     <td>string</td>
-    <td>The identifier of the data center that the DCOS Cassandra service will deploy. This MUST be unique for deployments supporting multiple data centers. This 
+    <td>The identifier of the data center that the DCOS Cassandra service will deploy. This MUST be unique for deployments supporting multiple data centers. This
     MAY be identical for multiple deployments on the same DCOS cluster that support different clusters.</td>
   </tr>
 
@@ -605,7 +605,7 @@ The service configuration object contains properties that MUST be specified duri
     <td>string</td>
     <td>The name of the operating system user account Cassandra tasks run as.</td>
   </tr>
-  
+
   <tr>
     <td>principal</td>
     <td>string</td>
@@ -616,57 +616,57 @@ The service configuration object contains properties that MUST be specified duri
     <td>string</td>
     <td>The name of the placement strategy of the Cassandra nodes.</td>
   </tr>
-  
+
   <tr>
     <td>secret</td>
     <td>string</td>
     <td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DCOS cluster. This parameter is optional, and should be omitted unless the DCOS deployment is specifically configured for authentication.</td>
   </tr>
-  
+
    <tr>
       <td>cpus</td>
       <td>number</td>
       <td>The number of CPU shares allocated to the DCOS Cassandra Service scheduler. </td>
     </tr>
-    
+
     <tr>
       <td>mem</td>
       <td>integer</td>
       <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
     </tr>
-    
+
     <tr>
       <td>heap</td>
       <td>integer</td>
       <td>The amount of heap, in MB, allocated for the DCOS Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
     </tr>
-    
+
     <tr>
       <td>api_port</td>
       <td>integer</td>
       <td>The port that the scheduler will accept API requests on.</td>
     </tr>
-    
+
     <tr>
     <td>data_center_url</td>
     <td>string</td>
-    <td>This specifies the URL that the DCOS Cassandra service instance will advertise to other instances in the cluster. 
-    If you are not configuring a multi data center deployment this should be omitted. 
-    If you are configuring a multiple data center deployment inside the same DCOS cluster, this should be omitted. 
-    If you are configuring a multiple data center deployment inside diffrent DCOS clusters, this value MUST be set to a URL that 
-    is reachable and resolvable by the DCOS Cassandra instances in the remote data centers. A good choice for this value is the admin 
+    <td>This specifies the URL that the DCOS Cassandra service instance will advertise to other instances in the cluster.
+    If you are not configuring a multi data center deployment this should be omitted.
+    If you are configuring a multiple data center deployment inside the same DCOS cluster, this should be omitted.
+    If you are configuring a multiple data center deployment inside diffrent DCOS clusters, this value MUST be set to a URL that
+    is reachable and resolvable by the DCOS Cassandra instances in the remote data centers. A good choice for this value is the admin
     router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
     </tr>
     <tr>
     <td>data_center_url</td>
     <td>string</td>
-    <td>This specifies the URLs of the external data centers that contain a cluster the DCOS Cassandra service will join as a comma separated list. 
-    This value should only be included when your deploying a DCOS Cassandra service instance that will extend an existing cluster. Otherwise, this 
+    <td>This specifies the URLs of the external data centers that contain a cluster the DCOS Cassandra service will join as a comma separated list.
+    This value should only be included when your deploying a DCOS Cassandra service instance that will extend an existing cluster. Otherwise, this
     value should be omitted. If this value is specified, the URLs contained in the comma separated list MUST be resolvable and reachable from the deployed cluster.
-    In practice, they should be identical to the values specified in data_center_url configuration parameter for the instance whose cluster will be extended. 
+    In practice, they should be identical to the values specified in data_center_url configuration parameter for the instance whose cluster will be extended.
     </td>
   </tr>
-  
+
 </table>
 
 - **In the DCOS CLI, options.json**: `name` = string (default: `cassandra`)
@@ -700,25 +700,25 @@ Example node configuration:
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>cpus</td>
     <td>number</td>
     <td>The number of cpu shares allocated to the container where the Cassandra process resides. Currently, due to a bug in Mesos, it is not safe to modify this parameter.</td>
   </tr>
-  
+
   <tr>
     <td>mem</td>
     <td>integer</td>
     <td>The amount of memory, in MB, allocated to the container where the Cassandra process resides. This value MUST be larger than the specified max heap size. Make sure to allocate enough space for additional memory used by the JVM and other overhead.</td>
   </tr>
-  
+
   <tr>
     <td>disk</td>
     <td>integer</td>
     <td>The amount of disk, in MB, allocated to a Cassandra node in the cluster. **Note:** Once this value is configured, it can not be changed.</td>
   </tr>
-  
+
   <tr>
     <td>disk_type</td>
     <td>string</td>
@@ -729,7 +729,7 @@ Example node configuration:
     </ul>
     </td>
   </tr>
-  
+
   <tr>
     <td>heap.size</td>
     <td>integer</td>
@@ -737,25 +737,25 @@ Example node configuration:
     Note: The value of heap size should not be greater than the total memory configured for the container via <b>mem</b> param. If value of <b>mem</b> is greater than <b>heap.size</b> then Linux operating system will use the remaining memory, <b>mem</b> - <b>heap.size</b> for <a href="https://en.wikipedia.org/wiki/Page_cache">PageCache</a>
     </td>
   </tr>
-  
+
   <tr>
     <td>heap.new</td>
     <td>integer</td>
     <td>The young generation heap size in MB. This value should be set at roughly 100MB per allocated CPU core. Increasing the size of this value will generally increase the length of garbage collection pauses. Smaller values will increase the frequency of garbage collection pauses.</td>
   </tr>
-  
+
   <tr>
     <td>count</td>
     <td>integer</td>
     <td>The number of nodes in the Cassandra cluster. This value MUST be between 3 and 100.</td>
   </tr>
-  
+
   <tr>
     <td>seeds</td>
     <td>integer</td>
     <td>The number of seed nodes that the service will use to seed the cluster. The service selects seed nodes dynamically based on the current state of the cluster. 2 - 5 seed nodes is generally sufficient.</td>
   </tr>
-  
+
 </table>
 
 ### Executor Configuration
@@ -784,31 +784,31 @@ Example executor configuration:
       <td>number</td>
       <td>The number of CPU shares allocated to the DCOS Cassandra Service executor. </td>
     </tr>
-    
+
     <tr>
       <td>mem</td>
       <td>integer</td>
       <td>The amount of memory, in MB, allocated for the DCOS Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
     </tr>
-    
+
     <tr>
       <td>heap</td>
       <td>integer</td>
       <td>The amount of heap, in MB, allocated for the DCOS Cassandra Service executor.</td>
     </tr>
-    
+
     <tr>
       <td>disk</td>
       <td>integer</td>
       <td>The amount of disk, in MB, allocated for the DCOS Cassandra Service executor.</td>
     </tr>
-    
+
     <tr>
       <td>api_port</td>
       <td>integer</td>
       <td>The port that the executor will accept API requests on.</td>
     </tr>
-  
+
 </table>
 ### Task Configuration
 The task configuration object allows you to modify the resources associated with management operations.  Again, These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
@@ -899,31 +899,31 @@ The IP address of the Cassandra node is determined automatically by the service 
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>jmx_port</td>
     <td>integer</td>
     <td>The port on which the application will listen for JMX connections. Remote JMX connections are disabled due to security considerations.</td>
   </tr>
-  
+
    <tr>
     <td>storage_port</td>
     <td>integer</td>
     <td>The port the application uses for inter-node communication.</td>
   </tr>
-  
+
    <tr>
     <td>internode_compression</td>
     <td>all,none,dc</td>
     <td>If set to all, traffic between all nodes is compressed. If set to dc, traffic between datacenters is compressed. If set to none, no compression is used for internode communication.</td>
   </tr>
-  
+
   <tr>
     <td>native_transport_port</td>
     <td>integer</td>
     <td>The port the application uses for inter-node communication.</td>
   </tr>
-  
+
 </table>
 
 ### Commit Log Configuration
@@ -937,13 +937,13 @@ The DCOS Cassandra service only supports the commitlog_sync model for configurin
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>commitlog_sync_period_in_ms</td>
     <td>integer</td>
     <td>The time, in ms, between successive calls to the fsync system call. This defines the maximum window between write acknowledgement and a potential data loss.</td>
   </tr>
-  
+
    <tr>
     <td>commitlog_segment_size_in_mb</td>
     <td>integer</td>
@@ -961,13 +961,13 @@ The DCOS Cassandra service only supports the commitlog_sync model for configurin
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>column_index_size_in_kb</td>
     <td>integer</td>
     <td>Index size  of rows within a partition. For very large rows, this value can be decreased to increase seek time. If key caching is enabled be careful when increasing this value, as the key cache may become overwhelmed.</td>
   </tr>
-  
+
   <tr>
     <td>index_summary_resize_interval_in_minutes</td>
     <td>integer</td>
@@ -987,7 +987,7 @@ Hinted handoff is the process by which Cassandra recovers consistency when a wri
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>hinted_handoff_enabled</td>
     <td>boolean</td>
@@ -999,7 +999,7 @@ Hinted handoff is the process by which Cassandra recovers consistency when a wri
     <td>integer</td>
     <td>The maximum amount of time, in ms, that Cassandra will record hints for an unavailable node.</td>
   </tr>
-  
+
   <tr>
     <td>max_hint_delivery_threads</td>
     <td>integer</td>
@@ -1019,19 +1019,19 @@ The endpoint snitch for the service is always the `GossipPropertyFileSnitch`, bu
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>dynamic_snitch_badness_threshold</td>
     <td>number</td>
     <td>Controls how much worse a poorly performing node has to be before the dynamic snitch prefers other replicas over it. A value of 0.2 means Cassandra continues to prefer the static snitch values until the node response time is 20% worse than the best performing node. Until the threshold is reached, incoming requests are statically routed to the closest replica.</td>
   </tr>
-  
+
   <tr>
     <td>dynamic_snitch_reset_interval_in_ms</td>
     <td>integer</td>
     <td>Time interval, in ms, to reset all node scores, allowing a bad node to recover.</td>
   </tr>
-  
+
    <tr>
     <td>dynamic_snitch_update_interval_in_ms</td>
     <td>integer</td>
@@ -1051,13 +1051,13 @@ The partition key cache is a cache of the partition index for a Cassandra table.
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>key_cache_save_period</td>
     <td>integer</td>
     <td>The duration in seconds that keys are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O.</td>
   </tr>
-  
+
   <tr>
     <td>key_cache_size_in_mb</td>
     <td>integer</td>
@@ -1080,13 +1080,13 @@ The following configuration properties are global for all row caches.
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>row_cache_save_period</td>
     <td>integer</td>
     <td>The duration in seconds that rows are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O.</td>
   </tr>
-  
+
   <tr>
     <td>row_cache_size_in_mb</td>
     <td>integer</td>
@@ -1110,35 +1110,35 @@ In addition to time synchronization, Cassandra requires OS level configuration s
     <th>Value</th>
     <th>Reason</th>
   </tr>
-  
+
    <tr>
     <td>/etc/sysctl.conf</td>
     <td>vm.max_map_count</td>
     <td>131702</td>
     <td>Aside from calls to the system malloc implementation, Cassandra uses mmap directly to memory map files. Exceeding the number of allowed memory mappings will cause a Cassandra node to fail.</td>
   </tr>
-  
+
    <tr>
     <td>/etc/sysctl.conf</td>
     <td>vm.swappiness</td>
     <td>0</td>
     <td>If the OS swaps out the Cassandra process, it can fail to respond to requests, resulting in the node being marked down by the cluster.</td>
   </tr>
-  
+
   <tr>
     <td>/etc/security/limits.conf</td>
     <td>memlock</td>
     <td>unlimited</td>
     <td>A Cassandra node can fail to load and map SSTables due to insufficient memory mappings into process address space. This will cause the node to terminate.</td>
   </tr>
-  
+
   <tr>
     <td>/etc/security/limits.conf</td>
     <td>nofile</td>
     <td>unlimited</td>
     <td>If this value is too low, a Cassandra node will terminate due to insufficient file handles.</td>
   </tr>
-  
+
   <tr>
     <td>/etc/security/limits.conf, /etc/security/limits.d/90-nproc.conf</td>
     <td>nproc</td>
@@ -1176,33 +1176,33 @@ The response is as below.
          "node-1.cassandra.mesos:9042",
          "node-2.cassandra.mesos:9042"
     ]
-    
+
 }
 ```
 
-This address JSON array contains a list of valid nodes addresses for nodes in the cluster. 
-The dns JSON array contains valid MesosDNS names for the same nodes. For availability 
-reasons, it is best to specify multiple nodes in the configuration of the CQL Driver used 
-by the application. 
+This address JSON array contains a list of valid nodes addresses for nodes in the cluster.
+The dns JSON array contains valid MesosDNS names for the same nodes. For availability
+reasons, it is best to specify multiple nodes in the configuration of the CQL Driver used
+by the application.
 
 If IP addresses are used, and a Cassandra node is moved to a different IP
-address, the address in the list passed to the Cluster configuration of the application 
-should be changed. Note that, once the application is connected to the Cluster, moving a 
-node to a new IP address will not result in a loss of connectivity. The CQL Driver is 
-capable of dealing with topology changes. However, the application's 
-configuration should be pointed to the new address the next time the application is 
+address, the address in the list passed to the Cluster configuration of the application
+should be changed. Note that, once the application is connected to the Cluster, moving a
+node to a new IP address will not result in a loss of connectivity. The CQL Driver is
+capable of dealing with topology changes. However, the application's
+configuration should be pointed to the new address the next time the application is
 restarted.
 
-If DNS ames are used, the DNS name will always resolve to correct IP address of the node. 
-This is true, even if the node is moved to a new IP address. However, it is important to 
+If DNS ames are used, the DNS name will always resolve to correct IP address of the node.
+This is true, even if the node is moved to a new IP address. However, it is important to
 understand the DNS caching behavior of your application. For a Java application using  
-the CQL driver, if a SecurityManager is installed the default behavior is to cache a 
-successful DNS lookup forever. Therefore, if a node moves, your application will always 
-maintain the original address. If no security manager is installed, the default cache 
-behavior falls back to an implementation defined timeout. If a node moves in this case, 
-the behavior is generally undefined. If you choose to use DNS to resolve entry points to 
+the CQL driver, if a SecurityManager is installed the default behavior is to cache a
+successful DNS lookup forever. Therefore, if a node moves, your application will always
+maintain the original address. If no security manager is installed, the default cache
+behavior falls back to an implementation defined timeout. If a node moves in this case,
+the behavior is generally undefined. If you choose to use DNS to resolve entry points to
 the cluster, the safest method is to set networkaddress.cache.ttl to a reasonable value.
-As with the IP address method, the CQL driver still detect topology changes and reamin 
+As with the IP address method, the CQL driver still detect topology changes and reamin
 connected even if a node moves.
 
 ### Configuring the CQL Driver
@@ -1283,73 +1283,73 @@ Result:
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>data_center</td>
     <td>string</td>
     <td>The datacenter that the Cassandra node is configured to run in. This has implications for tables created with topology-aware replication strategies. Multidatacenter topologies are not currently supported, but they will be in future releases.</td>
   </tr>
-  
+
   <tr>
     <td>endpoint</td>
     <td>string</td>
     <td>The address of the storage service in the cluster.</td>
   </tr>
-  
+
   <tr>
     <td>gossip_initialized</td>
     <td>boolean</td>
     <td>If true, the node has initialized the internal gossip protocol. This value should be true if the node is healthy.</td>
   </tr>
-  
+
   <tr>
     <td>gossip_running</td>
     <td>boolean</td>
     <td>If true, the node's gossip protocol is running. This value should be true if the node is healthy.</td>
   </tr>
-  
+
   <tr>
     <td>host_id</td>
     <td>string</td>
     <td>The host id that is exposed to as part of Cassandra's internal protocols. This value may be useful when examining the Cassandra process logs in the cluster. Hosts are sometimes referenced by id.</td>
   </tr>
-  
+
   <tr>
     <td>joined</td>
     <td>true</td>
     <td>If true, the node has successfully joined the cluster. This value should always be true if the node is healthy.</td>
   </tr>
- 
+
  <tr>
     <td>mode</td>
     <td>string</td>
     <td>The operating mode of the Cassandra node. If the mode is STARTING, JOINING, or JOINED, the node is initializing. If the mode is NORMAL, the node is healthy and ready to receive client requests.</td>
   </tr>
-  
+
   <tr>
     <td>native_transport_running</td>
     <td>boolean</td>
     <td>If true, the node can service requests over the native transport port using the CQL protocol. If this value is not true, then the node is not capable of serving requests to clients.</td>
   </tr>
-  
+
   <tr>
     <td>rack</td>
     <td>string</td>
     <td>The rack assigned to the Cassandra node. This property is important for topology-aware replication strategies. For the DCOS Cassandra service all nodes in the cluster should report the same value.</td>
   </tr>
-  
+
   <tr>
     <td>token_count</td>
     <td>integer</td>
     <td>The number of tokens assigned to the node. The Cassandra DCOS service only supports virtual node-based deployments. Because the resources allocated to each instance are homogenous, the number of tokens assigned to each node is identical and should always be 256.</td>
   </tr>
-  
+
    <tr>
     <td>version</td>
     <td>string</td>
     <td>The version of Cassandra that is running on the node.</td>
   </tr>
- 
+
 </table>
 
 ### Node Info
@@ -1360,7 +1360,7 @@ $ dcos cassandra --name=<service-name> node describe <nodeid>
 ```
 In contrast to the status command, this command requests information from the DCOS Cassandra Service and not the Cassandra node.
 
-In contrast to the `status` command, `node describe` requests information from the DCOS Cassandra Service and not the Cassandra node. 
+In contrast to the `status` command, `node describe` requests information from the DCOS Cassandra Service and not the Cassandra node.
 
 Result:
 
@@ -1382,43 +1382,43 @@ Result:
     <th>Type</th>
     <th>Description</th>
   </tr>
-  
+
    <tr>
     <td>hostname</td>
     <td>string</td>
     <td>The hostname or IP address of the DCOS agent on which the node is running.</td>
   </tr>
-  
+
   <tr>
     <td>id</td>
     <td>string</td>
     <td>The DCOS identifier of the task for the Cassandra node.</td>
   </tr>
-  
+
    <tr>
     <td>name</td>
     <td>string</td>
     <td>The name of the Cassandra node.</td>
   </tr>
-  
+
   <tr>
     <td>mode</td>
     <td>string</td>
     <td>The operating mode of the Cassandra node as recorded by the DCOS Cassandra service. This value should be eventually consistent with the mode returned by the status command.</td>
   </tr>
-  
+
    <tr>
     <td>slave_id</td>
     <td>string</td>
     <td>The identifier of the DCOS slave agent where the node is running.</td>
   </tr>
-  
+
   <tr>
     <td>state</td>
     <td>string</td>
     <td>The state of the task for the Cassandra node. If the node is being installed, this value may be TASK_STATING or TASK_STARTING. Under normal operating conditions the state should be TASK_RUNNING. The state may be temporarily displayed as TASK_FINISHED during configuration updates or upgrades.</td>
   </tr>
- 
+
 </table>
 
 ## Cleanup
@@ -1437,7 +1437,7 @@ Here, `<nodes>` is an optional comma-separated list indicating the nodes to clea
 If no arguments are specified a cleanup will be performed for all nodes, key spaces, and column families.
 
 ## Repair
-Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed. 
+Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed.
 Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra Service will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
 To perform a repair from the CLI, enter the following command:
@@ -1448,7 +1448,7 @@ $ dcos cassandra --name=<service-name> repair --nodes=<nodes> --key_spaces=<key_
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
 If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
- 
+
 ## Backup and Restore
 
 DCOS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
@@ -1457,9 +1457,11 @@ Cassandra takes a snapshot your tables and ships them to a remote location. Once
 
 ### Backup
 
-You can take a complete snapshot of your DCOS Cassandra ring and upload the artifacts to S3.
+You can take a complete snapshot of your DCOS Cassandra ring and upload the artifacts to S3 or to Azure.
 
-To perform a backup, enter the following command on the DCOS CLI:
+#### S3 Backup
+
+To perform a backup to S3, enter the following command on the DCOS CLI:
 
 ```
 $ dcos cassandra --name=<service-name> backup start \
@@ -1469,6 +1471,26 @@ $ dcos cassandra --name=<service-name> backup start \
     --s3_secret_key=<s3-secret-key>
 ```
 
+To upload to S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
+
+Check status of the backup:
+
+    $ dcos cassandra --name=<service-name> backup status
+
+#### Azure Backup
+
+To perform a backup to Azure, enter the following command on the DCOS CLI:
+
+```
+$ dcos cassandra --name=<service-name> backup start \
+    --backup_name=<backup-name> \
+    --external_location=azure://<container> \
+    --azure_account=<account_name> \
+    --azure_key=<key>
+```
+
+To upload to Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
+
 Check status of the backup:
 
 ```
@@ -1477,7 +1499,9 @@ $ dcos cassandra --name=<service-name> backup status
 
 ### Restore
 
-You can restore your DCOS Cassandra snapshots on a new Cassandra ring.
+You can restore your DCOS Cassandra snapshots on a new Cassandra ring from S3 or from Azure storage.
+
+#### S3 Restore
 
 To restore, enter the following command on the DCOS CLI:
 
@@ -1488,6 +1512,26 @@ $ dcos cassandra --name=<service-name> restore start \
     --s3_access_key=<s3-access-key> \
     --s3_secret_key=<s3-secret-key>
 ```
+
+To restore from S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
+
+Check the status of the restore:
+
+    $ dcos cassandra --name=<service-name> restore status
+
+#### Azure Restore
+
+To restore, enter the following command on the DCOS CLI:
+
+```
+$ dcos cassandra --name=<service-name> restore start \
+    --backup_name=<backup-name> \
+    --external_location=azure://<container-name> \
+    --azure_account=<account_name> \
+    --azure_key=<key>
+```
+
+To restore from Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
 
 Check the status of the restore:
 
@@ -1562,7 +1606,7 @@ $ dcos cassandra --name=<service-name> node replace <node_id>
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
 
 # API Reference
-The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token. 
+The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.
 The <dcos_url> parameter referenced below indicates the base URL of the DCOS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
 
 ## Configuration
@@ -1792,14 +1836,14 @@ During the installation of additional data centers, you will see a plan generate
 	"status": "Complete"
 }
 ```
-In the above, the Sync DataCenters phase will contain a Block for each data center that 
+In the above, the Sync DataCenters phase will contain a Block for each data center that
 contains a DCOS Cassandra service deployment containing a partition of the cluster. During the execution of each Block, the DCOS Cassandra Service will register its
-local endpoint with the data center indicated by the URL in the Block's message, and, it 
-will retrieve the current seed nodes for that data center. 
-Once the Installation plan progresses to deployment, it will provide the seeds from the 
-external data centers to the nodes it deploys, allowing the cluster to span multiple 
+local endpoint with the data center indicated by the URL in the Block's message, and, it
+will retrieve the current seed nodes for that data center.
+Once the Installation plan progresses to deployment, it will provide the seeds from the
+external data centers to the nodes it deploys, allowing the cluster to span multiple
 datacenters.
-After the Sync DataCenter Block completes, both data centers will periodically poll each 
+After the Sync DataCenter Block completes, both data centers will periodically poll each
 other for modifications to the seed set.
 
 # Limitations
@@ -1808,5 +1852,5 @@ other for modifications to the seed set.
 - Cluster restore can only restore a cluster of the same size as, or larger than, the cluster from which the backup was taken.
 - While nodes can be replaced, there is currently no way to shrink the size of the cluster. Future releases will contain decommissions and remove operations.
 - Anti-entropy repair can only be performed sequentially, for the primary range of each node, across and entire data center. There are use cases where one might wish to repair an individual node, but running the repair procedure as implemented is always sufficient to repair the cluster.
-- Once a cluster is configured to span multiple data centers, there is no way to shrink 
+- Once a cluster is configured to span multiple data centers, there is no way to shrink
 the cluster back to a single data center.

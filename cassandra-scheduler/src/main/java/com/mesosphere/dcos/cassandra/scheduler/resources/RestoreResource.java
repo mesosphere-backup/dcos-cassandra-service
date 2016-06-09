@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,9 +60,19 @@ public class RestoreResource {
         final RestoreContext context =
                 new RestoreContext();
         context.setName(request.getName());
-        context.setExternalLocation(request.getExternalLocation());
-        context.setS3AccessKey(request.getS3AccessKey());
-        context.setS3SecretKey(request.getS3SecretKey());
+        final String externalLocation = request.getExternalLocation();
+        context.setExternalLocation(externalLocation);
+        if (isAzure(externalLocation)) {
+          context.setAcccountId(request.getAzureAccount());
+          context.setSecretKey(request.getAzureKey());
+        } else {
+          context.setAcccountId(request.getS3AccessKey());
+          context.setSecretKey(request.getS3SecretKey());
+        }
         return context;
+    }
+
+    private static boolean isAzure(String externalLocation) {
+      return StringUtils.isNotEmpty(externalLocation) && externalLocation.startsWith("azure:");
     }
 }

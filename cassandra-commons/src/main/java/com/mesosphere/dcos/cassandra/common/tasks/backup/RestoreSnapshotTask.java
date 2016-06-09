@@ -83,8 +83,8 @@ public class RestoreSnapshotTask extends CassandraTask {
         private RestoreSnapshotStatus status;
         private String backupName;
         private String externalLocation;
-        private String s3AccessKey;
-        private String s3SecretKey;
+        private String accountId;
+        private String secretKey;
         private String localLocation;
 
         private Builder(RestoreSnapshotTask task) {
@@ -102,8 +102,8 @@ public class RestoreSnapshotTask extends CassandraTask {
             this.status = task.getStatus();
             this.backupName = task.backupName;
             this.externalLocation = task.externalLocation;
-            this.s3AccessKey = task.s3AccessKey;
-            this.s3SecretKey = task.s3SecretKey;
+            this.accountId = task.accountId;
+            this.secretKey = task.secretKey;
             this.localLocation = task.localLocation;
         }
 
@@ -176,18 +176,18 @@ public class RestoreSnapshotTask extends CassandraTask {
          *
          * @return The access key for the S3 bucket for backup.
          */
-        public String getS3AccessKey() {
-            return s3AccessKey;
+        public String getAccountId() {
+            return accountId;
         }
 
         /**
          * Sets the access key.
          *
-         * @param s3AccessKey The access key for the S3 bucket for the backup.
+         * @param accountId The access key for the S3 bucket for the backup.
          * @return The Builder instance.
          */
-        public Builder setS3AccessKey(String s3AccessKey) {
-            this.s3AccessKey = s3AccessKey;
+        public Builder setAccountId(String accountId) {
+            this.accountId = accountId;
             return this;
         }
 
@@ -196,18 +196,18 @@ public class RestoreSnapshotTask extends CassandraTask {
          *
          * @return The secret key for the S3 bucket for the backup.
          */
-        public String getS3SecretKey() {
-            return s3SecretKey;
+        public String getSecretKey() {
+            return secretKey;
         }
 
         /**
          * Sets the secret key.
          *
-         * @param s3SecretKey The secret key for the S3 bucket for the backup.
+         * @param secretKey The secret key for the S3 bucket for the backup.
          * @return The Builder instance.
          */
-        public Builder setS3SecretKey(String s3SecretKey) {
-            this.s3SecretKey = s3SecretKey;
+        public Builder setSecretKey(String secretKey) {
+            this.secretKey = secretKey;
             return this;
         }
 
@@ -248,8 +248,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                     status,
                     backupName,
                     externalLocation,
-                    s3AccessKey,
-                    s3SecretKey,
+                    accountId,
+                    secretKey,
                     localLocation);
         }
 
@@ -467,11 +467,11 @@ public class RestoreSnapshotTask extends CassandraTask {
     @JsonProperty("external_location")
     private final String externalLocation;
 
-    @JsonProperty("s3_access_key")
-    private final String s3AccessKey;
+    @JsonProperty("account_id")
+    private final String accountId;
 
-    @JsonProperty("s3_secret_key")
-    private final String s3SecretKey;
+    @JsonProperty("secret_key")
+    private final String secretKey;
 
     /**
      * Creates a new RestoreSnapshotTask.
@@ -493,9 +493,9 @@ public class RestoreSnapshotTask extends CassandraTask {
      * @param localLocation    The location where the download will be stored on
      *                         the local host.
      * @param backupName       The name of the backup.
-     * @param s3AccessKey      The S3 access key of the bucket where the backup is
+     * @param accountId      The S3 access key of the bucket where the backup is
      *                         stored.
-     * @param s3SecretKey      The S3 secret key of the bucket where the backup is
+     * @param secretKey      The S3 secret key of the bucket where the backup is
      *                         stored.
      * @return A new RestoreSnapshotTask constructed from the parameters.
      */
@@ -514,8 +514,8 @@ public class RestoreSnapshotTask extends CassandraTask {
             @JsonProperty("status") RestoreSnapshotStatus status,
             @JsonProperty("backup_name") String backupName,
             @JsonProperty("external_location") String externalLocation,
-            @JsonProperty("s3_access_key") String s3AccessKey,
-            @JsonProperty("s3_secret_key") String s3SecretKey,
+            @JsonProperty("account_id") String accountId,
+            @JsonProperty("secret_key") String secretKey,
             @JsonProperty("local_location") String localLocation) {
         return new RestoreSnapshotTask(id,
                 slaveId,
@@ -530,8 +530,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                 status,
                 backupName,
                 externalLocation,
-                s3AccessKey,
-                s3SecretKey,
+                accountId,
+                secretKey,
                 localLocation);
     }
 
@@ -555,9 +555,9 @@ public class RestoreSnapshotTask extends CassandraTask {
      * @param localLocation    The location where the download will be stored on
      *                         the local host.
      * @param backupName       The name of the backup.
-     * @param s3AccessKey      The S3 access key of the bucket where the backup is
+     * @param accountId      The S3 access key of the bucket where the backup is
      *                         stored.
-     * @param s3SecretKey      The S3 secret key of the bucket where the backup is
+     * @param secretKey      The S3 secret key of the bucket where the backup is
      *                         stored.
      */
     protected RestoreSnapshotTask(
@@ -574,8 +574,8 @@ public class RestoreSnapshotTask extends CassandraTask {
             RestoreSnapshotStatus status,
             String backupName,
             String externalLocation,
-            String s3AccessKey,
-            String s3SecretKey,
+            String accountId,
+            String secretKey,
             String localLocation) {
         super(TYPE.SNAPSHOT_RESTORE,
                 id,
@@ -593,8 +593,8 @@ public class RestoreSnapshotTask extends CassandraTask {
 
         this.backupName = backupName;
         this.externalLocation = externalLocation;
-        this.s3AccessKey = s3AccessKey;
-        this.s3SecretKey = s3SecretKey;
+        this.accountId = accountId;
+        this.secretKey = secretKey;
         this.localLocation = localLocation;
     }
 
@@ -618,16 +618,16 @@ public class RestoreSnapshotTask extends CassandraTask {
      * Gets the access key.
      * @return The access key for the S3 bucket where the backup will be stored.
      */
-    public String getS3AccessKey() {
-        return s3AccessKey;
+    public String getAccountId() {
+        return accountId;
     }
 
     /**
      * Gets the secret key.
      * @return The secret key for the S3 bucket where the backup will be stored.
      */
-    public String getS3SecretKey() {
-        return s3SecretKey;
+    public String getSecretKey() {
+        return secretKey;
     }
 
     /**
@@ -647,8 +647,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                 .setBackupName(backupName)
                 .setExternalLocation(externalLocation)
                 .setLocalLocation(localLocation)
-                .setS3AccessKey(s3AccessKey)
-                .setS3SecretKey(s3SecretKey)
+                .setAccoundId(accountId)
+                .setSecretKey(secretKey)
                 .build();
     }
 
@@ -667,8 +667,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                 (RestoreSnapshotStatus) status,
                 backupName,
                 externalLocation,
-                s3AccessKey,
-                s3SecretKey,
+                accountId,
+                secretKey,
                 localLocation);
     }
 
@@ -687,8 +687,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                 ((RestoreSnapshotStatus) status),
                 backupName,
                 externalLocation,
-                s3AccessKey,
-                s3SecretKey,
+                accountId,
+                secretKey,
                 localLocation);
     }
 
@@ -707,8 +707,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                 ((RestoreSnapshotStatus) status).update(state),
                 backupName,
                 externalLocation,
-                s3AccessKey,
-                s3SecretKey,
+                accountId,
+                secretKey,
                 localLocation);
     }
 
@@ -730,8 +730,8 @@ public class RestoreSnapshotTask extends CassandraTask {
                     (RestoreSnapshotStatus) status,
                     backupName,
                     externalLocation,
-                    s3AccessKey,
-                    s3SecretKey,
+                    accountId,
+                    secretKey,
                     localLocation);
         } else {
             return this;

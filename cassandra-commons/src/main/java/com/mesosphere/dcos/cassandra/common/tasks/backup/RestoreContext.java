@@ -34,8 +34,9 @@ public class RestoreContext implements ClusterTaskContext {
     private String name;
     private String externalLocation;
     private String localLocation;
-    private String s3AccessKey;
-    private String s3SecretKey;
+    private String acccountId;  // s3AccessKey or AccountName (prinicipal for service)
+    private String secretKey;  // s3SecretKey or azure key (secret)
+
     /**
      * Gets the name of the backup.
      *
@@ -66,21 +67,21 @@ public class RestoreContext implements ClusterTaskContext {
     /**
      * Gets the access key.
      *
-     * @return The S3 access key for the bucket where the keyspace files are
+     * @return The S3 access key for the bucket or Azure account where the keyspace files are
      * be stored.
      */
-    public String getS3AccessKey() {
-        return s3AccessKey;
+    public String getAcccountId() {
+        return acccountId;
     }
 
     /**
      * Gets the secret key.
      *
-     * @return The S3 secret key for the bucket where the keyspace files are
+     * @return The S3 secret key for the bucket or azure key where the keyspace files are
      * be stored.
      */
-    public String getS3SecretKey() {
-        return s3SecretKey;
+    public String getSecretKey() {
+        return secretKey;
     }
 
     /**
@@ -113,23 +114,23 @@ public class RestoreContext implements ClusterTaskContext {
     }
 
     /**
-     * Sets the S3 access key.
+     * Sets the S3 access key or azure account.
      *
-     * @param s3AccessKey The access key for the bucket where the backup
+     * @param acccountId The access key for the bucket where the backup
      *                    files will be stored.
      */
-    public void setS3AccessKey(String s3AccessKey) {
-        this.s3AccessKey = s3AccessKey;
+    public void setAcccountId(String acccountId) {
+        this.acccountId = acccountId;
     }
 
     /**
-     * Sets the S3 secret key.
+     * Sets the S3 or azure secret key.
      *
-     * @param s3SecretKey The secret key for the bucket where teh backup
+     * @param secretKey The secret key for the bucket where teh backup
      *                    files will be stored.
      */
-    public void setS3SecretKey(String s3SecretKey) {
-        this.s3SecretKey = s3SecretKey;
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
     }
 
     /**
@@ -166,14 +167,14 @@ public class RestoreContext implements ClusterTaskContext {
                         that.getExternalLocation()) &&
                 Objects.equals(getLocalLocation(),
                         that.getLocalLocation()) &&
-                Objects.equals(getS3AccessKey(), that.getS3AccessKey()) &&
-                Objects.equals(getS3SecretKey(), that.getS3SecretKey());
+                Objects.equals(getAcccountId(), that.getAcccountId()) &&
+                Objects.equals(getSecretKey(), that.getSecretKey());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getNodeId(), getName(), getExternalLocation(),
-                getLocalLocation(), getS3AccessKey(), getS3SecretKey());
+                getLocalLocation(), getAcccountId(), getSecretKey());
     }
 
     /**

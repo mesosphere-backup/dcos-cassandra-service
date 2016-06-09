@@ -69,8 +69,8 @@ public class RestoreSnapshot implements Runnable {
         this.context = new RestoreContext();
         context.setName(this.cassandraTask.getBackupName());
         context.setNodeId(nodeId);
-        context.setS3AccessKey(this.cassandraTask.getS3AccessKey());
-        context.setS3SecretKey(this.cassandraTask.getS3SecretKey());
+        context.setAcccountId(this.cassandraTask.getAccountId());
+        context.setSecretKey(this.cassandraTask.getSecretKey());
         context.setExternalLocation(this.cassandraTask.getExternalLocation());
         context.setLocalLocation(this.cassandraTask.getLocalLocation());
     }
@@ -82,7 +82,7 @@ public class RestoreSnapshot implements Runnable {
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
                     "Started restoring snapshot");
             final String localLocation = context.getLocalLocation();
-            final String keyspaceDirectory = localLocation + File.separator +
+            final String keyspaceDirectoryName = localLocation + File.separator +
                     context.getName() + File.separator + context.getNodeId();
 
             final String ssTableLoaderBinary =
@@ -91,7 +91,9 @@ public class RestoreSnapshot implements Runnable {
             final String cassandraYaml =
                     CassandraPaths.create(version).cassandraConfig().toString();
 
-            final File keyspacesDirectory = new File(keyspaceDirectory);
+            final File keyspacesDirectory = new File(keyspaceDirectoryName);
+            LOGGER.info("Keyspace Directory {} exists: {}", keyspaceDirectoryName, keyspacesDirectory.exists());
+
             final File[] keyspaces = keyspacesDirectory.listFiles();
 
             String libProcessAddress = System.getenv("LIBPROCESS_IP");
@@ -155,7 +157,7 @@ public class RestoreSnapshot implements Runnable {
             // Send TASK_FAILED
             final String errorMessage = "Failed restoring snapshot. Reason: "
                     + t;
-            LOGGER.error(errorMessage);
+            LOGGER.error(errorMessage, t);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, errorMessage);
         }
     }
