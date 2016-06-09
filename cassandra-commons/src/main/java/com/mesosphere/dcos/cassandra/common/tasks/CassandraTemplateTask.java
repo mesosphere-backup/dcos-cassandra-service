@@ -1,21 +1,18 @@
 package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.TemplateTaskStatus;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskUtils;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Created by gabriel on 6/8/16.
  */
-public class CassandraTemplateTask {
-
-    private String role;
-    private String principal;
-    private ClusterTaskConfig clusterTaskConfig;
-    private Protos.TaskInfo taskInfo;
+public class CassandraTemplateTask extends CassandraTask  {
 
     protected static Protos.SlaveID EMPTY_SLAVE_ID = Protos.SlaveID
             .newBuilder().setValue("").build();
@@ -23,53 +20,87 @@ public class CassandraTemplateTask {
     protected static Protos.TaskID EMPTY_TASK_ID = Protos.TaskID
             .newBuilder().setValue("").build();
 
-    protected CassandraTemplateTask(
-            String role,
-            String principal,
-            ClusterTaskConfig clusterTaskConfig) {
-
-        this.role = role;
-        this.principal = principal;
-        this.clusterTaskConfig = clusterTaskConfig;
-
-        taskInfo = Protos.TaskInfo.newBuilder()
-                .setTaskId(EMPTY_TASK_ID)
-                .setName("cluster_task_template")
-                .setSlaveId(EMPTY_SLAVE_ID)
-                .setData(CassandraData.createTemplateData().getBytes())
-                .addAllResources(Arrays.asList(
-                        getCpus(),
-                        getMem(),
-                        getDisk()))
-                .build();
-
-        taskInfo = TaskUtils.setTransient(taskInfo);
+    protected CassandraTemplateTask(Protos.TaskInfo taskInfo) {
+        super(taskInfo);
     }
 
     public static CassandraTemplateTask create(
         String role,
         String principal,
         ClusterTaskConfig clusterTaskConfig) {
-        return new CassandraTemplateTask(role, principal, clusterTaskConfig);
+
+        Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder()
+                .setTaskId(EMPTY_TASK_ID)
+                .setName("cluster_task_template")
+                .setSlaveId(EMPTY_SLAVE_ID)
+                .setData(CassandraData.createTemplateData().getBytes())
+                .addAllResources(Arrays.asList(
+                        getCpusResource(role, principal, clusterTaskConfig),
+                        getMemResource(role, principal, clusterTaskConfig),
+                        getDiskResource(role, principal, clusterTaskConfig)))
+                .build();
+
+        taskInfo = TaskUtils.setTransient(taskInfo);
+
+        return new CassandraTemplateTask(taskInfo);
     }
 
-    public Protos.TaskInfo getTaskInfo() {
-        return taskInfo;
+    @Override
+    public CassandraTask update(Protos.Offer offer) {
+        return this;
     }
 
-    private Protos.Resource getCpus() {
-        return getScalar("cpus", clusterTaskConfig.getCpus());
+    @Override
+    public CassandraTask updateId() {
+        return this;
     }
 
-    private Protos.Resource getMem() {
-        return getScalar("mem", (double) clusterTaskConfig.getMemoryMb());
+    @Override
+    public CassandraTask update(CassandraTaskStatus status) {
+        return this;
     }
 
-    private Protos.Resource getDisk() {
-        return getScalar("disk", (double) clusterTaskConfig.getDiskMb());
+    @Override
+    public CassandraTask update(Protos.TaskState state) {
+        return this;
     }
 
-    private Protos.Resource getScalar(String name, Double value) {
+    @Override
+    public CassandraTaskStatus createStatus(Protos.TaskState state, Optional<String> message) {
+
+        Protos.TaskStatus.Builder builder = getStatusBuilder();
+        if (message.isPresent()) {
+            builder.setMessage(message.get());
+        }
+
+        return TemplateTaskStatus.create(builder
+                .setData(CassandraData.createTemplateData().getBytes())
+                .setState(state)
+                .build());
+    }
+
+    private static Protos.Resource getCpusResource(
+            String role,
+            String principal,
+            ClusterTaskConfig clusterTaskConfig) {
+        return getScalar(role, principal, "cpus", clusterTaskConfig.getCpus());
+    }
+
+    private static Protos.Resource getMemResource(
+        String role,
+        String principal,
+        ClusterTaskConfig clusterTaskConfig) {
+        return getScalar(role, principal, "mem", (double) clusterTaskConfig.getMemoryMb());
+    }
+
+    private static Protos.Resource getDiskResource(
+        String role,
+        String principal,
+        ClusterTaskConfig clusterTaskConfig) {
+        return getScalar(role, principal, "disk", (double) clusterTaskConfig.getDiskMb());
+    }
+
+    private static Protos.Resource getScalar(String role, String principal, String name, Double value) {
         return ResourceUtils.getDesiredScalar(role, principal, name, value);
     }
 }
