@@ -4,10 +4,9 @@ package com.mesosphere.dcos.cassandra.scheduler.tasks;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
@@ -48,6 +47,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     private final IdentityManager identity;
     private final ConfigurationManager configuration;
+    private final ClusterTaskConfig clusterTaskConfig;
     private final PersistentMap<CassandraTask> persistent;
 
     // Maps Task Name -> Task, where task name can be PREFIX-id
@@ -61,11 +61,13 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             final IdentityManager identity,
             final ConfigurationManager configuration,
             final CuratorFrameworkConfig curatorConfig,
+            final ClusterTaskConfig clusterTaskConfig,
             final Serializer<CassandraTask> serializer,
             final PersistenceFactory persistence) {
         this.persistent = persistence.createMap("tasks", serializer);
         this.identity = identity;
         this.configuration = configuration;
+        this.clusterTaskConfig = clusterTaskConfig;
 
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
@@ -121,6 +123,10 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                                 entry -> entry.getKey(),
                                 entry -> entry.getValue())))
                 .build();
+    }
+
+    public StateStore getStateStore() {
+        return stateStore;
     }
 
     public Map<String, CassandraDaemonTask> getDaemons() {
@@ -220,6 +226,16 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         return persistenceIds;
     }
 
+
+    public CassandraContainer createCassandraContainer(CassandraDaemonTask daemonTask) throws PersistenceException {
+        CassandraTemplateTask templateTask = CassandraTemplateTask.create(
+                daemonTask.getExecutor().getRole(),
+                daemonTask.getExecutor().getPrincipal(),
+                clusterTaskConfig);
+
+        return CassandraContainer.create(daemonTask, templateTask);
+    }
+
     public CassandraDaemonTask createDaemon(String name) throws
             PersistenceException {
         return configuration.createDaemon(
@@ -274,6 +290,18 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             CassandraDaemonTask daemon,
             RepairContext context) throws PersistenceException {
         return configuration.createRepairTask(daemon, context);
+    }
+
+    public CassandraContainer getOrCreateContainer(String name) throws
+            PersistenceException {
+
+        CassandraDaemonTask daemonTask = getOrCreateDaemon(name);
+        CassandraTemplateTask templateTask = CassandraTemplateTask.create(
+                daemonTask.getExecutor().getRole(),
+                daemonTask.getExecutor().getPrincipal(),
+                clusterTaskConfig);
+
+        return CassandraContainer.create(daemonTask, templateTask);
     }
 
     public CassandraDaemonTask getOrCreateDaemon(String name) throws
