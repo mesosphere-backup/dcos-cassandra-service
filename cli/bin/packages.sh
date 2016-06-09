@@ -15,6 +15,7 @@
 # limitations under the License.
 
 echo "Building wheel..."
+source env/bin/activate
 python setup.py bdist_wheel
 
 echo "Building egg..."

@@ -32,7 +32,7 @@ CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL="https://archive.apache.org/dist/cassandra/${
 
 function _sha1sum {
     # Try 'sha1sum' (Linux) with fallback to 'shasum' (OSX)
-    SHA1SUM_EXE=$(which sha1suma || which shasum)
+    SHA1SUM_EXE=$(which sha1sum || which shasum)
     $SHA1SUM_EXE $@
 }
 
