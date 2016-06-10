@@ -73,8 +73,8 @@ public class DownloadSnapshot implements Runnable {
         context.setName(this.cassandraTask.getBackupName());
         context.setExternalLocation(this.cassandraTask.getExternalLocation());
         context.setLocalLocation(this.cassandraTask.getLocalLocation());
-        context.setS3AccessKey(this.cassandraTask.getS3AccessKey());
-        context.setS3SecretKey(this.cassandraTask.getS3SecretKey());
+        context.setAcccountId(this.cassandraTask.getAccountId());
+        context.setSecretKey(this.cassandraTask.getSecretKey());
     }
 
     @Override

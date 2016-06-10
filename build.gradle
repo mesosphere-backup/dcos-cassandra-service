@@ -18,6 +18,7 @@ allprojects {
     apply plugin: 'idea'
     apply plugin: 'eclipse'
     apply plugin: 'nebula.provided-base'
+    apply from: "$rootDir/gradle/spock.gradle"
 
     group = 'com.mesosphere.dcos'
     version = '1.0.5'

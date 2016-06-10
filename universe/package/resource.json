@@ -4,12 +4,40 @@
       "scheduler-zip":"{{artifact-dir}}/scheduler.zip",
       "executor-zip":"{{artifact-dir}}/executor.zip",
       "jre-tar-gz":"https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz",
-      "apache-cassandra-bin-tar-gz":"https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz"
+      "apache-cassandra-bin-tar-gz":"https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin-dcos.tar.gz"
     }
   },
   "images": {
     "icon-small": "https://downloads.mesosphere.com/cassandra-mesos/assets/cassandra-small.png",
     "icon-medium": "https://downloads.mesosphere.com/cassandra-mesos/assets/cassandra-medium.png",
     "icon-large": "https://downloads.mesosphere.com/cassandra-mesos/assets/cassandra-large.png"
+  },
+  "cli":{
+    "binaries":{
+      "darwin":{
+        "x86-64":{
+          "contentHash":[
+            {
+              "algo":"sha256",
+              "value":"{{cli-darwin-sha256q}}"
+            }
+          ],
+          "kind":"executable",
+          "url":"{{artifact-dir}}/cli/darwin/dcos-cassandra"
+        }
+      },
+      "linux":{
+        "x86-64":{
+          "contentHash":[
+            {
+              "algo":"sha256",
+              "value":"{{cli-linux-sha256}}"
+            }
+          ],
+          "kind":"executable",
+          "url":"{{artifact-dir}}/cli/linux/dcos-cassandra"
+        }
+      }
+    }
   }
 }

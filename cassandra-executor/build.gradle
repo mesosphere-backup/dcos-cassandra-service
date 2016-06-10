@@ -11,6 +11,9 @@ dependencies {
     compile 'org.apache.cassandra:cassandra-all:2.2.5'
     compile 'org.apache.commons:commons-compress:1.5'
     compile "com.amazonaws:aws-java-sdk-s3:${awsVer}"
+    compile "com.microsoft.azure:azure-storage:4.2.0"
+    compile "commons-io:commons-io:2.5"
+
     compile 'org.xerial.snappy:snappy-java:1.1.2.1'
     // To override the junit compile dependency that cassandra brings in.
     compile "junit:junit:${junitVer}"

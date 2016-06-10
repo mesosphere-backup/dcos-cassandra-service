@@ -204,8 +204,8 @@ public abstract class CassandraTask {
                         data.getColumnFamiliesList(),
                         data.getBackupName(),
                         data.getExternalLocation(),
-                        data.getS3AccessKey(),
-                        data.getS3SecretKey()
+                        data.getAccoundId(),
+                        data.getSecretKey()
                 );
 
             case BACKUP_UPLOAD:
@@ -234,8 +234,8 @@ public abstract class CassandraTask {
                         data.getColumnFamiliesList(),
                         data.getBackupName(),
                         data.getExternalLocation(),
-                        data.getS3AccessKey(),
-                        data.getS3SecretKey(),
+                        data.getAccoundId(),
+                        data.getSecretKey(),
                         data.getLocalLocation()
                 );
 
@@ -264,8 +264,8 @@ public abstract class CassandraTask {
                                 Optional.empty()),
                         data.getBackupName(),
                         data.getExternalLocation(),
-                        data.getS3AccessKey(),
-                        data.getS3SecretKey(),
+                        data.getAccoundId(),
+                        data.getSecretKey(),
                         data.getLocalLocation()
                 );
 
@@ -294,8 +294,8 @@ public abstract class CassandraTask {
                                 Optional.empty()),
                         data.getBackupName(),
                         data.getExternalLocation(),
-                        data.getS3AccessKey(),
-                        data.getS3SecretKey(),
+                        data.getAccoundId(),
+                        data.getSecretKey(),
                         data.getLocalLocation()
                 );
 
