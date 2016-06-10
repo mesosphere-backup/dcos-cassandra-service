@@ -221,9 +221,7 @@ public class CassandraScheduler implements Scheduler, Managed {
 
     private ResourceCleanerScheduler getCleanerScheduler() {
         try {
-            ResourceCleaner cleaner = new ResourceCleaner(
-                    cassandraTasks.getExpectedResourceIds(),
-                    cassandraTasks.getExpectedPersistenceIds());
+            ResourceCleaner cleaner = new ResourceCleaner(cassandraTasks.getStateStore());
             return new ResourceCleanerScheduler(cleaner, offerAccepter);
         } catch (Exception ex) {
             LOGGER.error("Failed to construct ResourceCleaner with exception:", ex);

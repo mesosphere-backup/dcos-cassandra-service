@@ -79,7 +79,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         this.stateStore = new CuratorStateStore(
-                "/cassandra/" + identity.get().getName(),
+                "/cassandra/" + identity.get().getName() + "/state",
                 curatorConfig.getServers(),
                 retryPolicy);
 
