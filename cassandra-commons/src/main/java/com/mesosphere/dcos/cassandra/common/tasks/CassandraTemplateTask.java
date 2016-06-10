@@ -45,6 +45,10 @@ public class CassandraTemplateTask extends CassandraTask  {
         return new CassandraTemplateTask(taskInfo);
     }
 
+    public static CassandraTemplateTask parse(final Protos.TaskInfo info) {
+        return new CassandraTemplateTask(info);
+    }
+
     @Override
     public CassandraTask update(Protos.Offer offer) {
         return this;

@@ -136,6 +136,8 @@ public abstract class CassandraTask {
                 return CleanupTask.parse(info);
             case REPAIR:
                 return RepairTask.parse(info);
+            case TEMPLATE:
+                return CassandraTemplateTask.parse(info);
             default:
                 throw new IOException("Failed to parse task from TaskInfo " +
                     "type information is invalid");
