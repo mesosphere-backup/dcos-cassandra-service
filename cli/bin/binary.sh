@@ -35,7 +35,7 @@ if [ "$(uname)" == "Darwin" ]; then
     # Do something under Mac OS X platform
     mkdir -p dist/darwin
     mv dist/dcos-cassandra dist/darwin
-    shasum -a 256 dist/darwin/dcos-cassandra | awk '{print $1}' > dist/darwin/dcos-cassandra.sha1
+    shasum -a 256 dist/darwin/dcos-cassandra | awk '{print $1}' > dist/darwin/dcos-cassandra.sha
     echo "Darin Build Complete!"
 
     # linux build on a darwin plaform if docker runs
@@ -46,7 +46,7 @@ if [ "$(uname)" == "Darwin" ]; then
     docker run --name cassandra-binary cassandra-binary
     mkdir -p dist/linux
     docker cp cassandra-binary:/dcos-cassandra/dist/linux dist/
-    shasum -a 256 dist/linux/dcos-cassandra | awk '{print $1}' > dist/linux/dcos-cassandra.sha1
+    shasum -a 256 dist/linux/dcos-cassandra | awk '{print $1}' > dist/linux/dcos-cassandra.sha
 
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
       # Do something under GNU/Linux platform  #statements
