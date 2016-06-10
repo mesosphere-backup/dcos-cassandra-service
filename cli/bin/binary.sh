@@ -52,7 +52,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
       # Do something under GNU/Linux platform  #statements
       mkdir -p dist/linux
       mv dist/dcos-cassandra dist/linux
-      sha256sum dist/linux/dcos-cassandra | awk '{print $1}' > dist/linux/dcos-cassandra.sha1
+      sha256sum dist/linux/dcos-cassandra | awk '{print $1}' > dist/linux/dcos-cassandra.sha
       echo "Linux Build Complete"
 fi
 
