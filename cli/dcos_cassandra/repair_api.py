@@ -27,6 +27,8 @@ def start_repair(nodes, keyspaces=None, column_families=None):
         req['key_spaces'] = keyspaces
     if column_families is not None:
         req['column_families'] = column_families
-    return http.put(cu.api_url("/repair/start"),
-                    json=req,
-                    headers={'Content-Type': 'application/json'})
+
+    return http.put(
+            cu.api_url("/repair/start"),
+            json=req,
+            headers={'Content-Type': 'application/json'})
