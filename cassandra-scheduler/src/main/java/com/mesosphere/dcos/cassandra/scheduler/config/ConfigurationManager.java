@@ -293,45 +293,6 @@ public class ConfigurationManager implements Managed {
         return daemonTask.move();
     }
 
-    public BackupSnapshotTask createBackupSnapshotTask(
-        CassandraDaemonTask daemon,
-        BackupContext context) {
-        return BackupSnapshotTask.create(daemon, clusterTaskConfig, context);
-    }
-
-    public DownloadSnapshotTask createDownloadSnapshotTask(
-        CassandraDaemonTask daemon,
-        RestoreContext context) {
-        return DownloadSnapshotTask.create(daemon, clusterTaskConfig, context);
-
-    }
-
-    public RestoreSnapshotTask createRestoreSnapshotTask(
-        CassandraDaemonTask daemon,
-        RestoreContext context) {
-        return RestoreSnapshotTask.create(daemon, clusterTaskConfig, context);
-    }
-
-    public BackupUploadTask createBackupUploadTask(
-        CassandraDaemonTask daemon,
-        BackupContext context) {
-        return BackupUploadTask.create(daemon, clusterTaskConfig, context);
-    }
-
-    public CleanupTask createCleanupTask(
-        CassandraDaemonTask daemon,
-        CleanupContext context) {
-        return CleanupTask.create(daemon, clusterTaskConfig, context);
-    }
-
-    public RepairTask createRepairTask(
-        CassandraDaemonTask daemon,
-        RepairContext context) {
-        return RepairTask.create(daemon,
-            clusterTaskConfig,
-            context);
-    }
-
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {
        return task.updateId();
     }

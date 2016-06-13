@@ -61,39 +61,33 @@ public class DownloadSnapshotTask extends CassandraTask {
         return new DownloadSnapshotTask(info);
     }
 
-    public static DownloadSnapshotTask create(final CassandraDaemonTask task,
-                                              final ClusterTaskConfig config,
-                                              final RestoreContext context) {
-        return new DownloadSnapshotTask(nameForDaemon(task),
-            task.getExecutor(),
-            config,
-            context,
-            task.getVolumePath() + "/data/temp_" + context.getName());
-    }
+    public static DownloadSnapshotTask create(
+            final Protos.TaskInfo template,
+            final CassandraDaemonTask daemon,
+            final RestoreContext context) {
 
-    protected DownloadSnapshotTask(final Protos.TaskInfo info) {
-        super(info);
+        String name = nameForDaemon(daemon);
+        CassandraData data = CassandraData.createSnapshotDownloadData(
+                "",
+                context
+                    .forNode(name)
+                    .withLocalLocation(daemon.getVolumePath() + "/data"));
+
+        Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
+                .setName(name)
+                .setData(data.getBytes())
+                .build();
+
+        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+
+        return new DownloadSnapshotTask(completedTemplate);
     }
 
     /**
      * Constructs a new DownloadSnapshotTask.
      */
-    protected DownloadSnapshotTask(
-        final String name,
-        final CassandraTaskExecutor executor,
-        final ClusterTaskConfig config,
-        final RestoreContext context,
-        final String localLocation) {
-        super(name,
-            executor,
-            config.getCpus(),
-            config.getMemoryMb(),
-            config.getDiskMb(),
-            VolumeRequirement.VolumeMode.NONE,
-            null,
-            Collections.emptyList(),
-            CassandraData.createSnapshotDownloadData("",
-                context.forNode(name).withLocalLocation(localLocation)));
+    protected DownloadSnapshotTask(final Protos.TaskInfo info) {
+        super(info);
     }
 
     @Override
