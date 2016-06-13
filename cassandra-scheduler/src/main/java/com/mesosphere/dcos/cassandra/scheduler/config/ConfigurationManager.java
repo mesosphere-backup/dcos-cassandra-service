@@ -276,7 +276,7 @@ public class ConfigurationManager implements Managed {
 
         return CassandraDaemonTask.create(
             name,
-            createExecutor(name + "_executor", frameworkId, role, principal),
+            createExecutor(frameworkId, name + "_executor", role, principal),
             cassandraConfig.mutable().setApplication(cassandraConfig
                 .getApplication()
                 .toBuilder().setSeedProvider(
@@ -287,8 +287,13 @@ public class ConfigurationManager implements Managed {
                 .build());
     }
 
-    public CassandraDaemonTask moveDaemon(CassandraDaemonTask daemonTask) {
-        return daemonTask.move();
+    public CassandraDaemonTask moveDaemon(
+            CassandraDaemonTask daemonTask,
+            String frameworkId,
+            String role,
+            String principal) {
+        CassandraTaskExecutor executor = createExecutor(frameworkId, daemonTask.getName() + "_executor", role, principal);
+        return daemonTask.move(executor);
     }
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {
@@ -308,17 +313,10 @@ public class ConfigurationManager implements Managed {
         LOGGER.info("Cassandra matches: " + cassandraConfigMatches);
 
         return executorMatches && cassandraConfigMatches;
-
-        //return task.getExecutor().matches(executorConfig) &&
-        //    task.getConfig().equals(cassandraConfig);
     }
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) {
         return task.updateConfig(cassandraConfig);
-    }
-
-    public CassandraTask updateId(CassandraTask task) {
-        return task.updateId();
     }
 
     public List<String> getErrors() {

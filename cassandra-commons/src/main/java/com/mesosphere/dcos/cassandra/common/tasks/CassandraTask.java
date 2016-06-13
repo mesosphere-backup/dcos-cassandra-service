@@ -151,7 +151,7 @@ public abstract class CassandraTask {
      */
     public static Protos.TaskID createId(final String name) {
         return Protos.TaskID.newBuilder()
-            .setValue(name + "-" + UUID.randomUUID())
+            .setValue(name + "__" + UUID.randomUUID())
             .build();
     }
 

@@ -94,6 +94,7 @@ public class CassandraTaskExecutor {
      * Constructs a CassandraTaskExecutor.
      *
      * @param frameworkId The id of the executor's framework.
+     * @param name        The name of the executor.
      * @param command     The command used to launch the executor.
      * @param arguments   The arguments passed to the executor.
      * @param cpus        The cpu shares allocated to the executor.
@@ -106,8 +107,8 @@ public class CassandraTaskExecutor {
      *                    executor.
      */
     private CassandraTaskExecutor(
-        String name,
         String frameworkId,
+        String name,
         String role,
         String principal,
         String command,
