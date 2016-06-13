@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
+import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.VolumeRequirement;
 
@@ -74,9 +75,29 @@ public class BackupSnapshotTask extends CassandraTask {
         return new BackupSnapshotTask(info);
     }
 
+
+    public static BackupSnapshotTask create(
+            Protos.TaskInfo template,
+            CassandraDaemonTask daemon,
+            BackupContext context) {
+
+        String name = nameForDaemon(daemon);
+        CassandraData data = CassandraData.createBackupSnapshotData("", context.forNode(name).withLocalLocation(daemon.getVolumePath() + "/data"));
+
+        Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
+            .setName(name)
+            .setData(data.getBytes())
+            .build();
+
+        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+
+        return new BackupSnapshotTask(completedTemplate);
+    }
+
     public static BackupSnapshotTask create(final CassandraDaemonTask task,
                                      final ClusterTaskConfig config,
                                      final BackupContext context) {
+
         return new BackupSnapshotTask(nameForDaemon(task),
             task.getExecutor(),
             config,
@@ -159,5 +180,4 @@ public class BackupSnapshotTask extends CassandraTask {
     public BackupContext getBackupContext() {
         return getData().getBackupContext();
     }
-
 }

@@ -24,9 +24,6 @@ import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.offer.MesosResource;
-import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.state.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
@@ -178,55 +175,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                         (RepairTask) entry.getValue())));
     }
 
-    public List<String> getExpectedResourceIds() {
-        List<String> resourceIds = new ArrayList<>();
-
-        for (Map.Entry<String, CassandraDaemonTask> entry : getDaemons().entrySet()) {
-            resourceIds.addAll(getExpectedResourceIds(entry.getValue().getTaskInfo().getResourcesList()));
-            resourceIds.addAll(getExpectedResourceIds(entry.getValue().getTaskInfo().getExecutor().getResourcesList()));
-        }
-
-        return resourceIds;
-    }
-
-    public List<String> getExpectedPersistenceIds() {
-        List<String> persistenceIds = new ArrayList<String>();
-
-        for (Map.Entry<String, CassandraDaemonTask> entry : getDaemons().entrySet()) {
-            persistenceIds.addAll(getExpectedPersistenceIds(entry.getValue().getTaskInfo().getResourcesList()));
-            persistenceIds.addAll(getExpectedPersistenceIds(entry.getValue().getTaskInfo().getExecutor().getResourcesList()));
-        }
-
-        return persistenceIds;
-    }
-
-    private List<String> getExpectedResourceIds(Collection<Resource> resources) {
-        List<String> resourceIds = new ArrayList<>();
-
-        for (Resource resource : resources) {
-            String resourceId = new MesosResource(resource).getResourceId();
-            if (resourceId != null) {
-                resourceIds.add(resourceId);
-            }
-        }
-
-        return resourceIds;
-    }
-
-    private List<String> getExpectedPersistenceIds(Collection<Resource> resources) {
-        List<String> persistenceIds = new ArrayList<String>();
-
-        for (Resource resource : resources) {
-            String persistenceId = ResourceUtils.getPersistenceId(resource);
-            if (persistenceId != null) {
-                persistenceIds.add(persistenceId);
-            }
-        }
-
-        return persistenceIds;
-    }
-
-
     public CassandraContainer createCassandraContainer(CassandraDaemonTask daemonTask) throws PersistenceException {
         CassandraTemplateTask templateTask = CassandraTemplateTask.create(
                 daemonTask.getExecutor().getRole(),
@@ -252,12 +200,25 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         return configuration.moveDaemon(daemon);
     }
 
+    private Optional<Protos.TaskInfo> getTemplate(CassandraDaemonTask daemon) {
+        return stateStore.fetchTasks(daemon.getExecutor().getName()).stream()
+                .filter(x -> x.getName().equals(CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME))
+                .findFirst();
+    }
+
 
     public BackupSnapshotTask createBackupSnapshotTask(
             CassandraDaemonTask daemon,
             BackupContext context) throws PersistenceException {
 
-        return configuration.createBackupSnapshotTask(daemon, context);
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return BackupSnapshotTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
+
     }
 
     public BackupUploadTask createBackupUploadTask(

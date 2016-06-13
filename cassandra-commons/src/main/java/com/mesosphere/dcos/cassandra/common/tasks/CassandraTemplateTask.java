@@ -13,6 +13,7 @@ import java.util.Optional;
  * Created by gabriel on 6/8/16.
  */
 public class CassandraTemplateTask extends CassandraTask  {
+    public static final String CLUSTER_TASK_TEMPLATE_NAME = "cluster_task_template";
 
     protected static Protos.SlaveID EMPTY_SLAVE_ID = Protos.SlaveID
             .newBuilder().setValue("").build();
@@ -31,13 +32,12 @@ public class CassandraTemplateTask extends CassandraTask  {
 
         Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder()
                 .setTaskId(EMPTY_TASK_ID)
-                .setName("cluster_task_template")
+                .setName(CLUSTER_TASK_TEMPLATE_NAME)
                 .setSlaveId(EMPTY_SLAVE_ID)
                 .setData(CassandraData.createTemplateData().getBytes())
                 .addAllResources(Arrays.asList(
                         getCpusResource(role, principal, clusterTaskConfig),
-                        getMemResource(role, principal, clusterTaskConfig),
-                        getDiskResource(role, principal, clusterTaskConfig)))
+                        getMemResource(role, principal, clusterTaskConfig)))
                 .build();
 
         taskInfo = TaskUtils.setTransient(taskInfo);
