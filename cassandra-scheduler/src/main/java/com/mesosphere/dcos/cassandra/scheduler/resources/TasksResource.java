@@ -150,7 +150,7 @@ public class TasksResource {
             Optional.ofNullable(tasks.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
-            tasks.moveDaemon(task);
+            tasks.moveCassandraContainer(task);
             if (!task.isTerminated()) {
                 client.shutdown(task.getHostname(),
                     task.getExecutor().getApiPort());

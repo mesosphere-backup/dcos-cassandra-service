@@ -184,6 +184,10 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         return CassandraContainer.create(daemonTask, templateTask);
     }
 
+    public CassandraContainer moveCassandraContainer(CassandraDaemonTask name) throws PersistenceException {
+        return createCassandraContainer(moveDaemon(name));
+    }
+
     public CassandraDaemonTask createDaemon(String name) throws
             PersistenceException {
         return configuration.createDaemon(
@@ -194,10 +198,14 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         );
     }
 
-    public CassandraDaemonTask moveDaemon(
-            CassandraDaemonTask daemon
-    ) throws PersistenceException {
-        return configuration.moveDaemon(daemon);
+    public CassandraDaemonTask moveDaemon(CassandraDaemonTask daemon) throws PersistenceException {
+        CassandraDaemonTask updated = configuration.moveDaemon(
+            daemon,
+            identity.get().getId(),
+            identity.get().getRole(),
+            identity.get().getPrincipal());
+        update(updated);
+        return updated;
     }
 
     private Optional<Protos.TaskInfo> getTemplate(CassandraDaemonTask daemon) {

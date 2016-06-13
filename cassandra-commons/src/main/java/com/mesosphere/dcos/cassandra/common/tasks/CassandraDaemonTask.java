@@ -70,7 +70,8 @@ public class CassandraDaemonTask extends CassandraTask {
     protected CassandraDaemonTask(
         final String name,
         final CassandraTaskExecutor executor,
-        final CassandraConfig config) {
+        final CassandraConfig config,
+        final CassandraData data) {
 
         super(
             name,
@@ -85,6 +86,17 @@ public class CassandraDaemonTask extends CassandraTask {
                 config.getApplication().getSslStoragePort(),
                 config.getApplication().getRpcPort(),
                 config.getApplication().getNativeTransportPort()),
+            data);
+    }
+
+    protected CassandraDaemonTask(
+            final String name,
+            final CassandraTaskExecutor executor,
+            final CassandraConfig config) {
+        this(
+            name,
+            executor,
+            config,
             CassandraData.createDaemonData(
                 "",
                 CassandraMode.STARTING,
@@ -183,17 +195,18 @@ public class CassandraDaemonTask extends CassandraTask {
             )).build());
     }
 
-    public CassandraDaemonTask move() {
-        return new CassandraDaemonTask(getBuilder()
-            .setExecutor(getExecutor().withNewId().getExecutorInfo())
-            .setTaskId(createId(getName()))
-            .setSlaveId(EMPTY_SLAVE_ID)
-            .setData(getData().replacing(getData().getHostname()).getBytes())
-            .clearResources()
-            .addAllResources(TaskUtils.replaceDisks(
-                CassandraConfig.VOLUME_PATH,
-                getTaskInfo().getResourcesList()
-            )).build());
+    public CassandraDaemonTask move(CassandraTaskExecutor executor) {
+        CassandraDaemonTask replacementDaemon = new CassandraDaemonTask(
+            getName(),
+            executor,
+            getConfig(),
+            getData().replacing(getData().getHostname()));
+
+        Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder(replacementDaemon.getTaskInfo())
+                .setTaskId(getTaskInfo().getTaskId())
+                .build();
+
+        return new CassandraDaemonTask(taskInfo);
     }
 
     @Override
