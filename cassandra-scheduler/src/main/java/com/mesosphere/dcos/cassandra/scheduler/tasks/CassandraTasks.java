@@ -225,32 +225,64 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             CassandraDaemonTask daemon,
             BackupContext context) throws PersistenceException {
 
-        return configuration.createBackupUploadTask(daemon, context);
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return BackupUploadTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
     }
 
     public DownloadSnapshotTask createDownloadSnapshotTask(
             CassandraDaemonTask daemon,
             RestoreContext context) throws PersistenceException {
 
-        return configuration.createDownloadSnapshotTask(daemon, context);
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return DownloadSnapshotTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
     }
 
     public RestoreSnapshotTask createRestoreSnapshotTask(
             CassandraDaemonTask daemon,
             RestoreContext context) throws PersistenceException {
-        return configuration.createRestoreSnapshotTask(daemon, context);
+
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return RestoreSnapshotTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
     }
 
     public CleanupTask createCleanupTask(
             CassandraDaemonTask daemon,
             CleanupContext context) throws PersistenceException {
-        return configuration.createCleanupTask(daemon, context);
+
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return CleanupTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
     }
 
     public RepairTask createRepairTask(
             CassandraDaemonTask daemon,
             RepairContext context) throws PersistenceException {
-        return configuration.createRepairTask(daemon, context);
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return RepairTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
     }
 
     public CassandraContainer getOrCreateContainer(String name) throws

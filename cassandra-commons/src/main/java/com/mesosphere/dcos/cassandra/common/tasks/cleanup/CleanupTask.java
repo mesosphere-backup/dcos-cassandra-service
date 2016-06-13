@@ -69,36 +69,29 @@ public class CleanupTask extends CassandraTask {
         return new CleanupTask(info);
     }
 
-    public static CleanupTask create(final CassandraDaemonTask task,
-                                     final ClusterTaskConfig config,
-                                     final CleanupContext context) {
-        return new CleanupTask(nameForDaemon(task),
-            task.getExecutor(),
-            config,
-            context);
-    }
+    public static CleanupTask create(
+            final Protos.TaskInfo template,
+            final CassandraDaemonTask daemon,
+            final CleanupContext context) {
 
-    protected CleanupTask(final Protos.TaskInfo info) {
-        super(info);
+        String name = nameForDaemon(daemon);
+        CassandraData data = CassandraData.createCleanupData("", context);
+
+        Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
+                .setName(name)
+                .setData(data.getBytes())
+                .build();
+
+        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+
+        return new CleanupTask(completedTemplate);
     }
 
     /**
      * Constructs a new CleanupTask.
      */
-    protected CleanupTask(
-        final String name,
-        final CassandraTaskExecutor executor,
-        final ClusterTaskConfig config,
-        final CleanupContext context) {
-        super(name,
-            executor,
-            config.getCpus(),
-            config.getMemoryMb(),
-            config.getDiskMb(),
-            VolumeRequirement.VolumeMode.NONE,
-            null,
-            Collections.emptyList(),
-            CassandraData.createCleanupData("", context));
+    protected CleanupTask(final Protos.TaskInfo info) {
+        super(info);
     }
 
     @Override

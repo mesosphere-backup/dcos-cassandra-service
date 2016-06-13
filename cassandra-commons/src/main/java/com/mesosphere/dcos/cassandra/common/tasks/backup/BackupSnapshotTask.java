@@ -68,12 +68,16 @@ public class BackupSnapshotTask extends CassandraTask {
 
 
     public static BackupSnapshotTask create(
-            Protos.TaskInfo template,
-            CassandraDaemonTask daemon,
-            BackupContext context) {
+            final Protos.TaskInfo template,
+            final CassandraDaemonTask daemon,
+            final BackupContext context) {
 
         String name = nameForDaemon(daemon);
-        CassandraData data = CassandraData.createBackupSnapshotData("", context.forNode(name).withLocalLocation(daemon.getVolumePath() + "/data"));
+        CassandraData data = CassandraData.createBackupSnapshotData(
+                "",
+                context
+                    .forNode(name)
+                    .withLocalLocation(daemon.getVolumePath() + "/data"));
 
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
             .setName(name)
@@ -85,41 +89,11 @@ public class BackupSnapshotTask extends CassandraTask {
         return new BackupSnapshotTask(completedTemplate);
     }
 
-    public static BackupSnapshotTask create(final CassandraDaemonTask task,
-                                     final ClusterTaskConfig config,
-                                     final BackupContext context) {
-
-        return new BackupSnapshotTask(nameForDaemon(task),
-            task.getExecutor(),
-            config,
-            context,
-            task.getVolumePath() + "/data");
-    }
-
-    protected BackupSnapshotTask(final Protos.TaskInfo info) {
-        super(info);
-    }
-
     /**
      * Constructs a new BackupSnapshotTask.
      */
-    protected BackupSnapshotTask(
-        final String name,
-        final CassandraTaskExecutor executor,
-        final ClusterTaskConfig config,
-        final BackupContext context,
-        final String localLocation) {
-        super(name,
-            executor,
-            config.getCpus(),
-            config.getMemoryMb(),
-            config.getDiskMb(),
-            VolumeRequirement.VolumeMode.NONE,
-            null,
-            Collections.emptyList(),
-            CassandraData.createBackupSnapshotData("",
-                context.forNode(name)
-                    .withLocalLocation(localLocation)));
+    protected BackupSnapshotTask(final Protos.TaskInfo info) {
+        super(info);
     }
 
     @Override

@@ -64,13 +64,22 @@ public class RepairTask extends CassandraTask {
         return new RepairTask(info);
     }
 
-    public static RepairTask create(final CassandraDaemonTask task,
-                                    final ClusterTaskConfig config,
-                                    final RepairContext context) {
-        return new RepairTask(nameForDaemon(task),
-            task.getExecutor(),
-            config,
-            context);
+    public static RepairTask create(
+            final Protos.TaskInfo template,
+            final CassandraDaemonTask daemon,
+            final RepairContext context) {
+
+        String name = nameForDaemon(daemon);
+        CassandraData data = CassandraData.createRepairData("", context);
+
+        Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
+                .setName(name)
+                .setData(data.getBytes())
+                .build();
+
+        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+
+        return new RepairTask(completedTemplate);
     }
 
     protected RepairTask(final Protos.TaskInfo info) {

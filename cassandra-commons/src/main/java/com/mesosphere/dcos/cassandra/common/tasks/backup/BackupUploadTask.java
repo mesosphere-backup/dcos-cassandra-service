@@ -62,39 +62,37 @@ public class BackupUploadTask extends CassandraTask {
         return nameForDaemon(daemon.getName());
     }
 
-    public static BackupUploadTask create(final CassandraDaemonTask task,
-                                          final ClusterTaskConfig config,
-                                          final BackupContext context) {
-        return new BackupUploadTask(nameForDaemon(task),
-            task.getExecutor(),
-            config,
-            context,
-            task.getVolumePath() + "/data");
+    public static BackupUploadTask parse(final Protos.TaskInfo info) {
+        return new BackupUploadTask(info);
     }
 
-    protected BackupUploadTask(final Protos.TaskInfo info) {
-        super(info);
+    public static BackupUploadTask create(
+            final Protos.TaskInfo template,
+            final CassandraDaemonTask daemon,
+            final BackupContext context) {
+
+        String name = nameForDaemon(daemon);
+        CassandraData data = CassandraData.createBackupUploadData(
+                "",
+                context
+                    .forNode(name)
+                    .withLocalLocation(daemon.getVolumePath() + "/data"));
+
+        Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
+                .setName(name)
+                .setData(data.getBytes())
+                .build();
+
+        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+
+        return new BackupUploadTask(completedTemplate);
     }
 
     /**
      * Constructs a new BackupUploadTask.
      */
-    protected BackupUploadTask(
-        final String name,
-        final CassandraTaskExecutor executor,
-        final ClusterTaskConfig config,
-        final BackupContext context,
-        final String localLocation) {
-        super(name,
-            executor,
-            config.getCpus(),
-            config.getMemoryMb(),
-            config.getDiskMb(),
-            VolumeRequirement.VolumeMode.NONE,
-            null,
-            Collections.emptyList(),
-            CassandraData.createBackupUploadData("",
-                context.forNode(name).withLocalLocation(localLocation)));
+    protected BackupUploadTask(final Protos.TaskInfo info) {
+        super(info);
     }
 
     @Override

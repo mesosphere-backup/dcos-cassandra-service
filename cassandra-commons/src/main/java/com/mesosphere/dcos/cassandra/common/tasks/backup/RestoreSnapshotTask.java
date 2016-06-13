@@ -60,39 +60,34 @@ public class RestoreSnapshotTask extends CassandraTask {
     public static RestoreSnapshotTask parse(final Protos.TaskInfo info){
         return new RestoreSnapshotTask(info);
     }
-    public static RestoreSnapshotTask create(final CassandraDaemonTask task,
-                                              final ClusterTaskConfig config,
-                                              final RestoreContext context) {
-        return new RestoreSnapshotTask(nameForDaemon(task),
-            task.getExecutor(),
-            config,
-            context,
-            task.getVolumePath() +  "/data/temp_" + context.getName());
-    }
 
-    protected RestoreSnapshotTask(final Protos.TaskInfo info) {
-        super(info);
+    public static RestoreSnapshotTask create(
+            final Protos.TaskInfo template,
+            final CassandraDaemonTask daemon,
+            final RestoreContext context) {
+
+        String name = nameForDaemon(daemon);
+        CassandraData data = CassandraData.createRestoreSnapshotData(
+                "",
+                context
+                    .forNode(name)
+                    .withLocalLocation(daemon.getVolumePath() + "/data"));
+
+        Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
+                .setName(name)
+                .setData(data.getBytes())
+                .build();
+
+        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+
+        return new RestoreSnapshotTask(completedTemplate);
     }
 
     /**
      * Constructs a new RestoreSnapshotTask.
      */
-    protected RestoreSnapshotTask(
-        final String name,
-        final CassandraTaskExecutor executor,
-        final ClusterTaskConfig config,
-        final RestoreContext context,
-        final String localLocation) {
-        super(name,
-            executor,
-            config.getCpus(),
-            config.getMemoryMb(),
-            config.getDiskMb(),
-            VolumeRequirement.VolumeMode.NONE,
-            null,
-            Collections.emptyList(),
-            CassandraData.createRestoreSnapshotData("",
-                context.forNode(name).withLocalLocation(localLocation)));
+    protected RestoreSnapshotTask(final Protos.TaskInfo info) {
+        super(info);
     }
 
     @Override
