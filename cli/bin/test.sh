@@ -13,10 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -x
 
-BASEDIR=`dirname $0`/..
+CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BASEDIR=$CURR_DIR/..
 
-cd $BASEDIR
-
-PATH=$(pwd)/dist:$PATH
+PATH=$BASEDIR/dist:$PATH
 $BASEDIR/env/bin/tox
