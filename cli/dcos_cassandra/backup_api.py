@@ -21,8 +21,14 @@ def status():
     return cu.to_json(http.get(cu.api_url("/plan"), headers={}))
 
 
-def start_backup(name, external_location,
-                s3_access_key, s3_secret_key, azure_account, azure_key):
+def start_backup(
+        name,
+        external_location,
+        s3_access_key,
+        s3_secret_key,
+        azure_account,
+        azure_key):
+
     req = {
         'backup_name': name,
         'external_location': external_location,

@@ -21,6 +21,9 @@ out/
 .settings/
 bin/
 
+# Vim
+*.swp
+
 # Mac
 .DS_Store
 
