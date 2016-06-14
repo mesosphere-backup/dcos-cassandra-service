@@ -10,6 +10,7 @@ buildscript {
 
 plugins {
     id 'nebula.provided-base' version '3.0.3'
+    id 'com.github.ksoichiro.console.reporter' version '0.4.0'
 }
 apply from: "$rootDir/gradle/universe.gradle"
 
@@ -17,7 +18,9 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
+    apply plugin: 'jacoco'
     apply plugin: 'nebula.provided-base'
+    apply plugin: 'com.github.ksoichiro.console.reporter'
     apply from: "$rootDir/gradle/spock.gradle"
 
     group = 'com.mesosphere.dcos'
@@ -66,6 +69,22 @@ configure(subprojects - project('seedprovider')) {
         testCompile 'org.apache.curator:curator-test:2.9.1'
         testCompile 'io.dropwizard:dropwizard-testing:0.9.2'
         testCompile 'org.mockito:mockito-all:1.9.5'
+    }
+
+    // Print results on the fly
+    test {
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+
+    // Include unit test report in 'check'
+    // (jacoco itself depends on 'test')
+    check.dependsOn jacocoTestReport
+    jacocoTestReport {
+        reports {
+            html.destination "${buildDir}/jacoco"
+        }
     }
 
     task copyTestResources(type: Copy) {
