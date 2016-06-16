@@ -170,7 +170,10 @@ def replace(node_id):
               help='External location where the snapshot should be stored.')
 @click.option('--s3_access_key', help='S3 access key')
 @click.option('--s3_secret_key', help='S3 secret key')
-def backup_start(backup_name, external_location, s3_access_key, s3_secret_key):
+@click.option('--azure_account', help='Azure storage account')
+@click.option('--azure_key', help='Azure secret key')
+def backup_start(backup_name, external_location,
+                 s3_access_key, s3_secret_key, azure_account, azure_key):
     """Perform cluster backup via snapshot mechanism"""
     response = backup_api.start_backup(backup_name, external_location,
                                        s3_access_key,
