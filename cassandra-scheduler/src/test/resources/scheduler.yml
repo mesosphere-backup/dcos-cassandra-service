@@ -130,11 +130,11 @@ identity:
 seeds_url: "${SEEDS_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
 phase_strategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
 mesos:
-  servers: ${MESOS_SERVERS:-"master.mesos:2181"}
+  servers: ${MESOS_SERVERS:-"localhost:40000"}
   path: ${MESOS_PATH:-"/mesos"}
   timeout_ms: ${MESOS_TIMEOUT_MS:-10000}
 zookeeper:
-  servers: ${ZOOKEEPER_SERVERS:-"master.mesos:2181"}
+  servers: ${ZOOKEEPER_SERVERS:-"localhost:40000"}
   session_timeout_ms: 10000
   connection_timeout_ms: 10000
   operation_timeout_ms: 10000
