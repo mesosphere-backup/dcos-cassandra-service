@@ -2,10 +2,12 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.inject.Injector;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.testing.ResourceHelpers;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.scheduler.plan.*;
@@ -99,7 +101,7 @@ public class CassandraSchedulerTest {
     }
 
     @Test
-    public void testResourceOffersThreeSufficientOffersCycle() throws Exception {
+    public void testDefaultInstall() throws Exception {
         final Main main = (Main) RULE.getApplication();
         final Injector injector = main.getInjector();
         final CassandraScheduler scheduler = injector.getInstance(CassandraScheduler.class);
@@ -115,11 +117,14 @@ public class CassandraSchedulerTest {
         final Phase reconcilePhase = stageManager.getCurrentPhase();
         final Block reconcileBlock = stageManager.getCurrentBlock();
 
+        // Verify we are in Reconcile phase.
         Assert.assertEquals("Reconciliation", reconcilePhase.getName());
         Assert.assertEquals("Reconciliation", reconcileBlock.getName());
 
+        // Mark Reconcile phase as complete.
         stageManager.forceComplete(reconcilePhase.getId(), reconcileBlock.getId());
 
+        // Send 1 offer
         scheduler.resourceOffers(mockSchedulerDriver,
                 Arrays.asList(TestUtils.generateOffer(
                         frameworkId.getValue(),
@@ -127,6 +132,7 @@ public class CassandraSchedulerTest {
                         10240,
                         20480)));
 
+        // Verify node-0 block is in progress
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
         Assert.assertEquals("node-0", stageManager.getCurrentBlock().getName());
         Assert.assertEquals(Status.InProgress, stageManager.getCurrentBlock().getStatus());
@@ -136,7 +142,7 @@ public class CassandraSchedulerTest {
         final CassandraDaemonTask task0 = daemons.get("node-0");
         Assert.assertNotNull(task0);
         final Protos.TaskID taskId = task0.getTaskInfo().getTaskId();
-        final Protos.TaskStatus status = TestUtils.generateStatus(taskId, Protos.TaskState.TASK_RUNNING);
+        final Protos.TaskStatus status = TestUtils.generateStatus(taskId, Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
         scheduler.statusUpdate(mockSchedulerDriver, status);
 
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
@@ -158,7 +164,7 @@ public class CassandraSchedulerTest {
         final CassandraDaemonTask task1 = daemons.get("node-1");
         Assert.assertNotNull(task1);
         final Protos.TaskID taskId1 = task1.getTaskInfo().getTaskId();
-        final Protos.TaskStatus status1 = TestUtils.generateStatus(taskId1, Protos.TaskState.TASK_RUNNING);
+        final Protos.TaskStatus status1 = TestUtils.generateStatus(taskId1, Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
         scheduler.statusUpdate(mockSchedulerDriver, status1);
 
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
@@ -180,7 +186,7 @@ public class CassandraSchedulerTest {
         final CassandraDaemonTask task2 = daemons.get("node-2");
         Assert.assertNotNull(task2);
         final Protos.TaskID taskId2 = task2.getTaskInfo().getTaskId();
-        final Protos.TaskStatus status2 = TestUtils.generateStatus(taskId2, Protos.TaskState.TASK_RUNNING);
+        final Protos.TaskStatus status2 = TestUtils.generateStatus(taskId2, Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
         scheduler.statusUpdate(mockSchedulerDriver, status2);
 
         Assert.assertNull(stageManager.getCurrentPhase());

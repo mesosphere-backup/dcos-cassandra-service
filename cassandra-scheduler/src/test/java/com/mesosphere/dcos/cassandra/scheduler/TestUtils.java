@@ -1,7 +1,5 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
-import com.mesosphere.dcos.cassandra.common.CassandraProtos;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraData;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import org.apache.mesos.Protos;
@@ -65,7 +63,17 @@ public class TestUtils {
         return Protos.TaskStatus.newBuilder()
                 .setTaskId(taskID)
                 .setState(taskState)
-                .setData(CassandraData.createDaemonStatusData(CassandraMode.NORMAL).getBytes())
+                .build();
+    }
+
+    public static Protos.TaskStatus generateStatus(
+            Protos.TaskID taskID,
+            Protos.TaskState taskState,
+            CassandraMode cassandraMode) {
+        return Protos.TaskStatus.newBuilder()
+                .setTaskId(taskID)
+                .setState(taskState)
+                .setData(CassandraData.createDaemonStatusData(cassandraMode).getBytes())
                 .build();
     }
 }
