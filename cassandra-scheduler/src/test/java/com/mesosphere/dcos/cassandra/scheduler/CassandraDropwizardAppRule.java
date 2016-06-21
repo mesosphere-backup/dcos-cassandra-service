@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import io.dropwizard.Application;
-import io.dropwizard.Configuration;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;

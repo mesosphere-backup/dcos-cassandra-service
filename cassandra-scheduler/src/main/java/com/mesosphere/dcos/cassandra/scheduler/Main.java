@@ -35,6 +35,8 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
     }
 
     private Injector injector;
+    private CassandraSchedulerConfiguration configuration;
+    private Environment environment;
 
     @Override
     public String getName() {
@@ -58,6 +60,9 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
     @Override
     public void run(CassandraSchedulerConfiguration configuration,
                     Environment environment) throws Exception {
+
+        this.configuration = configuration;
+        this.environment = environment;
 
         logConfiguration(configuration);
 
@@ -142,5 +147,13 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
 
     public Injector getInjector() {
         return injector;
+    }
+
+    public CassandraSchedulerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    public Environment getEnvironment() {
+        return environment;
     }
 }

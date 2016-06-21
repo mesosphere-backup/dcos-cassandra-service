@@ -51,7 +51,6 @@ import java.util.concurrent.ScheduledExecutorService;
 public class TestModule extends AbstractModule {
     private final CassandraSchedulerConfiguration configuration;
     private final Environment environment;
-    private final String zkConnectionString;
 
     public static TestingServer createTestingServerQuietly() {
         try {
@@ -68,11 +67,9 @@ public class TestModule extends AbstractModule {
 
     public TestModule(
             final CassandraSchedulerConfiguration configuration,
-            final Environment environment,
-            final String zkConnectionString) {
+            final Environment environment) {
         this.configuration = configuration;
         this.environment = environment;
-        this.zkConnectionString = zkConnectionString;
     }
 
     @Override
@@ -84,7 +81,7 @@ public class TestModule extends AbstractModule {
                 .create(
                         configuration.getIdentity(),
                         CuratorFrameworkConfig.create(
-                                zkConnectionString,
+                                configuration.getCuratorConfig().getServers(),
                                 10000L,
                                 10000L,
                                 Optional.empty(),
@@ -172,7 +169,7 @@ public class TestModule extends AbstractModule {
 
         bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(
                 configuration.getHttpClientConfiguration())
-                .build("http-client"));
+                .build("http-client-test"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(configuration.getCuratorConfig());
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());

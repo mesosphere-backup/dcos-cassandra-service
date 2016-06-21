@@ -1,17 +1,19 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import io.dropwizard.setup.Environment;
 import io.dropwizard.testing.ResourceHelpers;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.scheduler.plan.*;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -25,10 +27,19 @@ public class CassandraSchedulerTest {
     public static CassandraDropwizardAppRule<CassandraSchedulerConfiguration> RULE =
             new CassandraDropwizardAppRule<>(Main.class, ResourceHelpers.resourceFilePath("scheduler.yml"));
 
+    public static Injector injector;
+
+    @BeforeClass
+    public static void before() {
+        final Main main = (Main) RULE.getApplication();
+        final CassandraSchedulerConfiguration configuration = main.getConfiguration();
+        final Environment environment = main.getEnvironment();
+        injector = Guice.createInjector(new TestModule(configuration, environment));
+
+    }
+
     @Test
     public void testRegistered() throws Exception {
-        final Main main = (Main) RULE.getApplication();
-        final Injector injector = main.getInjector();
         final CassandraScheduler scheduler = injector.getInstance(CassandraScheduler.class);
         final Protos.FrameworkID expectedFrameworkId = TestUtils.generateFrameworkId();
         scheduler.registered(null, expectedFrameworkId, TestUtils.generateMasterInfo());
@@ -50,8 +61,6 @@ public class CassandraSchedulerTest {
 
     @Test
     public void testResourceOffersEmpty() throws Exception {
-        final Main main = (Main) RULE.getApplication();
-        final Injector injector = main.getInjector();
         final CassandraScheduler scheduler = injector.getInstance(CassandraScheduler.class);
         final SchedulerDriver mockSchedulerDriver = Mockito.mock(SchedulerDriver.class);
         Mockito.when(mockSchedulerDriver.acceptOffers(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Protos.Status.DRIVER_RUNNING);
@@ -70,8 +79,6 @@ public class CassandraSchedulerTest {
 
     @Test
     public void testResourceOffersOneInsufficientOfferCycle() throws Exception {
-        final Main main = (Main) RULE.getApplication();
-        final Injector injector = main.getInjector();
         final CassandraScheduler scheduler = injector.getInstance(CassandraScheduler.class);
         final SchedulerDriver mockSchedulerDriver = Mockito.mock(SchedulerDriver.class);
         Mockito.when(mockSchedulerDriver.acceptOffers(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Protos.Status.DRIVER_RUNNING);
@@ -102,8 +109,6 @@ public class CassandraSchedulerTest {
 
     @Test
     public void testDefaultInstall() throws Exception {
-        final Main main = (Main) RULE.getApplication();
-        final Injector injector = main.getInjector();
         final CassandraScheduler scheduler = injector.getInstance(CassandraScheduler.class);
         final SchedulerDriver mockSchedulerDriver = Mockito.mock(SchedulerDriver.class);
         Mockito.when(mockSchedulerDriver.acceptOffers(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Protos.Status.DRIVER_RUNNING);
