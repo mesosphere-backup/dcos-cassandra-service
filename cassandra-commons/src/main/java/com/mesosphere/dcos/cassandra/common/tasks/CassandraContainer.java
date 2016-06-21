@@ -7,7 +7,8 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * Created by gabriel on 6/8/16.
+ * This class encapsulates a Cassandra Daemon as well as a template task which reserves reosources for sidecar tasks
+ * like Backup, Upload, Restore and Download
  */
 public class CassandraContainer {
     private CassandraDaemonTask daemonTask;

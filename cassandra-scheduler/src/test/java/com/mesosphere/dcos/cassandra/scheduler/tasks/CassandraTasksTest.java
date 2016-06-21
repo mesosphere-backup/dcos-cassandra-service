@@ -26,6 +26,7 @@ import org.apache.mesos.Protos;
 import org.junit.*;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Optional;
 
 /**
@@ -149,7 +150,19 @@ public class CassandraTasksTest {
     public void testGetContainerTaskInfos() throws Exception {
         CassandraContainer container = getTestCassandraContainer();
         Collection<Protos.TaskInfo> taskInfos = container.getTaskInfos();
-        Assert.assertNotNull(taskInfos);
+        Assert.assertEquals(2, taskInfos.size());
+
+        Iterator<Protos.TaskInfo> iter = taskInfos.iterator();
+        Protos.TaskInfo daemonTaskInfo = iter.next();
+        Protos.TaskInfo clusterTemplateTaskInfo = iter.next();
+
+        Assert.assertEquals(testDaemonName, daemonTaskInfo.getName());
+        Assert.assertEquals(-1, );
+
+
+
+
+        Assert.assertEquals(CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME, clusterTemplateTaskInfo.getName());
     }
 
     @Test
@@ -160,8 +173,15 @@ public class CassandraTasksTest {
     }
 
     @Test
-    public void testCreateCassandraContainer() throws PersistenceException {
+    public void testGetOrCreateCassandraContainer() throws PersistenceException {
         Assert.assertNotNull(cassandraTasks.getOrCreateContainer("test_name"));
+    }
+
+    @Test
+    public void testCreateCassandraContainer() throws Exception {
+        CassandraDaemonTask daemonTask = cassandraTasks.createDaemon(testDaemonName);
+        CassandraContainer container = cassandraTasks.createCassandraContainer(daemonTask);
+        Assert.assertNotNull(container);
     }
 
     private CassandraContainer getTestCassandraContainer() throws Exception{
