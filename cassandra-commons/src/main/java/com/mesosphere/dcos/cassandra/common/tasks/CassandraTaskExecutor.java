@@ -73,7 +73,6 @@ public class CassandraTaskExecutor {
             config.getApiPort(),
             config.getURIs(),
             config.getJavaHome());
-
     }
 
     /**
@@ -138,7 +137,6 @@ public class CassandraTaskExecutor {
                 Arrays.asList(
                     createCpus(cpus, role, principal),
                     createMemoryMb(memoryMb, role, principal),
-                    createDiskMb(diskMb, role, principal),
                     createPorts(Arrays.asList(apiPort), role, principal)))
             .build();
     }
