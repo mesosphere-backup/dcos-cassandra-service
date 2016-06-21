@@ -63,22 +63,23 @@ public class BackupResource {
     }
 
     public static BackupContext from(StartBackupRequest request) {
-        final BackupContext context = BackupContext.create(
-            "",
-            request.getName(),
-            request.getExternalLocation(),
-            "",
-            request.getS3AccessKey(),
-            request.getS3SecretKey());
+        String accountId;
+        String secretKey;
+        if (isAzure(request.getExternalLocation())) {
+            accountId = request.getAzureAccount();
+            secretKey = request.getAzureKey();
+        } else {
+            accountId = request.getS3AccessKey();
+            secretKey = request.getS3SecretKey();
+        }
 
-    if (isAzure(externalLocation)) {
-      context.setAcccountId(request.getAzureAccount());
-      context.setSecretKey(request.getAzureKey());
-    } else {
-      context.setAcccountId(request.getS3AccessKey());
-      context.setSecretKey(request.getS3SecretKey());
-    }
-    return context;
+        return BackupContext.create(
+                "",
+                request.getName(),
+                request.getExternalLocation(),
+                "",
+                accountId,
+                secretKey);
   }
 
   private static boolean isAzure(String externalLocation) {

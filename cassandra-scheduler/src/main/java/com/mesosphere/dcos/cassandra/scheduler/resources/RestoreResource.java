@@ -57,19 +57,23 @@ public class RestoreResource {
     }
 
     public static RestoreContext from(StartRestoreRequest request) {
-        final RestoreContext context =
-                new RestoreContext();
-        context.setName(request.getName());
-        final String externalLocation = request.getExternalLocation();
-        context.setExternalLocation(externalLocation);
-        if (isAzure(externalLocation)) {
-          context.setAcccountId(request.getAzureAccount());
-          context.setSecretKey(request.getAzureKey());
+        String accountId;
+        String secretKey;
+        if (isAzure(request.getExternalLocation())) {
+            accountId = request.getAzureAccount();
+            secretKey = request.getAzureKey();
         } else {
-          context.setAcccountId(request.getS3AccessKey());
-          context.setSecretKey(request.getS3SecretKey());
+            accountId = request.getS3AccessKey();
+            secretKey = request.getS3SecretKey();
         }
-        return context;
+
+        return RestoreContext.create(
+                "",
+                request.getName(),
+                request.getExternalLocation(),
+                "",
+                accountId,
+                secretKey);
     }
 
     private static boolean isAzure(String externalLocation) {

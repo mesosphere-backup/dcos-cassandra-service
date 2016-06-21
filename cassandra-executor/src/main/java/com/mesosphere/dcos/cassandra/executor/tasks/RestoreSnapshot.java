@@ -83,8 +83,8 @@ public class RestoreSnapshot implements Runnable {
             final String cassandraYaml =
                 CassandraPaths.create(version).cassandraConfig().toString();
 
-            final File keyspacesDirectory = new File(keyspaceDirectoryName);
-            LOGGER.info("Keyspace Directory {} exists: {}", keyspaceDirectoryName, keyspacesDirectory.exists());
+            final File keyspacesDirectory = new File(keyspaceDirectory);
+            LOGGER.info("Keyspace Directory {} exists: {}", keyspaceDirectory, keyspacesDirectory.exists());
 
             final File[] keyspaces = keyspacesDirectory.listFiles();
 
