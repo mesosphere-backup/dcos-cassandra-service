@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.common.util;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.*;
+import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.util.Algorithms;
 
 import java.net.URI;
@@ -145,37 +146,21 @@ public class TaskUtils {
         double cpus,
         String role,
         String principal) {
-        return createScalar(CPUS, cpus, role, principal);
+        return ResourceUtils.getDesiredScalar(role, principal, CPUS, cpus);
     }
 
     public static Resource createMemoryMb(
         int memoryMb,
         String role,
         String principal) {
-        return createScalar(MEM, memoryMb, role, principal);
-    }
-
-    public static Resource createDiskMb(
-        final int diskMb,
-        final String role,
-        final String principal) {
-        return createScalar(DISK, diskMb, role, principal);
-    }
-
-    public static Resource createDiskMb(
-        final int diskMb,
-        final String role,
-        final String principal,
-        final String path) {
-        return Resource.newBuilder(createDiskMb(diskMb, role, principal))
-            .setDisk(createDiskInfo(path)).build();
+        return ResourceUtils.getDesiredScalar(role, principal, MEM, memoryMb);
     }
 
     public static Resource createPorts(
         final Collection<Integer> ports,
         final String role,
         final String principal) {
-        return createRanges(PORTS, createPortRanges(ports), role, principal);
+        return ResourceUtils.getDesiredRanges(role, principal, PORTS, Algorithms.createRanges(ports));
     }
 
 

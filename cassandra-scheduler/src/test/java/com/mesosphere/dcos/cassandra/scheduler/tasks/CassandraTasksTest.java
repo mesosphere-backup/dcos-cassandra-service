@@ -20,16 +20,20 @@ import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.validation.BaseValidator;
+import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
+import org.apache.mesos.offer.ResourceUtils;
+import org.apache.mesos.offer.TaskUtils;
 import org.junit.*;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Optional;
 
 /**
- * Created by kowens on 2/8/16.
+ * This class tests the CassandraTasks class.
  */
 public class CassandraTasksTest {
 
@@ -140,36 +144,61 @@ public class CassandraTasksTest {
     }
 
     @Test
-    public void testCassandraContainerCreate() throws Exception {
-        CassandraContainer container = getTestCassandraContainer();
-        Assert.assertNotNull(container);
-    }
-
-    @Test
-    public void testGetContainerTaskInfos() throws Exception {
+    public void testCreateCassandraContainer() throws Exception {
         CassandraContainer container = getTestCassandraContainer();
         Collection<Protos.TaskInfo> taskInfos = container.getTaskInfos();
-        Assert.assertNotNull(taskInfos);
+        Assert.assertEquals(2, taskInfos.size());
+
+        Iterator<Protos.TaskInfo> iter = taskInfos.iterator();
+        Protos.TaskInfo daemonTaskInfo = iter.next();
+        Protos.TaskInfo clusterTemplateTaskInfo = iter.next();
+
+        validateDaemonTaskInfo(daemonTaskInfo);
+
+        Assert.assertEquals(CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME, clusterTemplateTaskInfo.getName());
+        Assert.assertEquals(2, clusterTemplateTaskInfo.getResourcesCount());
+        Assert.assertTrue(clusterTemplateTaskInfo.getTaskId().getValue().isEmpty());
+
+        for (Protos.Resource resource : clusterTemplateTaskInfo.getResourcesList()) {
+            Assert.assertTrue(ResourceUtils.getResourceId(resource).isEmpty());
+        }
     }
 
     @Test
     public void testGetContainerExecutorInfo() throws Exception {
         CassandraContainer container = getTestCassandraContainer();
         Protos.ExecutorInfo execInfo = container.getExecutorInfo();
-        Assert.assertNotNull(execInfo);
+        validateDaemonExecutorInfo(execInfo);
     }
 
     @Test
-    public void testCreateCassandraContainer() throws PersistenceException {
-        Assert.assertNotNull(cassandraTasks.getOrCreateContainer("test_name"));
+    public void testGetOrCreateCassandraContainer() throws PersistenceException {
+        CassandraContainer cassandraContainer = cassandraTasks.getOrCreateContainer(testDaemonName);
+        validateDaemonTaskInfo(cassandraContainer.getDaemonTask().getTaskInfo());
+        validateDaemonExecutorInfo(cassandraContainer.getExecutorInfo());
     }
+
+    private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) {
+        Assert.assertEquals(testDaemonName, daemonTaskInfo.getName());
+        Assert.assertEquals(4, daemonTaskInfo.getResourcesCount());
+        Assert.assertEquals(testDaemonName, TaskUtils.toTaskName(daemonTaskInfo.getTaskId()));
+        Assert.assertTrue(daemonTaskInfo.getSlaveId().getValue().isEmpty());
+
+        for (Protos.Resource resource : daemonTaskInfo.getResourcesList()) {
+            Assert.assertTrue(ResourceUtils.getResourceId(resource).isEmpty());
+        }
+    }
+
+    private void validateDaemonExecutorInfo(Protos.ExecutorInfo executorInfo) {
+        for (Protos.Resource resource : executorInfo.getResourcesList()) {
+            Assert.assertTrue(ResourceUtils.getResourceId(resource).isEmpty());
+        }
+    }
+
+
 
     private CassandraContainer getTestCassandraContainer() throws Exception{
         CassandraDaemonTask daemonTask = cassandraTasks.createDaemon(testDaemonName);
-        CassandraTemplateTask clusterTemplateTask = CassandraTemplateTask.create(
-                "test_role",
-                "test_principal",
-                config.getClusterTaskConfig());
-        return CassandraContainer.create(daemonTask, clusterTemplateTask);
+        return cassandraTasks.createCassandraContainer(daemonTask);
     }
 }
