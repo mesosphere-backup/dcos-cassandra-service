@@ -7,10 +7,7 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTemplateTask;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
@@ -47,6 +44,7 @@ public class CassandraTasksTest {
     private static ClusterTaskConfig clusterTaskConfig;
     private static String path;
     private static String testDaemonName = "test-daemon-name";
+    private static String testHostName = "test-host-name";
     private CassandraTasks cassandraTasks;
 
     @Before
@@ -172,10 +170,22 @@ public class CassandraTasksTest {
     }
 
     @Test
-    public void testGetOrCreateCassandraContainer() throws PersistenceException {
+    public void testGetOrCreateCassandraContainer() throws Exception {
         CassandraContainer cassandraContainer = cassandraTasks.getOrCreateContainer(testDaemonName);
         validateDaemonTaskInfo(cassandraContainer.getDaemonTask().getTaskInfo());
         validateDaemonExecutorInfo(cassandraContainer.getExecutorInfo());
+    }
+
+    @Test
+    public void testMoveDaemon() throws Exception {
+        CassandraDaemonTask originalDaemonTask = cassandraTasks.createDaemon(testDaemonName);
+        originalDaemonTask = originalDaemonTask.update(getTestOffer());
+        Assert.assertEquals(testHostName, originalDaemonTask.getHostname());
+
+        CassandraDaemonTask movedDaemonTask = cassandraTasks.moveDaemon(originalDaemonTask);
+        CassandraData movedData = CassandraData.parse(movedDaemonTask.getTaskInfo().getData());
+        String movedReplaceIp = movedData.getConfig().getReplaceIp();
+        Assert.assertEquals(originalDaemonTask.getHostname(), movedReplaceIp);
     }
 
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) {
@@ -195,10 +205,23 @@ public class CassandraTasksTest {
         }
     }
 
-
-
     private CassandraContainer getTestCassandraContainer() throws Exception{
         CassandraDaemonTask daemonTask = cassandraTasks.createDaemon(testDaemonName);
         return cassandraTasks.createCassandraContainer(daemonTask);
+    }
+
+    private Protos.Offer getTestOffer() {
+        return Protos.Offer.newBuilder()
+                .setId(Protos.OfferID.newBuilder()
+                        .setValue("test-offer-id")
+                        .build())
+                .setFrameworkId(Protos.FrameworkID.newBuilder()
+                        .setValue("test-framework-id")
+                        .build())
+                .setSlaveId(Protos.SlaveID.newBuilder()
+                        .setValue("test-slave-id")
+                        .build())
+                .setHostname(testHostName)
+                .build();
     }
 }
