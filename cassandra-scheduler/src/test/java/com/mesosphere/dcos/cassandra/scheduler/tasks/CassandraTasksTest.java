@@ -45,6 +45,7 @@ public class CassandraTasksTest {
     private static String path;
     private static String testDaemonName = "test-daemon-name";
     private static String testHostName = "test-host-name";
+    private static String testTaskId = "test-task-id";
     private CassandraTasks cassandraTasks;
 
     @Before
@@ -188,6 +189,26 @@ public class CassandraTasksTest {
         Assert.assertEquals(originalDaemonTask.getHostname(), movedReplaceIp);
     }
 
+    @Test
+    public void testUpdateTaskStatus() throws Exception {
+        // Test that updating an empty StateStore doesn't have any ill effects
+        Assert.assertEquals(0, cassandraTasks.getDaemons().size());
+        cassandraTasks.update(getTestTaskStatus());
+        Assert.assertEquals(0, cassandraTasks.getDaemons().size());
+
+        // Initial update should result in STAGING state
+        CassandraDaemonTask daemonTask = cassandraTasks.createDaemon(testDaemonName);
+        cassandraTasks.update(daemonTask.getTaskInfo(), getTestOffer());
+        Assert.assertEquals(1, cassandraTasks.getDaemons().size());
+        CassandraDaemonTask updatedDaemonTask = cassandraTasks.getDaemons().entrySet().iterator().next().getValue();
+        Assert.assertEquals(Protos.TaskState.TASK_STAGING, updatedDaemonTask.getState());
+
+        // TaskStatus update with RUNNING should result in RUNNING state.
+        cassandraTasks.update(getTestTaskStatus(daemonTask.getTaskInfo().getTaskId().getValue()));
+        updatedDaemonTask = cassandraTasks.getDaemons().entrySet().iterator().next().getValue();
+        Assert.assertEquals(Protos.TaskState.TASK_RUNNING, updatedDaemonTask.getState());
+    }
+
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) {
         Assert.assertEquals(testDaemonName, daemonTaskInfo.getName());
         Assert.assertEquals(4, daemonTaskInfo.getResourcesCount());
@@ -222,6 +243,19 @@ public class CassandraTasksTest {
                         .setValue("test-slave-id")
                         .build())
                 .setHostname(testHostName)
+                .build();
+    }
+
+    private Protos.TaskStatus getTestTaskStatus() {
+        return getTestTaskStatus(testTaskId);
+    }
+
+    private Protos.TaskStatus getTestTaskStatus(String taskId) {
+        return Protos.TaskStatus.newBuilder()
+                .setTaskId(Protos.TaskID.newBuilder()
+                        .setValue(taskId)
+                        .build())
+                .setState(Protos.TaskState.TASK_RUNNING)
                 .build();
     }
 }
