@@ -82,6 +82,7 @@ public class BackupUploadTask extends CassandraTask {
 
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
                 .setName(name)
+                .setTaskId(TaskUtils.toTaskId(name))
                 .setData(data.getBytes())
                 .build();
 
