@@ -16,14 +16,8 @@
 package com.mesosphere.dcos.cassandra.common.tasks.repair;
 
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.CassandraProtos;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import org.apache.mesos.Protos;
-
-import java.util.Optional;
 
 /**
  * RepairStatus extends CassandraTaskStatus to implement the status Object for
@@ -31,63 +25,12 @@ import java.util.Optional;
  */
 public class RepairStatus extends CassandraTaskStatus {
 
-    /**
-     * Creates a RepairStatus.
-     * @param state      The state of the task
-     * @param id         The id of the task associated with the status.
-     * @param slaveId    The id of the slave on which the task associated
-     *                   with the status was launched.
-     * @param executorId The id of the executor for the task associated with
-     *                   the status.
-     * @param message    An optional message sent from the executor.
-     * @return A RepairStatus constructed from the parameters.
-     */
-    @JsonCreator
-    public static RepairStatus create(
-            @JsonProperty("state") Protos.TaskState state,
-            @JsonProperty("id") String id,
-            @JsonProperty("slave_id") String slaveId,
-            @JsonProperty("executor_id") String executorId,
-            @JsonProperty("message") Optional<String> message) {
-        return new RepairStatus(state, id, slaveId, executorId, message);
+    public static RepairStatus create(final Protos.TaskStatus status) {
+        return new RepairStatus(status);
     }
 
-    /**
-     * Constructs a RepairStatus.
-     * @param state      The state of the task
-     * @param id         The id of the task associated with the status.
-     * @param slaveId    The id of the slave on which the task associated
-     *                   with the status was launched.
-     * @param executorId The id of the executor for the task associated with
-     *                   the status.
-     * @param message    An optional message sent from the executor.
-     */
-    protected RepairStatus(Protos.TaskState state,
-                           String id,
-                           String slaveId,
-                           String executorId,
-                           Optional<String> message) {
-        super(CassandraTask.TYPE.REPAIR,
-                state,
-                id,
-                slaveId,
-                executorId,
-                message);
+    protected RepairStatus(final Protos.TaskStatus status) {
+        super(status);
     }
 
-    @Override
-    public RepairStatus update(Protos.TaskState state) {
-        if (isFinished()) {
-            return this;
-        } else {
-            return create(state, id, slaveId, executorId, message);
-        }
-    }
-
-    @Override
-    protected CassandraProtos.CassandraTaskStatusData getData() {
-        return CassandraProtos.CassandraTaskStatusData.newBuilder()
-                .setType(CassandraProtos.CassandraTaskData.TYPE.REPAIR)
-                .build();
-    }
 }

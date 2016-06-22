@@ -21,7 +21,6 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
 import com.mesosphere.dcos.cassandra.common.config.Location;
-import com.mesosphere.dcos.cassandra.common.tasks.Volume;
 import org.apache.mesos.offer.VolumeRequirement;
 
 import static com.mesosphere.dcos.cassandra.common.config
@@ -62,8 +61,6 @@ public class CassandraConfigParser {
     private int batchlogReplayThrottleInKb;
     @JsonProperty(PARTITIONER_KEY)
     private String partitioner;
-    @JsonProperty("volume_size_mb")
-    private int volumeSizeMb;
     @JsonProperty(DISK_FAILURE_POLICY_KEY)
     private String diskFailurePolicy;
     @JsonProperty(COMMIT_FAILURE_POLICY_KEY)
@@ -190,7 +187,6 @@ public class CassandraConfigParser {
         maxHintsDeliveryThreads = DEFAULT_MAX_HINTS_DELIVERY_THREADS;
         batchlogReplayThrottleInKb = DEFAULT_BATCHLOG_REPLAY_THROTTLE_IN_KB;
         partitioner = DEFAULT_PARTITIONER;
-        volumeSizeMb = CassandraConfig.DEFAULT.getVolume().getSizeMb();
         diskFailurePolicy = DEFAULT_DISK_FAILURE_POLICY;
         commitFailurePolicy = DEFAULT_COMMIT_FAILURE_POLICY;
         keyCacheSizeInMb = DEFAULT_KEY_CACHE_SIZE_IN_MB;
@@ -264,7 +260,7 @@ public class CassandraConfigParser {
                 DEFAULT_ROLES_VALIDITY_IN_MS,
                 DEFAULT_PERMISSIONS_VALIDITY_IN_MS,
                 partitioner,
-                CassandraConfig.DEFAULT.getVolume().getPath(),
+                CassandraConfig.VOLUME_PATH,
                 diskFailurePolicy,
                 commitFailurePolicy,
                 keyCacheSizeInMb,
@@ -343,10 +339,6 @@ public class CassandraConfigParser {
                 heap,
                 location,
                 jmxPort,
-                Volume.create(
-                        CassandraConfig.DEFAULT.getVolume().getPath(),
-                        volumeSizeMb,
-                        ""),
                 getApplicationConfig(name, seedsUrl));
     }
 
@@ -676,14 +668,6 @@ public class CassandraConfigParser {
 
     public void setPartitioner(String partitioner) {
         this.partitioner = partitioner;
-    }
-
-    public int getVolumeSizeMb() {
-        return volumeSizeMb;
-    }
-
-    public void setVolumeSizeMb(int volumeSizeMb) {
-        this.volumeSizeMb = volumeSizeMb;
     }
 
     public int getRangeRequestTimeoutInMs() {

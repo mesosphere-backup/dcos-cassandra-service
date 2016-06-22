@@ -5,6 +5,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.scheduler.plan.DefaultPhase;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public class CassandraDaemonPhase extends DefaultPhase {
     private static void createBlocks(
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
-            final CassandraOfferRequirementProvider provider,
+            final PersistentOfferRequirementProvider provider,
             final SchedulerClient client,
             final List<CassandraDaemonBlock> blocks,
             final List<String> errors) {
@@ -63,7 +64,7 @@ public class CassandraDaemonPhase extends DefaultPhase {
     public static final CassandraDaemonPhase create(
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
-            final CassandraOfferRequirementProvider provider,
+            final PersistentOfferRequirementProvider provider,
             final SchedulerClient client) {
 
         final List<CassandraDaemonBlock> blocks =

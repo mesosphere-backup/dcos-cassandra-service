@@ -136,7 +136,7 @@ public class SeedsManager implements Runnable {
     public List<String> getLocalSeeds() throws IOException {
         final List<CassandraDaemonTask> active = tasks.getDaemons().values()
                 .stream()
-                .filter(daemon -> daemon.getStatus().getMode() ==
+                .filter(daemon -> daemon.getMode() ==
                         CassandraMode.NORMAL &&
                         daemon.getHostname().isEmpty() == false).collect(
                         Collectors

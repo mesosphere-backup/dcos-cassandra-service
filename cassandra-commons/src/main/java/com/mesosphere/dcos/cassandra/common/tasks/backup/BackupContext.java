@@ -15,6 +15,9 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
@@ -30,40 +33,88 @@ import java.util.Objects;
  */
 public class BackupContext implements ClusterTaskContext {
 
-  /**
-   * Serializer serializes and deserializes a BackupContext to and from a
-   * JSON Object.
-   */
-  public static final Serializer<BackupContext> JSON_SERIALIZER =
-    new Serializer<BackupContext>() {
-      @Override
-      public byte[] serialize(BackupContext value) throws SerializationException {
-        try {
-          return JsonUtils.MAPPER.writeValueAsBytes(value);
-        } catch (JsonProcessingException ex) {
-          throw new SerializationException(
-            "Error writing BackupContext to JSON", ex);
-        }
-      }
+    /**
+     * Serializer serializes and deserializes a BackupContext to and from a
+     * JSON Object.
+     */
+    public static final Serializer<BackupContext> JSON_SERIALIZER =
+        new Serializer<BackupContext>() {
+            @Override
+            public byte[] serialize(BackupContext value)
+                throws SerializationException {
+                try {
+                    return JsonUtils.MAPPER.writeValueAsBytes(value);
+                } catch (JsonProcessingException ex) {
+                    throw new SerializationException(
+                        "Error writing BackupContext to JSON",
+                        ex);
+                }
+            }
 
-      @Override
-      public BackupContext deserialize(byte[] bytes) throws SerializationException {
-        try {
-          return JsonUtils.MAPPER.readValue(bytes,
-            BackupContext.class);
-        } catch (IOException ex) {
-          throw new SerializationException("Error reading " +
-            "BackupContext form JSON", ex);
-        }
-      }
-    };
+            @Override
+            public BackupContext deserialize(byte[] bytes)
+                throws SerializationException {
+                try {
+                    return JsonUtils.MAPPER.readValue(bytes,
+                        BackupContext.class);
+                } catch (IOException ex) {
+                    throw new SerializationException("Error reading " +
+                        "BackupContext form JSON", ex);
+                }
+            }
+        };
 
-  private String nodeId;
-  private String name;
-  private String externalLocation;
-  private String localLocation;
-  private String acccountId;  // s3AccessKey or AccountName (prinicipal for service)
-  private String secretKey;  // s3SecretKey or azure key (secret)
+    @JsonCreator
+    public static BackupContext create(
+        @JsonProperty("node_id")
+        final String nodeId,
+        @JsonProperty("name")
+        final String name,
+        @JsonProperty("external_location")
+        final String externalLocation,
+        @JsonProperty("local_location")
+        final String localLocation,
+        @JsonProperty("s3_access_key")
+        final String s3AccessKey,
+        @JsonProperty("s3_secret_key")
+        final String s3SecretKey) {
+        return new BackupContext(
+            nodeId,
+            name,
+            externalLocation,
+            localLocation,
+            s3AccessKey,
+            s3SecretKey);
+    }
+
+    @JsonProperty("node_id")
+    private final String nodeId;
+    @JsonProperty("name")
+    private final String name;
+    @JsonProperty("external_location")
+    private final String externalLocation;
+    @JsonProperty("local_location")
+    private final String localLocation;
+    @JsonProperty("account_id")
+    private final String accountId;
+    @JsonProperty("s3_secret_key")
+    private final String secretKey;
+
+
+    public BackupContext(final String nodeId,
+                         final String name,
+                         final String externalLocation,
+                         final String localLocation,
+                         final String accountId,
+                         final String secretKey) {
+        this.nodeId = nodeId;
+        this.name = name;
+        this.externalLocation = externalLocation;
+        this.localLocation = localLocation;
+        this.accountId = accountId;
+        this.secretKey = secretKey;
+    }
+
 
   /**
    * Gets the name of the backup.
@@ -99,7 +150,7 @@ public class BackupContext implements ClusterTaskContext {
    * be stored.
    */
   public String getAcccountId() {
-    return acccountId;
+    return accountId;
   }
 
   /**
@@ -112,72 +163,36 @@ public class BackupContext implements ClusterTaskContext {
     return secretKey;
   }
 
-  /**
-   * Sets the backup name.
-   *
-   * @param name The name of the backup.
-   */
-  public void setName(String name) {
-    this.name = name;
-  }
+    /**
+     * Gets the id of the node for the backup.
+     *
+     * @return The id of the node for the backup.
+     */
+    public String getNodeId() {
+        return nodeId;
+    }
 
-  /**
-   * Sets the external location.
-   *
-   * @param externalLocation The location where the backup files will be
-   *                         stored.
-   */
-  public void setExternalLocation(String externalLocation) {
-    this.externalLocation = externalLocation;
-  }
+    @JsonIgnore
+    public BackupContext forNode(final String nodeId){
+        return create(
+            nodeId,
+            name,
+            externalLocation,
+            localLocation,
+            accountId,
+            secretKey);
+    }
 
-  /**
-   * Sets the local location.
-   *
-   * @param localLocation The location where the keyspace files will be
-   *                      read from.
-   */
-  public void setLocalLocation(String localLocation) {
-    this.localLocation = localLocation;
-  }
-
-  /**
-   * Sets the S3 access key or azure storage account name.
-   *
-   * @param acccountId The access key for the bucket or azure account where the backup
-   *                   files will be stored.
-   */
-  public void setAcccountId(String acccountId) {
-    this.acccountId = acccountId;
-  }
-
-  /**
-   * Sets the S3 or azure secret key
-   *
-   * @param secretKey The secret key for the bucket where teh backup
-   *                  files will be stored.
-   */
-  public void setSecretKey(String secretKey) {
-    this.secretKey = secretKey;
-  }
-
-  /**
-   * Gets the id of the node for the backup.
-   *
-   * @return The id of the node for the backup.
-   */
-  public String getNodeId() {
-    return nodeId;
-  }
-
-  /**
-   * Sets the id of the node for the backup.
-   *
-   * @param nodeId The id of the node for the backup.
-   */
-  public void setNodeId(String nodeId) {
-    this.nodeId = nodeId;
-  }
+    @JsonIgnore
+    public BackupContext withLocalLocation(final String localLocation){
+        return create(
+            nodeId,
+            name,
+            externalLocation,
+            localLocation,
+            accountId,
+            secretKey);
+    }
 
   @Override
   public String toString() {

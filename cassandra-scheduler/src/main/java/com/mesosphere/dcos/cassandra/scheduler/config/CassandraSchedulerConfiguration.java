@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import io.dropwizard.Configuration;
 import io.dropwizard.client.HttpClientConfiguration;
 import org.slf4j.Logger;

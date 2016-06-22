@@ -38,36 +38,37 @@ public class RepairContext implements ClusterTaskContext {
      * object.
      */
     public static final Serializer<RepairContext> JSON_SERIALIZER =
-            new Serializer<RepairContext>() {
-                @Override
-                public byte[] serialize(RepairContext value)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.writeValueAsBytes(value);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Serialization " +
-                                "failed", ex);
-                    }
+        new Serializer<RepairContext>() {
+            @Override
+            public byte[] serialize(RepairContext value)
+                throws SerializationException {
+                try {
+                    return JsonUtils.MAPPER.writeValueAsBytes(value);
+                } catch (IOException ex) {
+                    throw new SerializationException("Serialization " +
+                        "failed", ex);
                 }
+            }
 
-                @Override
-                public RepairContext deserialize(byte[] bytes)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.readValue(bytes, RepairContext
-                                .class);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Deserialization " +
-                                "failed", ex);
-                    }
+            @Override
+            public RepairContext deserialize(byte[] bytes)
+                throws SerializationException {
+                try {
+                    return JsonUtils.MAPPER.readValue(bytes, RepairContext
+                        .class);
+                } catch (IOException ex) {
+                    throw new SerializationException("Deserialization " +
+                        "failed", ex);
                 }
-            };
+            }
+        };
 
     /**
      * Creates a new RepairContext.
-     * @param nodes The nodes on which repair will be performed.
-     * @param keySpaces The key spaces that will be repaired. If empty, all
-     *                  non-system key spaces will be repaired.
+     *
+     * @param nodes          The nodes on which repair will be performed.
+     * @param keySpaces      The key spaces that will be repaired. If empty, all
+     *                       non-system key spaces will be repaired.
      * @param columnFamilies The column families that will be repaired. If
      *                       empty, all column families for the indicated key
      *                       spaces will be repaired.
@@ -75,10 +76,10 @@ public class RepairContext implements ClusterTaskContext {
      */
     @JsonCreator
     public static RepairContext create(
-            @JsonProperty("nodes") final List<String> nodes,
-            @JsonProperty("keySpaces") final List<String> keySpaces,
-            @JsonProperty("columnFamilies") final List<String> columnFamilies) {
-        return new RepairContext( nodes,keySpaces,columnFamilies);
+        @JsonProperty("nodes") final List<String> nodes,
+        @JsonProperty("keySpaces") final List<String> keySpaces,
+        @JsonProperty("columnFamilies") final List<String> columnFamilies) {
+        return new RepairContext(nodes, keySpaces, columnFamilies);
     }
 
     @JsonProperty("nodes")
@@ -90,27 +91,29 @@ public class RepairContext implements ClusterTaskContext {
 
     /**
      * Constructs a new RepairContext.
-     * @param nodes The nodes on which repair will be performed.
-     * @param keySpaces The key spaces that will be repaired. If empty, all
-     *                  non-system key spaces will be repaired.
+     *
+     * @param nodes          The nodes on which repair will be performed.
+     * @param keySpaces      The key spaces that will be repaired. If empty, all
+     *                       non-system key spaces will be repaired.
      * @param columnFamilies The column families that will be repaired. If
      *                       empty, all column families for the indicated key
      *                       spaces will be repaired.
      */
     public RepairContext(final List<String> nodes,
-                          final List<String> keySpaces,
-                          final List<String> columnFamilies) {
+                         final List<String> keySpaces,
+                         final List<String> columnFamilies) {
         this.nodes = (nodes == null) ? Collections.emptyList() : nodes;
         this.keySpaces = (keySpaces == null) ?
-                Collections.emptyList() :
-                keySpaces;
+            Collections.emptyList() :
+            keySpaces;
         this.columnFamilies = (columnFamilies == null) ?
-                Collections.emptyList() :
-                columnFamilies;
+            Collections.emptyList() :
+            columnFamilies;
     }
 
     /**
      * Gets the nodes to repair.
+     *
      * @return The nodes that will be repaired.
      */
     public List<String> getNodes() {
@@ -119,6 +122,7 @@ public class RepairContext implements ClusterTaskContext {
 
     /**
      * Gets the column families.
+     *
      * @return The column families that will be repaired. If empty, all
      * column families for the indicated key spaces will be repaired.
      */
@@ -128,6 +132,7 @@ public class RepairContext implements ClusterTaskContext {
 
     /**
      * Gets the key spaces.
+     *
      * @return The key spaces that will be repaired. If empty, all non-system
      * key spaces will be repaired.
      */
@@ -141,9 +146,9 @@ public class RepairContext implements ClusterTaskContext {
         if (!(o instanceof RepairContext)) return false;
         RepairContext that = (RepairContext) o;
         return Objects.equals(getNodes(), that.getNodes()) &&
-                Objects.equals(getKeySpaces(), that.getKeySpaces()) &&
-                Objects.equals(getColumnFamilies(),
-                        that.getColumnFamilies());
+            Objects.equals(getKeySpaces(), that.getKeySpaces()) &&
+            Objects.equals(getColumnFamilies(),
+                that.getColumnFamilies());
     }
 
     @Override

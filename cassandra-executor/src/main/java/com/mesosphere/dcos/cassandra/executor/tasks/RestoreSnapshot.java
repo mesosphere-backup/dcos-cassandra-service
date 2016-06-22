@@ -16,7 +16,6 @@
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraPaths;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +41,7 @@ import java.util.Optional;
  */
 public class RestoreSnapshot implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            RestoreSnapshot.class);
+        RestoreSnapshot.class);
 
     private final ExecutorDriver driver;
     private final RestoreContext context;
@@ -58,21 +57,14 @@ public class RestoreSnapshot implements Runnable {
      * @param version       The version of Cassandra that will be restored.
      */
     public RestoreSnapshot(
-            ExecutorDriver driver,
-            RestoreSnapshotTask cassandraTask,
-            String nodeId,
-            String version) {
+        ExecutorDriver driver,
+        RestoreSnapshotTask cassandraTask,
+        String nodeId,
+        String version) {
         this.driver = driver;
         this.version = version;
         this.cassandraTask = cassandraTask;
-
-        this.context = new RestoreContext();
-        context.setName(this.cassandraTask.getBackupName());
-        context.setNodeId(nodeId);
-        context.setAcccountId(this.cassandraTask.getAccountId());
-        context.setSecretKey(this.cassandraTask.getSecretKey());
-        context.setExternalLocation(this.cassandraTask.getExternalLocation());
-        context.setLocalLocation(this.cassandraTask.getLocalLocation());
+        this.context = cassandraTask.getRestoreContext();
     }
 
     @Override
@@ -80,25 +72,25 @@ public class RestoreSnapshot implements Runnable {
         try {
             // Send TASK_RUNNING
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
-                    "Started restoring snapshot");
+                "Started restoring snapshot");
             final String localLocation = context.getLocalLocation();
-            final String keyspaceDirectoryName = localLocation + File.separator +
-                    context.getName() + File.separator + context.getNodeId();
+            final String keyspaceDirectory = localLocation + File.separator +
+                context.getName() + File.separator + context.getNodeId();
 
             final String ssTableLoaderBinary =
-                    CassandraPaths.create(version).bin()
-                            .resolve("sstableloader").toString();
+                CassandraPaths.create(version).bin()
+                    .resolve("sstableloader").toString();
             final String cassandraYaml =
-                    CassandraPaths.create(version).cassandraConfig().toString();
+                CassandraPaths.create(version).cassandraConfig().toString();
 
-            final File keyspacesDirectory = new File(keyspaceDirectoryName);
-            LOGGER.info("Keyspace Directory {} exists: {}", keyspaceDirectoryName, keyspacesDirectory.exists());
+            final File keyspacesDirectory = new File(keyspaceDirectory);
+            LOGGER.info("Keyspace Directory {} exists: {}", keyspaceDirectory, keyspacesDirectory.exists());
 
             final File[] keyspaces = keyspacesDirectory.listFiles();
 
             String libProcessAddress = System.getenv("LIBPROCESS_IP");
             libProcessAddress = StringUtils.isBlank(
-                    libProcessAddress) ? InetAddress.getLocalHost().getHostAddress() : libProcessAddress;
+                libProcessAddress) ? InetAddress.getLocalHost().getHostAddress() : libProcessAddress;
 
             for (File keyspace : keyspaces) {
                 final File[] columnFamilies = keyspace.listFiles();
@@ -110,17 +102,17 @@ public class RestoreSnapshot implements Runnable {
                 for (File columnFamily : columnFamilies) {
                     final String columnFamilyName = columnFamily.getName();
                     LOGGER.info(
-                            "Bulk loading... keyspace: {} column family: {}",
-                            keyspaceName, columnFamilyName);
+                        "Bulk loading... keyspace: {} column family: {}",
+                        keyspaceName, columnFamilyName);
 
                     final String columnFamilyPath = columnFamily.getAbsolutePath();
                     final List<String> command = Arrays.asList(
-                            ssTableLoaderBinary, "-d", libProcessAddress, "-f",
-                            cassandraYaml, columnFamilyPath);
+                        ssTableLoaderBinary, "-d", libProcessAddress, "-f",
+                        cassandraYaml, columnFamilyPath);
                     LOGGER.info("Executing command: {}", command);
 
                     final ProcessBuilder processBuilder = new ProcessBuilder(
-                            command);
+                        command);
                     Process process = processBuilder.start();
                     int exitCode = process.waitFor();
 
@@ -134,20 +126,20 @@ public class RestoreSnapshot implements Runnable {
                     // Send TASK_ERROR
                     if (exitCode != 0) {
                         final String errMessage = String.format(
-                                "Error restoring snapshot. Exit code: %s Stdout: %s Stderr: %s",
-                                (exitCode + ""), stdout, stderr);
+                            "Error restoring snapshot. Exit code: %s Stdout: %s Stderr: %s",
+                            (exitCode + ""), stdout, stderr);
                         LOGGER.error(errMessage);
                         sendStatus(driver, Protos.TaskState.TASK_ERROR,
-                                errMessage);
+                            errMessage);
                     }
 
                     LOGGER.info(
-                            "Done bulk loading! keyspace: {} column family: {}",
-                            keyspaceName, columnFamilyName);
+                        "Done bulk loading! keyspace: {} column family: {}",
+                        keyspaceName, columnFamilyName);
                 }
 
                 LOGGER.info("Successfully bulk loaded keyspace: {}",
-                        keyspaceName);
+                    keyspaceName);
             }
 
             final String message = "Finished restoring snapshot";
@@ -156,15 +148,15 @@ public class RestoreSnapshot implements Runnable {
         } catch (Throwable t) {
             // Send TASK_FAILED
             final String errorMessage = "Failed restoring snapshot. Reason: "
-                    + t;
-            LOGGER.error(errorMessage, t);
+                + t;
+            LOGGER.error(errorMessage);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, errorMessage);
         }
     }
 
     private static String streamToString(InputStream stream) throws Exception {
         BufferedReader reader = new BufferedReader(
-                new InputStreamReader(stream));
+            new InputStreamReader(stream));
         StringBuilder builder = new StringBuilder();
         String line = null;
         while ((line = reader.readLine()) != null) {
@@ -178,14 +170,8 @@ public class RestoreSnapshot implements Runnable {
     private void sendStatus(ExecutorDriver driver,
                             Protos.TaskState state,
                             String message) {
-
-        Protos.TaskStatus status = RestoreSnapshotStatus.create(
-                state,
-                cassandraTask.getId(),
-                cassandraTask.getSlaveId(),
-                cassandraTask.getExecutor().getId(),
-                Optional.of(message)
-        ).toProto();
+        Protos.TaskStatus status = cassandraTask
+            .createStatus(state, Optional.of(message)).getTaskStatus();
         driver.sendStatusUpdate(status);
     }
 }

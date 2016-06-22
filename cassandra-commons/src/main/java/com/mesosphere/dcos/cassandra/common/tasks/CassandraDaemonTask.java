@@ -15,22 +15,13 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.offer.VolumeRequirement;
 
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static org.apache.mesos.protobuf.ResourceBuilder.*;
 
 /**
  * CassandraDaemonTask extends CassandraTask to implement the task for a
@@ -43,368 +34,26 @@ import static org.apache.mesos.protobuf.ResourceBuilder.*;
 public class CassandraDaemonTask extends CassandraTask {
 
     /**
-     * Builder is a mutable instance of a CassandraDaemonTask.
-     */
-    public static class Builder {
-
-        private String id;
-        private String slaveId;
-        private String hostname;
-        private CassandraTaskExecutor executor;
-        private String name;
-        private String role;
-        private String principal;
-        private double cpus;
-        private int memoryMb;
-        private int diskMb;
-        private CassandraDaemonStatus status;
-        private CassandraConfig config;
-
-        private Builder(CassandraDaemonTask task) {
-
-            this.id = task.id;
-            this.slaveId = task.slaveId;
-            this.hostname = task.hostname;
-            this.executor = task.executor;
-            this.name = task.name;
-            this.role = task.role;
-            this.principal = task.principal;
-            this.cpus = task.cpus;
-            this.memoryMb = task.memoryMb;
-            this.diskMb = task.diskMb;
-            this.status = task.getStatus();
-            this.config = task.config;
-
-        }
-
-        /**
-         * Gets the config.
-         *
-         * @return The CassandraConfig for the Cassandra daemon.
-         */
-        public CassandraConfig getConfig() {
-            return config;
-        }
-
-        /**
-         * Sets the config.
-         *
-         * @param config The CassandraConfig for the Cassandra daemon.
-         * @return The Builder instance.
-         */
-        public Builder setConfig(CassandraConfig config) {
-            this.config = config;
-            return this;
-        }
-
-        /**
-         * Sets the cpu shares for the task.
-         *
-         * @return The cpu shares for the task.
-         */
-        public double getCpus() {
-            return cpus;
-        }
-
-        /**
-         * Sets the cpu shares for the task.
-         *
-         * @param cpus The cpu shares for the task.
-         * @return The Builder instance.
-         */
-        public Builder setCpus(double cpus) {
-            this.cpus = cpus;
-            return this;
-        }
-
-        /**
-         * Gets the disk allocation.
-         *
-         * @return The disk allocated for the task in Mb.
-         */
-        public int getDiskMb() {
-            return diskMb;
-        }
-
-        /**
-         * Gets the disk allocation.
-         *
-         * @param diskMb The disk allocated for the task in Mb.
-         * @return The Builder instance.
-         */
-        public Builder setDiskMb(int diskMb) {
-            this.diskMb = diskMb;
-            return this;
-        }
-
-        /**
-         * Gets the executor.
-         *
-         * @return The executor for the slave on which the task will be
-         * launched.
-         */
-        public CassandraTaskExecutor getExecutor() {
-            return executor;
-        }
-
-        /**
-         * Sets the executor.
-         *
-         * @param executor The executor for the slave on which the task will
-         *                 be launched.
-         * @return The Builder instance.
-         */
-        public Builder setExecutor(CassandraTaskExecutor executor) {
-            this.executor = executor;
-            return this;
-        }
-
-        /**
-         * Gets the hostname.
-         *
-         * @return The hostname of the slave on which the task is launched.
-         */
-        public String getHostname() {
-            return hostname;
-        }
-
-        /**
-         * Sets the hostname.
-         *
-         * @param hostname The hostname of the slave on which the task is
-         *                 launched.
-         * @return The Builder instance.
-         */
-        public Builder setHostname(String hostname) {
-            this.hostname = hostname;
-            return this;
-        }
-
-        /**
-         * Gets the unique id.
-         *
-         * @return The unique identifier of the task.
-         */
-        public String getId() {
-            return id;
-        }
-
-        /**
-         * Sets the unique id.
-         *
-         * @param id The unique identifier of the task.
-         * @return The Builder instance.
-         */
-        public Builder setId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        /**
-         * Gets the memory allocation.
-         *
-         * @return The memory allocation for the task in Mb.
-         */
-        public int getMemoryMb() {
-            return memoryMb;
-        }
-
-        /**
-         * Sets the memory allocation.
-         *
-         * @param memoryMb The memory allocation for the task in Mb.
-         * @return The Builder instance.
-         */
-        public Builder setMemoryMb(int memoryMb) {
-            this.memoryMb = memoryMb;
-            return this;
-        }
-
-        /**
-         * Gets the name.
-         *
-         * @return The name of the task.
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * Sets the name.
-         *
-         * @param name The name of the task.
-         * @return The Builder instance.
-         */
-        public Builder setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        /**
-         * Gets the principal
-         *
-         * @return The principal for the task.
-         */
-        public String getPrincipal() {
-            return principal;
-        }
-
-        /**
-         * Sets the principal.
-         *
-         * @param principal The principal for the task.
-         * @return The Builder instance.
-         */
-        public Builder setPrincipal(String principal) {
-            this.principal = principal;
-            return this;
-        }
-
-        /**
-         * Gets the role.
-         *
-         * @return The role for the task.
-         */
-        public String getRole() {
-            return role;
-        }
-
-        /**
-         * Sets the role.
-         *
-         * @param role The role for the task.
-         * @return The Builder instance.
-         */
-        public Builder setRole(String role) {
-            this.role = role;
-            return this;
-        }
-
-        /**
-         * Gets the slave id.
-         *
-         * @return The unique identifier of the slave the task was launched on.
-         */
-        public String getSlaveId() {
-            return slaveId;
-        }
-
-        /**
-         * Sets the slave id.
-         *
-         * @param slaveId The unique identifier of the slave the task was
-         *                launched on.
-         * @return The Builder instance.
-         */
-        public Builder setSlaveId(String slaveId) {
-            this.slaveId = slaveId;
-            return this;
-        }
-
-        /**
-         * Gets the status for the task.
-         *
-         * @return The status for the task.
-         */
-        public CassandraTaskStatus getStatus() {
-            return status;
-        }
-
-        /**
-         * Sets the status for the task.
-         *
-         * @param status The status for the task.
-         * @return The Builder instance.
-         */
-        public Builder setStatus(CassandraDaemonStatus status) {
-            this.status = status;
-            return this;
-        }
-
-        /**
-         * Creates a CassandraDaemonTask for the builder's properties.
-         *
-         * @return A CassandraDaemonTask whose properties are set to the
-         * properties of the Builder instance.
-         */
-        public CassandraDaemonTask build() {
-            return create(
-                    id,
-                    slaveId,
-                    hostname,
-                    executor,
-                    name,
-                    role,
-                    principal,
-                    cpus,
-                    memoryMb,
-                    diskMb,
-                    config,
-                    status
-            );
-        }
-    }
-
-    /**
      * String prefix for the CassandraDaemon task.
      */
     public static final String NAME_PREFIX = "node-";
 
-    /**
-     * Creates a new CassandraDaemonTask.
-     *
-     * @param id        The unique identifier of the task.
-     * @param slaveId   The identifier of the slave the task is running on.
-     * @param hostname  The hostname of the slave the task is running on.
-     * @param executor  The executor configuration for the task.
-     * @param name      The name of the task.
-     * @param role      The role for the task.
-     * @param principal The principal associated with the task.
-     * @param cpus      The cpu shares allocated to the task.
-     * @param memoryMb  The memory allocated to the task in Mb.
-     * @param diskMb    The disk allocated to the task in Mb.
-     * @param config    The CassandraConfig for the task.
-     * @param status    The status associated with the task.
-     * @return A new CassandraDaemonTask constructed from the parameters
-     */
-    @JsonCreator
-    public static CassandraDaemonTask create(
-            @JsonProperty("id") String id,
-            @JsonProperty("slave_id") String slaveId,
-            @JsonProperty("hostname") String hostname,
-            @JsonProperty("executor") CassandraTaskExecutor executor,
-            @JsonProperty("name") String name,
-            @JsonProperty("role") String role,
-            @JsonProperty("principal") String principal,
-            @JsonProperty("cpus") double cpus,
-            @JsonProperty("memory_mb") int memoryMb,
-            @JsonProperty("disk_mb") int diskMb,
-            @JsonProperty("config") CassandraConfig config,
-            @JsonProperty("status") CassandraDaemonStatus status) {
 
-        return new CassandraDaemonTask(
-                id,
-                slaveId,
-                hostname,
-                executor,
-                name,
-                role,
-                principal,
-                cpus,
-                memoryMb,
-                diskMb,
-                config.getDiskType(),
-                config,
-                status
-        );
-
+    public static CassandraDaemonTask parse(final Protos.TaskInfo info) {
+        return new CassandraDaemonTask(info);
     }
 
-    @JsonProperty("config")
-    private final CassandraConfig config;
+    public static CassandraDaemonTask create(
+        final String name,
+        final CassandraTaskExecutor executor,
+        final CassandraConfig config) {
+        return new CassandraDaemonTask(name, executor, config);
+    }
 
-    private final CassandraConfig updateConfig(CassandraDaemonStatus status) {
-        if (Protos.TaskState.TASK_RUNNING.equals(status.getState())) {
+    private static CassandraConfig updateConfig(
+        final Protos.TaskState state,
+        final CassandraConfig config) {
+        if (Protos.TaskState.TASK_RUNNING.equals(state)) {
             return config.mutable().setReplaceIp("").build();
         } else {
             return config;
@@ -414,206 +63,161 @@ public class CassandraDaemonTask extends CassandraTask {
     /**
      * Constructs a new CassandraDaemonTask.
      *
-     * @param id        The unique identifier of the task.
-     * @param slaveId   The identifier of the slave the task is running on.
-     * @param hostname  The hostname of the slave the task is running on.
-     * @param executor  The executor configuration for the task.
-     * @param name      The name of the task.
-     * @param role      The role for the task.
-     * @param principal The principal associated with the task.
-     * @param cpus      The cpu shares allocated to the task.
-     * @param memoryMb  The memory allocated to the task in Mb.
-     * @param diskMb    The disk allocated to the task in Mb.
-     * @param config    The CassandraConfig for the task.
-     * @param status    The status associated with the task.
+     * @param name     The name of the Cassandra node.
+     * @param executor The exeuctor for the CassandraDaemonTask.
+     * @param config   The configuration for the Cassandra node.
      */
-    protected CassandraDaemonTask(String id,
-                                  String slaveId,
-                                  String hostname,
-                                  CassandraTaskExecutor executor,
-                                  String name,
-                                  String role,
-                                  String principal,
-                                  double cpus,
-                                  int memoryMb,
-                                  int diskMb,
-                                  VolumeRequirement.VolumeType diskType,
-                                  CassandraConfig config,
-                                  CassandraDaemonStatus status) {
+    protected CassandraDaemonTask(
+        final String name,
+        final CassandraTaskExecutor executor,
+        final CassandraConfig config,
+        final CassandraData data) {
 
-        super(TYPE.CASSANDRA_DAEMON,
-                id,
-                slaveId,
-                hostname,
-                executor,
-                name,
-                role,
-                principal,
-                cpus,
-                memoryMb,
-                diskMb,
-                diskType,
-                status);
+        super(
+            name,
+            executor,
+            config.getCpus(),
+            config.getMemoryMb(),
+            config.getDiskMb(),
+            VolumeRequirement.VolumeMode.CREATE,
+            config.getDiskType(),
+            Arrays.asList(config.getJmxPort(),
+                config.getApplication().getStoragePort(),
+                config.getApplication().getSslStoragePort(),
+                config.getApplication().getRpcPort(),
+                config.getApplication().getNativeTransportPort()),
+            data);
+    }
 
-        this.config = config;
+    protected CassandraDaemonTask(
+            final String name,
+            final CassandraTaskExecutor executor,
+            final CassandraConfig config) {
+        this(
+            name,
+            executor,
+            config,
+            CassandraData.createDaemonData(
+                "",
+                CassandraMode.STARTING,
+                config));
+    }
+
+    protected CassandraDaemonTask(final Protos.TaskInfo info) {
+        super(info);
     }
 
     /**
      * Gets the CassandraConfig for the Cassandra daemon.
+     *
      * @return The configuration object for the Cassandra daemon.
      */
     public CassandraConfig getConfig() {
-        return config;
+        return getData().getConfig();
     }
 
-    @Override
-    public CassandraProtos.CassandraTaskData getTaskData() {
-        try {
-            return CassandraProtos.CassandraTaskData.newBuilder()
-                    .setType(
-                            CassandraProtos.CassandraTaskData.TYPE.CASSANDRA_DAEMON)
-                    .setConfig(config.toProto())
-                    .setAddress(hostname).build();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+    public CassandraMode getMode() {
+        return getData().getMode();
     }
 
     @Override
     public CassandraDaemonTask update(CassandraTaskStatus status) {
-
         if (status.getType() == TYPE.CASSANDRA_DAEMON &&
-                status.getId().equals(id)) {
-
-            return create(
-                    id,
-                    slaveId,
-                    hostname,
-                    executor,
-                    name,
-                    role,
-                    principal,
-                    cpus,
-                    memoryMb,
-                    diskMb,
-                    updateConfig((CassandraDaemonStatus) status),
-                    (CassandraDaemonStatus) status);
+            status.getId().equals(getId())) {
+            CassandraDaemonStatus daemonStatus = (CassandraDaemonStatus) status;
+            return new CassandraDaemonTask(
+                Protos.TaskInfo.newBuilder(getTaskInfo())
+                    .setData(getData().updateDaemon(
+                        daemonStatus.getState(),
+                        daemonStatus.getMode(),
+                        updateConfig(daemonStatus.getState(), getConfig())
+                    ).getBytes()).build()
+            );
         }
         return this;
 
     }
 
+    public VolumeRequirement.VolumeType getVolumeType() {
+        return getConfig().getDiskType();
+    }
+
     @Override
     public CassandraDaemonTask update(Protos.TaskState state) {
+        return new CassandraDaemonTask(
+            getBuilder()
+                .setData(getData()
+                    .withState(state)
+                    .getBytes()).build());
 
+    }
 
-        return create(
-                id,
-                slaveId,
-                hostname,
-                executor,
-                name,
-                role,
-                principal,
-                cpus,
-                memoryMb,
-                diskMb,
-                config,
-                ((CassandraDaemonStatus) status).update(state));
+    public CassandraDaemonStatus createStatus(Protos.TaskState state,
+                                              CassandraMode mode,
+                                              Optional<String> message) {
+        return CassandraDaemonStatus.create(getStatusBuilder(state, message)
+            .setData(CassandraData.createDaemonStatusData(mode).getBytes())
+            .build());
+    }
 
+    public String getVolumePath() {
+        return TaskUtils.getVolumePaths(
+            getTaskInfo().getResourcesList())
+            .get(0);
     }
 
     @Override
-    public CassandraDaemonStatus getStatus() {
-        return (CassandraDaemonStatus) status;
+    public CassandraDaemonStatus createStatus(Protos.TaskState state,
+                                              Optional<String> message) {
+        return createStatus(state, getMode(), message);
     }
 
-    /**
-     * Gets a mutable representation of the task.
-     * @return A mutable Builder whose properties are set to the properties
-     * of the task.
-     */
-    public Builder mutable() {
-        return new Builder(this);
-    }
 
     @Override
     public CassandraDaemonTask update(Protos.Offer offer) {
-        return create(
-                id,
-                offer.getSlaveId().getValue(),
-                offer.getHostname(),
-                executor,
-                name,
-                role,
-                principal,
-                cpus,
-                memoryMb,
-                diskMb,
-                config,
-                CassandraDaemonStatus.create(
-                        Protos.TaskState.TASK_STAGING,
-                        id,
-                        offer.getSlaveId().getValue(),
-                        name,
-                        Optional.empty(),
-                        CassandraMode.STARTING));
+        return new CassandraDaemonTask(
+            getBuilder()
+                .setData(getData().withHostname(offer.getHostname()).getBytes())
+                .setSlaveId(offer.getSlaveId())
+                .build());
+    }
+
+    public CassandraDaemonTask updateConfig(CassandraConfig config) {
+        return new CassandraDaemonTask(getBuilder()
+            .setExecutor(getExecutor().withNewId().getExecutorInfo())
+            .setTaskId(createId(getName()))
+            .setData(getData().withNewConfig(config).getBytes())
+            .clearResources()
+            .addAllResources(TaskUtils.updateResources(
+                config.getCpus(),
+                config.getDiskMb(),
+                getTaskInfo().getResourcesList()
+            )).build());
+    }
+
+    public CassandraDaemonTask move(CassandraTaskExecutor executor) {
+        CassandraDaemonTask replacementDaemon = new CassandraDaemonTask(
+            getName(),
+            executor,
+            getConfig(),
+            getData().replacing(getData().getHostname()));
+
+        Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder(replacementDaemon.getTaskInfo())
+                .setTaskId(getTaskInfo().getTaskId())
+                .build();
+
+        return new CassandraDaemonTask(taskInfo);
     }
 
     @Override
-    public CassandraDaemonTask updateId(String id) {
-        return create(
-                id,
-                slaveId,
-                hostname,
-                executor,
-                name,
-                role,
-                principal,
-                cpus,
-                memoryMb,
-                diskMb,
-                config,
-                (CassandraDaemonStatus) status);
-    }
-
-    @Override
-    public List<Resource> getReserveResources() {
-        return Arrays.asList(
-
-                reservedPorts(PortRange.fromPorts(
-                        executor.getApiPort(),
-                        config.getJmxPort(),
-                        config.getApplication().getStoragePort(),
-                        config.getApplication().getSslStoragePort(),
-                        config.getApplication().getRpcPort(),
-                        config.getApplication().getNativeTransportPort())
-                        .stream().map(range -> range.toProto()).collect(
-                                Collectors.toList()), role, principal));
+    public CassandraDaemonTask updateId() {
+        return new CassandraDaemonTask(getBuilder()
+            .setTaskId(createId(getName()))
+            .setExecutor(getExecutor().withNewId().getExecutorInfo())
+            .setData(getData()
+                .withState(Protos.TaskState.TASK_STAGING).getBytes())
+            .build());
     }
 
 
-    @Override
-    public List<Resource> getCreateResources() {
-        return Arrays.asList(config.getVolume().toResource(role, principal));
-    }
-
-    @Override
-    public List<Resource> getLaunchResources() {
-        return Arrays.asList(reservedCpus(cpus, role, principal),
-                reservedMem(memoryMb, role, principal));
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CassandraDaemonTask)) return false;
-        CassandraDaemonTask that = (CassandraDaemonTask) o;
-        return Objects.equals(config, that.config);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(config);
-    }
 }

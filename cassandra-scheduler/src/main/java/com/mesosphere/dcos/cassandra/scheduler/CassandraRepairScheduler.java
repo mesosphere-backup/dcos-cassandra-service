@@ -1,8 +1,8 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
@@ -22,12 +22,12 @@ public class CassandraRepairScheduler {
             CassandraRepairScheduler.class);
 
     private final OfferAccepter offerAccepter;
-    private final CassandraOfferRequirementProvider offerRequirementProvider;
+    private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraTasks cassandraTasks;
     private final Random random = new Random();
 
     public CassandraRepairScheduler(
-            CassandraOfferRequirementProvider requirementProvider,
+            PersistentOfferRequirementProvider requirementProvider,
             OfferAccepter offerAccepter, CassandraTasks cassandraTasks) {
         this.offerAccepter = offerAccepter;
         this.cassandraTasks = cassandraTasks;
@@ -38,22 +38,23 @@ public class CassandraRepairScheduler {
     public List<Protos.OfferID> resourceOffers(final SchedulerDriver driver,
                                                final List<Protos.Offer> offers,
                                                final Set<String> ignore) {
+
         List<Protos.OfferID> acceptedOffers = Collections.emptyList();
-        Optional<CassandraDaemonTask> terminatedOption = getTerminatedTask(
-                ignore);
+        Optional<CassandraDaemonTask> terminatedOption = getTerminatedTask(ignore);
 
         if (terminatedOption.isPresent()) {
             try {
                 CassandraDaemonTask terminated = terminatedOption.get();
                 terminated = cassandraTasks.replaceDaemon(terminated);
 
-                OfferRequirement offerReq =
-                        (terminated.getConfig().getReplaceIp()
-                                .isEmpty()) ?
-                                offerRequirementProvider.getReplacementOfferRequirement(
-                                        terminated.toProto())
-                                : offerRequirementProvider.getNewOfferRequirement(
-                                terminated.toProto());
+                OfferRequirement offerReq;
+                if (terminated.getConfig().getReplaceIp().isEmpty()) {
+                    offerReq = offerRequirementProvider.getReplacementOfferRequirement(terminated.getTaskInfo());
+                } else {
+                    offerReq = offerRequirementProvider.getNewOfferRequirement(
+                            cassandraTasks.createCassandraContainer(terminated));
+                }
+
                 OfferEvaluator offerEvaluator = new OfferEvaluator(
                         offerReq);
                 List<OfferRecommendation> recommendations =
@@ -81,8 +82,7 @@ public class CassandraRepairScheduler {
 
         List<CassandraDaemonTask> terminated =
                 cassandraTasks.getDaemons().values().stream()
-                        .filter(task -> TaskUtils.isTerminated(task.getStatus
-                                ().getState()))
+                        .filter(task -> task.isTerminated())
                         .filter(task -> !ignore.contains(task.getName()))
                         .collect(Collectors.toList());
         LOGGER.info("Terminated tasks size: {}", terminated.size());

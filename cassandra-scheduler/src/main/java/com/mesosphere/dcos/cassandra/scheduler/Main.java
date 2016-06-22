@@ -30,9 +30,13 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
         new Main().run(args);
     }
 
-    protected Main() {
+    public Main() {
         super();
     }
+
+    private Injector injector;
+    private CassandraSchedulerConfiguration configuration;
+    private Environment environment;
 
     @Override
     public String getName() {
@@ -57,12 +61,15 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
     public void run(CassandraSchedulerConfiguration configuration,
                     Environment environment) throws Exception {
 
+        this.configuration = configuration;
+        this.environment = environment;
+
         logConfiguration(configuration);
 
         final SchedulerModule baseModule = new SchedulerModule(configuration,
                 environment);
 
-        Injector injector = Guice.createInjector(baseModule);
+        this.injector = Guice.createInjector(baseModule);
 
         registerManagedObjects(environment, injector);
         registerJerseyResources(environment, injector);
@@ -136,5 +143,17 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
                 .getApplication()
                 .toMap()
                 .forEach((key, value) -> LOGGER.info("{} = {}", key, value));
+    }
+
+    public Injector getInjector() {
+        return injector;
+    }
+
+    public CassandraSchedulerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    public Environment getEnvironment() {
+        return environment;
     }
 }

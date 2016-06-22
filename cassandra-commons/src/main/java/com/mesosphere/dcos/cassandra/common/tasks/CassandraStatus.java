@@ -102,40 +102,6 @@ public class CassandraStatus {
                 version);
     }
 
-    /**
-     * Parses a CassandraStatus from a Protocol Buffers representation.
-     * @param status The Protocol Buffers representation of a CassandraStatus.
-     * @return A CassandraStatus parsed from status.
-     */
-    public static CassandraStatus parse(
-            CassandraProtos.CassandraStatus status) {
-
-        return create(
-                CassandraMode.values()[status.getMode()],
-                status.getJoined(),
-                status.getRpcServerRunning(),
-                status.getNativeTransportRunning(),
-                status.getGossipInitialized(),
-                status.getGossipRunning(),
-                status.getHostId(),
-                status.getEndpoint(),
-                status.getTokenCount(),
-                status.getDataCenter(),
-                status.getRack(),
-                status.getVersion());
-    }
-
-    /**
-     * Parses a CassandraStatus from a byte array containing a Protocol Buffers
-     * representation.
-     * @param bytes A byte array containing a Protocol Buffers representation
-     *              of a CassandraStatus.
-     * @return A CassandraStatus parsed from bytes.
-     * @throws IOException If a CassandraStatus can not be parsed from bytes.
-     */
-    public static CassandraStatus parse(byte[] bytes) throws IOException {
-        return parse(CassandraProtos.CassandraStatus.parseFrom(bytes));
-    }
 
     /**
      * Constructs a CassandraStatus.
@@ -276,36 +242,6 @@ public class CassandraStatus {
         return rack;
     }
 
-    /**
-     * Gets a Protocol Buffers representation.
-     * @return A Protocol Buffers representation of the CassandraStatus.
-     */
-    public CassandraProtos.CassandraStatus toProto() {
-        return CassandraProtos.CassandraStatus.newBuilder()
-                .setMode(mode.ordinal())
-                .setJoined(joined)
-                .setRpcServerRunning(rpcRunning)
-                .setNativeTransportRunning(nativeTransportRunning)
-                .setGossipInitialized(gossipInitialized)
-                .setGossipRunning(gossipRunning)
-                .setTokenCount(tokenCount)
-                .setHostId(hostId)
-                .setEndpoint(endpoint)
-                .setDataCenter(dataCenter)
-                .setRack(rack)
-                .setVersion(version)
-                .build();
-    }
-
-    /**
-     * Gets a byte array containing a Protocol Buffers representation of the
-     * the status.
-     * @return A byte array containing a Protocol Buffers representation of
-     * the nodes status.
-     */
-    public byte[] toByteArray() {
-        return toProto().toByteArray();
-    }
 
     @Override
     public boolean equals(Object o) {

@@ -15,7 +15,6 @@
  */
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import org.apache.mesos.ExecutorDriver;
@@ -40,26 +39,21 @@ public class Cleanup implements Runnable {
     private final CleanupTask task;
 
     private List<String> getKeySpaces() {
-        if (task.getKeySpaces().isEmpty()) {
+        if (task.getCleanupContext().getKeySpaces().isEmpty()) {
             return daemon.getNonSystemKeySpaces();
         } else {
-            return task.getKeySpaces();
+            return task.getCleanupContext().getKeySpaces();
         }
     }
 
     private List<String> getColumnFamilies() {
-        return task.getColumnFamilies();
+        return task.getCleanupContext().getColumnFamilies();
     }
 
     private void sendStatus(ExecutorDriver driver,
                             Protos.TaskState state, String message) {
-        Protos.TaskStatus status = CleanupStatus.create(
-                state,
-                task.getId(),
-                task.getSlaveId(),
-                task.getExecutor().getId(),
-                Optional.of(message)
-        ).toProto();
+        Protos.TaskStatus status =
+            task.createStatus(state, Optional.of(message)).getTaskStatus();
         driver.sendStatusUpdate(status);
     }
 
@@ -85,30 +79,30 @@ public class Cleanup implements Runnable {
             final List<String> keySpaces = getKeySpaces();
             final List<String> columnFamilies = getColumnFamilies();
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
-                    String.format("Starting cleanup: keySpaces = %s, " +
-                                    "columnFamilies = %s",
-                            keySpaces,
-                            columnFamilies));
+                String.format("Starting cleanup: keySpaces = %s, " +
+                        "columnFamilies = %s",
+                    keySpaces,
+                    columnFamilies));
 
             for (String keyspace : keySpaces) {
                 LOGGER.info("Starting cleanup : keySpace = {}, " +
-                                "columnFamilies = {}",
-                        keyspace,
-                        Arrays.asList(columnFamilies));
+                        "columnFamilies = {}",
+                    keyspace,
+                    Arrays.asList(columnFamilies));
 
                 daemon.cleanup(keyspace, columnFamilies);
 
                 LOGGER.info("Completed cleanup : keySpace = {}, " +
-                                "columnFamilies = {}",
-                        keyspace,
-                        Arrays.asList(columnFamilies));
+                        "columnFamilies = {}",
+                    keyspace,
+                    Arrays.asList(columnFamilies));
             }
 
             sendStatus(driver, Protos.TaskState.TASK_FINISHED,
-                    String.format("Completed cleanup: keySpaces = %s, " +
-                                    "columnFamilies = %s",
-                            keySpaces,
-                            Arrays.asList(columnFamilies)));
+                String.format("Completed cleanup: keySpaces = %s, " +
+                        "columnFamilies = %s",
+                    keySpaces,
+                    Arrays.asList(columnFamilies)));
         } catch (final Throwable t) {
             LOGGER.error("Cleanup failed", t);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, t.getMessage());

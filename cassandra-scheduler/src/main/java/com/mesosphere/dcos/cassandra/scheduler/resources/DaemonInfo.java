@@ -49,8 +49,8 @@ public class DaemonInfo {
         id = task.getId();
         hostname = task.getHostname();
         slaveId = task.getSlaveId();
-        state = task.getStatus().getState();
-        mode = task.getStatus().getMode();
+        state = task.getState();
+        mode = task.getMode();
     }
 
     public String getHostname() {

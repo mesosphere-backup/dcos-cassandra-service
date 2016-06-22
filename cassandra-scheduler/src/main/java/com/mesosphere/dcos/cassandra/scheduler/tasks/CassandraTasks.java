@@ -4,24 +4,29 @@ package com.mesosphere.dcos.cassandra.scheduler.tasks;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
-import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentMap;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,22 +44,42 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     private final IdentityManager identity;
     private final ConfigurationManager configuration;
+    private final ClusterTaskConfig clusterTaskConfig;
     private final PersistentMap<CassandraTask> persistent;
 
     // Maps Task Name -> Task, where task name can be PREFIX-id
     private volatile Map<String, CassandraTask> tasks = Collections.emptyMap();
     // Maps TaskId -> Task Name
     private final Map<String, String> byId = new HashMap<>();
+    private StateStore stateStore;
 
     @Inject
     public CassandraTasks(
             final IdentityManager identity,
             final ConfigurationManager configuration,
+            final CuratorFrameworkConfig curatorConfig,
+            final ClusterTaskConfig clusterTaskConfig,
             final Serializer<CassandraTask> serializer,
             final PersistenceFactory persistence) {
         this.persistent = persistence.createMap("tasks", serializer);
         this.identity = identity;
         this.configuration = configuration;
+        this.clusterTaskConfig = clusterTaskConfig;
+
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        this.stateStore = new CuratorStateStore(
+                "/cassandra/" + identity.get().getName() + "/state",
+                curatorConfig.getServers(),
+                retryPolicy);
+
         loadTasks();
     }
 
@@ -82,33 +107,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         }
     }
 
-    public void update(CassandraTask task) throws PersistenceException {
-        persistent.put(task.getName(), task);
-        if (tasks.containsKey(task.getName())) {
-            byId.remove(tasks.get(task.getName()).getId());
-        }
-        byId.put(task.getId(), task.getName());
-        tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
-                tasks.entrySet().stream()
-                        .filter(entry -> !entry.getKey().equals(task.getName()))
-                        .collect(Collectors.toMap(
-                                entry -> entry.getKey(),
-                                entry -> entry.getValue())))
-                .put(task.getName(), task)
-                .build();
-    }
-
-
-    public void update(Protos.TaskInfo taskInfo) {
-        try {
-            final CassandraTask task = CassandraTask.parse(taskInfo);
-            synchronized (persistent) {
-                update(task);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
-        }
-    }
 
     private void removeTask(String name) throws PersistenceException {
         persistent.remove(name);
@@ -122,6 +120,10 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                                 entry -> entry.getKey(),
                                 entry -> entry.getValue())))
                 .build();
+    }
+
+    public StateStore getStateStore() {
+        return stateStore;
     }
 
     public Map<String, CassandraDaemonTask> getDaemons() {
@@ -173,32 +175,43 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                         (RepairTask) entry.getValue())));
     }
 
-    public CassandraDaemonTask createDaemon(String name) throws
-            PersistenceException {
-        CassandraDaemonTask task = configuration.createDaemon(
-                identity.get().getId(),
-                "",
-                "",
-                name,
-                identity.get().getRole(),
-                identity.get().getPrincipal()
-        );
+    public CassandraContainer createCassandraContainer(CassandraDaemonTask daemonTask) throws PersistenceException {
+        CassandraTemplateTask templateTask = CassandraTemplateTask.create(
+                daemonTask.getExecutor().getRole(),
+                daemonTask.getExecutor().getPrincipal(),
+                clusterTaskConfig);
 
-        synchronized (persistent) {
-            update(task);
-        }
-
-        return task;
+        return CassandraContainer.create(daemonTask, templateTask);
     }
 
-    public CassandraDaemonTask moveDaemon(
-            CassandraDaemonTask daemon
-    ) throws PersistenceException {
-        CassandraDaemonTask updated = configuration.moveDaemon(daemon);
-        synchronized (persistent) {
-            update(updated);
-        }
+    public CassandraContainer moveCassandraContainer(CassandraDaemonTask name) throws PersistenceException {
+        return createCassandraContainer(moveDaemon(name));
+    }
+
+    public CassandraDaemonTask createDaemon(String name) throws
+            PersistenceException {
+        return configuration.createDaemon(
+            identity.get().getId(),
+            name,
+            identity.get().getRole(),
+            identity.get().getPrincipal()
+        );
+    }
+
+    public CassandraDaemonTask moveDaemon(CassandraDaemonTask daemon) throws PersistenceException {
+        CassandraDaemonTask updated = configuration.moveDaemon(
+            daemon,
+            identity.get().getId(),
+            identity.get().getRole(),
+            identity.get().getPrincipal());
+        update(updated);
         return updated;
+    }
+
+    private Optional<Protos.TaskInfo> getTemplate(CassandraDaemonTask daemon) {
+        return stateStore.fetchTasks(daemon.getExecutor().getName()).stream()
+                .filter(x -> x.getName().equals(CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME))
+                .findFirst();
     }
 
 
@@ -206,75 +219,90 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             CassandraDaemonTask daemon,
             BackupContext context) throws PersistenceException {
 
-        BackupSnapshotTask task = configuration.createBackupSnapshotTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return BackupSnapshotTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
         }
-        return task;
+
     }
 
     public BackupUploadTask createBackupUploadTask(
             CassandraDaemonTask daemon,
             BackupContext context) throws PersistenceException {
 
-        BackupUploadTask task = configuration.createBackupUploadTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return BackupUploadTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
         }
-        return task;
     }
 
     public DownloadSnapshotTask createDownloadSnapshotTask(
             CassandraDaemonTask daemon,
             RestoreContext context) throws PersistenceException {
 
-        DownloadSnapshotTask task = configuration.createDownloadSnapshotTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return DownloadSnapshotTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
         }
-        return task;
     }
 
     public RestoreSnapshotTask createRestoreSnapshotTask(
             CassandraDaemonTask daemon,
             RestoreContext context) throws PersistenceException {
-        RestoreSnapshotTask task = configuration.createRestoreSnapshotTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
+
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return RestoreSnapshotTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
         }
-        return task;
     }
 
     public CleanupTask createCleanupTask(
             CassandraDaemonTask daemon,
             CleanupContext context) throws PersistenceException {
-        CleanupTask task = configuration.createCleanupTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
+
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return CleanupTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
         }
-        return task;
     }
 
     public RepairTask createRepairTask(
             CassandraDaemonTask daemon,
             RepairContext context) throws PersistenceException {
-        RepairTask task = configuration.createRepairTask(
-                daemon,
-                context);
-        synchronized (persistent) {
-            update(task);
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return RepairTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
         }
-        return task;
+    }
+
+    public CassandraContainer getOrCreateContainer(String name) throws
+            PersistenceException {
+
+        CassandraDaemonTask daemonTask = getOrCreateDaemon(name);
+        CassandraTemplateTask templateTask = CassandraTemplateTask.create(
+                daemonTask.getExecutor().getRole(),
+                daemonTask.getExecutor().getPrincipal(),
+                clusterTaskConfig);
+
+        return CassandraContainer.create(daemonTask, templateTask);
     }
 
     public CassandraDaemonTask getOrCreateDaemon(String name) throws
@@ -371,49 +399,54 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         return !configuration.hasCurrentConfig(daemon);
     }
 
-    public CassandraTask replaceTask(CassandraTask task)
-            throws PersistenceException {
-
-        synchronized (persistent) {
-            final CassandraDaemonTask updated =
-                    configuration.replaceDaemon((CassandraDaemonTask) task);
-            update(updated);
-            return updated;
-        }
-
-    }
-
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task)
             throws PersistenceException {
         synchronized (persistent) {
-            final CassandraDaemonTask updated =
-                    configuration.replaceDaemon(task);
-            update(updated);
-            return updated;
+            return configuration.replaceDaemon(task);
         }
     }
 
     public CassandraDaemonTask reconfigureDeamon(
             final CassandraDaemonTask daemon) throws PersistenceException {
         synchronized (persistent) {
-            final CassandraDaemonTask updated = configuration.updateConfig(
-                    daemon);
-            update(updated);
-            return updated;
+            return configuration.updateConfig(daemon);
         }
     }
 
-    public Optional<CassandraTask> update(String taskId, Protos.Offer offer)
-            throws PersistenceException {
-        synchronized (persistent) {
-            if (byId.containsKey(taskId)) {
-                CassandraTask updated = tasks.get(byId.get(taskId)).update(
-                        offer);
-                update(updated);
-                return Optional.of(updated);
-            } else {
-                return Optional.empty();
+    public void update(CassandraTask task) throws PersistenceException {
+        persistent.put(task.getName(), task);
+        if (tasks.containsKey(task.getName())) {
+            byId.remove(tasks.get(task.getName()).getId());
+        }
+
+        if (!task.getId().contains("__")) {
+            LOGGER.error(
+                    "Encountered malformed TaskID: " + task.getId(),
+                    new PersistenceException("Encountered malformed TaskID: " + task.getId()));
+        }
+
+        byId.put(task.getId(), task.getName());
+        tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
+                tasks.entrySet().stream()
+                        .filter(entry -> !entry.getKey().equals(task.getName()))
+                        .collect(Collectors.toMap(
+                                entry -> entry.getKey(),
+                                entry -> entry.getValue())))
+                .put(task.getName(), task)
+                .build();
+    }
+
+    public void update(Protos.TaskInfo taskInfo, Offer offer) throws Exception {
+        try {
+            final CassandraTask task = CassandraTask.parse(taskInfo);
+            stateStore.storeTasks(Arrays.asList(taskInfo), taskInfo.getExecutor().getName());
+
+            synchronized (persistent) {
+                update(task.update(offer));
             }
+        } catch (Exception e) {
+            LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
+            throw e;
         }
     }
 
@@ -434,6 +467,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                 }
 
                 update(updated);
+
+                stateStore.storeStatus(
+                        status,
+                        updated.getTaskInfo().getName(),
+                        updated.getExecutor().getName());
+
                 LOGGER.info("Updated task {}", updated);
             } else {
                 LOGGER.info("Received status update for unrecorded task: " +
@@ -469,8 +508,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     public List<CassandraTask> getTerminatedTasks() {
         List<CassandraTask> terminatedTasks = tasks
                 .values().stream()
-                .filter(task -> TaskUtils.isTerminated(
-                        task.getStatus().getState())).collect(
+                .filter(task -> task.isTerminated()).collect(
                         Collectors.toList());
 
         return terminatedTasks;
@@ -494,12 +532,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     private boolean isRunning(CassandraTask task) {
-        return Protos.TaskState.TASK_RUNNING == task.getStatus().getState();
+        return Protos.TaskState.TASK_RUNNING == task.getState();
     }
 
     @Override
-    public Set<Protos.TaskStatus> getTaskStatuses() throws Exception {
+    public Set<Protos.TaskStatus> getTaskStatuses()  {
         return get().values().stream().map(
-                task -> task.getStatus().toProto()).collect(Collectors.toSet());
+                task -> task.getCurrentStatus()).collect(Collectors.toSet());
     }
 }

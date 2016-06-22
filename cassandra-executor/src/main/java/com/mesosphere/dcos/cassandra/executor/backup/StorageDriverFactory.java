@@ -14,12 +14,12 @@ public class StorageDriverFactory {
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageDriverFactory.class);
 
   public static BackupStorageDriver createStorageDriver(BackupUploadTask backupUploadTask) {
-    final String externalLocation = backupUploadTask.getExternalLocation();
+    final String externalLocation = backupUploadTask.getBackupContext().getExternalLocation();
     return getBackupStorageDriver(externalLocation);
   }
 
   public static BackupStorageDriver createStorageDriver(DownloadSnapshotTask downloadSnapshotTask) {
-    final String externalLocation = downloadSnapshotTask.getExternalLocation();
+    final String externalLocation = downloadSnapshotTask.getRestoreContext().getExternalLocation();
     return getBackupStorageDriver(externalLocation);
   }
 

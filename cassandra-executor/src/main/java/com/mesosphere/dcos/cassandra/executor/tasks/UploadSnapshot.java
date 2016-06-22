@@ -16,7 +16,6 @@
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
@@ -34,7 +33,7 @@ import java.util.Optional;
  */
 public class UploadSnapshot implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            UploadSnapshot.class);
+        UploadSnapshot.class);
     private final CassandraDaemonProcess daemon;
     private final ExecutorDriver driver;
     private final BackupContext context;
@@ -43,42 +42,30 @@ public class UploadSnapshot implements Runnable {
 
     /**
      * Constructs a new UploadSnapshot
-     * @param driver The ExecutorDriver used to send task status.
-     * @param daemon The CassandraDaemonProcess used clean the local snapshot.
-     * @param cassandraTask The BackUploadTask that will be executed.
-     * @param nodeId The id of the node the local node.
+     *
+     * @param driver              The ExecutorDriver used to send task status.
+     * @param daemon              The CassandraDaemonProcess used clean the local snapshot.
+     * @param cassandraTask       The BackUploadTask that will be executed.
      * @param backupStorageDriver The BackupStorageDriver used to upload the
      *                            snapshot.
      */
     public UploadSnapshot(
-            ExecutorDriver driver,
-            CassandraDaemonProcess daemon,
-            BackupUploadTask cassandraTask,
-            String nodeId,
-            BackupStorageDriver backupStorageDriver) {
+        ExecutorDriver driver,
+        CassandraDaemonProcess daemon,
+        BackupUploadTask cassandraTask,
+        BackupStorageDriver backupStorageDriver) {
         this.daemon = daemon;
         this.driver = driver;
         this.cassandraTask = cassandraTask;
         this.backupStorageDriver = backupStorageDriver;
-        context = new BackupContext();
-        context.setNodeId(nodeId);
-        context.setName(this.cassandraTask.getBackupName());
-        context.setExternalLocation(this.cassandraTask.getExternalLocation());
-        context.setAcccountId(this.cassandraTask.getAccountId());
-        context.setSecretKey(this.cassandraTask.getSecretKey());
-        context.setLocalLocation(this.cassandraTask.getLocalLocation());
+        context = cassandraTask.getBackupContext();
     }
 
     private void sendStatus(ExecutorDriver driver,
                             Protos.TaskState state,
                             String message) {
-        Protos.TaskStatus status = BackupUploadStatus.create(
-                state,
-                cassandraTask.getId(),
-                cassandraTask.getSlaveId(),
-                cassandraTask.getExecutor().getId(),
-                Optional.of(message)
-        ).toProto();
+        Protos.TaskStatus status = cassandraTask.createStatus(state,
+            Optional.of(message)).getTaskStatus();
         driver.sendStatusUpdate(status);
     }
 
@@ -87,7 +74,7 @@ public class UploadSnapshot implements Runnable {
         try {
             // Send TASK_RUNNING
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
-                    "Started uploading snapshots");
+                "Started uploading snapshots");
 
             // Upload snapshots to external location.
             backupStorageDriver.upload(context);
@@ -97,9 +84,9 @@ public class UploadSnapshot implements Runnable {
 
             // Send TASK_FINISHED
             sendStatus(driver, Protos.TaskState.TASK_FINISHED,
-                    "Finished uploading snapshots");
+                "Finished uploading snapshots");
         } catch (Throwable t) {
-            LOGGER.error("Upload snapshot failed",t);
+            LOGGER.error("Upload snapshot failed", t);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, t.getMessage());
         }
     }

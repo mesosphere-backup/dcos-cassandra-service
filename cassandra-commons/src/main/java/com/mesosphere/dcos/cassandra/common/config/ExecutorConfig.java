@@ -1,7 +1,8 @@
-package com.mesosphere.dcos.cassandra.scheduler.config;
+package com.mesosphere.dcos.cassandra.common.config;
 
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
@@ -12,7 +13,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Objects;
 
 public class ExecutorConfig {
@@ -210,6 +214,16 @@ public class ExecutorConfig {
     @JsonProperty("cassandra_location")
     public String getCassandraLocationString() {
         return cassandraLocation.toString();
+    }
+
+    @JsonIgnore
+    public Set<String> getURIs() {
+        Set<String> uris = new HashSet<String>();
+        uris.add(executorLocation.toString());
+        uris.add(cassandraLocation.toString());
+        uris.add(jreLocation.toString());
+
+        return uris;
     }
 
     @Override

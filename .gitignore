@@ -24,6 +24,9 @@ bin/
 # Mac
 .DS_Store
 
+# Vim
+*.swp
+
 # Maven
 log/
 target/

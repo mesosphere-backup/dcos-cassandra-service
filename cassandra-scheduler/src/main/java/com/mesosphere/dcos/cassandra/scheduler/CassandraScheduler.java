@@ -5,10 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
+import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
@@ -21,16 +18,22 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.lifecycle.Managed;
+
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
+
 import org.apache.mesos.offer.OfferAccepter;
+import org.apache.mesos.offer.ResourceCleaner;
+import org.apache.mesos.offer.ResourceCleanerScheduler;
+
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.DefaultStageScheduler;
 import org.apache.mesos.scheduler.plan.StageManager;
 import org.apache.mesos.scheduler.plan.StageScheduler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +91,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.offerRequirementProvider = offerRequirementProvider;
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
-                new PersistentOperationRecorder(cassandraTasks)));
+                new PersistentOperationRecorder(identityManager, cassandraTasks)));
         planScheduler = new DefaultStageScheduler(offerAccepter);
         repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
                 offerAccepter, cassandraTasks);
@@ -142,9 +145,7 @@ public class CassandraScheduler implements Scheduler, Managed {
                     restore,
                     cleanup,
                     repair));
-            reconciler.start(cassandraTasks.get().values().stream().map(
-                    task -> task.getStatus().toProto()
-            ).collect(Collectors.toList()));
+            reconciler.start(cassandraTasks.getTaskStatuses());
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";
@@ -157,9 +158,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void reregistered(SchedulerDriver driver,
                              Protos.MasterInfo masterInfo) {
         LOGGER.info("Re-registered with master: {}", masterInfo);
-        reconciler.start(cassandraTasks.get().values().stream().map(
-                task -> task.getStatus().toProto()
-        ).collect(Collectors.toList()));
+        reconciler.start(cassandraTasks.getTaskStatuses());
     }
 
     @Override
@@ -200,6 +199,11 @@ public class CassandraScheduler implements Scheduler, Managed {
                                                 currentBlock.getName()) :
                                         Collections.emptySet()));
 
+                ResourceCleanerScheduler cleanerScheduler = getCleanerScheduler();
+                if (cleanerScheduler != null) {
+                    acceptedOffers.addAll(getCleanerScheduler().resourceOffers(driver, offers));
+                }
+
                 declineOffers(driver, acceptedOffers, offers);
             } else {
 
@@ -212,6 +216,16 @@ public class CassandraScheduler implements Scheduler, Managed {
         } catch (Throwable t){
 
             LOGGER.error("Error in offer acceptance cycle", t);
+        }
+    }
+
+    private ResourceCleanerScheduler getCleanerScheduler() {
+        try {
+            ResourceCleaner cleaner = new ResourceCleaner(cassandraTasks.getStateStore());
+            return new ResourceCleanerScheduler(cleaner, offerAccepter);
+        } catch (Exception ex) {
+            LOGGER.error("Failed to construct ResourceCleaner with exception:", ex);
+            return null;
         }
     }
 

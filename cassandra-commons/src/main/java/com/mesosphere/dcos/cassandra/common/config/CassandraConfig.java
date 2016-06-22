@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.Volume;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.offer.VolumeRequirement;
 
@@ -33,7 +32,7 @@ import java.util.Objects;
  * serializable to both JSON and Protocol Buffers.
  */
 public class CassandraConfig {
-
+    public static final String VOLUME_PATH = "volume";
     /**
      * The default configuration object.
      */
@@ -48,7 +47,6 @@ public class CassandraConfig {
                     HeapConfig.DEFAULT,
                     Location.DEFAULT,
                     7199,
-                    Volume.create("volume", 9216, ""),
                     CassandraApplicationConfig.builder().build());
 
 
@@ -67,7 +65,6 @@ public class CassandraConfig {
         private HeapConfig heap;
         private Location location;
         private int jmxPort;
-        private Volume volume;
         private CassandraApplicationConfig application;
 
         /**
@@ -86,7 +83,6 @@ public class CassandraConfig {
             this.heap = config.heap;
             this.location = config.location;
             this.jmxPort = config.jmxPort;
-            this.volume = config.volume;
             this.application = config.application;
         }
 
@@ -291,24 +287,6 @@ public class CassandraConfig {
         }
 
         /**
-         * Gets the volume configuration of the node.
-         * @return The volume configuration of the node.
-         */
-        public Volume getVolume() {
-            return volume;
-        }
-
-        /**
-         * Sets the Volume configuration of the node.
-         * @param volume The Volume configuration of the node.
-         * @return The Builder instance.
-         */
-        public Builder setVolume(Volume volume) {
-            this.volume = volume;
-            return this;
-        }
-
-        /**
          * Creates a CassandraConfig with the properties of the Builder.
          * @return A
          */
@@ -324,7 +302,6 @@ public class CassandraConfig {
                     heap,
                     location,
                     jmxPort,
-                    volume,
                     application);
         }
     }
@@ -386,7 +363,6 @@ public class CassandraConfig {
      * @param location The location (Rack and Data center) configuration for
      *                 the node.
      * @param jmxPort The JMX port the node will listen on.
-     * @param volume The volume configuration for the node.
      * @param application The Cassandra application configuration for the
      *                    node (This corresponds to the cassandra.yaml).
      * @return A CassandraConfig constructed from arguments.
@@ -402,7 +378,6 @@ public class CassandraConfig {
             @JsonProperty("heap") HeapConfig heap,
             @JsonProperty("location") Location location,
             @JsonProperty("jmx_port") int jmxPort,
-            @JsonProperty("volume") Volume volume,
             @JsonProperty("application")
             CassandraApplicationConfig application) {
 
@@ -416,7 +391,6 @@ public class CassandraConfig {
                 heap,
                 location,
                 jmxPort,
-                volume,
                 application);
     }
 
@@ -435,12 +409,11 @@ public class CassandraConfig {
                 config.getCpus(),
                 config.getMemoryMb(),
                 config.getDiskMb(),
-                VolumeRequirement.VolumeType.valueOf(config.getDiskType()),
+                VolumeRequirement.VolumeType.values()[config.getDiskType()],
                 (config.hasReplaceIp()) ? config.getReplaceIp() : "",
                 HeapConfig.parse(config.getHeap()),
                 Location.parse(config.getLocation()),
                 config.getJmxPort(),
-                Volume.parse(config.getVolume()),
                 CassandraApplicationConfig.parse(config.getApplication()));
 
     }
@@ -485,9 +458,6 @@ public class CassandraConfig {
     @JsonProperty("jmx_port")
     private final int jmxPort;
 
-    @JsonProperty("volume")
-    private final Volume volume;
-
     @JsonProperty("application")
     private final CassandraApplicationConfig application;
 
@@ -505,7 +475,6 @@ public class CassandraConfig {
      * @param location The location (Rack and Data center) configuration for
      *                 the node.
      * @param jmxPort The JMX port the node will listen on.
-     * @param volume The volume configuration for the node.
      * @param application The Cassandra application configuration for the
      *                    node (This corresponds to the cassandra.yaml).
      */
@@ -518,7 +487,6 @@ public class CassandraConfig {
                            final HeapConfig heap,
                            final Location location,
                            final int jmxPort,
-                           final Volume volume,
                            final CassandraApplicationConfig application) {
         this.version = version;
         this.cpus = cpus;
@@ -529,7 +497,6 @@ public class CassandraConfig {
         this.heap = heap;
         this.location = location;
         this.jmxPort = jmxPort;
-        this.volume = volume;
         this.application = application;
     }
 
@@ -617,13 +584,6 @@ public class CassandraConfig {
         return memoryMb;
     }
 
-    /**
-     * Gets the Volume information for the node.
-     * @return The Volume information for the node.
-     */
-    public Volume getVolume() {
-        return volume;
-    }
 
     /**
      * Gets a Protocol Buffers representation of the config.
@@ -631,8 +591,7 @@ public class CassandraConfig {
      * @throws IOException If the config could not be serialized. (This should
      * not throw).
      */
-    public CassandraProtos.CassandraConfig toProto()
-            throws IOException {
+    public CassandraProtos.CassandraConfig toProto() {
         CassandraProtos.CassandraConfig.Builder builder =
                 CassandraProtos.CassandraConfig
                         .newBuilder()
@@ -640,12 +599,11 @@ public class CassandraConfig {
                         .setVersion(version)
                         .setCpus(cpus)
                         .setDiskMb(diskMb)
-                        .setDiskType(diskType.name())
+                        .setDiskType(diskType.ordinal())
                         .setMemoryMb(memoryMb)
                         .setReplaceIp(replaceIp)
                         .setHeap(heap.toProto())
                         .setLocation(location.toProto())
-                        .setVolume(volume.toProto())
                         .setApplication(application.toByteString());
 
         return builder.build();
@@ -658,7 +616,7 @@ public class CassandraConfig {
      * representation of the CassandraConfig.
      * @throws IOException
      */
-    public byte[] toByteArray() throws IOException {
+    public byte[] toByteArray(){
         return toProto().toByteArray();
     }
 

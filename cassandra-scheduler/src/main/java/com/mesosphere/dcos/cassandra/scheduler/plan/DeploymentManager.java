@@ -4,6 +4,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.reconciliation.Reconciler;
@@ -17,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 public class DeploymentManager {
 
     public static final DeploymentManager create(
-            final CassandraOfferRequirementProvider provider,
+            final PersistentOfferRequirementProvider provider,
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final SchedulerClient client,
@@ -38,7 +39,7 @@ public class DeploymentManager {
     private final SyncDataCenterPhase syncDc;
 
     public DeploymentManager(
-            final CassandraOfferRequirementProvider provider,
+            final PersistentOfferRequirementProvider provider,
             final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final SchedulerClient client,

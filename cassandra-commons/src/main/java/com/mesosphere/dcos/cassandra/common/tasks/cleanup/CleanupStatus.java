@@ -31,64 +31,11 @@ import java.util.Optional;
  */
 public class CleanupStatus extends CassandraTaskStatus {
 
-    /**
-     * Creates a CleanupStatus.
-     *
-     * @param state      The state of the task
-     * @param id         The id of the task associated with the status.
-     * @param slaveId    The id of the slave on which the task associated
-     *                   with the status was launched.
-     * @param executorId The id of the executor for the task associated with
-     *                   the status.
-     * @param message    An optional message sent from the executor.
-     * @return A CleanupStatus constructed from the parameters.
-     */
-    @JsonCreator
-    public static CleanupStatus create(
-            @JsonProperty("state") Protos.TaskState state,
-            @JsonProperty("id") String id,
-            @JsonProperty("slave_id") String slaveId,
-            @JsonProperty("executor_id") String executorId,
-            @JsonProperty("message") Optional<String> message) {
-        return new CleanupStatus(state, id, slaveId, executorId, message);
+    public static CleanupStatus create(final Protos.TaskStatus status) {
+        return new CleanupStatus(status);
     }
 
-    /**
-     * Constructs a CleanupStatus.
-     * @param state      The state of the task
-     * @param id         The id of the task associated with the status.
-     * @param slaveId    The id of the slave on which the task associated
-     *                   with the status was launched.
-     * @param executorId The id of the executor for the task associated with
-     *                   the status.
-     * @param message    An optional message sent from the executor.
-     */
-    protected CleanupStatus(Protos.TaskState state,
-                            String id,
-                            String slaveId,
-                            String executorId,
-                            Optional<String> message) {
-        super(CassandraTask.TYPE.CLEANUP,
-                state,
-                id,
-                slaveId,
-                executorId,
-                message);
-    }
-
-    @Override
-    public CleanupStatus update(Protos.TaskState state) {
-        if (isFinished()) {
-            return this;
-        } else {
-            return create(state, id, slaveId, executorId, message);
-        }
-    }
-
-    @Override
-    protected CassandraProtos.CassandraTaskStatusData getData() {
-        return CassandraProtos.CassandraTaskStatusData.newBuilder()
-                .setType(CassandraProtos.CassandraTaskData.TYPE.CLEANUP)
-                .build();
+    protected CleanupStatus(final Protos.TaskStatus status) {
+        super(status);
     }
 }

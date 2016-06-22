@@ -17,7 +17,6 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
@@ -28,31 +27,45 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.setup.Environment;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
 import org.apache.http.client.HttpClient;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.StageManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class SchedulerModule extends AbstractModule {
-    private final static Logger LOGGER = LoggerFactory.getLogger(
-            SchedulerModule.class);
-
+public class TestModule extends AbstractModule {
     private final CassandraSchedulerConfiguration configuration;
     private final Environment environment;
 
-    public SchedulerModule(
+    public static TestingServer createTestingServerQuietly() {
+        try {
+            return new TestingServer(40000);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public static CuratorFramework createClient(final TestingServer server) {
+        return CuratorFrameworkFactory.newClient(
+                server.getConnectString(), new RetryOneTime(1));
+    }
+
+    public TestModule(
             final CassandraSchedulerConfiguration configuration,
             final Environment environment) {
         this.configuration = configuration;
@@ -61,15 +74,19 @@ public class SchedulerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(Environment.class).toInstance(this.environment);
-
         bind(CassandraSchedulerConfiguration.class).toInstance(
                 this.configuration);
 
         bind(PersistenceFactory.class).toInstance(ZooKeeperPersistence
                 .create(
                         configuration.getIdentity(),
-                        configuration.getCuratorConfig()));
+                        CuratorFrameworkConfig.create(
+                                configuration.getCuratorConfig().getServers(),
+                                10000L,
+                                10000L,
+                                Optional.empty(),
+                                250L
+                        )));
 
         bind(new TypeLiteral<Serializer<Integer>>() {
         }).toInstance(IntegerStringSerializer.get());
@@ -152,12 +169,12 @@ public class SchedulerModule extends AbstractModule {
 
         bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(
                 configuration.getHttpClientConfiguration())
-                .build("http-client"));
+                .build("http-client-test"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(configuration.getCuratorConfig());
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
         bind(ScheduledExecutorService.class).toInstance(
-                Executors .newScheduledThreadPool(8));
+                Executors.newScheduledThreadPool(8));
         bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
                 .asEagerSingleton();
         bind(StageManager.class).to(CassandraStageManager.class)
