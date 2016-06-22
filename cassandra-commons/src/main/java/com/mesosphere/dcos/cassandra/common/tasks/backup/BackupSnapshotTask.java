@@ -15,22 +15,13 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
-import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import org.apache.mesos.Protos;
-import org.apache.mesos.offer.VolumeRequirement;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
-
-import static org.apache.mesos.protobuf.ResourceBuilder.*;
 
 /**
  * BackupSnapshotTask extends CassandraTask to implement a task that

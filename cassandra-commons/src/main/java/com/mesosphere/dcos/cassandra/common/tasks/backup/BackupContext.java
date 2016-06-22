@@ -95,73 +95,73 @@ public class BackupContext implements ClusterTaskContext {
     private final String externalLocation;
     @JsonProperty("local_location")
     private final String localLocation;
-    @JsonProperty("s3_access_key")
-    private final String s3AccessKey;
+    @JsonProperty("account_id")
+    private final String accountId;
     @JsonProperty("s3_secret_key")
-    private final String s3SecretKey;
+    private final String secretKey;
 
 
     public BackupContext(final String nodeId,
                          final String name,
                          final String externalLocation,
                          final String localLocation,
-                         final String s3AccessKey,
-                         final String s3SecretKey) {
+                         final String accountId,
+                         final String secretKey) {
         this.nodeId = nodeId;
         this.name = name;
         this.externalLocation = externalLocation;
         this.localLocation = localLocation;
-        this.s3AccessKey = s3AccessKey;
-        this.s3SecretKey = s3SecretKey;
+        this.accountId = accountId;
+        this.secretKey = secretKey;
     }
 
 
-    /**
-     * Gets the name of the backup.
-     *
-     * @return The name of the backup.
-     */
-    public String getName() {
-        return name;
-    }
+  /**
+   * Gets the name of the backup.
+   *
+   * @return The name of the backup.
+   */
+  public String getName() {
+    return name;
+  }
 
-    /**
-     * Gets the external location of the backup.
-     *
-     * @return The location where the backup files are stored.
-     */
-    public String getExternalLocation() {
-        return externalLocation;
-    }
+  /**
+   * Gets the external location of the backup.
+   *
+   * @return The location where the backup files are stored.
+   */
+  public String getExternalLocation() {
+    return externalLocation;
+  }
 
-    /**
-     * Gets the local location of the backup.
-     *
-     * @return The local location of the keyspace files that will be backed up.
-     */
-    public String getLocalLocation() {
-        return localLocation;
-    }
+  /**
+   * Gets the local location of the backup.
+   *
+   * @return The local location of the keyspace files that will be backed up.
+   */
+  public String getLocalLocation() {
+    return localLocation;
+  }
 
-    /**
-     * Gets the access key.
-     *
-     * @return The S3 access key for the bucket where the keyspace files will
-     * be stored.
-     */
-    public String getS3AccessKey() {
-        return s3AccessKey;
-    }
+  /**
+   * Gets the access key.
+   *
+   * @return The S3 access key for the bucket or azure storage account where the keyspace files will
+   * be stored.
+   */
+  public String getAcccountId() {
+    return accountId;
+  }
 
-    /**
-     * Gets the secret key.
-     *
-     * @return The S3 secret key for the bucket where the keyspace files will
-     * be stored.
-     */
-    public String getS3SecretKey() {
-        return s3SecretKey;
-    }
+  /**
+   * Gets the secret key.
+   *
+   * @return The S3 secret key for the bucket or azure account key where the keyspace files will
+   * be stored.
+   */
+  public String getSecretKey() {
+    return secretKey;
+  }
 
     /**
      * Gets the id of the node for the backup.
@@ -179,8 +179,8 @@ public class BackupContext implements ClusterTaskContext {
             name,
             externalLocation,
             localLocation,
-            s3AccessKey,
-            s3SecretKey);
+            accountId,
+            secretKey);
     }
 
     @JsonIgnore
@@ -190,33 +190,33 @@ public class BackupContext implements ClusterTaskContext {
             name,
             externalLocation,
             localLocation,
-            s3AccessKey,
-            s3SecretKey);
+            accountId,
+            secretKey);
     }
 
-    @Override
-    public String toString() {
-        return JsonUtils.toJsonString(this);
-    }
+  @Override
+  public String toString() {
+    return JsonUtils.toJsonString(this);
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BackupContext)) return false;
-        BackupContext that = (BackupContext) o;
-        return Objects.equals(getNodeId(), that.getNodeId()) &&
-            Objects.equals(getName(), that.getName()) &&
-            Objects.equals(getExternalLocation(),
-                that.getExternalLocation()) &&
-            Objects.equals(getLocalLocation(),
-                that.getLocalLocation()) &&
-            Objects.equals(getS3AccessKey(), that.getS3AccessKey()) &&
-            Objects.equals(getS3SecretKey(), that.getS3SecretKey());
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof BackupContext)) return false;
+    BackupContext that = (BackupContext) o;
+    return Objects.equals(getNodeId(), that.getNodeId()) &&
+      Objects.equals(getName(), that.getName()) &&
+      Objects.equals(getExternalLocation(),
+        that.getExternalLocation()) &&
+      Objects.equals(getLocalLocation(),
+        that.getLocalLocation()) &&
+      Objects.equals(getAcccountId(), that.getAcccountId()) &&
+      Objects.equals(getSecretKey(), that.getSecretKey());
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getNodeId(), getName(), getExternalLocation(),
-            getLocalLocation(), getS3AccessKey(), getS3SecretKey());
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(getNodeId(), getName(), getExternalLocation(),
+      getLocalLocation(), getAcccountId(), getSecretKey());
+  }
 }

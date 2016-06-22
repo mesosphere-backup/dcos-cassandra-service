@@ -84,6 +84,8 @@ public class RestoreSnapshot implements Runnable {
                 CassandraPaths.create(version).cassandraConfig().toString();
 
             final File keyspacesDirectory = new File(keyspaceDirectory);
+            LOGGER.info("Keyspace Directory {} exists: {}", keyspaceDirectory, keyspacesDirectory.exists());
+
             final File[] keyspaces = keyspacesDirectory.listFiles();
 
             String libProcessAddress = System.getenv("LIBPROCESS_IP");

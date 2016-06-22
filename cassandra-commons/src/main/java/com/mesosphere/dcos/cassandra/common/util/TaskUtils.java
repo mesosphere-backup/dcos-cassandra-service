@@ -1,16 +1,11 @@
 package com.mesosphere.dcos.cassandra.common.util;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.*;
-import org.apache.mesos.util.Algorithms;
-
-import java.net.URI;
 import java.util.*;
+import org.apache.mesos.Protos.*;
+import org.apache.mesos.offer.ResourceUtils;
+import org.apache.mesos.util.Algorithms;
 import java.util.stream.Collectors;
 
-/**
- * Created by kowens on 5/19/16.
- */
 public class TaskUtils {
 
     public static final String CPUS = "cpus";
@@ -45,12 +40,12 @@ public class TaskUtils {
             .collect(Collectors.toList());
     }
 
-    public static Protos.CommandInfo createCommandInfo(
+    public static CommandInfo createCommandInfo(
         final String command,
         final List<String> arguments,
         final Set<String> uris,
         final Map<String, String> environment) {
-        return Protos.CommandInfo.newBuilder()
+        return CommandInfo.newBuilder()
             .setValue(command)
             .addAllArguments(arguments)
             .addAllUris(createURIs(uris))
@@ -114,9 +109,9 @@ public class TaskUtils {
         return Resource.DiskInfo.newBuilder()
             .setPersistence(Resource.DiskInfo.Persistence.newBuilder()
                 .setId(createVolumeId()))
-            .setVolume(Protos.Volume.newBuilder()
+            .setVolume(Volume.newBuilder()
                 .setContainerPath(path)
-                .setMode(Protos.Volume.Mode.RW
+                .setMode(Volume.Mode.RW
                 )).build();
     }
 
@@ -145,37 +140,21 @@ public class TaskUtils {
         double cpus,
         String role,
         String principal) {
-        return createScalar(CPUS, cpus, role, principal);
+        return ResourceUtils.getDesiredScalar(role, principal, CPUS, cpus);
     }
 
     public static Resource createMemoryMb(
         int memoryMb,
         String role,
         String principal) {
-        return createScalar(MEM, memoryMb, role, principal);
-    }
-
-    public static Resource createDiskMb(
-        final int diskMb,
-        final String role,
-        final String principal) {
-        return createScalar(DISK, diskMb, role, principal);
-    }
-
-    public static Resource createDiskMb(
-        final int diskMb,
-        final String role,
-        final String principal,
-        final String path) {
-        return Resource.newBuilder(createDiskMb(diskMb, role, principal))
-            .setDisk(createDiskInfo(path)).build();
+        return ResourceUtils.getDesiredScalar(role, principal, MEM, memoryMb);
     }
 
     public static Resource createPorts(
         final Collection<Integer> ports,
         final String role,
         final String principal) {
-        return createRanges(PORTS, createPortRanges(ports), role, principal);
+        return ResourceUtils.getDesiredRanges(role, principal, PORTS, Algorithms.createRanges(ports));
     }
 
 

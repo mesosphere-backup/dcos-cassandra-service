@@ -33,6 +33,7 @@ import java.util.*;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.ResourceUtils;
+import org.apache.mesos.util.Algorithms;
 
 import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
 
@@ -220,39 +221,12 @@ public abstract class CassandraTask {
         }
 
         if (!ports.isEmpty()) {
-            builder.addResources(createPorts(ports, role, principal));
+            builder.addResources(ResourceUtils.getDesiredRanges(role, principal, "ports", Algorithms.createRanges(ports)));
         }
 
         info = builder.build();
     }
 
-    /**
-     * Gets the cpu shares allocated to the task.
-     *
-     * @return The cpu shares allocated to the task.
-     */
-    public double getCpus() {
-        return getResourceCpus(info.getResourcesList());
-    }
-
-    /**
-     * Gets the disk allocated to the task.
-     *
-     * @return The disk allocated to the task in Mb.
-     */
-
-    public int getDiskMb() {
-        return getResourceDiskMb(info.getResourcesList());
-    }
-
-    /**
-     * Gets the memory allocated to the task.
-     *
-     * @return The memory allocated to the task in Mb.
-     */
-    public int getMemoryMb() {
-        return getResourceMemoryMb(info.getResourcesList());
-    }
 
     /**
      * Gets the unique identifier for the task.
@@ -270,24 +244,6 @@ public abstract class CassandraTask {
      */
     public String getName() {
         return info.getName();
-    }
-
-    /**
-     * Gets the tasks principal.
-     *
-     * @return The principal associated with the tasks resources.
-     */
-    public String getPrincipal() {
-        return info.getResources(0).getReservation().getPrincipal();
-    }
-
-    /**
-     * Gets the task's role.
-     *
-     * @return The task's role.
-     */
-    public String getRole() {
-        return info.getResources(0).getRole();
     }
 
     /**

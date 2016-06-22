@@ -2,12 +2,12 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import org.apache.mesos.Protos;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * Created by gabriel on 6/8/16.
+ * This class encapsulates a Cassandra Daemon and a Template task that reserves resources for sidecar tasks like
+ * Backup, Restore, Upload and Download.
  */
 public class CassandraContainer {
     private CassandraDaemonTask daemonTask;

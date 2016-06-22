@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,12 +22,12 @@ public class BackupResource {
     private static final Logger LOGGER = LoggerFactory.getLogger
         (BackupResource.class);
 
-    private final BackupManager manager;
+  private final BackupManager manager;
 
-    @Inject
-    public BackupResource(final BackupManager manager) {
-        this.manager = manager;
-    }
+  @Inject
+  public BackupResource(final BackupManager manager) {
+    this.manager = manager;
+  }
 
     @PUT
     @Timed
@@ -62,14 +63,26 @@ public class BackupResource {
     }
 
     public static BackupContext from(StartBackupRequest request) {
-        final BackupContext context = BackupContext.create(
-            "",
-            request.getName(),
-            request.getExternalLocation(),
-            "",
-            request.getS3AccessKey(),
-            request.getS3SecretKey());
+        String accountId;
+        String secretKey;
+        if (isAzure(request.getExternalLocation())) {
+            accountId = request.getAzureAccount();
+            secretKey = request.getAzureKey();
+        } else {
+            accountId = request.getS3AccessKey();
+            secretKey = request.getS3SecretKey();
+        }
 
-        return context;
-    }
+        return BackupContext.create(
+                "",
+                request.getName(),
+                request.getExternalLocation(),
+                "",
+                accountId,
+                secretKey);
+  }
+
+  private static boolean isAzure(String externalLocation) {
+    return StringUtils.isNotEmpty(externalLocation) && externalLocation.startsWith("azure:");
+  }
 }

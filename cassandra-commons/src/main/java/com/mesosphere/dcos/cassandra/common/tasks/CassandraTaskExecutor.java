@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 
-import java.net.URI;
 import java.util.*;
 
 import org.apache.mesos.Protos;
@@ -73,7 +72,6 @@ public class CassandraTaskExecutor {
             config.getApiPort(),
             config.getURIs(),
             config.getJavaHome());
-
     }
 
     /**
@@ -138,7 +136,6 @@ public class CassandraTaskExecutor {
                 Arrays.asList(
                     createCpus(cpus, role, principal),
                     createMemoryMb(memoryMb, role, principal),
-                    createDiskMb(diskMb, role, principal),
                     createPorts(Arrays.asList(apiPort), role, principal)))
             .build();
     }

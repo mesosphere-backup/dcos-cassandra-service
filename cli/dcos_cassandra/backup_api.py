@@ -27,7 +27,9 @@ def start_backup(name, external_location,
         'backup_name': name,
         'external_location': external_location,
         's3_access_key': s3_access_key,
-        's3_secret_key': s3_secret_key
+        's3_secret_key': s3_secret_key,
+        'azure_account': azure_account,
+        'azure_key': azure_key
     }
     return http.put(cu.api_url("/backup/start"),
                     json=req,

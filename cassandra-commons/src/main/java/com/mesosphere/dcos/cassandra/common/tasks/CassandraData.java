@@ -90,8 +90,8 @@ public class CassandraData {
             context.getName(),
             context.getExternalLocation(),
             context.getLocalLocation(),
-            context.getS3AccessKey(),
-            context.getS3SecretKey());
+            context.getAcccountId(),
+            context.getSecretKey());
     }
 
     public static final CassandraData createBackupSnapshotStatusData() {
@@ -108,8 +108,8 @@ public class CassandraData {
             context.getName(),
             context.getExternalLocation(),
             context.getLocalLocation(),
-            context.getS3AccessKey(),
-            context.getS3SecretKey());
+            context.getAcccountId(),
+            context.getSecretKey());
     }
 
     public static final CassandraData createBackupUploadStatusData() {
@@ -127,8 +127,8 @@ public class CassandraData {
             context.getName(),
             context.getExternalLocation(),
             context.getLocalLocation(),
-            context.getS3AccessKey(),
-            context.getS3SecretKey());
+            context.getAcccountId(),
+            context.getSecretKey());
     }
 
     public static final CassandraData createSnapshotDownloadStatusData() {
@@ -145,8 +145,8 @@ public class CassandraData {
             context.getName(),
             context.getExternalLocation(),
             context.getLocalLocation(),
-            context.getS3AccessKey(),
-            context.getS3SecretKey());
+            context.getAcccountId(),
+            context.getSecretKey());
     }
 
     public static final CassandraData createRestoreSnapshotStatusData() {
@@ -219,8 +219,8 @@ public class CassandraData {
                           final String name,
                           final String externalLocation,
                           final String localLocation,
-                          final String s3AccessKey,
-                          final String s3SecretKey) {
+                          final String accountId,
+                          final String secretKey) {
 
         data = CassandraProtos.CassandraData.newBuilder()
             .setType(type.ordinal())
@@ -229,8 +229,8 @@ public class CassandraData {
             .setBackupName(name)
             .setExternalLocation(externalLocation)
             .setLocalLocation(localLocation)
-            .setS3AccessKey(s3AccessKey)
-            .setS3SecretKey(s3SecretKey)
+            .setAccoundId(accountId)
+            .setSecretKey(secretKey)
             .setState(Protos.TaskState.TASK_STAGING.ordinal())
             .build();
 
@@ -343,8 +343,8 @@ public class CassandraData {
             data.getBackupName(),
             data.getExternalLocation(),
             data.getLocalLocation(),
-            data.getS3AccessKey(),
-            data.getS3SecretKey()
+            data.getAccoundId(),
+            data.getSecretKey()
         );
     }
 
@@ -354,8 +354,8 @@ public class CassandraData {
             data.getBackupName(),
             data.getExternalLocation(),
             data.getLocalLocation(),
-            data.getS3AccessKey(),
-            data.getS3SecretKey()
+            data.getAccoundId(),
+            data.getSecretKey()
         );
     }
 

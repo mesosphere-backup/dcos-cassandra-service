@@ -18,7 +18,6 @@ package com.mesosphere.dcos.cassandra.common.tasks.backup;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import org.apache.mesos.Protos;
-import org.apache.mesos.offer.VolumeRequirement;
 
 import java.util.Collections;
 import java.util.Optional;

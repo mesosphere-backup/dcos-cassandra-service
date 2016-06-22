@@ -65,23 +65,23 @@ public class RestoreContext implements ClusterTaskContext {
     private final String externalLocation;
     @JsonProperty("local_location")
     private final String localLocation;
-    @JsonProperty("s3_access_key")
-    private final String s3AccessKey;
-    @JsonProperty("s3_secret_key")
-    private final String s3SecretKey;
+    @JsonProperty("account_id")
+    private final String accountId;  // s3AccessKey or AccountName (prinicipal for service)
+    @JsonProperty("secret_key")
+    private final String secretKey;
 
     public RestoreContext(final String nodeId,
                           final String name,
                           final String externalLocation,
                           final String localLocation,
-                          final String s3AccessKey,
-                          final String s3SecretKey) {
+                          final String accountId,
+                          final String secretKey) {
         this.nodeId = nodeId;
         this.externalLocation = externalLocation;
         this.name = name;
         this.localLocation = localLocation;
-        this.s3AccessKey = s3AccessKey;
-        this.s3SecretKey = s3SecretKey;
+        this.accountId = accountId;
+        this.secretKey = secretKey;
     }
 
     /**
@@ -114,21 +114,21 @@ public class RestoreContext implements ClusterTaskContext {
     /**
      * Gets the access key.
      *
-     * @return The S3 access key for the bucket where the keyspace files are
+     * @return The S3 access key for the bucket or Azure account where the keyspace files are
      * be stored.
      */
-    public String getS3AccessKey() {
-        return s3AccessKey;
+    public String getAcccountId() {
+        return accountId;
     }
 
     /**
      * Gets the secret key.
      *
-     * @return The S3 secret key for the bucket where the keyspace files are
+     * @return The S3 secret key for the bucket or azure key where the keyspace files are
      * be stored.
      */
-    public String getS3SecretKey() {
-        return s3SecretKey;
+    public String getSecretKey() {
+        return secretKey;
     }
 
     /**
@@ -151,19 +151,19 @@ public class RestoreContext implements ClusterTaskContext {
         if (!(o instanceof RestoreContext)) return false;
         RestoreContext that = (RestoreContext) o;
         return Objects.equals(getNodeId(), that.getNodeId()) &&
-            Objects.equals(getName(), that.getName()) &&
-            Objects.equals(getExternalLocation(),
-                that.getExternalLocation()) &&
-            Objects.equals(getLocalLocation(),
-                that.getLocalLocation()) &&
-            Objects.equals(getS3AccessKey(), that.getS3AccessKey()) &&
-            Objects.equals(getS3SecretKey(), that.getS3SecretKey());
+                Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getExternalLocation(),
+                        that.getExternalLocation()) &&
+                Objects.equals(getLocalLocation(),
+                        that.getLocalLocation()) &&
+                Objects.equals(getAcccountId(), that.getAcccountId()) &&
+                Objects.equals(getSecretKey(), that.getSecretKey());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getNodeId(), getName(), getExternalLocation(),
-            getLocalLocation(), getS3AccessKey(), getS3SecretKey());
+                getLocalLocation(), getAcccountId(), getSecretKey());
     }
 
     @JsonIgnore
@@ -173,8 +173,8 @@ public class RestoreContext implements ClusterTaskContext {
             name,
             externalLocation,
             localLocation,
-            s3AccessKey,
-            s3SecretKey);
+            accountId,
+            secretKey);
     }
 
     @JsonIgnore
@@ -184,8 +184,8 @@ public class RestoreContext implements ClusterTaskContext {
             name,
             externalLocation,
             localLocation,
-            s3AccessKey,
-            s3SecretKey);
+            accountId,
+            secretKey);
     }
 
     /**

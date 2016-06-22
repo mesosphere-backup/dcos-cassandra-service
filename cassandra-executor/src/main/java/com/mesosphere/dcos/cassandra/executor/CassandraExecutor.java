@@ -24,8 +24,13 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
-import com.mesosphere.dcos.cassandra.executor.backup.S3StorageDriver;
-import com.mesosphere.dcos.cassandra.executor.tasks.*;
+import com.mesosphere.dcos.cassandra.executor.backup.StorageDriverFactory;
+import com.mesosphere.dcos.cassandra.executor.tasks.BackupSnapshot;
+import com.mesosphere.dcos.cassandra.executor.tasks.Cleanup;
+import com.mesosphere.dcos.cassandra.executor.tasks.DownloadSnapshot;
+import com.mesosphere.dcos.cassandra.executor.tasks.Repair;
+import com.mesosphere.dcos.cassandra.executor.tasks.RestoreSnapshot;
+import com.mesosphere.dcos.cassandra.executor.tasks.UploadSnapshot;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -117,22 +122,21 @@ public class CassandraExecutor implements Executor {
                 break;
 
             case BACKUP_UPLOAD:
-                clusterJobExecutorService.submit(new UploadSnapshot(
-                    driver,
-                    cassandra,
-                    (BackupUploadTask) cassandraTask,
-                    new S3StorageDriver()));
+              clusterJobExecutorService.submit(new UploadSnapshot(
+                driver,
+                cassandra,
+                (BackupUploadTask) cassandraTask,
+                StorageDriverFactory.createStorageDriver((BackupUploadTask) cassandraTask)));
 
                 break;
 
             case SNAPSHOT_DOWNLOAD:
-                clusterJobExecutorService.submit(new DownloadSnapshot(
-                    driver,
-                    (DownloadSnapshotTask) cassandraTask,
-                    nodeId,
-                    new S3StorageDriver()));
-
-                break;
+              clusterJobExecutorService.submit(new DownloadSnapshot(
+                driver,
+                (DownloadSnapshotTask) cassandraTask,
+                nodeId,
+                StorageDriverFactory.createStorageDriver((DownloadSnapshotTask) cassandraTask)));
+              break;
 
             case SNAPSHOT_RESTORE:
 

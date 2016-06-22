@@ -9,10 +9,16 @@ dependencies {
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"
 }
-
-ext {
-    protobufOutputDir = file("$buildDir/generated/source/proto/main")
-}
 idea.module {
     sourceDirs += file("$projectDir/src/generated/main/java")
+}
+eclipse {
+    classpath {
+        file {
+            withXml {
+                def node = it.asNode()
+                node.appendNode('classpathentry', [kind: 'src', path: 'src/generated/main/java', src: 'src/generated/main/java'])
+            }
+        }
+    }
 }
