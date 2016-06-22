@@ -60,7 +60,7 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
     }
 
     public Status getStatus() {
-        return getCurrentBlock().getStatus();
+        return Block.getStatus(getCurrentBlock());
     }
 
     @Override

@@ -26,16 +26,6 @@ public class EmptyBlock implements Block {
     }
 
     @Override
-    public Status getStatus() {
-        return Status.Complete;
-    }
-
-    @Override
-    public void setStatus(Status newStatus) {
-
-    }
-
-    @Override
     public boolean isPending() {
         return false;
     }
@@ -73,5 +63,20 @@ public class EmptyBlock implements Block {
     @Override
     public boolean isComplete() {
         return true;
+    }
+
+
+    @Override
+    public void forceComplete() {
+
+    }
+
+    @Override
+    public void restart() {
+
+    }
+
+    @Override
+    public void updateOfferStatus(boolean accepted) {
     }
 }

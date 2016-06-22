@@ -9,11 +9,7 @@ import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
-import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.offer.PlacementStrategy;
-import org.apache.mesos.offer.ResourceUtils;
-import org.apache.mesos.offer.TaskRequirement;
-import org.apache.mesos.offer.VolumeRequirement;
+import org.apache.mesos.offer.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +61,7 @@ public class PersistentOfferRequirementProvider {
                     container.getExecutorInfo(),
                     agentsToAvoid,
                     agentsToColocate);
-        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+        } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
         }
@@ -98,7 +94,7 @@ public class PersistentOfferRequirementProvider {
                     execInfo,
                     null,
                     null);
-        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+        } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
         }
