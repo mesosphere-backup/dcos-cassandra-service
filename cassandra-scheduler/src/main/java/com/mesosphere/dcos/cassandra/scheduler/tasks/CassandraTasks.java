@@ -209,9 +209,13 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     private Optional<Protos.TaskInfo> getTemplate(CassandraDaemonTask daemon) {
-        return stateStore.fetchTasks(daemon.getExecutor().getName()).stream()
-                .filter(x -> x.getName().equals(CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME))
-                .findFirst();
+        try {
+            return Optional.of(stateStore.fetchTask(daemon.getExecutor().getName()));
+        } catch (Exception e) {
+            LOGGER.warn(String.format("Failed to retrieve task data for '%s'",
+                    daemon.getExecutor().getName()), e);
+            return Optional.empty();
+        }
     }
 
 
