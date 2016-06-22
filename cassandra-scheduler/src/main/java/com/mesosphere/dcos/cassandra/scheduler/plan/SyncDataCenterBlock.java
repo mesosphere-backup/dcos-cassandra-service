@@ -44,29 +44,23 @@ public class SyncDataCenterBlock implements Block, Runnable {
         this.executor = executor;
     }
 
-    @Override
-    public synchronized Status getStatus() {
-        return status;
-    }
-
-    @Override
     public synchronized void setStatus(Status newStatus) {
         status = newStatus;
     }
 
     @Override
     public boolean isPending() {
-        return getStatus() == Status.Pending;
+        return status == Status.Pending;
     }
 
     @Override
     public boolean isInProgress() {
-        return getStatus() == Status.InProgress;
+        return status == Status.InProgress;
     }
 
     @Override
     public boolean isComplete() {
-        return getStatus() == Status.Complete;
+        return status == Status.Complete;
     }
 
     @Override
@@ -101,6 +95,23 @@ public class SyncDataCenterBlock implements Block, Runnable {
     @Override
     public String getMessage() {
         return "Syncing data center @ " + url;
+    }
+
+    @Override
+    public void updateOfferStatus(boolean accepted) {
+        if (!accepted) {
+            setStatus(Status.Pending);
+        }
+    }
+
+    @Override
+    public void restart() {
+        setStatus(Status.Pending);
+    }
+
+    @Override
+    public void forceComplete() {
+        setStatus(Status.Complete);
     }
 
     @Override

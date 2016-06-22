@@ -439,7 +439,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     public void update(Protos.TaskInfo taskInfo, Offer offer) throws Exception {
         try {
             final CassandraTask task = CassandraTask.parse(taskInfo);
-            stateStore.storeTasks(Arrays.asList(taskInfo), taskInfo.getExecutor().getName());
+            stateStore.storeTasks(Arrays.asList(taskInfo));
 
             synchronized (persistent) {
                 update(task.update(offer));
@@ -468,10 +468,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
                 update(updated);
 
-                stateStore.storeStatus(
-                        status,
-                        updated.getTaskInfo().getName(),
-                        updated.getExecutor().getName());
+                stateStore.storeStatus(status);
 
                 LOGGER.info("Updated task {}", updated);
             } else {

@@ -135,19 +135,14 @@ public class CassandraDaemonBlock implements Block {
     }
 
     @Override
-    public Status getStatus() {
-        return status;
-    }
-
-    @Override
     public boolean isPending() {
-        return Status.Pending.equals(getStatus());
+        return Status.Pending.equals(Block.getStatus(this));
     }
 
     @Override
     public boolean isInProgress() {
 
-        return Status.InProgress.equals(getStatus());
+        return Status.InProgress.equals(Block.getStatus(this));
     }
 
     @Override
@@ -234,13 +229,28 @@ public class CassandraDaemonBlock implements Block {
         return Status.Complete.equals(status);
     }
 
-    @Override
     public void setStatus(Status newStatus) {
         LOGGER.info("Block {} setting status to {}",
                 getName(), newStatus);
         status = newStatus;
     }
 
+    @Override
+    public void updateOfferStatus(boolean accepted) {
+        if (!accepted) {
+            setStatus(Status.Pending);
+        }
+    }
+
+    @Override
+    public void restart() {
+        setStatus(Status.Pending);
+    }
+
+    @Override
+    public void forceComplete() {
+        setStatus(Status.Complete);
+    }
 
     @Override
     public String toString() {

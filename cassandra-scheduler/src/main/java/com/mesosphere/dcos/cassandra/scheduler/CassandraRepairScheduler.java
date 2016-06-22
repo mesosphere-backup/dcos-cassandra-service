@@ -55,10 +55,9 @@ public class CassandraRepairScheduler {
                             cassandraTasks.createCassandraContainer(terminated));
                 }
 
-                OfferEvaluator offerEvaluator = new OfferEvaluator(
-                        offerReq);
+                OfferEvaluator offerEvaluator = new OfferEvaluator();
                 List<OfferRecommendation> recommendations =
-                        offerEvaluator.evaluate(offers);
+                        offerEvaluator.evaluate(offerReq, offers);
                 LOGGER.debug(
                         "Got recommendations: {} for terminated task: {}",
                         recommendations,

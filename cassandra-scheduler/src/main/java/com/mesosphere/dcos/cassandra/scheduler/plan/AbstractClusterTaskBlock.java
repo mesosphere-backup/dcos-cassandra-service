@@ -142,15 +142,9 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     @Override
     public String getMessage() {
-        return "Block " + getName() + " status = " + getStatus();
+        return "Block " + getName() + " status = " + status;
     }
 
-    @Override
-    public Status getStatus() {
-        return status;
-    }
-
-    @Override
     public void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status,
                 newStatus);
@@ -179,5 +173,22 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     public String getDaemon() {
         return daemon;
+    }
+
+    @Override
+    public void forceComplete() {
+        setStatus(Status.Complete);
+    }
+
+    @Override
+    public void restart() {
+        setStatus(Status.Pending);
+    }
+
+    @Override
+    public void updateOfferStatus(boolean accepted) {
+        if (!accepted) {
+            setStatus(Status.Pending);
+        }
     }
 }

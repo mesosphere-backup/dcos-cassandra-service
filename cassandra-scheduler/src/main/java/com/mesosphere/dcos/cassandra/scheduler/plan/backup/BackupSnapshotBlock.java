@@ -53,4 +53,21 @@ public class BackupSnapshotBlock extends AbstractClusterTaskBlock<BackupContext>
     public String getName() {
         return BackupSnapshotTask.nameForDaemon(daemon);
     }
+
+    @Override
+    public void forceComplete() {
+        setStatus(Status.Complete);
+    }
+
+    @Override
+    public void restart() {
+        setStatus(Status.Pending);
+    }
+
+    @Override
+    public void updateOfferStatus(boolean accepted) {
+        if (!accepted) {
+            setStatus(Status.Pending);
+        }
+    }
 }

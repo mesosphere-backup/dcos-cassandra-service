@@ -22,6 +22,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.ResourceUtils;
+import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
 import org.junit.*;
 
@@ -45,7 +46,7 @@ public class CassandraTasksTest {
     private static String path;
     private static String testDaemonName = "test-daemon-name";
     private static String testHostName = "test-host-name";
-    private static String testTaskId = "test-task-id";
+    private static String testTaskId = "test-task-id__UUID";
     private CassandraTasks cassandraTasks;
 
     @Before
@@ -212,7 +213,11 @@ public class CassandraTasksTest {
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) {
         Assert.assertEquals(testDaemonName, daemonTaskInfo.getName());
         Assert.assertEquals(4, daemonTaskInfo.getResourcesCount());
-        Assert.assertEquals(testDaemonName, TaskUtils.toTaskName(daemonTaskInfo.getTaskId()));
+        try {
+            Assert.assertEquals(testDaemonName, TaskUtils.toTaskName(daemonTaskInfo.getTaskId()));
+        } catch (TaskException e) {
+            Assert.assertTrue(e == null);
+        }
         Assert.assertTrue(daemonTaskInfo.getSlaveId().getValue().isEmpty());
 
         for (Protos.Resource resource : daemonTaskInfo.getResourcesList()) {
@@ -253,6 +258,9 @@ public class CassandraTasksTest {
     private Protos.TaskStatus getTestTaskStatus(String taskId) {
         return Protos.TaskStatus.newBuilder()
                 .setTaskId(Protos.TaskID.newBuilder()
+                        .setValue(taskId)
+                        .build())
+                .setExecutorId(Protos.ExecutorID.newBuilder()
                         .setValue(taskId)
                         .build())
                 .setState(Protos.TaskState.TASK_RUNNING)
