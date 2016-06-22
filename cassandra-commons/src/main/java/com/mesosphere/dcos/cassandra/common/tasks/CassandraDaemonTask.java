@@ -185,7 +185,7 @@ public class CassandraDaemonTask extends CassandraTask {
     public CassandraDaemonTask updateConfig(CassandraConfig config) {
         return new CassandraDaemonTask(getBuilder()
             .setExecutor(getExecutor().withNewId().getExecutorInfo())
-            .setTaskId(createId(getName()))
+            .setTaskId(org.apache.mesos.offer.TaskUtils.toTaskId(getName()))
             .setData(getData().withNewConfig(config).getBytes())
             .clearResources()
             .addAllResources(TaskUtils.updateResources(
@@ -212,7 +212,7 @@ public class CassandraDaemonTask extends CassandraTask {
     @Override
     public CassandraDaemonTask updateId() {
         return new CassandraDaemonTask(getBuilder()
-            .setTaskId(createId(getName()))
+            .setTaskId(org.apache.mesos.offer.TaskUtils.toTaskId(getName()))
             .setExecutor(getExecutor().withNewId().getExecutorInfo())
             .setData(getData()
                 .withState(Protos.TaskState.TASK_STAGING).getBytes())

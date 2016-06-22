@@ -9,7 +9,6 @@ import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -17,11 +16,12 @@ import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.validation.BaseValidator;
-import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
+import org.apache.mesos.executor.ExecutorUtils;
 import org.apache.mesos.offer.ResourceUtils;
+import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
 import org.junit.*;
 
@@ -45,7 +45,8 @@ public class CassandraTasksTest {
     private static String path;
     private static String testDaemonName = "test-daemon-name";
     private static String testHostName = "test-host-name";
-    private static String testTaskId = "test-task-id";
+    private static Protos.TaskID testTaskId = TaskUtils.toTaskId("test-task-id");
+    private static Protos.ExecutorID testExecutorId = ExecutorUtils.toExecutorId("test-executor-id");
     private CassandraTasks cassandraTasks;
 
     @Before
@@ -204,12 +205,14 @@ public class CassandraTasksTest {
         Assert.assertEquals(Protos.TaskState.TASK_STAGING, updatedDaemonTask.getState());
 
         // TaskStatus update with RUNNING should result in RUNNING state.
-        cassandraTasks.update(getTestTaskStatus(daemonTask.getTaskInfo().getTaskId().getValue()));
+        cassandraTasks.update(getTestTaskStatus(
+                daemonTask.getTaskInfo().getTaskId(),
+                daemonTask.getTaskInfo().getExecutor().getExecutorId()));
         updatedDaemonTask = cassandraTasks.getDaemons().entrySet().iterator().next().getValue();
         Assert.assertEquals(Protos.TaskState.TASK_RUNNING, updatedDaemonTask.getState());
     }
 
-    private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) {
+    private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) throws TaskException {
         Assert.assertEquals(testDaemonName, daemonTaskInfo.getName());
         Assert.assertEquals(4, daemonTaskInfo.getResourcesCount());
         Assert.assertEquals(testDaemonName, TaskUtils.toTaskName(daemonTaskInfo.getTaskId()));
@@ -247,14 +250,14 @@ public class CassandraTasksTest {
     }
 
     private Protos.TaskStatus getTestTaskStatus() {
-        return getTestTaskStatus(testTaskId);
+        return getTestTaskStatus(testTaskId, testExecutorId);
     }
 
-    private Protos.TaskStatus getTestTaskStatus(String taskId) {
+    private Protos.TaskStatus getTestTaskStatus(
+            Protos.TaskID taskId, Protos.ExecutorID executorId) {
         return Protos.TaskStatus.newBuilder()
-                .setTaskId(Protos.TaskID.newBuilder()
-                        .setValue(taskId)
-                        .build())
+                .setTaskId(taskId)
+                .setExecutorId(executorId)
                 .setState(Protos.TaskState.TASK_RUNNING)
                 .build();
     }

@@ -4,7 +4,6 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -130,24 +129,23 @@ public class CassandraDaemonBlock implements Block {
 
         CassandraContainer container = cassandraTasks.getOrCreateContainer(name);
         if (!needsConfigUpdate(container.getDaemonTask()) && isComplete(container)) {
-            status = Status.Complete;
+            setStatus(Status.Complete);
         }
     }
 
     @Override
-    public Status getStatus() {
-        return status;
-    }
-
-    @Override
     public boolean isPending() {
-        return Status.Pending.equals(getStatus());
+        return Status.Pending.equals(status);
     }
 
     @Override
     public boolean isInProgress() {
+        return Status.InProgress.equals(status);
+    }
 
-        return Status.InProgress.equals(getStatus());
+    @Override
+    public boolean isComplete() {
+        return Status.Complete.equals(status);
     }
 
     @Override
@@ -230,23 +228,38 @@ public class CassandraDaemonBlock implements Block {
     }
 
     @Override
-    public boolean isComplete() {
-        return Status.Complete.equals(status);
-    }
-
-    @Override
-    public void setStatus(Status newStatus) {
-        LOGGER.info("Block {} setting status to {}",
-                getName(), newStatus);
-        status = newStatus;
-    }
-
-
-    @Override
     public String toString() {
         return "CassandraDaemonBlock{" +
                 "name='" + name + '\'' +
                 ", id=" + id +
                 '}';
+    }
+
+    @Override
+    public void updateOfferStatus(boolean accepted) {
+        //TODO(nick): Any additional actions to perform when OfferRequirement returned by start()
+        //            was accepted or not accepted?
+        if (accepted) {
+            setStatus(Status.InProgress);
+        } else {
+            setStatus(Status.Pending);
+        }
+    }
+
+    @Override
+    public void restart() {
+        //TODO(nick): Any additional actions to perform when restarting work? eg terminated=false?
+        setStatus(Status.Pending);
+    }
+
+    @Override
+    public void forceComplete() {
+        //TODO(nick): Any additional actions to perform when forcing complete?
+        setStatus(Status.Complete);
+    }
+
+    private void setStatus(Status newStatus) {
+        LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        status = newStatus;
     }
 }

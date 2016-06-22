@@ -18,6 +18,8 @@ package com.mesosphere.dcos.cassandra.common.tasks.repair;
 
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
+
+import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.offer.VolumeRequirement;
 import org.apache.mesos.Protos;
 
@@ -77,7 +79,7 @@ public class RepairTask extends CassandraTask {
                 .setData(data.getBytes())
                 .build();
 
-        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+        completedTemplate = TaskUtils.clearTransient(completedTemplate);
 
         return new RepairTask(completedTemplate);
     }
@@ -115,7 +117,7 @@ public class RepairTask extends CassandraTask {
 
     @Override
     public RepairTask updateId() {
-        return new RepairTask(getBuilder().setTaskId(createId(getName()))
+        return new RepairTask(getBuilder().setTaskId(TaskUtils.toTaskId(getName()))
             .build());
     }
 

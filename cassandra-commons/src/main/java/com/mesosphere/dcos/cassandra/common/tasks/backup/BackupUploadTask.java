@@ -17,6 +17,8 @@ package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
+
+import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.offer.VolumeRequirement;
 import org.apache.mesos.Protos;
 
@@ -83,7 +85,7 @@ public class BackupUploadTask extends CassandraTask {
                 .setData(data.getBytes())
                 .build();
 
-        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+        completedTemplate = TaskUtils.clearTransient(completedTemplate);
 
         return new BackupUploadTask(completedTemplate);
     }
@@ -105,7 +107,7 @@ public class BackupUploadTask extends CassandraTask {
 
     @Override
     public BackupUploadTask updateId() {
-        return new BackupUploadTask(getBuilder().setTaskId(createId(getName()))
+        return new BackupUploadTask(getBuilder().setTaskId(TaskUtils.toTaskId(getName()))
             .build());
     }
 
