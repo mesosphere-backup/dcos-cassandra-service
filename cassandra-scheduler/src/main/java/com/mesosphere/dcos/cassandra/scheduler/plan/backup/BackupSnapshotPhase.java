@@ -16,10 +16,6 @@ import java.util.stream.Collectors;
  * During snapshot phase, data will be snapshotted across all cassandra nodes.
  */
 public class BackupSnapshotPhase extends AbstractClusterTaskPhase<BackupSnapshotBlock, BackupContext> {
-
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(BackupSnapshotPhase.class);
-
     public BackupSnapshotPhase(
             BackupContext backupContext,
             CassandraTasks cassandraTasks,
