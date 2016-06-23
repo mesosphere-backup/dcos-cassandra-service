@@ -176,6 +176,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       return;
     }
     String keyPrefix = String.format("%s/%s", backupName, nodeId);
+    logger.info("KeyPrefix: " + keyPrefix);
 
     final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, keyPrefix);
     logger.info("Snapshot files for this node: {}", snapshotFileKeys);
