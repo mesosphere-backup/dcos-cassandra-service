@@ -121,6 +121,7 @@ public class BackupContext implements ClusterTaskContext {
    *
    * @return The name of the backup.
    */
+  @JsonIgnore
   public String getName() {
     return name;
   }
@@ -130,6 +131,7 @@ public class BackupContext implements ClusterTaskContext {
    *
    * @return The location where the backup files are stored.
    */
+  @JsonIgnore
   public String getExternalLocation() {
     return externalLocation;
   }
@@ -139,6 +141,7 @@ public class BackupContext implements ClusterTaskContext {
    *
    * @return The local location of the keyspace files that will be backed up.
    */
+  @JsonIgnore
   public String getLocalLocation() {
     return localLocation;
   }
@@ -149,6 +152,7 @@ public class BackupContext implements ClusterTaskContext {
    * @return The S3 access key for the bucket or azure storage account where the keyspace files will
    * be stored.
    */
+  @JsonIgnore
   public String getAcccountId() {
     return accountId;
   }
@@ -159,6 +163,7 @@ public class BackupContext implements ClusterTaskContext {
    * @return The S3 secret key for the bucket or azure account key where the keyspace files will
    * be stored.
    */
+  @JsonIgnore
   public String getSecretKey() {
     return secretKey;
   }
@@ -168,6 +173,7 @@ public class BackupContext implements ClusterTaskContext {
      *
      * @return The id of the node for the backup.
      */
+    @JsonIgnore
     public String getNodeId() {
         return nodeId;
     }
