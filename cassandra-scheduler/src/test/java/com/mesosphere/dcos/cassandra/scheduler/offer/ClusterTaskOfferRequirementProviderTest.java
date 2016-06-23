@@ -1,6 +1,5 @@
 package com.mesosphere.dcos.cassandra.scheduler.tasks;
 
-//import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
@@ -58,9 +57,9 @@ public class ClusterTaskOfferRequirementProviderTest {
     private static ClusterTaskOfferRequirementProvider provider;
     private static Protos.TaskInfo testTaskInfo;
 
-		private static final String testRole = "cassandra-role";
-		private static final String testPrincipal = "cassandra-principal";
-		private static final String testResourceId = "cassandra-resource-id";
+    private static final String testRole = "cassandra-role";
+    private static final String testPrincipal = "cassandra-principal";
+    private static final String testResourceId = "cassandra-resource-id";
     private static final Double testCpus = 1.0;
     private static final Double testMem = 1000.0;
     private static final Double testDisk = 2000.0;
@@ -202,35 +201,35 @@ public class ClusterTaskOfferRequirementProviderTest {
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));
         Assert.assertEquals(taskInfo.getSlaveId().getValue(), "");
 
-				List<Protos.Resource> resources = taskInfo.getResourcesList();
-				Assert.assertEquals(4, resources.size());
+        List<Protos.Resource> resources = taskInfo.getResourcesList();
+        Assert.assertEquals(4, resources.size());
 
-				Protos.Resource cpusResource = resources.get(0);
-				Assert.assertEquals("cpus", cpusResource.getName());
-				Assert.assertEquals(Protos.Value.Type.SCALAR, cpusResource.getType());
-				Assert.assertEquals(testCpus, cpusResource.getScalar().getValue(), 0.0);
-				Assert.assertEquals(testRole, cpusResource.getRole());
-				Assert.assertEquals(testPrincipal, cpusResource.getReservation().getPrincipal());
-				Assert.assertEquals("resource_id", cpusResource.getReservation().getLabels().getLabelsList().get(0).getKey());
-				Assert.assertEquals(testResourceId, cpusResource.getReservation().getLabels().getLabelsList().get(0).getValue());
+        Protos.Resource cpusResource = resources.get(0);
+        Assert.assertEquals("cpus", cpusResource.getName());
+        Assert.assertEquals(Protos.Value.Type.SCALAR, cpusResource.getType());
+        Assert.assertEquals(testCpus, cpusResource.getScalar().getValue(), 0.0);
+        Assert.assertEquals(testRole, cpusResource.getRole());
+        Assert.assertEquals(testPrincipal, cpusResource.getReservation().getPrincipal());
+        Assert.assertEquals("resource_id", cpusResource.getReservation().getLabels().getLabelsList().get(0).getKey());
+        Assert.assertEquals(testResourceId, cpusResource.getReservation().getLabels().getLabelsList().get(0).getValue());
 
-				Protos.Resource memResource = resources.get(1);
-				Assert.assertEquals("mem", memResource.getName());
-				Assert.assertEquals(Protos.Value.Type.SCALAR, memResource.getType());
-				Assert.assertEquals(testMem, memResource.getScalar().getValue(), 0.0);
-				Assert.assertEquals(testRole, memResource.getRole());
-				Assert.assertEquals(testPrincipal, memResource.getReservation().getPrincipal());
-				Assert.assertEquals("resource_id", memResource.getReservation().getLabels().getLabelsList().get(0).getKey());
-				Assert.assertEquals(testResourceId, memResource.getReservation().getLabels().getLabelsList().get(0).getValue());
+        Protos.Resource memResource = resources.get(1);
+        Assert.assertEquals("mem", memResource.getName());
+        Assert.assertEquals(Protos.Value.Type.SCALAR, memResource.getType());
+        Assert.assertEquals(testMem, memResource.getScalar().getValue(), 0.0);
+        Assert.assertEquals(testRole, memResource.getRole());
+        Assert.assertEquals(testPrincipal, memResource.getReservation().getPrincipal());
+        Assert.assertEquals("resource_id", memResource.getReservation().getLabels().getLabelsList().get(0).getKey());
+        Assert.assertEquals(testResourceId, memResource.getReservation().getLabels().getLabelsList().get(0).getValue());
 
-				Protos.Resource diskResource = resources.get(2);
-				Assert.assertEquals("disk", diskResource.getName());
-				Assert.assertEquals(Protos.Value.Type.SCALAR, diskResource.getType());
-				Assert.assertEquals(testDisk, diskResource.getScalar().getValue(), 0.0);
-				Assert.assertEquals(testRole, diskResource.getRole());
-				Assert.assertEquals(testPrincipal, diskResource.getReservation().getPrincipal());
-				Assert.assertEquals("resource_id", diskResource.getReservation().getLabels().getLabelsList().get(0).getKey());
-				Assert.assertEquals(testResourceId, diskResource.getReservation().getLabels().getLabelsList().get(0).getValue());
+        Protos.Resource diskResource = resources.get(2);
+        Assert.assertEquals("disk", diskResource.getName());
+        Assert.assertEquals(Protos.Value.Type.SCALAR, diskResource.getType());
+        Assert.assertEquals(testDisk, diskResource.getScalar().getValue(), 0.0);
+        Assert.assertEquals(testRole, diskResource.getRole());
+        Assert.assertEquals(testPrincipal, diskResource.getReservation().getPrincipal());
+        Assert.assertEquals("resource_id", diskResource.getReservation().getLabels().getLabelsList().get(0).getKey());
+        Assert.assertEquals(testResourceId, diskResource.getReservation().getLabels().getLabelsList().get(0).getValue());
 
         Protos.Resource portsResource = resources.get(3);
         Assert.assertEquals("ports", portsResource.getName());
@@ -247,14 +246,14 @@ public class ClusterTaskOfferRequirementProviderTest {
         Protos.CommandInfo cmd = executorInfo.getCommand();
         Assert.assertEquals(3, cmd.getUrisList().size());
         Assert.assertEquals(
-						config.getExecutorConfig().getExecutorLocation().toString(),
-					  cmd.getUrisList().get(0).getValue());
+            config.getExecutorConfig().getExecutorLocation().toString(),
+            cmd.getUrisList().get(0).getValue());
         Assert.assertEquals(
-						config.getExecutorConfig().getCassandraLocation().toString(),
-					  cmd.getUrisList().get(1).getValue());
+            config.getExecutorConfig().getCassandraLocation().toString(),
+            cmd.getUrisList().get(1).getValue());
         Assert.assertEquals(
-						config.getExecutorConfig().getJreLocation().toString(),
-				  	cmd.getUrisList().get(2).getValue());
+            config.getExecutorConfig().getJreLocation().toString(),
+            cmd.getUrisList().get(2).getValue());
     }
 
     @Test
@@ -265,20 +264,20 @@ public class ClusterTaskOfferRequirementProviderTest {
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));
         Assert.assertEquals("", taskInfo.getSlaveId().getValue());
 
-				List<Protos.Resource> resources = taskInfo.getResourcesList();
-				Assert.assertEquals(4, resources.size());
+        List<Protos.Resource> resources = taskInfo.getResourcesList();
+        Assert.assertEquals(4, resources.size());
 
-				Protos.Resource cpusResource = resources.get(0);
-				Assert.assertEquals("cpus", cpusResource.getName());
-				Assert.assertEquals(testCpus, cpusResource.getScalar().getValue(), 0.0);
+        Protos.Resource cpusResource = resources.get(0);
+        Assert.assertEquals("cpus", cpusResource.getName());
+        Assert.assertEquals(testCpus, cpusResource.getScalar().getValue(), 0.0);
 
-				Protos.Resource memResource = resources.get(1);
-				Assert.assertEquals("mem", memResource.getName());
-				Assert.assertEquals(testMem, memResource.getScalar().getValue(), 0.0);
+        Protos.Resource memResource = resources.get(1);
+        Assert.assertEquals("mem", memResource.getName());
+        Assert.assertEquals(testMem, memResource.getScalar().getValue(), 0.0);
 
-				Protos.Resource diskResource = resources.get(2);
-				Assert.assertEquals("disk", diskResource.getName());
-				Assert.assertEquals(testDisk, diskResource.getScalar().getValue(), 0.0);
+        Protos.Resource diskResource = resources.get(2);
+        Assert.assertEquals("disk", diskResource.getName());
+        Assert.assertEquals(testDisk, diskResource.getScalar().getValue(), 0.0);
 
         Protos.Resource portsResource = resources.get(3);
         Assert.assertEquals("ports", portsResource.getName());
@@ -294,20 +293,20 @@ public class ClusterTaskOfferRequirementProviderTest {
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));
         Assert.assertEquals("", taskInfo.getSlaveId().getValue());
 
-				List<Protos.Resource> resources = taskInfo.getResourcesList();
-				Assert.assertEquals(4, resources.size());
+        List<Protos.Resource> resources = taskInfo.getResourcesList();
+        Assert.assertEquals(4, resources.size());
 
-				Protos.Resource cpusResource = resources.get(0);
-				Assert.assertEquals("cpus", cpusResource.getName());
-				Assert.assertEquals(testCpus, cpusResource.getScalar().getValue(), 0.0);
+        Protos.Resource cpusResource = resources.get(0);
+        Assert.assertEquals("cpus", cpusResource.getName());
+        Assert.assertEquals(testCpus, cpusResource.getScalar().getValue(), 0.0);
 
-				Protos.Resource memResource = resources.get(1);
-				Assert.assertEquals("mem", memResource.getName());
-				Assert.assertEquals(testMem, memResource.getScalar().getValue(), 0.0);
+        Protos.Resource memResource = resources.get(1);
+        Assert.assertEquals("mem", memResource.getName());
+        Assert.assertEquals(testMem, memResource.getScalar().getValue(), 0.0);
 
-				Protos.Resource diskResource = resources.get(2);
-				Assert.assertEquals("disk", diskResource.getName());
-				Assert.assertEquals(testDisk, diskResource.getScalar().getValue(), 0.0);
+        Protos.Resource diskResource = resources.get(2);
+        Assert.assertEquals("disk", diskResource.getName());
+        Assert.assertEquals(testDisk, diskResource.getScalar().getValue(), 0.0);
 
         Protos.Resource portsResource = resources.get(3);
         Assert.assertEquals("ports", portsResource.getName());
