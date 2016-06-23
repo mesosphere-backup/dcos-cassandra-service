@@ -73,9 +73,10 @@ public class RestoreSnapshot implements Runnable {
             // Send TASK_RUNNING
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
                 "Started restoring snapshot");
-            final String localLocation = context.getLocalLocation();
-            final String keyspaceDirectory = localLocation + File.separator +
-                context.getName() + File.separator + context.getNodeId();
+            final String keyspaceDirectory =
+                    context.getLocalLocation() + File.separator +
+                    context.getName() + File.separator +
+                    context.getNodeId();
 
             final String ssTableLoaderBinary =
                 CassandraPaths.create(version).bin()
@@ -149,7 +150,7 @@ public class RestoreSnapshot implements Runnable {
             // Send TASK_FAILED
             final String errorMessage = "Failed restoring snapshot. Reason: "
                 + t;
-            LOGGER.error(errorMessage);
+            LOGGER.error(errorMessage, t);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, errorMessage);
         }
     }

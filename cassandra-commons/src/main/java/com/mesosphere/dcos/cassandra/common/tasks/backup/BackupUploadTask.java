@@ -71,15 +71,14 @@ public class BackupUploadTask extends CassandraTask {
             final CassandraDaemonTask daemon,
             final BackupContext context) {
 
-        String name = nameForDaemon(daemon);
         CassandraData data = CassandraData.createBackupUploadData(
                 "",
                 context
-                    .forNode(name)
+                    .forNode(daemon.getName())
                     .withLocalLocation(daemon.getVolumePath() + "/data"));
 
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
-                .setName(name)
+                .setName(nameForDaemon(daemon))
                 .setData(data.getBytes())
                 .build();
 

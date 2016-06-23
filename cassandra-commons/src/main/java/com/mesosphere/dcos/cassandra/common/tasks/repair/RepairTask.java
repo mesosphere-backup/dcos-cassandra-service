@@ -69,11 +69,10 @@ public class RepairTask extends CassandraTask {
             final CassandraDaemonTask daemon,
             final RepairContext context) {
 
-        String name = nameForDaemon(daemon);
         CassandraData data = CassandraData.createRepairData("", context);
 
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
-                .setName(name)
+                .setName(nameForDaemon(daemon))
                 .setData(data.getBytes())
                 .build();
 

@@ -74,11 +74,10 @@ public class CleanupTask extends CassandraTask {
             final CassandraDaemonTask daemon,
             final CleanupContext context) {
 
-        String name = nameForDaemon(daemon);
         CassandraData data = CassandraData.createCleanupData("", context);
 
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
-                .setName(name)
+                .setName(nameForDaemon(daemon))
                 .setData(data.getBytes())
                 .build();
 
