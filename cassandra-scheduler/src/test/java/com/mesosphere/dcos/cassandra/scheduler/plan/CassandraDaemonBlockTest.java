@@ -9,6 +9,7 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementP
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,6 +30,10 @@ public class CassandraDaemonBlockTest {
     private CassandraTasks cassandraTasks;
     @Mock
     private SchedulerClient client;
+    @Mock
+    private CompletionStage<Boolean> mockStage;
+    @Mock
+    private CompletableFuture<Boolean> mockFuture;
 
     @Before
     public void beforeEach() {
@@ -45,7 +50,7 @@ public class CassandraDaemonBlockTest {
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
 
         Assert.assertEquals(EXPECTED_NAME, block.getName());
-        Assert.assertEquals(Status.Pending, block.getStatus());
+        Assert.assertEquals(Status.Pending, Block.getStatus(block));
     }
 
     @Test
@@ -100,8 +105,6 @@ public class CassandraDaemonBlockTest {
 
         when(cassandraContainer.getDaemonTask()).thenReturn(mockDaemonTask);
         when(cassandraContainer.isTerminated()).thenReturn(false);
-        final CompletionStage mockStage = Mockito.mock(CompletionStage.class);
-        final CompletableFuture mockFuture = Mockito.mock(CompletableFuture.class);
         when(mockStage.toCompletableFuture()).thenReturn(mockFuture);
         when(mockFuture.get()).thenReturn(true);
         when(client.shutdown("1234", 1234)).thenReturn(mockStage);
@@ -127,8 +130,6 @@ public class CassandraDaemonBlockTest {
 
         when(cassandraContainer.getDaemonTask()).thenReturn(mockDaemonTask);
         when(cassandraContainer.isTerminated()).thenReturn(false);
-        final CompletionStage mockStage = Mockito.mock(CompletionStage.class);
-        final CompletableFuture mockFuture = Mockito.mock(CompletableFuture.class);
         when(mockStage.toCompletableFuture()).thenReturn(mockFuture);
         when(mockFuture.get()).thenReturn(false);
         when(client.shutdown("1234", 1234)).thenReturn(mockStage);
