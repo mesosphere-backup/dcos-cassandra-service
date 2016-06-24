@@ -63,13 +63,12 @@ public class DownloadSnapshotTask extends CassandraTask {
             final CassandraDaemonTask daemon,
             final RestoreContext context) {
 
-        String name = nameForDaemon(daemon);
         CassandraData data = CassandraData.createSnapshotDownloadData(
                 "",
                 context
-                    .forNode(name)
+                    .forNode(daemon.getName())
                     .withLocalLocation(daemon.getVolumePath() + "/data"));
-
+        String name = nameForDaemon(daemon);
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
                 .setName(name)
                 .setTaskId(TaskUtils.toTaskId(name))

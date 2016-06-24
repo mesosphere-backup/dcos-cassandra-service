@@ -15,12 +15,10 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.TaskUtils;
 
-import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -67,13 +65,12 @@ public class RestoreSnapshotTask extends CassandraTask {
             final CassandraDaemonTask daemon,
             final RestoreContext context) {
 
-        String name = nameForDaemon(daemon);
         CassandraData data = CassandraData.createRestoreSnapshotData(
                 "",
                 context
-                    .forNode(name)
+                    .forNode(daemon.getName())
                     .withLocalLocation(daemon.getVolumePath() + "/data"));
-
+        String name = nameForDaemon(daemon);
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
                 .setName(name)
                 .setTaskId(TaskUtils.toTaskId(name))
