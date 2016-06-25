@@ -30,7 +30,7 @@ DCOS Cassandra provides the following features:
 
 - [DCOS Spark](https://docs.mesosphere.com/manage-service/spark)
 
-# Getting Started!
+# Getting Started!!
 
 ## Quick Start
 
