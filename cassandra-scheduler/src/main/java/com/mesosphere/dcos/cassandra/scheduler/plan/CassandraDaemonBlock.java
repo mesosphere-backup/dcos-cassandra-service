@@ -8,6 +8,7 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementPr
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
@@ -180,7 +181,7 @@ public class CassandraDaemonBlock implements Block {
             } else {
                 return reconfigureTask(container.getDaemonTask());
             }
-        } else if (container.getAgentId().isEmpty()) {
+        } else if (StringUtils.isBlank(container.getAgentId())) {
             LOGGER.info("Block {} - Launching new container : id = {}",
                     getName(),
                     container.getId());

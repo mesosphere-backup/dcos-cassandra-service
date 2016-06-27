@@ -17,9 +17,6 @@ import java.util.stream.Collectors;
  * external location.
  */
 public class DownloadSnapshotPhase extends AbstractClusterTaskPhase<DownloadSnapshotBlock, RestoreContext> {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(DownloadSnapshotPhase.class);
-
     public DownloadSnapshotPhase(
             RestoreContext context,
             CassandraTasks cassandraTasks,
