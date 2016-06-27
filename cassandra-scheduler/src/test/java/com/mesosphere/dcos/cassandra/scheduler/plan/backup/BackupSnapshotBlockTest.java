@@ -6,6 +6,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
@@ -116,5 +117,27 @@ public class BackupSnapshotBlockTest {
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNotNull(backupSnapshotBlock.start());
         Assert.assertEquals(Status.InProgress, backupSnapshotBlock.getStatus());
+    }
+
+    @Test
+    public void testTaskFailed() throws Exception {
+        final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
+        Mockito.when(cassandraTasks.get("snapshot-node-0")).thenReturn(Optional.empty());
+        final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
+        map.put("node-0", daemonTask);
+        Mockito.when(cassandraTasks.getDaemons()).thenReturn(map);
+        final BackupContext backupContext = BackupContext.create("", "", "", "", "", "");
+
+        final BackupSnapshotTask snapshotTask = Mockito.mock(BackupSnapshotTask.class);
+        Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
+        Mockito.when(cassandraTasks.getOrCreateBackupSnapshot(daemonTask, backupContext))
+                .thenThrow(PersistenceException.class);
+
+        final BackupSnapshotBlock backupSnapshotBlock = BackupSnapshotBlock.create(
+                "node-0",
+                cassandraTasks,
+                provider,
+                backupContext);
+        Assert.assertNull(backupSnapshotBlock.start());
     }
 }
