@@ -24,6 +24,7 @@ public class CassandraRepairScheduler {
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraTasks cassandraTasks;
+    private final OfferEvaluator offerEvaluator = new OfferEvaluator();
     private final Random random = new Random();
 
     public CassandraRepairScheduler(
@@ -55,10 +56,8 @@ public class CassandraRepairScheduler {
                             cassandraTasks.createCassandraContainer(terminated));
                 }
 
-                OfferEvaluator offerEvaluator = new OfferEvaluator(
-                        offerReq);
                 List<OfferRecommendation> recommendations =
-                        offerEvaluator.evaluate(offers);
+                        offerEvaluator.evaluate(offerReq, offers);
                 LOGGER.debug(
                         "Got recommendations: {} for terminated task: {}",
                         recommendations,

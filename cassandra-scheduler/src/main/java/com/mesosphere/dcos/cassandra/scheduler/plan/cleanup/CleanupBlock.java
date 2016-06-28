@@ -40,7 +40,7 @@ public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
     protected Optional<CassandraTask> getOrCreateTask(CleanupContext context)
             throws PersistenceException {
         CassandraDaemonTask daemonTask =
-                cassandraTasks.getDaemons().get(daemon);
+                cassandraTasks.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
             setStatus(Status.Complete);
@@ -53,14 +53,14 @@ public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
 
     @Override
     public String getName() {
-        return CleanupTask.nameForDaemon(daemon);
+        return CleanupTask.nameForDaemon(getDaemon());
     }
 
     @Override
     public String toString() {
         return "CleanupBlock{" +
                 "name='" + getName() + '\'' +
-                ", id=" + id +
+                ", id=" + getId() +
                 '}';
     }
 }
