@@ -13,26 +13,32 @@ import java.util.Optional;
  * Created by gabriel on 6/8/16.
  */
 public class CassandraTemplateTask extends CassandraTask  {
-    public static final String CLUSTER_TASK_TEMPLATE_NAME = "cluster_task_template";
-
-    protected static Protos.SlaveID EMPTY_SLAVE_ID = Protos.SlaveID
-            .newBuilder().setValue("").build();
-
-    protected static Protos.TaskID EMPTY_TASK_ID = Protos.TaskID
-            .newBuilder().setValue("").build();
+    private static final String CLUSTER_TASK_TEMPLATE_SUFFIX = "-task-template";
+    private static Protos.SlaveID EMPTY_SLAVE_ID =
+        Protos.SlaveID.newBuilder().setValue("").build();
+    private static Protos.TaskID EMPTY_TASK_ID =
+        Protos.TaskID.newBuilder().setValue("").build();
 
     protected CassandraTemplateTask(Protos.TaskInfo taskInfo) {
         super(taskInfo);
     }
 
-    public static CassandraTemplateTask create(
-        String role,
-        String principal,
-        ClusterTaskConfig clusterTaskConfig) {
+    public static String toTemplateTaskName(String daemonTaskName) {
+      return daemonTaskName + CLUSTER_TASK_TEMPLATE_SUFFIX;
+    }
 
+    /**
+     * Creates a new Template Task which is paired to the provided Daemon Task.
+     */
+    public static CassandraTemplateTask create(CassandraDaemonTask daemonTask,
+            ClusterTaskConfig clusterTaskConfig) {
+        final String role = daemonTask.getExecutor().getRole();
+        final String principal = daemonTask.getExecutor().getPrincipal();
+
+        // note: there currently are no disk resources associated with cassandra template tasks.
         Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder()
                 .setTaskId(EMPTY_TASK_ID)
-                .setName(CLUSTER_TASK_TEMPLATE_NAME)
+                .setName(toTemplateTaskName(daemonTask.getName()))
                 .setSlaveId(EMPTY_SLAVE_ID)
                 .setData(CassandraData.createTemplateData().getBytes())
                 .addAllResources(Arrays.asList(
@@ -91,17 +97,10 @@ public class CassandraTemplateTask extends CassandraTask  {
     }
 
     private static Protos.Resource getMemResource(
-        String role,
-        String principal,
-        ClusterTaskConfig clusterTaskConfig) {
+            String role,
+            String principal,
+            ClusterTaskConfig clusterTaskConfig) {
         return getScalar(role, principal, "mem", (double) clusterTaskConfig.getMemoryMb());
-    }
-
-    private static Protos.Resource getDiskResource(
-        String role,
-        String principal,
-        ClusterTaskConfig clusterTaskConfig) {
-        return getScalar(role, principal, "disk", (double) clusterTaskConfig.getDiskMb());
     }
 
     private static Protos.Resource getScalar(String role, String principal, String name, Double value) {

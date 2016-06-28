@@ -1,15 +1,15 @@
 package com.mesosphere.dcos.cassandra.scheduler.offer;
 
 import com.google.inject.Inject;
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.PlacementStrategy;
-import org.apache.mesos.offer.TaskRequirement;
-import org.apache.mesos.offer.VolumeRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ public class ClusterTaskOfferRequirementProvider
                     execInfo,
                     agentsToAvoid,
                     agentsToColocate);
-        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+        } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
         }
@@ -81,7 +81,7 @@ public class ClusterTaskOfferRequirementProvider
                     execInfo,
                     placementStrategy.getAgentsToAvoid(taskInfo),
                     placementStrategy.getAgentsToColocate(taskInfo));
-        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+        } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
         }
@@ -95,7 +95,8 @@ public class ClusterTaskOfferRequirementProvider
 
     private OfferRequirement getExistingOfferRequirement(
             Protos.TaskInfo taskInfo) {
-        LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
+        LOGGER.info("Getting existing OfferRequirement for task: {}",
+                TextFormat.shortDebugString(taskInfo));
         final Identity identity = identityManager.get();
 
         ExecutorInfo execInfo = taskInfo.getExecutor();
@@ -107,7 +108,7 @@ public class ClusterTaskOfferRequirementProvider
                     execInfo,
                     null,
                     null);
-        } catch (TaskRequirement.InvalidTaskRequirementException e) {
+        } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
         }

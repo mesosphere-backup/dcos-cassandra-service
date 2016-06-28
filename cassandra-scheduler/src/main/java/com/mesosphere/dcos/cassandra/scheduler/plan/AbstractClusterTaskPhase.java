@@ -7,15 +7,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Status;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
 
 public abstract class AbstractClusterTaskPhase<B extends Block, C extends ClusterTaskContext> implements Phase {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(AbstractClusterTaskPhase.class);
 
     protected final UUID id = UUID.randomUUID();
     protected final C context;
@@ -60,7 +56,7 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
     }
 
     public Status getStatus() {
-        return getCurrentBlock().getStatus();
+        return Block.getStatus(getCurrentBlock());
     }
 
     @Override

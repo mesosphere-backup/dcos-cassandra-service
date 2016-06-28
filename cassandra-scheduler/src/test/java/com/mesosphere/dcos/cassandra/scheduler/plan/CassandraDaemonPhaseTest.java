@@ -1,6 +1,5 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;

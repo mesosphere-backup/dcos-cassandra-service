@@ -15,12 +15,9 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import org.apache.mesos.Protos;
-import org.apache.mesos.offer.VolumeRequirement;
-
-import java.util.Collections;
+import org.apache.mesos.offer.TaskUtils;
 import java.util.Optional;
 
 /**
@@ -71,13 +68,14 @@ public class DownloadSnapshotTask extends CassandraTask {
                 context
                     .forNode(daemon.getName())
                     .withLocalLocation(daemon.getVolumePath() + "/data"));
-
+        String name = nameForDaemon(daemon);
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
-                .setName(nameForDaemon(daemon))
+                .setName(name)
+                .setTaskId(TaskUtils.toTaskId(name))
                 .setData(data.getBytes())
                 .build();
 
-        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+        completedTemplate = TaskUtils.clearTransient(completedTemplate);
 
         return new DownloadSnapshotTask(completedTemplate);
     }
@@ -100,7 +98,7 @@ public class DownloadSnapshotTask extends CassandraTask {
     @Override
     public DownloadSnapshotTask updateId() {
         return new DownloadSnapshotTask(
-            getBuilder().setTaskId(createId(getName()))
+            getBuilder().setTaskId(TaskUtils.toTaskId(getName()))
                 .build());
     }
 
@@ -138,5 +136,5 @@ public class DownloadSnapshotTask extends CassandraTask {
     public RestoreContext getRestoreContext() {
         return getData().getRestoreContext();
     }
-   
+
 }

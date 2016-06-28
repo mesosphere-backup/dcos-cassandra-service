@@ -15,12 +15,11 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
-import org.apache.mesos.offer.VolumeRequirement;
+
+import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.Protos;
 
-import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -76,13 +75,14 @@ public class BackupUploadTask extends CassandraTask {
                 context
                     .forNode(daemon.getName())
                     .withLocalLocation(daemon.getVolumePath() + "/data"));
-
+        String name = nameForDaemon(daemon);
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
-                .setName(nameForDaemon(daemon))
+                .setName(name)
+                .setTaskId(TaskUtils.toTaskId(name))
                 .setData(data.getBytes())
                 .build();
 
-        completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
+        completedTemplate = TaskUtils.clearTransient(completedTemplate);
 
         return new BackupUploadTask(completedTemplate);
     }
@@ -104,7 +104,7 @@ public class BackupUploadTask extends CassandraTask {
 
     @Override
     public BackupUploadTask updateId() {
-        return new BackupUploadTask(getBuilder().setTaskId(createId(getName()))
+        return new BackupUploadTask(getBuilder().setTaskId(TaskUtils.toTaskId(getName()))
             .build());
     }
 
