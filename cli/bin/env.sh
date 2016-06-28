@@ -22,7 +22,13 @@ if [ ! -d "$BASEDIR/env" ]; then
 fi
 
 cd $BASEDIR
-source $BASEDIR/env/bin/activate
+if [ "$(uname)" == "Darwin" ]; then
+    source $BASEDIR/env/bin/activate
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    source $BASEDIR/env/bin/activate
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
+    source $BASEDIR/env/Scripts/activate
+fi
 echo "Virtualenv activated."
 
 if [ ! -f "$BASEDIR/env/updated" -o $BASEDIR/setup.py -nt $BASEDIR/env/updated ]; then
