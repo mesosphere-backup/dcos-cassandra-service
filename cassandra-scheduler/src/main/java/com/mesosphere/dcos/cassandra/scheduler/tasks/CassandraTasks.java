@@ -61,7 +61,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             final ClusterTaskConfig clusterTaskConfig,
             final Serializer<CassandraTask> serializer,
             final PersistenceFactory persistence) {
-        this.persistent = persistence.createMap("tasks", serializer);
+        this.persistent = persistence.createMap("tasks", serializer); // TODO(nick) remove in favor of StateStore
         this.identity = identity;
         this.configuration = configuration;
         this.clusterTaskConfig = clusterTaskConfig;
@@ -76,9 +76,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         this.stateStore = new CuratorStateStore(
-                "/cassandra/" + identity.get().getName() + "/state",
-                curatorConfig.getServers(),
-                retryPolicy);
+                "/" + identity.get().getName(), curatorConfig.getServers(), retryPolicy);
 
         loadTasks();
     }
@@ -210,10 +208,14 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     private Optional<Protos.TaskInfo> getTemplate(CassandraDaemonTask daemon) {
         try {
-            return Optional.of(stateStore.fetchTask(daemon.getExecutor().getName()));
+            Optional<Protos.TaskInfo> info = Optional.of(
+                    stateStore.fetchTask(CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME));
+            LOGGER.info("Fetched template task '{}': {}",
+                    CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME, info.get());
+            return info;
         } catch (Exception e) {
-            LOGGER.warn(String.format("Failed to retrieve task data for '%s'",
-                    daemon.getExecutor().getName()), e);
+            LOGGER.warn(String.format("Failed to retrieve template task '%s'",
+                    CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME), e);
             return Optional.empty();
         }
     }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
@@ -51,7 +52,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final ConfigurationManager configurationManager;
     private final MesosConfig mesosConfig;
     private final StageManager stageManager;
-    private final StageScheduler planScheduler;
+    private final StageScheduler stageScheduler;
     private final CassandraRepairScheduler repairScheduler;
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
@@ -92,7 +93,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(identityManager, cassandraTasks)));
-        planScheduler = new DefaultStageScheduler(offerAccepter);
+        stageScheduler = new DefaultStageScheduler(offerAccepter);
         repairScheduler = new CassandraRepairScheduler(offerRequirementProvider,
                 offerAccepter, cassandraTasks);
         this.client = client;
@@ -181,10 +182,10 @@ public class CassandraScheduler implements Scheduler, Managed {
                 if (currentBlock == null) {
                     LOGGER.info("Current plan {} interrupted.",
                             (stageManager.isInterrupted()) ? "is" : "is not");
+                } else {
+                    acceptedOffers.addAll(
+                            stageScheduler.resourceOffers(driver, offers, currentBlock));
                 }
-                acceptedOffers.addAll(
-                        planScheduler.resourceOffers(driver, offers,
-                                currentBlock));
 
                 // Perform any required repairs
                 List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(
@@ -337,9 +338,8 @@ public class CassandraScheduler implements Scheduler, Managed {
         }
 
         LOGGER.info("Received {} offers", offers.size());
-
-        for (Protos.Offer offer : offers) {
-            LOGGER.debug("Received Offer: {}", offer);
+        for (int i = 0; i < offers.size(); ++i) {
+            LOGGER.info("Offer {}: {}", i + 1, TextFormat.shortDebugString(offers.get(i)));
         }
     }
 
