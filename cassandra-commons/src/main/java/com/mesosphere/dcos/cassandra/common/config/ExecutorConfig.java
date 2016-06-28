@@ -54,7 +54,6 @@ public class ExecutorConfig {
             List<String> arguments,
             double cpus,
             int memoryMb,
-            int diskMb,
             int heapMb,
             int apiPort,
             String javaHome,
@@ -70,7 +69,6 @@ public class ExecutorConfig {
                 arguments,
                 cpus,
                 memoryMb,
-                diskMb,
                 heapMb,
                 apiPort,
                 javaHome,
@@ -88,7 +86,6 @@ public class ExecutorConfig {
             @JsonProperty("arguments") List<String> arguments,
             @JsonProperty("cpus") double cpus,
             @JsonProperty("memory_mb") int memoryMb,
-            @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("heap_mb") int heapMb,
             @JsonProperty("api_port") int apiPort,
             @JsonProperty("java_home") String javaHome,
@@ -105,7 +102,6 @@ public class ExecutorConfig {
                 arguments,
                 cpus,
                 memoryMb,
-                diskMb,
                 heapMb,
                 apiPort,
                 javaHome,
@@ -127,8 +123,6 @@ public class ExecutorConfig {
     private final double cpus;
     @JsonProperty("memory_mb")
     private final int memoryMb;
-    @JsonProperty("disk_mb")
-    private final int diskMb;
     @JsonProperty("heap_mb")
     private final int heapMb;
     @JsonProperty("api_port")
@@ -152,7 +146,6 @@ public class ExecutorConfig {
             List<String> arguments,
             double cpus,
             int memoryMb,
-            int diskMb,
             int heapMb,
             int apiPort,
             String javaHome,
@@ -167,7 +160,6 @@ public class ExecutorConfig {
         this.arguments = arguments;
         this.cpus = cpus;
         this.memoryMb = memoryMb;
-        this.diskMb = diskMb;
         this.heapMb = heapMb;
         this.apiPort = apiPort;
         this.jreLocation = jreLocation;
@@ -198,10 +190,6 @@ public class ExecutorConfig {
 
     public double getCpus() {
         return cpus;
-    }
-
-    public int getDiskMb() {
-        return diskMb;
     }
 
     public URI getExecutorLocation() {
@@ -271,7 +259,6 @@ public class ExecutorConfig {
         ExecutorConfig that = (ExecutorConfig) o;
         return Double.compare(that.getCpus(), getCpus()) == 0 &&
                 getMemoryMb() == that.getMemoryMb() &&
-                getDiskMb() == that.getDiskMb() &&
                 getHeapMb() == that.getHeapMb() &&
                 getApiPort() == that.getApiPort() &&
                 Objects.equals(getCommand(), that.getCommand()) &&
@@ -288,7 +275,7 @@ public class ExecutorConfig {
     public int hashCode() {
         return Objects.hash(getCommand(), getArguments(), getCpus(),
                 getMemoryMb(),
-                getDiskMb(), getHeapMb(), getApiPort(),
+                getHeapMb(), getApiPort(),
                 getJreLocation(), getExecutorLocation(), getCassandraLocation(),
                 getJavaHome());
     }

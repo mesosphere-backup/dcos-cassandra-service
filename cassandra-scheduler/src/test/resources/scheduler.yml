@@ -5,7 +5,6 @@ executor:
   arguments : ${EXECUTOR_ARGS:-[]}
   cpus : ${EXECUTOR_CPUS:-0.1}
   memory_mb : ${EXECUTOR_MEMORY_MB:-768}
-  disk_mb : ${EXECUTOR_DISK_MB:-1024}
   heap_mb : ${EXECUTOR_HEAP_MB:-512}
   api_port : ${EXECUTOR_API_PORT:-9000}
   java_home : ${EXECUTOR_JAVA_HOME:-"./foo"}
