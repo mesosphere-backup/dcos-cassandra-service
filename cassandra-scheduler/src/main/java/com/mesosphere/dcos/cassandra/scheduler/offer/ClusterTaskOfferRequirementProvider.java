@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.offer;
 
 import com.google.inject.Inject;
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -94,7 +95,8 @@ public class ClusterTaskOfferRequirementProvider
 
     private OfferRequirement getExistingOfferRequirement(
             Protos.TaskInfo taskInfo) {
-        LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
+        LOGGER.info("Getting existing OfferRequirement for task: {}",
+                TextFormat.shortDebugString(taskInfo));
         final Identity identity = identityManager.get();
 
         ExecutorInfo execInfo = taskInfo.getExecutor();

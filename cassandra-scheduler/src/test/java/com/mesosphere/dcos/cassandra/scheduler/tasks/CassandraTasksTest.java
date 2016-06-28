@@ -155,7 +155,8 @@ public class CassandraTasksTest {
 
         validateDaemonTaskInfo(daemonTaskInfo);
 
-        Assert.assertEquals(CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME, clusterTemplateTaskInfo.getName());
+        Assert.assertEquals(CassandraTemplateTask.toTemplateTaskName(daemonTaskInfo.getName()),
+                clusterTemplateTaskInfo.getName());
         Assert.assertEquals(2, clusterTemplateTaskInfo.getResourcesCount());
         Assert.assertTrue(clusterTemplateTaskInfo.getTaskId().getValue().isEmpty());
 
