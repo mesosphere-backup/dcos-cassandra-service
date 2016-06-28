@@ -66,7 +66,10 @@ public class CassandraTaskExecutor {
             config.getHeapMb(),
             config.getApiPort(),
             config.getURIs(),
-            config.getJavaHome());
+            config.getJavaHome(),
+            config.getCassandraUlimitMemlock(),
+            config.getCassandraUlimitNofile(),
+            config.getCassandraUlimitNproc());
     }
 
     /**
@@ -112,7 +115,10 @@ public class CassandraTaskExecutor {
         int heapMb,
         int apiPort,
         Set<String> uris,
-        String javaHome) {
+        String javaHome,
+        String cassandraUlimitMemlock,
+        String cassandraUlimitNofile,
+        String cassandraUlimitNProc) {
 
         this.info = Protos.ExecutorInfo.newBuilder()
             .setFrameworkId(Protos.FrameworkID.newBuilder()
@@ -126,6 +132,9 @@ public class CassandraTaskExecutor {
                     .put("JAVA_HOME", javaHome)
                     .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
                     .put("EXECUTOR_API_PORT", Integer.toString(apiPort))
+                    .put("CASSANDRA_ULIMIT_MEMLOCK", cassandraUlimitMemlock)
+                    .put("CASSANDRA_ULIMIT_NOFILE", cassandraUlimitNofile)
+                    .put("CASSANDRA_ULIMIT_NPROC", cassandraUlimitNProc)
                     .build()))
             .addAllResources(
                 Arrays.asList(

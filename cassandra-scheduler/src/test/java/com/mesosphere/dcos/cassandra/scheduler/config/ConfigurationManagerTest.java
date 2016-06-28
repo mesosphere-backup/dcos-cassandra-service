@@ -206,10 +206,20 @@ public class ConfigurationManagerTest {
                 config.getCassandraConfig().mutable().setJmxPort(8000)
                         .setCpus(0.6).setMemoryMb(10000).build();
 
-        ExecutorConfig updatedExecutorConfig = new ExecutorConfig("/command/line",
-                new ArrayList<String>(), 1.2, 345, 678, 901, 17, "/java/home",
+        ExecutorConfig updatedExecutorConfig = new ExecutorConfig(
+                "/command/line",
+                new ArrayList<>(),
+                1.2,
+                345,
+                678,
+                901,
+                17,
+                "/java/home",
                 URI.create("/jre/location"), URI.create("/executor/location"),
-                URI.create("/cassandra/location"));
+                URI.create("/cassandra/location"),
+                "unlimited",
+                "100000",
+                "32768");
 
         int updatedServers = config.getServers() + 10;
 
@@ -528,9 +538,21 @@ public class ConfigurationManagerTest {
 
         manager.start();
 
-        ExecutorConfig new_config = new ExecutorConfig("/command/line", new ArrayList<String>(), 1.2, 345, 678, 901,
-                17, "/java/home", URI.create("/jre/location"), URI.create("/executor/location"),
-                URI.create("/cassandra/location"));
+        ExecutorConfig new_config = new ExecutorConfig(
+                "/command/line",
+                new ArrayList<>(),
+                1.2,
+                345,
+                678,
+                901,
+                17,
+                "/java/home",
+                URI.create("/jre/location"),
+                URI.create("/executor/location"),
+                URI.create("/cassandra/location"),
+                "unlimited",
+                "100000",
+                "32768");
 
         assertNotSame(new_config, manager.getExecutorConfig());
         manager.setExecutorConfig(new_config);
