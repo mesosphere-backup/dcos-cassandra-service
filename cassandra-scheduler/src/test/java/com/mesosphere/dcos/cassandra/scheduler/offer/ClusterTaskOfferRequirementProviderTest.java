@@ -185,7 +185,7 @@ public class ClusterTaskOfferRequirementProviderTest {
     @Test
     public void testGetNewOfferRequirement() throws Exception {
         OfferRequirement requirement = provider.getNewOfferRequirement(testTaskInfo);
-        Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();//TODO FAIL
+        Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();
         Assert.assertEquals(taskInfo.getName(), "test-daemon");
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));
         Assert.assertEquals(taskInfo.getSlaveId().getValue(), "");
@@ -248,7 +248,7 @@ public class ClusterTaskOfferRequirementProviderTest {
     @Test
     public void testGetUpdateOfferRequirement() throws Exception {
         OfferRequirement requirement = provider.getUpdateOfferRequirement(testTaskInfo);
-        Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();//TODO FAIL
+        Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();
         Assert.assertEquals(taskInfo.getName(), "test-daemon");
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));
         Assert.assertEquals("", taskInfo.getSlaveId().getValue());
@@ -277,7 +277,7 @@ public class ClusterTaskOfferRequirementProviderTest {
     @Test
     public void testGetReplacementOfferRequirement() throws Exception {
         OfferRequirement requirement = provider.getReplacementOfferRequirement(testTaskInfo);
-        Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();//TODO FAIL
+        Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();
         Assert.assertEquals(taskInfo.getName(), "test-daemon");
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));
         Assert.assertEquals("", taskInfo.getSlaveId().getValue());

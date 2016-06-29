@@ -118,7 +118,7 @@ public class CassandraTaskExecutor {
             .setFrameworkId(Protos.FrameworkID.newBuilder()
                 .setValue(frameworkId))
             .setName(name)
-            .setExecutorId(ExecutorUtils.toExecutorId(name))
+            .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
             .setCommand(createCommandInfo(command,
                 arguments,
                 uris,
