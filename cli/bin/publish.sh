@@ -10,3 +10,4 @@ export S3_URL="s3://downloads.mesosphere.io/cassandra/assets/${VERSION}/cli/${PL
 
 make clean binary
 aws s3 cp dist/dcos-cassandra "${S3_URL}"
+sha256sum dist/dcos-cassandra
