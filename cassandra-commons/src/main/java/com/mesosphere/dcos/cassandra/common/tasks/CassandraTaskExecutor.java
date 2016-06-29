@@ -94,7 +94,6 @@ public class CassandraTaskExecutor {
      * @param arguments   The arguments passed to the executor.
      * @param cpus        The cpu shares allocated to the executor.
      * @param memoryMb    The memory allocated to the executor in Mb.
-     * @param diskMb      The disk allocated to the executor in Mb.
      * @param heapMb      The heap allocated to the executor in Mb.
      * @param apiPort     The port the executor's API will listen on.
      * @param uris        The URI's for the executor's resources.
@@ -167,30 +166,12 @@ public class CassandraTaskExecutor {
     }
 
     /**
-     * Gets the executor's arguments.
-     *
-     * @return The arguments passed to the executor.
-     */
-    public List<String> getArguments() {
-        return info.getCommand().getArgumentsList();
-    }
-
-    /**
      * Gets the command.
      *
      * @return The command used to launch the executor.
      */
     public String getCommand() {
         return info.getCommand().getValue();
-    }
-
-    /**
-     * Gets the disk allocation.
-     *
-     * @return The disk allocated to the executor in Mb.
-     */
-    public int getDiskMb() {
-        return getResourceDiskMb(info.getResourcesList());
     }
 
     public String getRole(){
@@ -207,15 +188,6 @@ public class CassandraTaskExecutor {
      */
     public double getCpus() {
         return getResourceCpus(info.getResourcesList());
-    }
-
-    /**
-     * Gets the framework id.
-     *
-     * @return The unique id of the executors framework.
-     */
-    public String getFrameworkId() {
-        return info.getFrameworkId().getValue();
     }
 
     /**
