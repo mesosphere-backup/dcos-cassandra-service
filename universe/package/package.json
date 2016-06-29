@@ -1,12 +1,12 @@
 {
-  "packagingVersion": "2.0",
-  "name": "cassandra",
+  "packagingVersion": "3.0",
+  "name": "dse",
   "version": "stub-universe",
   "maintainer": "support@mesosphere.io",
-  "description": "Apache Cassandra running on DCOS",
+  "description": "DSE running on DCOS",
   "selected": true,
   "framework": true,
   "tags": ["data", "database", "nosql"],
-  "postInstallNotes": "DCOS Cassandra has been successfully installed!\n\n\tDocumentation: https://docs.mesosphere.com/usage/services/cassandra/\n\tIssues: https://docs.mesosphere.com/support/",
-  "postUninstallNotes": "DCOS Cassandra service has been uninstalled. Please run the framework_cleaner to remove any persistent state if required."
+  "postInstallNotes": "DCOS DSE has been successfully installed!\n\n\tDocumentation: https://docs.mesosphere.com/usage/services/cassandra/\n\tIssues: https://docs.mesosphere.com/support/",
+  "postUninstallNotes": "DCOS DSE service has been uninstalled. Please run the framework_cleaner to remove any persistent state if required."
 }
