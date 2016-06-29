@@ -88,7 +88,9 @@ public class PersistentOfferRequirementProvider {
         volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.EXISTING);
         volumeRequirement.setVolumeType(configurationManager.getCassandraConfig().getDiskType());
 
-        ExecutorInfo execInfo = taskInfo.getExecutor();
+        ExecutorInfo execInfo = ExecutorInfo.newBuilder(taskInfo.getExecutor())
+                .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
+                .build();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
