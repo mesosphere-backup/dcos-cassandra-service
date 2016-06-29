@@ -279,7 +279,6 @@ public class CassandraDaemonProcess {
             .directory(new File(System.getProperty("user.dir")))
             .redirectOutput(new File("cassandra-stdout.log"))
             .redirectError(new File("cassandra-stderr.log"));
-
         builder.environment().putAll(task.getConfig().getHeap().toEnv());
         builder.environment().put(
             "JMX_PORT",
