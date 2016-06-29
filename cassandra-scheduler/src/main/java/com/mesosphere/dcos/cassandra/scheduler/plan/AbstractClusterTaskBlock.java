@@ -19,12 +19,12 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     private static final Logger LOGGER = LoggerFactory.getLogger(
             AbstractClusterTaskBlock.class);
 
-    protected final UUID id = UUID.randomUUID();
-    protected final String daemon;
-    protected volatile Status status;
-    protected final C context;
+    private final UUID id = UUID.randomUUID();
+    private final String daemon;
+    private volatile Status status;
+    private final C context;
     protected final CassandraTasks cassandraTasks;
-    protected final CassandraOfferRequirementProvider provider;
+    private final CassandraOfferRequirementProvider provider;
 
     protected abstract Optional<CassandraTask> getOrCreateTask(C context)
             throws PersistenceException;
@@ -142,19 +142,16 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     @Override
     public String getMessage() {
-        return "Block " + getName() + " status = " + getStatus();
+        return "Block " + getName() + " status = " + status;
     }
 
     @Override
-    public Status getStatus() {
-        return status;
+    public UUID getId() {
+        return id;
     }
 
-    @Override
-    public void setStatus(Status newStatus) {
-        LOGGER.info("{}: changing status from: {} to: {}", getName(), status,
-                newStatus);
-        status = newStatus;
+    public String getDaemon() {
+        return daemon;
     }
 
     @Override
@@ -168,16 +165,36 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     }
 
     @Override
-    public UUID getId() {
-        return id;
-    }
-
-    @Override
     public boolean isComplete() {
         return Status.Complete == this.status;
     }
 
-    public String getDaemon() {
-        return daemon;
+    @Override
+    public void updateOfferStatus(boolean accepted) {
+        //TODO(nick): Any additional actions to perform when OfferRequirement returned by start()
+        //            was accepted or not accepted?
+        if (accepted) {
+            setStatus(Status.InProgress);
+        } else {
+            setStatus(Status.Pending);
+        }
+    }
+
+    @Override
+    public void restart() {
+        //TODO(nick): Any additional actions to perform when restarting work?
+        setStatus(Status.Pending);
+    }
+
+    @Override
+    public void forceComplete() {
+        //TODO(nick): Any additional actions to perform when forcing complete?
+        setStatus(Status.Complete);
+    }
+
+    protected void setStatus(Status newStatus) {
+        LOGGER.info("{}: changing status from: {} to: {}", getName(), status,
+                newStatus);
+        status = newStatus;
     }
 }

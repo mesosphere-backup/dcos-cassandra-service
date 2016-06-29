@@ -1,7 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -25,6 +24,7 @@ public class CassandraRepairScheduler {
     private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraTasks cassandraTasks;
     private final Random random = new Random();
+    private final OfferEvaluator offerEvaluator = new OfferEvaluator();
 
     public CassandraRepairScheduler(
             PersistentOfferRequirementProvider requirementProvider,
@@ -55,10 +55,8 @@ public class CassandraRepairScheduler {
                             cassandraTasks.createCassandraContainer(terminated));
                 }
 
-                OfferEvaluator offerEvaluator = new OfferEvaluator(
-                        offerReq);
                 List<OfferRecommendation> recommendations =
-                        offerEvaluator.evaluate(offers);
+                        offerEvaluator.evaluate(offerReq, offers);
                 LOGGER.debug(
                         "Got recommendations: {} for terminated task: {}",
                         recommendations,

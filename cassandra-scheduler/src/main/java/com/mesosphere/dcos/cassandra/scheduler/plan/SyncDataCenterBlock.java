@@ -45,28 +45,18 @@ public class SyncDataCenterBlock implements Block, Runnable {
     }
 
     @Override
-    public synchronized Status getStatus() {
-        return status;
-    }
-
-    @Override
-    public synchronized void setStatus(Status newStatus) {
-        status = newStatus;
-    }
-
-    @Override
     public boolean isPending() {
-        return getStatus() == Status.Pending;
+        return status == Status.Pending;
     }
 
     @Override
     public boolean isInProgress() {
-        return getStatus() == Status.InProgress;
+        return status == Status.InProgress;
     }
 
     @Override
     public boolean isComplete() {
-        return getStatus() == Status.Complete;
+        return status == Status.Complete;
     }
 
     @Override
@@ -89,6 +79,23 @@ public class SyncDataCenterBlock implements Block, Runnable {
     }
 
     @Override
+    public void updateOfferStatus(boolean accepted) {
+        // Not expected to be called: start() always returns a null OfferRequirement.
+    }
+
+    @Override
+    public void restart() {
+        //TODO(nick): Any additional actions to perform when restarting work?
+        setStatus(Status.Pending);
+    }
+
+    @Override
+    public void forceComplete() {
+        //TODO(nick): Any additional actions to perform when forcing complete?
+        setStatus(Status.Complete);
+    }
+
+    @Override
     public UUID getId() {
         return id;
     }
@@ -107,9 +114,13 @@ public class SyncDataCenterBlock implements Block, Runnable {
     public void run() {
         while (!isComplete()) {
             if (seeds.sync(url)) {
-
                 setStatus(Status.Complete);
             }
         }
+    }
+
+    private void setStatus(Status newStatus) {
+        LOGGER.info("Block {} setting status to {}", getName(), newStatus);
+        status = newStatus;
     }
 }
