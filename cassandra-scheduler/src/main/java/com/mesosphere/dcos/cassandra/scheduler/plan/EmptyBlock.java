@@ -4,7 +4,6 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
-import org.apache.mesos.scheduler.plan.Status;
 
 import java.util.UUID;
 
@@ -26,16 +25,6 @@ public class EmptyBlock implements Block {
     }
 
     @Override
-    public Status getStatus() {
-        return Status.Complete;
-    }
-
-    @Override
-    public void setStatus(Status newStatus) {
-
-    }
-
-    @Override
     public boolean isPending() {
         return false;
     }
@@ -46,13 +35,18 @@ public class EmptyBlock implements Block {
     }
 
     @Override
+    public boolean isComplete() {
+        return true;
+    }
+
+    @Override
     public OfferRequirement start() {
         return null;
     }
 
     @Override
     public void update(Protos.TaskStatus status) {
-
+        // no-op
     }
 
     @Override
@@ -71,7 +65,17 @@ public class EmptyBlock implements Block {
     }
 
     @Override
-    public boolean isComplete() {
-        return true;
+    public void updateOfferStatus(boolean accepted) {
+        // no-op
+    }
+
+    @Override
+    public void restart() {
+        // no-op
+    }
+
+    @Override
+    public void forceComplete() {
+        // no-op
     }
 }

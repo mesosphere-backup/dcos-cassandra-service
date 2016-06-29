@@ -31,7 +31,7 @@ public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreConte
     protected Optional<CassandraTask> getOrCreateTask(RestoreContext context)
             throws PersistenceException {
         CassandraDaemonTask daemonTask =
-                cassandraTasks.getDaemons().get(daemon);
+                cassandraTasks.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
             setStatus(Status.Complete);
@@ -52,6 +52,6 @@ public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreConte
 
     @Override
     public String getName() {
-        return DownloadSnapshotTask.nameForDaemon(daemon);
+        return DownloadSnapshotTask.nameForDaemon(getDaemon());
     }
 }
