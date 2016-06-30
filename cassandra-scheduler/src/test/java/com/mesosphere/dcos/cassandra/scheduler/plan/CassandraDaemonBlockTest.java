@@ -9,6 +9,7 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementP
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,7 +46,7 @@ public class CassandraDaemonBlockTest {
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
 
         Assert.assertEquals(EXPECTED_NAME, block.getName());
-        Assert.assertEquals(Status.Pending, block.getStatus());
+        Assert.assertEquals(Status.Pending, Block.getStatus(block));
     }
 
     @Test

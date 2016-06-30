@@ -22,7 +22,7 @@ import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import java.util.*;
 
 import org.apache.mesos.Protos;
-
+import org.apache.mesos.executor.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,11 +39,6 @@ public class CassandraTaskExecutor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraTaskExecutor.class);
-
-    public static Protos.ExecutorID createId(final String name) {
-        return Protos.ExecutorID.newBuilder()
-            .setValue(name + "_" + UUID.randomUUID()).build();
-    }
 
     /**
      * Creates a new CassandraTaskExecutor.
@@ -123,7 +118,7 @@ public class CassandraTaskExecutor {
             .setFrameworkId(Protos.FrameworkID.newBuilder()
                 .setValue(frameworkId))
             .setName(name)
-            .setExecutorId(createId(name))
+            .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
             .setCommand(createCommandInfo(command,
                 arguments,
                 uris,
@@ -267,7 +262,7 @@ public class CassandraTaskExecutor {
     public CassandraTaskExecutor withNewId() {
         return parse(
             Protos.ExecutorInfo.newBuilder(getExecutorInfo())
-                .setExecutorId(createId(getName())).build());
+                .setExecutorId(ExecutorUtils.toExecutorId(getName())).build());
     }
 
     public boolean matches(final ExecutorConfig config) {
@@ -282,7 +277,7 @@ public class CassandraTaskExecutor {
     public CassandraTaskExecutor update(final ExecutorConfig config) {
         return new CassandraTaskExecutor(
             Protos.ExecutorInfo.newBuilder(info)
-                .setExecutorId(createId(info.getName()))
+                .setExecutorId(ExecutorUtils.toExecutorId(info.getName()))
             .addAllResources(updateResources(config.getCpus(), config
                     .getMemoryMb(),
                 info.getResourcesList())).build());
