@@ -91,6 +91,7 @@ public class PersistentOfferRequirementProvider {
         ExecutorInfo execInfo = ExecutorInfo.newBuilder(taskInfo.getExecutor())
                 .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
                 .build();
+        LOGGER.info("ExecutorInfo: ", execInfo);
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
