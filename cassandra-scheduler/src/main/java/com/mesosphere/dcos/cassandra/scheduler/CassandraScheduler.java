@@ -29,6 +29,7 @@ import org.apache.mesos.offer.ResourceCleaner;
 import org.apache.mesos.offer.ResourceCleanerScheduler;
 
 import org.apache.mesos.reconciliation.Reconciler;
+import org.apache.mesos.scheduler.SchedulerDriverFactory;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.DefaultStageScheduler;
 import org.apache.mesos.scheduler.plan.StageManager;
@@ -46,7 +47,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final static Logger LOGGER = LoggerFactory.getLogger(
             CassandraScheduler.class);
 
-    private MesosSchedulerDriver driver;
+    private SchedulerDriver driver;
     private final IdentityManager identityManager;
     private final ConfigurationManager configurationManager;
     private final MesosConfig mesosConfig;
@@ -309,22 +310,13 @@ public class CassandraScheduler implements Scheduler, Managed {
     private void registerFramework() throws IOException {
         Identity identity = identityManager.get();
         Optional<ByteString> secretBytes = identity.readSecretBytes();
+        SchedulerDriverFactory factory = new SchedulerDriverFactory();
         if (secretBytes.isPresent()) {
             // Authenticated if a non empty secret is provided.
-            Protos.Credential credential = Protos.Credential.newBuilder()
-                    .setPrincipal(identity.getPrincipal())
-                    .setSecretBytes(secretBytes.get())
-                    .build();
-            this.driver = new MesosSchedulerDriver(
-                    this,
-                    identity.asInfo(),
-                    mesosConfig.toZooKeeperUrl(),
-                    credential);
+            this.driver = factory.create(this, identity.asInfo(), mesosConfig.toZooKeeperUrl(),
+                    secretBytes.get().toByteArray());
         } else {
-            this.driver = new MesosSchedulerDriver(this,
-                    identity.asInfo(),
-                    mesosConfig.toZooKeeperUrl());
-
+            this.driver = factory.create(this, identity.asInfo(), mesosConfig.toZooKeeperUrl());
         }
         LOGGER.info("Starting driver...");
         final Protos.Status startStatus = this.driver.start();
