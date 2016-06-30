@@ -59,8 +59,6 @@ public class CassandraExecutor implements Executor {
     private String nodeId = null;
     private final ScheduledExecutorService executor;
     private final ExecutorService clusterJobExecutorService;
-    private final CustomExecutor customExecutor;
-    private final ExecutorTaskFactory taskFactory;
 
     private String getNodeId(String executorName) {
         int end = executorName.indexOf("_");
@@ -200,8 +198,6 @@ public class CassandraExecutor implements Executor {
                              final ExecutorService clusterJobExecutorService) {
         this.executor = executor;
         this.clusterJobExecutorService = clusterJobExecutorService;
-        this.taskFactory = new CassandraTaskFactory();
-        this.customExecutor = new CustomExecutor(clusterJobExecutorService, taskFactory);
     }
 
 
@@ -211,14 +207,11 @@ public class CassandraExecutor implements Executor {
                            Protos.FrameworkInfo frameworkInfo,
                            Protos.SlaveInfo slaveInfo) {
         this.nodeId = getNodeId(executorInfo.getName());
-
-        customExecutor.registered(driver, executorInfo, frameworkInfo, slaveInfo);
     }
 
     @Override
     public void reregistered(ExecutorDriver driver,
                              Protos.SlaveInfo slaveInfo) {
-        customExecutor.reregistered(driver, slaveInfo);
     }
 
     @Override
