@@ -13,7 +13,11 @@ import java.util.Optional;
  * Created by gabriel on 6/8/16.
  */
 public class CassandraTemplateTask extends CassandraTask  {
-    public static final String CLUSTER_TASK_TEMPLATE_NAME = "cluster_task_template";
+    private static final String CLUSTER_TASK_TEMPLATE_SUFFIX = "-task-template";
+
+    public static String toTemplateTaskName(String daemonTaskName) {
+        return daemonTaskName + CLUSTER_TASK_TEMPLATE_SUFFIX;
+    }
 
     protected static Protos.SlaveID EMPTY_SLAVE_ID = Protos.SlaveID
             .newBuilder().setValue("").build();
@@ -25,14 +29,14 @@ public class CassandraTemplateTask extends CassandraTask  {
         super(taskInfo);
     }
 
-    public static CassandraTemplateTask create(
-        String role,
-        String principal,
+    public static CassandraTemplateTask create(CassandraDaemonTask daemonTask,
         ClusterTaskConfig clusterTaskConfig) {
+        final String role = daemonTask.getExecutor().getRole();
+        final String principal = daemonTask.getExecutor().getPrincipal();
 
         Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder()
                 .setTaskId(EMPTY_TASK_ID)
-                .setName(CLUSTER_TASK_TEMPLATE_NAME)
+                .setName(toTemplateTaskName(daemonTask.getName()))
                 .setSlaveId(EMPTY_SLAVE_ID)
                 .setData(CassandraData.createTemplateData().getBytes())
                 .addAllResources(Arrays.asList(
@@ -95,13 +99,6 @@ public class CassandraTemplateTask extends CassandraTask  {
         String principal,
         ClusterTaskConfig clusterTaskConfig) {
         return getScalar(role, principal, "mem", (double) clusterTaskConfig.getMemoryMb());
-    }
-
-    private static Protos.Resource getDiskResource(
-        String role,
-        String principal,
-        ClusterTaskConfig clusterTaskConfig) {
-        return getScalar(role, principal, "disk", (double) clusterTaskConfig.getDiskMb());
     }
 
     private static Protos.Resource getScalar(String role, String principal, String name, Double value) {

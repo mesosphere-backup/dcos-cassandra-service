@@ -72,7 +72,7 @@ public class CassandraSchedulerTest {
 
         Assert.assertEquals("Reconciliation", stageManager.getCurrentPhase().getName());
         Assert.assertEquals("Reconciliation", stageManager.getCurrentBlock().getName());
-        Assert.assertEquals(Status.InProgress, stageManager.getCurrentBlock().getStatus());
+        Assert.assertEquals(Status.InProgress, Block.getStatus(stageManager.getCurrentBlock()));
     }
 
     @Test
@@ -102,7 +102,7 @@ public class CassandraSchedulerTest {
 
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
         Assert.assertEquals("node-0", stageManager.getCurrentBlock().getName());
-        Assert.assertEquals(Status.Pending, stageManager.getCurrentBlock().getStatus());
+        Assert.assertEquals(Status.Pending, Block.getStatus(stageManager.getCurrentBlock()));
     }
 
     @Test
@@ -138,7 +138,7 @@ public class CassandraSchedulerTest {
         // Verify node-0 block is in progress
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
         Assert.assertEquals("node-0", stageManager.getCurrentBlock().getName());
-        Assert.assertEquals(Status.InProgress, stageManager.getCurrentBlock().getStatus());
+        Assert.assertEquals(Status.InProgress, Block.getStatus(stageManager.getCurrentBlock()));
 
         final CassandraTasks cassandraTasks = injector.getInstance(CassandraTasks.class);
         Map<String, CassandraDaemonTask> daemons = cassandraTasks.getDaemons();
@@ -150,7 +150,7 @@ public class CassandraSchedulerTest {
 
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
         Assert.assertEquals("node-1", stageManager.getCurrentBlock().getName());
-        Assert.assertEquals(Status.Pending, stageManager.getCurrentBlock().getStatus());
+        Assert.assertEquals(Status.Pending, Block.getStatus(stageManager.getCurrentBlock()));
 
         scheduler.resourceOffers(mockSchedulerDriver,
                 Arrays.asList(TestUtils.generateOffer(
@@ -161,7 +161,7 @@ public class CassandraSchedulerTest {
 
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
         Assert.assertEquals("node-1", stageManager.getCurrentBlock().getName());
-        Assert.assertEquals(Status.InProgress, stageManager.getCurrentBlock().getStatus());
+        Assert.assertEquals(Status.InProgress, Block.getStatus(stageManager.getCurrentBlock()));
 
         daemons = cassandraTasks.getDaemons();
         final CassandraDaemonTask task1 = daemons.get("node-1");
@@ -172,7 +172,7 @@ public class CassandraSchedulerTest {
 
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
         Assert.assertEquals("node-2", stageManager.getCurrentBlock().getName());
-        Assert.assertEquals(Status.Pending, stageManager.getCurrentBlock().getStatus());
+        Assert.assertEquals(Status.Pending, Block.getStatus(stageManager.getCurrentBlock()));
 
         scheduler.resourceOffers(mockSchedulerDriver,
                 Arrays.asList(TestUtils.generateOffer(
@@ -183,7 +183,7 @@ public class CassandraSchedulerTest {
 
         Assert.assertEquals("Deploy", stageManager.getCurrentPhase().getName());
         Assert.assertEquals("node-2", stageManager.getCurrentBlock().getName());
-        Assert.assertEquals(Status.InProgress, stageManager.getCurrentBlock().getStatus());
+        Assert.assertEquals(Status.InProgress, Block.getStatus(stageManager.getCurrentBlock()));
 
         daemons = cassandraTasks.getDaemons();
         final CassandraDaemonTask task2 = daemons.get("node-2");

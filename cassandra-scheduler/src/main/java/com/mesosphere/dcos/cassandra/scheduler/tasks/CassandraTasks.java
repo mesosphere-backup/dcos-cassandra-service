@@ -4,6 +4,7 @@ package com.mesosphere.dcos.cassandra.scheduler.tasks;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
@@ -177,15 +178,16 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public CassandraContainer createCassandraContainer(CassandraDaemonTask daemonTask) throws PersistenceException {
         CassandraTemplateTask templateTask = CassandraTemplateTask.create(
-                daemonTask.getExecutor().getRole(),
-                daemonTask.getExecutor().getPrincipal(),
-                clusterTaskConfig);
-
+                daemonTask, clusterTaskConfig);
         return CassandraContainer.create(daemonTask, templateTask);
     }
 
     public CassandraContainer moveCassandraContainer(CassandraDaemonTask name) throws PersistenceException {
         return createCassandraContainer(moveDaemon(name));
+    }
+
+    public CassandraContainer getOrCreateContainer(String name) throws PersistenceException {
+        return createCassandraContainer(getOrCreateDaemon(name));
     }
 
     public CassandraDaemonTask createDaemon(String name) throws
@@ -209,9 +211,17 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     private Optional<Protos.TaskInfo> getTemplate(CassandraDaemonTask daemon) {
-        return stateStore.fetchTasks(daemon.getExecutor().getName()).stream()
-                .filter(x -> x.getName().equals(CassandraTemplateTask.CLUSTER_TASK_TEMPLATE_NAME))
-                .findFirst();
+            String templateTaskName = CassandraTemplateTask.toTemplateTaskName(daemon.getName());
+        try {
+            Optional<Protos.TaskInfo> info = Optional.of(stateStore.fetchTask(templateTaskName));
+            LOGGER.info("Fetched template task for daemon '{}': {}",
+                    daemon.getName(), TextFormat.shortDebugString(info.get()));
+            return info;
+        } catch (Exception e) {
+            LOGGER.warn(String.format(
+                    "Failed to retrieve template task '%s'", templateTaskName), e);
+            return Optional.empty();
+        }
     }
 
 
@@ -291,18 +301,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         } else {
             throw new PersistenceException("Failed to retrieve ClusterTask Template.");
         }
-    }
-
-    public CassandraContainer getOrCreateContainer(String name) throws
-            PersistenceException {
-
-        CassandraDaemonTask daemonTask = getOrCreateDaemon(name);
-        CassandraTemplateTask templateTask = CassandraTemplateTask.create(
-                daemonTask.getExecutor().getRole(),
-                daemonTask.getExecutor().getPrincipal(),
-                clusterTaskConfig);
-
-        return CassandraContainer.create(daemonTask, templateTask);
     }
 
     public CassandraDaemonTask getOrCreateDaemon(String name) throws
@@ -439,7 +437,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     public void update(Protos.TaskInfo taskInfo, Offer offer) throws Exception {
         try {
             final CassandraTask task = CassandraTask.parse(taskInfo);
-            stateStore.storeTasks(Arrays.asList(taskInfo), taskInfo.getExecutor().getName());
+            stateStore.storeTasks(Arrays.asList(taskInfo));
 
             synchronized (persistent) {
                 update(task.update(offer));
@@ -468,10 +466,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
                 update(updated);
 
-                stateStore.storeStatus(
-                        status,
-                        updated.getTaskInfo().getName(),
-                        updated.getExecutor().getName());
+                stateStore.storeStatus(status);
 
                 LOGGER.info("Updated task {}", updated);
             } else {

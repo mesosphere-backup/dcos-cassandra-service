@@ -1,4 +1,4 @@
-package com.mesosphere.dcos.cassandra.scheduler.tasks;
+package com.mesosphere.dcos.cassandra.scheduler.offer;
 
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -7,17 +7,12 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTemplateTask;
-import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -30,16 +25,11 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.protobuf.TaskInfoBuilder;
 import org.apache.mesos.protobuf.ResourceBuilder;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.scheduler.plan.Status;
 import org.junit.*;
-import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 
 public class ClusterTaskOfferRequirementProviderTest {
 
@@ -52,7 +42,6 @@ public class ClusterTaskOfferRequirementProviderTest {
     private static CuratorFrameworkConfig curatorConfig;
     private static ClusterTaskConfig clusterTaskConfig;
     private static String path;
-    private static String testDaemonName = "test-daemon-name";
     private static CassandraTasks cassandraTasks;
     private static ClusterTaskOfferRequirementProvider provider;
     private static Protos.TaskInfo testTaskInfo;
