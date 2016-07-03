@@ -25,8 +25,8 @@ cassandra:
   disk_type: ${CASSANDRA_DISK_TYPE:-ROOT}
   version: ${CASSANDRA_VERSION:-2.2.5}
   heap:
-    size_mb : ${CASSANDRA_HEAP_MB:-2048}
-    new_mb : ${CASSANDRA_HEAP_MB:-100}
+    size_mb : ${CASSANDRA_HEAP_SIZE_MB:-2048}
+    new_mb : ${CASSANDRA_HEAP_NEW_MB:-100}
   location:
     rack : ${CASSANDRA_LOCATION_RACK:-"rac1"}
     data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
