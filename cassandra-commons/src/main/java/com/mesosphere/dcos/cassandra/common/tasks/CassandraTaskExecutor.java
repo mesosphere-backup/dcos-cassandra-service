@@ -111,7 +111,13 @@ public class CassandraTaskExecutor {
             .setFrameworkId(Protos.FrameworkID.newBuilder()
                 .setValue(frameworkId))
             .setName(name)
-            .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
+            .setExecutorId(createId(name))
+                .setContainer(Protos.ContainerInfo.newBuilder()
+                .setType(Protos.ContainerInfo.Type.MESOS)
+                .setMesos(Protos.ContainerInfo.MesosInfo.newBuilder()
+                .setImage(Protos.Image.newBuilder().setType(Protos.Image.Type.DOCKER)
+                .setDocker(Protos.Image.Docker.newBuilder()
+                .setName("centos:7")))))
             .setCommand(createCommandInfo(command,
                 arguments,
                 uris,
