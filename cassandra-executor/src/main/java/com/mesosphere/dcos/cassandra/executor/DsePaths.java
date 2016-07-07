@@ -82,7 +82,7 @@ public class DsePaths {
      * @return The Cassandra run command.
      */
     public Path dseRun() {
-        return bin().resolve("dse-dcos");
+        return bin().resolve("dse");
     }
 
     /**
