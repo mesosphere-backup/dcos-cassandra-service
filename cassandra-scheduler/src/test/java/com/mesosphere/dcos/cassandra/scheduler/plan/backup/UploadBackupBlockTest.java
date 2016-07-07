@@ -46,7 +46,7 @@ public class UploadBackupBlockTest {
                 context);
         Assert.assertEquals(UPLOAD_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertEquals(Status.Pending, block.getStatus());
+        Assert.assertTrue(block.isPending());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class UploadBackupBlockTest {
                 context);
         Assert.assertEquals(UPLOAD_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertEquals(Status.Complete, block.getStatus());
+        Assert.assertTrue(block.isComplete());
     }
 
     @Test
@@ -90,7 +90,7 @@ public class UploadBackupBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNull(block.start());
-        Assert.assertEquals(Status.Complete, block.getStatus());
+        Assert.assertTrue(block.isComplete());
     }
 
     @Test
@@ -117,6 +117,6 @@ public class UploadBackupBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNotNull(block.start());
-        Assert.assertEquals(Status.InProgress, block.getStatus());
+        Assert.assertTrue(block.isInProgress());
     }
 }

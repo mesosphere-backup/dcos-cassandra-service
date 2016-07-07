@@ -22,7 +22,7 @@ import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import java.util.*;
 
 import org.apache.mesos.Protos;
-
+import org.apache.mesos.executor.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,11 +39,6 @@ public class CassandraTaskExecutor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraTaskExecutor.class);
-
-    public static Protos.ExecutorID createId(final String name) {
-        return Protos.ExecutorID.newBuilder()
-            .setValue(name + "_" + UUID.randomUUID()).build();
-    }
 
     /**
      * Creates a new CassandraTaskExecutor.
@@ -67,11 +62,13 @@ public class CassandraTaskExecutor {
             config.getArguments(),
             config.getCpus(),
             config.getMemoryMb(),
-            config.getDiskMb(),
             config.getHeapMb(),
             config.getApiPort(),
             config.getURIs(),
-            config.getJavaHome());
+            config.getJavaHome(),
+            config.getCassandraUlimitMemlock(),
+            config.getCassandraUlimitNofile(),
+            config.getCassandraUlimitNproc());
     }
 
     /**
@@ -97,7 +94,6 @@ public class CassandraTaskExecutor {
      * @param arguments   The arguments passed to the executor.
      * @param cpus        The cpu shares allocated to the executor.
      * @param memoryMb    The memory allocated to the executor in Mb.
-     * @param diskMb      The disk allocated to the executor in Mb.
      * @param heapMb      The heap allocated to the executor in Mb.
      * @param apiPort     The port the executor's API will listen on.
      * @param uris        The URI's for the executor's resources.
@@ -113,17 +109,19 @@ public class CassandraTaskExecutor {
         List<String> arguments,
         double cpus,
         int memoryMb,
-        int diskMb,
         int heapMb,
         int apiPort,
         Set<String> uris,
-        String javaHome) {
+        String javaHome,
+        String cassandraUlimitMemlock,
+        String cassandraUlimitNofile,
+        String cassandraUlimitNProc) {
 
         this.info = Protos.ExecutorInfo.newBuilder()
             .setFrameworkId(Protos.FrameworkID.newBuilder()
                 .setValue(frameworkId))
             .setName(name)
-            .setExecutorId(createId(name))
+            .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
             .setCommand(createCommandInfo(command,
                 arguments,
                 uris,
@@ -131,6 +129,9 @@ public class CassandraTaskExecutor {
                     .put("JAVA_HOME", javaHome)
                     .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
                     .put("EXECUTOR_API_PORT", Integer.toString(apiPort))
+                    .put("CASSANDRA_ULIMIT_MEMLOCK", cassandraUlimitMemlock)
+                    .put("CASSANDRA_ULIMIT_NOFILE", cassandraUlimitNofile)
+                    .put("CASSANDRA_ULIMIT_NPROC", cassandraUlimitNProc)
                     .build()))
             .addAllResources(
                 Arrays.asList(
@@ -165,30 +166,12 @@ public class CassandraTaskExecutor {
     }
 
     /**
-     * Gets the executor's arguments.
-     *
-     * @return The arguments passed to the executor.
-     */
-    public List<String> getArguments() {
-        return info.getCommand().getArgumentsList();
-    }
-
-    /**
      * Gets the command.
      *
      * @return The command used to launch the executor.
      */
     public String getCommand() {
         return info.getCommand().getValue();
-    }
-
-    /**
-     * Gets the disk allocation.
-     *
-     * @return The disk allocated to the executor in Mb.
-     */
-    public int getDiskMb() {
-        return getResourceDiskMb(info.getResourcesList());
     }
 
     public String getRole(){
@@ -205,15 +188,6 @@ public class CassandraTaskExecutor {
      */
     public double getCpus() {
         return getResourceCpus(info.getResourcesList());
-    }
-
-    /**
-     * Gets the framework id.
-     *
-     * @return The unique id of the executors framework.
-     */
-    public String getFrameworkId() {
-        return info.getFrameworkId().getValue();
     }
 
     /**
@@ -267,7 +241,7 @@ public class CassandraTaskExecutor {
     public CassandraTaskExecutor withNewId() {
         return parse(
             Protos.ExecutorInfo.newBuilder(getExecutorInfo())
-                .setExecutorId(createId(getName())).build());
+                .setExecutorId(ExecutorUtils.toExecutorId(getName())).build());
     }
 
     public boolean matches(final ExecutorConfig config) {
@@ -282,7 +256,7 @@ public class CassandraTaskExecutor {
     public CassandraTaskExecutor update(final ExecutorConfig config) {
         return new CassandraTaskExecutor(
             Protos.ExecutorInfo.newBuilder(info)
-                .setExecutorId(createId(info.getName()))
+                .setExecutorId(ExecutorUtils.toExecutorId(info.getName()))
             .addAllResources(updateResources(config.getCpus(), config
                     .getMemoryMb(),
                 info.getResourcesList())).build());

@@ -10,6 +10,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,7 +46,7 @@ public class BackupSnapshotBlockTest {
                 backupContext);
         Assert.assertEquals("snapshot-node-0", backupSnapshotBlock.getName());
         Assert.assertEquals("node-0", backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.Pending, backupSnapshotBlock.getStatus());
+        Assert.assertEquals(Status.Pending, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -62,7 +63,7 @@ public class BackupSnapshotBlockTest {
                 backupContext);
         Assert.assertEquals("snapshot-node-0", backupSnapshotBlock.getName());
         Assert.assertEquals("node-0", backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.Complete, backupSnapshotBlock.getStatus());
+        Assert.assertEquals(Status.Complete, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -89,7 +90,7 @@ public class BackupSnapshotBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNull(backupSnapshotBlock.start());
-        Assert.assertEquals(Status.Complete, backupSnapshotBlock.getStatus());
+        Assert.assertEquals(Status.Complete, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -116,7 +117,7 @@ public class BackupSnapshotBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNotNull(backupSnapshotBlock.start());
-        Assert.assertEquals(Status.InProgress, backupSnapshotBlock.getStatus());
+        Assert.assertEquals(Status.InProgress, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test

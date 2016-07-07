@@ -46,7 +46,7 @@ public class RestoreSnapshotBlockTest {
                 context);
         Assert.assertEquals(RESTORE_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertEquals(Status.Pending, block.getStatus());
+        Assert.assertEquals(true, block.isPending());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class RestoreSnapshotBlockTest {
                 context);
         Assert.assertEquals(RESTORE_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertEquals(Status.Complete, block.getStatus());
+        Assert.assertEquals(true, block.isComplete());
     }
 
     @Test
@@ -90,7 +90,7 @@ public class RestoreSnapshotBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNull(block.start());
-        Assert.assertEquals(Status.Complete, block.getStatus());
+        Assert.assertEquals(true, block.isComplete());
     }
 
     @Test
@@ -117,6 +117,6 @@ public class RestoreSnapshotBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNotNull(block.start());
-        Assert.assertEquals(Status.InProgress, block.getStatus());
+        Assert.assertEquals(true, block.isInProgress());
     }
 }

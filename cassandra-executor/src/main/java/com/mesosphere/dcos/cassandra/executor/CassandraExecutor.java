@@ -34,6 +34,8 @@ import com.mesosphere.dcos.cassandra.executor.tasks.UploadSnapshot;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.executor.CustomExecutor;
+import org.apache.mesos.executor.ExecutorTaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

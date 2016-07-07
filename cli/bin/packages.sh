@@ -15,7 +15,23 @@
 # limitations under the License.
 
 echo "Building wheel..."
-source env/bin/activate
+BASEDIR=`dirname $0`/..
+
+if [ ! -d "$BASEDIR/env" ]; then
+    virtualenv -q $BASEDIR/env --prompt='(dcos-cassandra-cli) '
+    echo "Virtualenv created."
+fi
+
+cd $BASEDIR
+if [ "$(uname)" == "Darwin" ]; then
+    source $BASEDIR/env/bin/activate
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    source $BASEDIR/env/bin/activate
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
+    source $BASEDIR/env/Scripts/activate
+fi
+echo "Virtualenv activated."
+
 python setup.py bdist_wheel
 
 echo "Building egg..."
