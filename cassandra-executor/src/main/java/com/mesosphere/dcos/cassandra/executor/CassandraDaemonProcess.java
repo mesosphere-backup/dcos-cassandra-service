@@ -34,6 +34,7 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -516,13 +517,14 @@ public class CassandraDaemonProcess {
                         List<String> columnFamilies)
         throws InterruptedException, ExecutionException, IOException {
 
-        if (columnFamilies.isEmpty()) {
-            this.probe.forceKeyspaceCleanup(keySpace);
+        if(columnFamilies.isEmpty()) {
+            this.probe.forceKeyspaceCleanup(0,keySpace);
         } else {
             String[] families = new String[columnFamilies.size()];
             families = columnFamilies.toArray(families);
-            this.probe.forceKeyspaceCleanup(keySpace, families);
+            this.probe.forceKeyspaceCleanup(0, keySpace, families);
         }
+
     }
 
     /**
@@ -536,10 +538,9 @@ public class CassandraDaemonProcess {
      */
     public void cleanup()
         throws InterruptedException, ExecutionException, IOException {
-
-
-        this.probe.forceKeyspaceCleanup(null);
-
+        for(String keyspace : getNonSystemKeySpaces()) {
+            cleanup(keyspace, Collections.emptyList());
+        }
     }
 
     /**
@@ -619,8 +620,9 @@ public class CassandraDaemonProcess {
      */
     public void upgradeTables()
         throws InterruptedException, ExecutionException, IOException {
-
-        this.probe.upgradeSSTables(null, true);
+        for(String keyspace : getNonSystemKeySpaces()){
+            this.probe.forceKeyspaceCleanup(0,keyspace);
+        }
     }
 
 
