@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraData;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDaemonBlock;
 import org.apache.mesos.Protos;
 import org.apache.mesos.protobuf.ResourceBuilder;
 
