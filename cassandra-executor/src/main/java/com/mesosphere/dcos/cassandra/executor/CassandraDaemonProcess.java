@@ -22,6 +22,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraStatus;
 import com.mesosphere.dcos.cassandra.executor.metrics.MetricsConfig;
 import org.apache.cassandra.tools.NodeProbe;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
