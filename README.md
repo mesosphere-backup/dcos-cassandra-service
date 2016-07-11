@@ -658,7 +658,7 @@ The service configuration object contains properties that MUST be specified duri
     router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
     </tr>
     <tr>
-    <td>data_center_url</td>
+    <td>external_data_centers</td>
     <td>string</td>
     <td>This specifies the URLs of the external data centers that contain a cluster the DCOS Cassandra service will join as a comma separated list.
     This value should only be included when your deploying a DCOS Cassandra service instance that will extend an existing cluster. Otherwise, this
