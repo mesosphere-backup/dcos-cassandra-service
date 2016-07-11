@@ -271,14 +271,11 @@ public class CassandraDaemonProcess {
     private Process createDaemon() throws IOException {
 
         final ProcessBuilder builder = new ProcessBuilder(
-            paths.cassandraRun()
-                .toString(),
+            paths.cassandraRun().toString(),
             getReplaceIp(),
-            "-f"
-        )
-            .directory(new File(System.getProperty("user.dir")))
-            .redirectOutput(new File("cassandra-stdout.log"))
-            .redirectError(new File("cassandra-stderr.log"));
+            "-f")
+            .inheritIO()
+            .directory(new File(System.getProperty("user.dir")));
 
         builder.environment().putAll(task.getConfig().getHeap().toEnv());
         builder.environment().put(

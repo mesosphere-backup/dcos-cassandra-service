@@ -108,13 +108,6 @@ server:
 logging:
   level: ${LOG_LEVEL:-INFO}
   appenders:
-    - type: file
-      currentLogFilename: ${LOG_FILE:-dcos-cassandra-service.log}
-      threshold: ALL
-      archive: true
-      archivedFileCount: 5
-      archivedLogFilenamePattern: ${LOG_FILE:-dcos-cassandra-service.log}.%d
-      timeZone: UTC
     - type: console
       threshold: ALL
       timeZone: UTC
