@@ -111,6 +111,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     private void removeTask(String name) throws PersistenceException {
         persistent.remove(name);
+        stateStore.clearTask(name);
         if (tasks.containsKey(name)) {
             byId.remove(tasks.get(name).getId());
         }
@@ -480,7 +481,9 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public void remove(String name) throws PersistenceException {
         synchronized (persistent) {
-            if (tasks.containsKey(name)) removeTask(name);
+            if (tasks.containsKey(name)) {
+                removeTask(name);
+            }
         }
     }
 
