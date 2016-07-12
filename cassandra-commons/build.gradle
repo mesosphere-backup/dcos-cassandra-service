@@ -3,7 +3,7 @@ targetCompatibility = '1.8'
 
 apply plugin: 'com.google.protobuf'
 dependencies {
-    compile "mesosphere:dcos-commons:0.4.18-SNAPSHOT"
+    compile "mesosphere:dcos-commons:0.4.21-SNAPSHOT"
     compile 'org.apache.cassandra:cassandra-all:2.2.4'
 }
 protobuf {

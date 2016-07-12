@@ -119,6 +119,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                         task.getState()
                 )) {
                     setStatus(Status.Complete);
+                    cassandraTasks.remove(getName());
                     LOGGER.info("Block {} task finished", getName());
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
