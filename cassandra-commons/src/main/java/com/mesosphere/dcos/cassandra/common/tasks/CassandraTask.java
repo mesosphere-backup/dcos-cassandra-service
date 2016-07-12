@@ -33,6 +33,7 @@ import java.util.*;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.ResourceUtils;
+import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.util.Algorithms;
 
 import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
@@ -151,9 +152,7 @@ public abstract class CassandraTask {
      * @return A universally unique identifier.
      */
     public static Protos.TaskID createId(final String name) {
-        return Protos.TaskID.newBuilder()
-            .setValue(name + "__" + UUID.randomUUID())
-            .build();
+        return TaskUtils.toTaskId(name);
     }
 
     private final Protos.TaskInfo info;

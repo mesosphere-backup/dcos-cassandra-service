@@ -16,11 +16,14 @@
 package com.mesosphere.dcos.cassandra.executor;
 
 
+import com.google.common.collect.ImmutableSet;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraStatus;
 import com.mesosphere.dcos.cassandra.executor.metrics.MetricsConfig;
+import org.apache.cassandra.db.SystemKeyspace;
+import org.apache.cassandra.schema.SchemaKeyspace;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -34,15 +37,14 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * The CassandraDaemonProcess launches the Cassandra process process,
@@ -53,8 +55,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * daemon via JMX using the NodeProbe class.
  */
 public class CassandraDaemonProcess {
-
-
+    public static final Set<String> SYSTEM_KEYSPACE_NAMES =
+            ImmutableSet.of(SystemKeyspace.NAME, SchemaKeyspace.NAME);
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraDaemonProcess.class);
 
@@ -440,7 +442,10 @@ public class CassandraDaemonProcess {
      * the Cassandra instance.
      */
     public List<String> getNonSystemKeySpaces() {
-        return probe.getNonSystemKeyspaces();
+        return probe.getKeyspaces().stream().filter(
+                keyspace ->
+                        !SYSTEM_KEYSPACE_NAMES.contains(keyspace))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -515,12 +520,13 @@ public class CassandraDaemonProcess {
             throws InterruptedException, ExecutionException, IOException {
 
         if (columnFamilies.isEmpty()) {
-            this.probe.forceKeyspaceCleanup(keySpace);
+            this.probe.forceKeyspaceCleanup(0, keySpace);
         } else {
             String[] families = new String[columnFamilies.size()];
             families = columnFamilies.toArray(families);
-            this.probe.forceKeyspaceCleanup(keySpace, families);
+            this.probe.forceKeyspaceCleanup(0, keySpace, families);
         }
+
     }
 
     /**
@@ -534,10 +540,9 @@ public class CassandraDaemonProcess {
      */
     public void cleanup()
             throws InterruptedException, ExecutionException, IOException {
-
-
-        this.probe.forceKeyspaceCleanup(null);
-
+        for (String keyspace : getNonSystemKeySpaces()) {
+            cleanup(keyspace, Collections.emptyList());
+        }
     }
 
     /**
@@ -617,8 +622,9 @@ public class CassandraDaemonProcess {
      */
     public void upgradeTables()
             throws InterruptedException, ExecutionException, IOException {
-
-        this.probe.upgradeSSTables(null, true);
+        for (String keyspace : getNonSystemKeySpaces()) {
+            this.probe.forceKeyspaceCleanup(0, keyspace);
+        }
     }
 
 

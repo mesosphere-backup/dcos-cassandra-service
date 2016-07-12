@@ -32,7 +32,7 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<RestoreContex
             throws PersistenceException {
 
         CassandraDaemonTask daemonTask =
-                cassandraTasks.getDaemons().get(daemon);
+                cassandraTasks.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon does not exist");
             setStatus(Status.Complete);
@@ -55,6 +55,6 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<RestoreContex
 
     @Override
     public String getName() {
-        return RestoreSnapshotTask.nameForDaemon(daemon);
+        return RestoreSnapshotTask.nameForDaemon(getDaemon());
     }
 }

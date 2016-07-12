@@ -21,7 +21,6 @@ import java.util.Objects;
 
 public class ExecutorConfig {
 
-
     public static Serializer<ExecutorConfig> JSON_SERIALIZER =
             new Serializer<ExecutorConfig>() {
                 @Override
@@ -55,27 +54,30 @@ public class ExecutorConfig {
             List<String> arguments,
             double cpus,
             int memoryMb,
-            int diskMb,
             int heapMb,
             int apiPort,
             String javaHome,
             URI jreLocation,
             URI executorLocation,
-            URI cassandraLocation) {
+            URI cassandraLocation,
+            String cassandraUlimitMemlock,
+            String cassandraUlimitNofile,
+            String cassandraUlimitNproc) {
 
         return new ExecutorConfig(
                 command,
                 arguments,
                 cpus,
                 memoryMb,
-                diskMb,
                 heapMb,
                 apiPort,
                 javaHome,
                 jreLocation,
                 executorLocation,
-                cassandraLocation
-        );
+                cassandraLocation,
+                cassandraUlimitMemlock,
+                cassandraUlimitNofile,
+                cassandraUlimitNproc);
     }
 
     @JsonCreator
@@ -84,13 +86,15 @@ public class ExecutorConfig {
             @JsonProperty("arguments") List<String> arguments,
             @JsonProperty("cpus") double cpus,
             @JsonProperty("memory_mb") int memoryMb,
-            @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("heap_mb") int heapMb,
             @JsonProperty("api_port") int apiPort,
             @JsonProperty("java_home") String javaHome,
             @JsonProperty("jre_location") String jreLocation,
             @JsonProperty("executor_location") String executorLocation,
-            @JsonProperty("cassandra_location") String cassandraLocation)
+            @JsonProperty("cassandra_location") String cassandraLocation,
+            @JsonProperty("cassandra_ulimit_memlock") String cassandraUlimitMemlock,
+            @JsonProperty("cassandra_ulimit_nofile") String cassandraUlimitNofile,
+            @JsonProperty("cassandra_ulimit_nproc") String cassandraUlimitNproc)
             throws URISyntaxException, UnsupportedEncodingException {
 
         ExecutorConfig config = create(
@@ -98,13 +102,15 @@ public class ExecutorConfig {
                 arguments,
                 cpus,
                 memoryMb,
-                diskMb,
                 heapMb,
                 apiPort,
                 javaHome,
                 URI.create(jreLocation),
                 URI.create(executorLocation),
-                URI.create(cassandraLocation));
+                URI.create(cassandraLocation),
+                cassandraUlimitMemlock,
+                cassandraUlimitNofile,
+                cassandraUlimitNproc);
 
         return config;
     }
@@ -117,8 +123,6 @@ public class ExecutorConfig {
     private final double cpus;
     @JsonProperty("memory_mb")
     private final int memoryMb;
-    @JsonProperty("disk_mb")
-    private final int diskMb;
     @JsonProperty("heap_mb")
     private final int heapMb;
     @JsonProperty("api_port")
@@ -126,6 +130,13 @@ public class ExecutorConfig {
     private final URI jreLocation;
     private final URI executorLocation;
     private final URI cassandraLocation;
+
+    @JsonProperty("cassandra_ulimit_memlock")
+    private final String cassandraUlimitMemlock;
+    @JsonProperty("cassandra_ulimit_nofile")
+    private final String cassandraUlimitNofile;
+    @JsonProperty("cassandra_ulimit_nproc")
+    private final String cassandraUlimitNproc;
 
     @JsonProperty("java_home")
     private final String javaHome;
@@ -135,25 +146,29 @@ public class ExecutorConfig {
             List<String> arguments,
             double cpus,
             int memoryMb,
-            int diskMb,
             int heapMb,
             int apiPort,
             String javaHome,
             URI jreLocation,
             URI executorLocation,
-            URI cassandraLocation) {
+            URI cassandraLocation,
+            String cassandraUlimitMemlock,
+            String cassandraUlimitNofile,
+            String cassandraUlimitNproc) {
 
         this.command = command;
         this.arguments = arguments;
         this.cpus = cpus;
         this.memoryMb = memoryMb;
-        this.diskMb = diskMb;
         this.heapMb = heapMb;
         this.apiPort = apiPort;
         this.jreLocation = jreLocation;
         this.executorLocation = executorLocation;
         this.cassandraLocation = cassandraLocation;
         this.javaHome = javaHome;
+        this.cassandraUlimitMemlock = cassandraUlimitMemlock;
+        this.cassandraUlimitNofile = cassandraUlimitNofile;
+        this.cassandraUlimitNproc = cassandraUlimitNproc;
     }
 
 
@@ -177,10 +192,6 @@ public class ExecutorConfig {
         return cpus;
     }
 
-    public int getDiskMb() {
-        return diskMb;
-    }
-
     public URI getExecutorLocation() {
         return executorLocation;
     }
@@ -199,6 +210,21 @@ public class ExecutorConfig {
 
     public int getMemoryMb() {
         return memoryMb;
+    }
+
+    @JsonProperty("cassandra_ulimit_memlock")
+    public String getCassandraUlimitMemlock() {
+        return cassandraUlimitMemlock;
+    }
+
+    @JsonProperty("cassandra_ulimit_nofile")
+    public String getCassandraUlimitNofile() {
+        return cassandraUlimitNofile;
+    }
+
+    @JsonProperty("cassandra_ulimit_nproc")
+    public String getCassandraUlimitNproc() {
+        return cassandraUlimitNproc;
     }
 
     @JsonProperty("jre_location")
@@ -233,7 +259,6 @@ public class ExecutorConfig {
         ExecutorConfig that = (ExecutorConfig) o;
         return Double.compare(that.getCpus(), getCpus()) == 0 &&
                 getMemoryMb() == that.getMemoryMb() &&
-                getDiskMb() == that.getDiskMb() &&
                 getHeapMb() == that.getHeapMb() &&
                 getApiPort() == that.getApiPort() &&
                 Objects.equals(getCommand(), that.getCommand()) &&
@@ -250,7 +275,7 @@ public class ExecutorConfig {
     public int hashCode() {
         return Objects.hash(getCommand(), getArguments(), getCpus(),
                 getMemoryMb(),
-                getDiskMb(), getHeapMb(), getApiPort(),
+                getHeapMb(), getApiPort(),
                 getJreLocation(), getExecutorLocation(), getCassandraLocation(),
                 getJavaHome());
     }

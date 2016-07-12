@@ -6,7 +6,6 @@ import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,10 +56,6 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
     @Override
     public UUID getId() {
         return id;
-    }
-
-    public Status getStatus() {
-        return getCurrentBlock().getStatus();
     }
 
     @Override
