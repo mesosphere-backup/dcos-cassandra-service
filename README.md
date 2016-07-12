@@ -1599,11 +1599,32 @@ To proceed with the installation or configuration update fix the indicated error
 ## Replacing a Permanently Failed Node
 The DCOS Cassandra Service is resilient to temporary node failures. However, if a DCOS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server.
 
+Via CLI:
 ```
-$ dcos cassandra --name=<service-name> node replace <node_id>
+$ dcos cassandra --name=cassandra node replace 0
+```
+
+Via API:
+```
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "$DCOS_URI/service/cassandra/v1/nodes/replace?node=node-0"
 ```
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
+
+## Restarting a Node
+To restart a given Cassandra node please use following:
+
+CLI:
+```
+$ dcos cassandra --name=cassandra node restart 0
+```
+
+API:
+```
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "$DCOS_URI/service/cassandra/v1/nodes/restart?node=node-0"
+```
+
+This will restart the node with the same name running on the same server. 
 
 # API Reference
 The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.
