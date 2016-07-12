@@ -405,7 +405,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         }
     }
 
-    public CassandraDaemonTask reconfigureDeamon(
+    public CassandraDaemonTask reconfigureDaemon(
             final CassandraDaemonTask daemon) throws PersistenceException {
         synchronized (persistent) {
             return configuration.updateConfig(daemon);

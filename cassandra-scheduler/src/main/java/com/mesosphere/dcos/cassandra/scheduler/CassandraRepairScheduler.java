@@ -50,10 +50,9 @@ public class CassandraRepairScheduler {
 
                 OfferRequirement offerReq;
                 if (terminated.getConfig().getReplaceIp().isEmpty()) {
-                    offerReq = offerRequirementProvider.getReplacementOfferRequirement(terminated.getTaskInfo());
+                    offerReq = offerRequirementProvider.getReplacementOfferRequirement(cassandraTasks.getOrCreateContainer(terminated.getName()));
                 } else {
-                    offerReq = offerRequirementProvider.getNewOfferRequirement(
-                            cassandraTasks.createCassandraContainer(terminated));
+                    offerReq = offerRequirementProvider.getNewOfferRequirement(cassandraTasks.createCassandraContainer(terminated));
                 }
 
                 List<OfferRecommendation> recommendations =
