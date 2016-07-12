@@ -121,7 +121,7 @@ public class CassandraTaskExecutor {
             .setFrameworkId(Protos.FrameworkID.newBuilder()
                 .setValue(frameworkId))
             .setName(name)
-            .setExecutorId(createId(name))
+                .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
                 .setContainer(Protos.ContainerInfo.newBuilder()
                 .setType(Protos.ContainerInfo.Type.MESOS)
                         .addVolumes(Protos.Volume.newBuilder()
