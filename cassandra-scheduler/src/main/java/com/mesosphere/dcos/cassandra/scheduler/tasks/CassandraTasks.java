@@ -459,8 +459,9 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                 CassandraTask updated;
 
                 CassandraTask cassandraTask = tasks.get(byId.get(status.getTaskId().getValue()));
-                if (cassandraTask.getState().equals(Protos.TaskState.TASK_FINISHED)) {
-                    LOGGER.warn("Ignoring task update for finished Task.");
+                if (cassandraTask.getState().equals(Protos.TaskState.TASK_FINISHED)
+                        && status.getState().equals(Protos.TaskState.TASK_LOST)) {
+                    LOGGER.warn("Ignoring TASK_LOST task update for finished Task.");
                     return;
                 }
 

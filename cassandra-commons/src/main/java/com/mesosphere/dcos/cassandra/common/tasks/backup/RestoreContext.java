@@ -43,18 +43,18 @@ public class RestoreContext implements ClusterTaskContext {
         final String externalLocation,
         @JsonProperty("local_location")
         final String localLocation,
-        @JsonProperty("s3_access_key")
-        final String s3AccessKey,
-        @JsonProperty("s3_secret_key")
-        final String s3SecretKey) {
+        @JsonProperty("account_id")
+        final String accountId,
+        @JsonProperty("secret_key")
+        final String secretKey) {
 
         return new RestoreContext(
             nodeId,
             name,
             externalLocation,
             localLocation,
-            s3AccessKey,
-            s3SecretKey);
+            accountId,
+            secretKey);
     }
 
     @JsonProperty("node_id")
@@ -89,6 +89,7 @@ public class RestoreContext implements ClusterTaskContext {
      *
      * @return The name of the backup.
      */
+    @JsonProperty("name")
     public String getName() {
         return name;
     }
@@ -98,6 +99,7 @@ public class RestoreContext implements ClusterTaskContext {
      *
      * @return The location where the backup files are stored.
      */
+    @JsonProperty("external_location")
     public String getExternalLocation() {
         return externalLocation;
     }
@@ -107,6 +109,7 @@ public class RestoreContext implements ClusterTaskContext {
      *
      * @return The local location where the backup files will be downloaded to.
      */
+    @JsonProperty("local_location")
     public String getLocalLocation() {
         return localLocation;
     }
@@ -117,6 +120,7 @@ public class RestoreContext implements ClusterTaskContext {
      * @return The S3 access key for the bucket or Azure account where the keyspace files are
      * be stored.
      */
+    @JsonProperty("account_id")
     public String getAcccountId() {
         return accountId;
     }
@@ -127,6 +131,7 @@ public class RestoreContext implements ClusterTaskContext {
      * @return The S3 secret key for the bucket or azure key where the keyspace files are
      * be stored.
      */
+    @JsonProperty("secret_key")
     public String getSecretKey() {
         return secretKey;
     }
@@ -136,6 +141,7 @@ public class RestoreContext implements ClusterTaskContext {
      *
      * @return The id of the node for the backup.
      */
+    @JsonProperty("node_id")
     public String getNodeId() {
         return nodeId;
     }
