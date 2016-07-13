@@ -27,6 +27,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.State;
 import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -451,9 +452,18 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     @Subscribe
     public void update(Protos.TaskStatus status) throws IOException {
+        LOGGER.info("Received status update = {}", status);
+
         synchronized (persistent) {
             if (byId.containsKey(status.getTaskId().getValue())) {
                 CassandraTask updated;
+
+                CassandraTask cassandraTask = tasks.get(byId.get(status.getTaskId().getValue()));
+                if (cassandraTask.getState().equals(Protos.TaskState.TASK_FINISHED)
+                        && status.getState().equals(Protos.TaskState.TASK_LOST)) {
+                    LOGGER.warn("Ignoring TASK_LOST task update for finished Task.");
+                    return;
+                }
 
                 if (status.hasData()) {
                     updated = tasks.get(
@@ -466,7 +476,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                 }
 
                 update(updated);
-
                 stateStore.storeStatus(status);
 
                 LOGGER.info("Updated task {}", updated);
@@ -484,6 +493,13 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             if (tasks.containsKey(name)) {
                 removeTask(name);
             }
+        }
+    }
+
+    public void remove(Set<String> names) throws PersistenceException {
+        for (String name : names) {
+
+            remove(name);
         }
     }
 

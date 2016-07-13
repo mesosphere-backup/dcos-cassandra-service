@@ -89,6 +89,19 @@ public class CleanupManager {
         }
     }
 
+    public void stopCleanup() {
+        LOGGER.info("Stopping cleanup");
+        try {
+            this.persistent.delete();
+            cassandraTasks.remove(cassandraTasks.getCleanupTasks().keySet());
+        } catch (PersistenceException e) {
+            LOGGER.error(
+                    "Error deleting cleanup context from persistence store. Reason: {}",
+                    e);
+        }
+        this.context = null;
+    }
+
     public boolean canStartCleanup() {
         // If CleanupContext is null, then we can start cleanup; otherwise, not.
         return context == null || isComplete();

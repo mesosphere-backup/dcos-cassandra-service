@@ -60,6 +60,14 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
         try {
             Optional<CassandraTask> task = getOrCreateTask(context);
+            if (task.isPresent()) {
+                update(task.get().getCurrentStatus());
+                if (isComplete() || isInProgress()) {
+                    return null;
+                } else {
+                    setStatus(Status.Pending);
+                }
+            }
 
             if (!task.isPresent()) {
                 LOGGER.info("Block has no task: name = {}, id = {}",
@@ -106,21 +114,24 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     public abstract String getName();
 
     public void update(Protos.TaskStatus status) {
-
-        LOGGER.debug("Updating status : id = {}, task = {}, status = {}",
+        LOGGER.info("Updating status : id = {}, task = {}, status = {}",
                 getId(), getName(), status);
+
+        if (isComplete()) {
+            LOGGER.warn("Task is already complete, ignoring status update.");
+            return;
+        }
+
         try {
             cassandraTasks.update(status);
             Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
 
             if (taskOption.isPresent()) {
                 CassandraTask task = taskOption.get();
-                if (Protos.TaskState.TASK_FINISHED.equals(
-                        task.getState()
-                )) {
+                if (Protos.TaskState.TASK_FINISHED.equals(task.getState())) {
                     setStatus(Status.Complete);
-                    cassandraTasks.remove(getName());
-                    LOGGER.info("Block {} task finished", getName());
+                } else if (Protos.TaskState.TASK_RUNNING.equals(task.getState())) {
+                    setStatus(Status.InProgress);
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
                     cassandraTasks.remove(getName());

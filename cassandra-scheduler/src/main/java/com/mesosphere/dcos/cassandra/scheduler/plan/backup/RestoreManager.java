@@ -111,6 +111,7 @@ public class RestoreManager {
         LOGGER.info("Stopping restore");
         try {
             this.persistentContext.delete();
+            cassandraTasks.remove(cassandraTasks.getRestoreSnapshotTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error deleting restore context from persistence store. Reason: {}",
