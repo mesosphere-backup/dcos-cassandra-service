@@ -487,6 +487,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         }
     }
 
+    public void remove(Set<String> names) throws PersistenceException {
+        for (String name : names) {
+            remove(name);
+        }
+    }
+
     public void removeById(String id) throws PersistenceException {
         synchronized (persistent) {
             if (byId.containsKey(id)) {

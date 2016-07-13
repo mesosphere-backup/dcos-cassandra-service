@@ -88,6 +88,7 @@ public class RepairManager {
         LOGGER.info("Stopping repair");
         try {
             this.persistent.delete();
+            cassandraTasks.remove(cassandraTasks.getRepairTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error deleting repair context from persistence store. " +

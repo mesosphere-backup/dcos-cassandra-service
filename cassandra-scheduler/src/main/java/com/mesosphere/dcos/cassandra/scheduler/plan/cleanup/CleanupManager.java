@@ -93,6 +93,7 @@ public class CleanupManager {
         LOGGER.info("Stopping cleanup");
         try {
             this.persistent.delete();
+            cassandraTasks.remove(cassandraTasks.getCleanupTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error deleting cleanup context from persistence store. Reason: {}",
