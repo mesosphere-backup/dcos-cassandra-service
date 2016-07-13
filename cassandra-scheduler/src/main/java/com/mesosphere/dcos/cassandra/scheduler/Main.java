@@ -9,7 +9,6 @@ import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.resources.*;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.Application;
@@ -102,8 +101,6 @@ public class Main extends Application<DropwizardConfiguration> {
     }
 
     private void registerManagedObjects(Environment environment, Injector injector) {
-        environment.lifecycle().manage(
-                injector.getInstance(PersistenceFactory.class));
         environment.lifecycle().manage(
                 injector.getInstance(IdentityManager.class));
         environment.lifecycle().manage(

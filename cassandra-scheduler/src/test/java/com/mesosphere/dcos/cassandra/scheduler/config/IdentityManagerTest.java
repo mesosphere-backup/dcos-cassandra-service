@@ -4,42 +4,33 @@ package com.mesosphere.dcos.cassandra.scheduler.config;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.validation.BaseValidator;
-import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
+import org.apache.mesos.state.CuratorStateStore;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Optional;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
 public class IdentityManagerTest {
-
     private static TestingServer server;
-
-    private static CuratorFramework curator;
-
-    private static ZooKeeperPersistence persistence;
-
-    private static String path;
-
     private static Identity initial;
+    private static CuratorStateStore curatorStateStore;
 
-
-    @BeforeClass
-    public static void beforeAll() throws Exception {
-
+    @Before
+    public void beforeEach() throws Exception {
         server = new TestingServer();
-
         server.start();
 
         final ConfigurationFactory<DropwizardConfiguration> factory =
@@ -50,127 +41,76 @@ public class IdentityManagerTest {
                                 .registerModule(new Jdk8Module()),
                         "dw");
 
-        CassandraSchedulerConfiguration config = factory.build(
+        CassandraSchedulerConfiguration configuration = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
 
-        initial = config.getIdentity();
+        final CuratorFrameworkConfig curatorConfig = configuration.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
 
-        persistence = (ZooKeeperPersistence) ZooKeeperPersistence.create(
-                initial,
-                CuratorFrameworkConfig.create(server.getConnectString(),
-                        10000L,
-                        10000L,
-                        Optional.empty(),
-                        250L));
+        curatorStateStore = new CuratorStateStore(
+                "/" + configuration.getName(),
+                server.getConnectString(),
+                retryPolicy);
 
-        curator = persistence.getCurator();
-
-        path = "/cassandra/" + config.getIdentity().getName() +"/identity";
-
-
+        initial = configuration.getIdentity();
     }
 
     @After
-    public void afterEach() {
-
-        try {
-            curator.delete().forPath(path);
-        } catch (Exception e) {
-
-        }
-    }
-
-    @AfterClass
-    public static void afterAll() throws Exception {
-
-        persistence.stop();
-
+    public void afterEach() throws IOException {
         server.close();
-
         server.stop();
     }
 
     @Test
     public void createIdentity() throws Exception {
-
         IdentityManager manager = new IdentityManager(
                 initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
-
+                curatorStateStore);
         manager.start();
-
         assertEquals(manager.get(), initial);
-
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial);
     }
 
     @Test
     public void registerIdentity() throws Exception {
-
         IdentityManager manager = new IdentityManager(
                 initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
-
+                curatorStateStore);
         manager.start();
-
         assertEquals(manager.get(), initial);
 
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial);
-
         manager.register("test_id");
-
         assertEquals(manager.get(), initial.register("test_id"));
-
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial.register("test_id"));
 
         manager.stop();
 
         manager = new IdentityManager(
                 initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
-
+                curatorStateStore);
         manager.start();
-
         assertEquals(manager.get(), initial.register("test_id"));
-
     }
 
     @Test(expected = IllegalStateException.class)
     public void immutableName() throws Exception {
-
         IdentityManager manager = new IdentityManager(
                 initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
+                curatorStateStore);
 
         manager.start();
-
         assertEquals(manager.get(), initial);
 
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial);
-
         manager.register("test_id");
-
         assertEquals(manager.get(), initial.register("test_id"));
-
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial.register("test_id"));
-
         manager.stop();
 
         manager = new IdentityManager(
@@ -185,36 +125,22 @@ public class IdentityManagerTest {
                         initial.getFailoverTimeout(),
                         initial.getSecret(),
                         initial.isCheckpoint()),
-                persistence,
-                Identity.JSON_SERIALIZER);
+                curatorStateStore);
 
         manager.start();
-
     }
 
     @Test(expected = IllegalStateException.class)
     public void immutableCluster() throws Exception {
-
         IdentityManager manager = new IdentityManager(
                 initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
-
+                curatorStateStore);
         manager.start();
-
         assertEquals(manager.get(), initial);
-
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial);
 
         manager.register("test_id");
 
         assertEquals(manager.get(), initial.register("test_id"));
-
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial.register("test_id"));
 
         manager.stop();
 
@@ -230,8 +156,7 @@ public class IdentityManagerTest {
                         initial.getFailoverTimeout(),
                         initial.getSecret(),
                         initial.isCheckpoint()),
-                persistence,
-                Identity.JSON_SERIALIZER);
+                curatorStateStore);
 
         manager.start();
 
@@ -242,24 +167,15 @@ public class IdentityManagerTest {
 
         IdentityManager manager = new IdentityManager(
                 initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
+                curatorStateStore);
 
         manager.start();
 
         assertEquals(manager.get(), initial);
 
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial);
-
         manager.register("test_id");
 
         assertEquals(manager.get(), initial.register("test_id"));
-
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial.register("test_id"));
 
         manager.stop();
 
@@ -275,8 +191,7 @@ public class IdentityManagerTest {
                         initial.getFailoverTimeout(),
                         initial.getSecret(),
                         initial.isCheckpoint()),
-                persistence,
-                Identity.JSON_SERIALIZER);
+                curatorStateStore);
 
         manager.start();
 
@@ -287,24 +202,15 @@ public class IdentityManagerTest {
 
         IdentityManager manager = new IdentityManager(
                 initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
+                curatorStateStore);
 
         manager.start();
 
         assertEquals(manager.get(), initial);
 
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial);
-
         manager.register("test_id");
 
         assertEquals(manager.get(), initial.register("test_id"));
-
-        assertEquals(
-                Identity.JSON_SERIALIZER.deserialize(curator.getData().forPath(path)),
-                initial.register("test_id"));
 
         manager.stop();
 
@@ -320,8 +226,7 @@ public class IdentityManagerTest {
                         initial.getFailoverTimeout(),
                         initial.getSecret(),
                         initial.isCheckpoint()),
-                persistence,
-                Identity.JSON_SERIALIZER);
+                curatorStateStore);
 
         manager.start();
 

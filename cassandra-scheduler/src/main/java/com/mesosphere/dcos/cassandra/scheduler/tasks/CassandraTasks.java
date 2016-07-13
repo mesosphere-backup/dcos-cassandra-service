@@ -17,14 +17,10 @@ import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import io.dropwizard.lifecycle.Managed;
-import org.apache.curator.RetryPolicy;
-import org.apache.curator.retry.RetryForever;
-import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
-import org.apache.mesos.state.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
@@ -57,24 +53,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             final IdentityManager identity,
             final ConfigurationManager configuration,
             final CuratorFrameworkConfig curatorConfig,
-            final ClusterTaskConfig clusterTaskConfig) {
+            final ClusterTaskConfig clusterTaskConfig,
+            final StateStore stateStore) {
         this.identity = identity;
         this.configuration = configuration;
         this.clusterTaskConfig = clusterTaskConfig;
-
-        RetryPolicy retryPolicy =
-                (curatorConfig.getOperationTimeout().isPresent()) ?
-                        new RetryUntilElapsed(
-                                curatorConfig.getOperationTimeoutMs()
-                                        .get()
-                                        .intValue()
-                                , (int) curatorConfig.getBackoffMs()) :
-                        new RetryForever((int) curatorConfig.getBackoffMs());
-
-        this.stateStore = new CuratorStateStore(
-                "/" + identity.get().getName() + "/state",
-                curatorConfig.getServers(),
-                retryPolicy);
+        this.stateStore = stateStore;
 
         loadTasks();
     }

@@ -31,12 +31,17 @@ import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.setup.Environment;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.http.client.HttpClient;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.StageManager;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -183,5 +188,21 @@ public class SchedulerModule extends AbstractModule {
         } catch (ConfigStoreException e) {
             throw new RuntimeException(e);
         }
+
+        final CuratorFrameworkConfig curatorConfig = configuration.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        CuratorStateStore curatorStateStore = new CuratorStateStore(
+                "/" + configuration.getName(),
+                curatorConfig.getServers(),
+                retryPolicy);
+        bind(StateStore.class).toInstance(curatorStateStore);
     }
 }

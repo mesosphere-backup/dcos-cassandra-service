@@ -9,19 +9,22 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraData;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTemplateTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.validation.BaseValidator;
-import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.junit.*;
 
 import java.util.Collection;
@@ -33,31 +36,19 @@ import java.util.Optional;
  */
 public class CassandraTasksTest {
     private static TestingServer server;
-    private static CuratorFramework curator;
-    private static ZooKeeperPersistence persistence;
     private static DropwizardConfiguration config;
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
     private static CuratorFrameworkConfig curatorConfig;
     private static ClusterTaskConfig clusterTaskConfig;
-    private static String path;
     private static String testDaemonName = "test-daemon-name";
     private static String testHostName = "test-host-name";
     private static String testTaskId = "test-task-id";
     private CassandraTasks cassandraTasks;
+    private static StateStore stateStore;
 
     @Before
     public void beforeEach() throws Exception {
-        cassandraTasks = new CassandraTasks(
-                identity,
-                configuration,
-                curatorConfig,
-                clusterTaskConfig);
-    }
-
-    @BeforeClass
-    public static void beforeAll() throws Exception {
-
         server = new TestingServer();
 
         server.start();
@@ -85,46 +76,48 @@ public class CassandraTasksTest {
                 Optional.empty(),
                 250L);
 
-        clusterTaskConfig = config.getSchedulerConfiguration().getClusterTaskConfig();
+        final CassandraSchedulerConfiguration targetConfig = config.getSchedulerConfiguration();
+        clusterTaskConfig = targetConfig.getClusterTaskConfig();
 
-        persistence = (ZooKeeperPersistence) ZooKeeperPersistence.create(
-                initial,
-                curatorConfig);
+        final CuratorFrameworkConfig curatorConfig = targetConfig.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
 
-        curator = persistence.getCurator();
+        stateStore = new CuratorStateStore(
+                "/" + targetConfig.getName(),
+                server.getConnectString(),
+                retryPolicy);
 
         identity = new IdentityManager(
-                initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
+                initial,stateStore);
 
         identity.register("test_id");
 
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
                 "/" + config.getSchedulerConfiguration().getName(),
-                curatorConfig.getServers(),
+                server.getConnectString(),
                 config.getSchedulerConfiguration(),
                 new ConfigValidator());
 
         configuration = new ConfigurationManager(configurationManager);
 
-        path = "/" + config.getSchedulerConfiguration().getIdentity().getName() + "/state";
+        cassandraTasks = new CassandraTasks(
+                identity,
+                configuration,
+                curatorConfig,
+                clusterTaskConfig,
+                stateStore);
     }
 
     @After
-    public void afterEach() {
-
-        try {
-            curator.delete().deletingChildrenIfNeeded().forPath(path);
-        } catch (Exception e) {
-
-        }
-    }
-
-    @AfterClass
-    public static void afterAll() throws Exception {
-        persistence.stop();
+    public void afterEach() throws Exception {
         server.close();
         server.stop();
     }

@@ -3,8 +3,10 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
+import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
+import com.mesosphere.dcos.cassandra.scheduler.config.DropwizardConfiguration;
+import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
+import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -12,24 +14,24 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import io.dropwizard.validation.BaseValidator;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Optional;
-
 import static org.junit.Assert.assertEquals;
 
 public class IdentityResourceTest {
     private static TestingServer server;
-
-    private static ZooKeeperPersistence persistence;
-
     private static DropwizardConfiguration config;
-
     private static IdentityManager manager;
+    private static StateStore stateStore;
 
     @Rule
     public final ResourceTestRule resources = ResourceTestRule.builder()
@@ -59,18 +61,24 @@ public class IdentityResourceTest {
 
         Identity initial = config.getSchedulerConfiguration().getIdentity();
 
-        persistence = (ZooKeeperPersistence) ZooKeeperPersistence.create(
-                initial,
-                CuratorFrameworkConfig.create(server.getConnectString(),
-                        10000L,
-                        10000L,
-                        Optional.empty(),
-                        250L));
+        final CuratorFrameworkConfig curatorConfig = config.getSchedulerConfiguration().getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        stateStore = new CuratorStateStore(
+                "/" + config.getSchedulerConfiguration().getName(),
+                server.getConnectString(),
+                retryPolicy);
 
         manager = new IdentityManager(
                 initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
+                stateStore);
 
         manager.start();
 
@@ -78,13 +86,8 @@ public class IdentityResourceTest {
 
     @AfterClass
     public static void afterAll() throws Exception {
-
         manager.stop();
-
-        persistence.stop();
-
         server.close();
-
         server.stop();
     }
 

@@ -1,21 +1,19 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * BackupManager is responsible for orchestrating cluster-wide backup.
@@ -29,42 +27,37 @@ public class BackupManager {
 
     private final CassandraTasks cassandraTasks;
     private final ClusterTaskOfferRequirementProvider provider;
-    private final PersistentReference<BackupContext> persistentBackupContext;
     private volatile BackupSnapshotPhase backup = null;
     private volatile UploadBackupPhase upload = null;
     private volatile BackupContext backupContext = null;
+    private StateStore stateStore;
 
     @Inject
     public BackupManager(
             CassandraTasks cassandraTasks,
             ClusterTaskOfferRequirementProvider provider,
-            PersistenceFactory persistenceFactory,
-            final Serializer<BackupContext> serializer) {
+            StateStore stateStore) {
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
+        this.stateStore = stateStore;
 
         // Load BackupManager from state store
-        this.persistentBackupContext = persistenceFactory.createReference(
-                BACKUP_KEY, serializer);
         try {
-            final Optional<BackupContext> loadedBackupContext = persistentBackupContext.load();
-            if (loadedBackupContext.isPresent()) {
-                BackupContext backupContext = loadedBackupContext.get();
-                // Recovering from failure
-                if (backupContext != null) {
-                    this.backup = new BackupSnapshotPhase(
-                            backupContext,
-                            cassandraTasks,
-                            provider);
-                    this.upload = new UploadBackupPhase(
-                            backupContext,
-                            cassandraTasks,
-                            provider);
-                    this.backupContext = backupContext;
-                }
+            final byte[] bytes = stateStore.fetchProperty(BACKUP_KEY);
+            final BackupContext backupContext = BackupContext.JSON_SERIALIZER.deserialize(bytes);
+            // Recovering from failure
+            if (backupContext != null) {
+                this.backup = new BackupSnapshotPhase(
+                        backupContext,
+                        cassandraTasks,
+                        provider);
+                this.upload = new UploadBackupPhase(
+                        backupContext,
+                        cassandraTasks,
+                        provider);
+                this.backupContext = backupContext;
             }
-
-        } catch (PersistenceException e) {
+        } catch (SerializationException e) {
             LOGGER.error(
                     "Error loading backup context from peristence store. Reason: ",
                     e);
@@ -86,7 +79,7 @@ public class BackupManager {
                         cassandraTasks.remove(name);
                     }
                 }
-                persistentBackupContext.store(context);
+                stateStore.storeProperty(BACKUP_KEY, BackupContext.JSON_SERIALIZER.serialize(context));
                 this.backup = new BackupSnapshotPhase(
                         context,
                         cassandraTasks,
@@ -96,35 +89,17 @@ public class BackupManager {
                         cassandraTasks,
                         provider);
                 backupContext = context;
-            } catch (PersistenceException e) {
+            } catch (SerializationException | PersistenceException e) {
                 LOGGER.error(
                         "Error storing backup context into persistence store. Reason: ",
                         e);
-
             }
         }
-    }
-
-    public void stopBackup() {
-        LOGGER.info("Stopping backup");
-        try {
-            this.persistentBackupContext.delete();
-        } catch (PersistenceException e) {
-            LOGGER.error(
-                    "Error deleting backup context from persistence store. Reason: {}",
-                    e);
-        }
-        this.backupContext = null;
     }
 
     public boolean canStartBackup() {
         // If backupContext is null, then we can start backup; otherwise, not.
         return backupContext == null || isComplete();
-    }
-
-    public boolean canStartRestore() {
-        // If restoreContext is null, then we can start restore; otherwise, not.
-        return backupContext == null;
     }
 
     public boolean inProgress() {
