@@ -89,6 +89,18 @@ public class CleanupManager {
         }
     }
 
+    public void stopCleanup() {
+        LOGGER.info("Stopping restore");
+        try {
+            this.persistent.delete();
+        } catch (PersistenceException e) {
+            LOGGER.error(
+                    "Error deleting restore context from persistence store. Reason: {}",
+                    e);
+        }
+        this.context = null;
+    }
+
     public boolean canStartCleanup() {
         // If CleanupContext is null, then we can start cleanup; otherwise, not.
         return context == null || isComplete();

@@ -71,7 +71,6 @@ public class RepairManager {
                     for(String name: cassandraTasks.getRepairTasks().keySet()) {
                         cassandraTasks.remove(name);
                     }
-                    this.persistent.delete();
                 }
                 persistent.store(context);
                 this.phase = new RepairPhase(context, cassandraTasks,
