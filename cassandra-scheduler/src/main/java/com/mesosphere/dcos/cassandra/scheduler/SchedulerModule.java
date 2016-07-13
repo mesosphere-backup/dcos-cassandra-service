@@ -71,6 +71,36 @@ public class SchedulerModule extends AbstractModule {
         bind(CassandraSchedulerConfiguration.class).toInstance(
                 this.configuration);
 
+        try {
+            final ConfigValidator configValidator = new ConfigValidator();
+            final CuratorFrameworkConfig curatorConfig = configuration.getCuratorConfig();
+            final DefaultConfigurationManager configurationManager
+                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                    "/" + configuration.getName(),
+                    curatorConfig.getServers(),
+                    configuration,
+                    configValidator);
+            bind(DefaultConfigurationManager.class).toInstance(configurationManager);
+        } catch (ConfigStoreException e) {
+            throw new RuntimeException(e);
+        }
+
+        final CuratorFrameworkConfig curatorConfig = configuration.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        CuratorStateStore curatorStateStore = new CuratorStateStore(
+                "/" + configuration.getName(),
+                curatorConfig.getServers(),
+                retryPolicy);
+        bind(StateStore.class).toInstance(curatorStateStore);
+
         bind(new TypeLiteral<Serializer<Integer>>() {
         }).toInstance(IntegerStringSerializer.get());
 
@@ -174,35 +204,5 @@ public class SchedulerModule extends AbstractModule {
         bind(CleanupManager.class).asEagerSingleton();
         bind(RepairManager.class).asEagerSingleton();
         bind(SeedsManager.class).asEagerSingleton();
-
-        try {
-            final ConfigValidator configValidator = new ConfigValidator();
-            final CuratorFrameworkConfig curatorConfig = configuration.getCuratorConfig();
-            final DefaultConfigurationManager configurationManager
-                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                    "/" + configuration.getName(),
-                    curatorConfig.getServers(),
-                    configuration,
-                    configValidator);
-            bind(DefaultConfigurationManager.class).toInstance(configurationManager);
-        } catch (ConfigStoreException e) {
-            throw new RuntimeException(e);
-        }
-
-        final CuratorFrameworkConfig curatorConfig = configuration.getCuratorConfig();
-        RetryPolicy retryPolicy =
-                (curatorConfig.getOperationTimeout().isPresent()) ?
-                        new RetryUntilElapsed(
-                                curatorConfig.getOperationTimeoutMs()
-                                        .get()
-                                        .intValue()
-                                , (int) curatorConfig.getBackoffMs()) :
-                        new RetryForever((int) curatorConfig.getBackoffMs());
-
-        CuratorStateStore curatorStateStore = new CuratorStateStore(
-                "/" + configuration.getName(),
-                curatorConfig.getServers(),
-                retryPolicy);
-        bind(StateStore.class).toInstance(curatorStateStore);
     }
 }

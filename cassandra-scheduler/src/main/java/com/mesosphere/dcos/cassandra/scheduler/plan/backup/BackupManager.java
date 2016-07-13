@@ -8,6 +8,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,10 +59,9 @@ public class BackupManager {
                 this.backupContext = backupContext;
             }
         } catch (SerializationException e) {
-            LOGGER.error(
-                    "Error loading backup context from peristence store. Reason: ",
-                    e);
-            throw new RuntimeException(e);
+            LOGGER.error("Error loading backup context from persistence store. Reason: ", e);
+        } catch (StateStoreException e) {
+            LOGGER.warn("No backup context found.");
         }
     }
 

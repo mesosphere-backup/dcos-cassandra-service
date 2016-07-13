@@ -16,6 +16,7 @@ import com.mesosphere.dcos.cassandra.scheduler.resources.SeedsResponse;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,6 +107,7 @@ public class SeedsManager implements Runnable {
         this.tasks = tasks;
         this.stateStore = stateStore;
         this.serializer = serializer;
+        this.configurationManager = configurationManager;
         ImmutableMap.Builder<String, DataCenterInfo> builder =
                 ImmutableMap.<String, DataCenterInfo>builder();
         this.client = client;
@@ -127,6 +129,13 @@ public class SeedsManager implements Runnable {
         } catch (SerializationException e) {
             LOGGER.error("Error loading data centers", e);
             throw new RuntimeException(e);
+        } catch (StateStoreException e) {
+            LOGGER.warn("No backup context found.", e);
+        } finally {
+            if (dataCenters == null) {
+                // Initialize an empty map.
+                dataCenters = ImmutableMap.<String, DataCenterInfo>builder().build();
+            }
         }
         final CassandraSchedulerConfiguration configuration = (CassandraSchedulerConfiguration)
                 configurationManager.getTargetConfig();
