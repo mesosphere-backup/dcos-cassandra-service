@@ -90,12 +90,12 @@ public class CleanupManager {
     }
 
     public void stopCleanup() {
-        LOGGER.info("Stopping restore");
+        LOGGER.info("Stopping cleanup");
         try {
             this.persistent.delete();
         } catch (PersistenceException e) {
             LOGGER.error(
-                    "Error deleting restore context from persistence store. Reason: {}",
+                    "Error deleting cleanup context from persistence store. Reason: {}",
                     e);
         }
         this.context = null;

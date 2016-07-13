@@ -91,7 +91,6 @@ public class CassandraStage implements Stage {
     }
 
     public void update() {
-        LOGGER.info("Updating cluster task manager.");
         if (backup.isComplete()) {
             backup.stopBackup();
         }
