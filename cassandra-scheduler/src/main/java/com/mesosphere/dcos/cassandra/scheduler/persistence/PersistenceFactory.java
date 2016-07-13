@@ -8,7 +8,4 @@ public interface PersistenceFactory extends Managed {
 
     <T> PersistentReference<T> createReference(String name,
                                                Serializer<T> serializer);
-
-    <T> PersistentMap<T> createMap(String name,
-                                   Serializer<T> serializer);
 }

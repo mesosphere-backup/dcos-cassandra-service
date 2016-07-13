@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
@@ -18,23 +19,18 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.lifecycle.Managed;
-
-import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
-
 import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.ResourceCleaner;
 import org.apache.mesos.offer.ResourceCleanerScheduler;
-
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.SchedulerDriverFactory;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.DefaultStageScheduler;
 import org.apache.mesos.scheduler.plan.StageManager;
 import org.apache.mesos.scheduler.plan.StageScheduler;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +62,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final RepairManager repair;
     private final SeedsManager seeds;
     private final ExecutorService executor;
+    private final DefaultConfigurationManager defaultConfigurationManager;
 
     @Inject
     public CassandraScheduler(
@@ -83,7 +80,8 @@ public class CassandraScheduler implements Scheduler, Managed {
             final CleanupManager cleanup,
             final RepairManager repair,
             final SeedsManager seeds,
-            final ExecutorService executor) {
+            final ExecutorService executor,
+            final DefaultConfigurationManager defaultConfigurationManager) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
         this.cassandraTasks = cassandraTasks;
@@ -105,6 +103,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.repair = repair;
         this.seeds = seeds;
         this.executor = executor;
+        this.defaultConfigurationManager = defaultConfigurationManager;
     }
 
     @Override
@@ -133,9 +132,11 @@ public class CassandraScheduler implements Scheduler, Managed {
             identityManager.register(frameworkIdValue);
             stageManager.setStage(CassandraStage.create(
                     configurationManager,
+                    defaultConfigurationManager,
                     DeploymentManager.create(
                             offerRequirementProvider,
                             configurationManager,
+                            defaultConfigurationManager,
                             cassandraTasks,
                             client,
                             reconciler,
@@ -331,7 +332,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         LOGGER.info("Received {} offers", offers.size());
 
         for (Protos.Offer offer : offers) {
-            LOGGER.debug("Received Offer: {}", offer);
+            LOGGER.debug("Received Offer: {}", TextFormat.shortDebugString(offer));
         }
     }
 

@@ -42,9 +42,9 @@ public class IdentityManagerTest {
 
         server.start();
 
-        final ConfigurationFactory<CassandraSchedulerConfiguration> factory =
+        final ConfigurationFactory<DropwizardConfiguration> factory =
                 new ConfigurationFactory<>(
-                        CassandraSchedulerConfiguration.class,
+                        DropwizardConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(new GuavaModule())
                                 .registerModule(new Jdk8Module()),
@@ -54,7 +54,7 @@ public class IdentityManagerTest {
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile());
+                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
 
         initial = config.getIdentity();
 

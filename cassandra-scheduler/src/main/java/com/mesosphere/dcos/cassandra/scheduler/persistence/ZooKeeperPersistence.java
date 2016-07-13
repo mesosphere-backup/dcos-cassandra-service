@@ -27,7 +27,6 @@ public class ZooKeeperPersistence implements PersistenceFactory {
 
     @Override
     public void stop() throws Exception {
-
         curator.close();
     }
 
@@ -297,11 +296,5 @@ public class ZooKeeperPersistence implements PersistenceFactory {
     public <T> PersistentReference<T> createReference(String name,
                                                       Serializer<T> serializer) {
         return new ZooKeeperReference<>(curator, path + "/" + name, serializer);
-    }
-
-    @Override
-    public <T> PersistentMap<T> createMap(String name,
-                                          Serializer<T> serializer) {
-        return new ZooKeeperMap<T>(curator, path + "/" + name, serializer);
     }
 }

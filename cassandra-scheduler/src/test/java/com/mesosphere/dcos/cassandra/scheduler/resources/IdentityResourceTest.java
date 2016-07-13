@@ -3,10 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
-import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
-import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -30,7 +27,7 @@ public class IdentityResourceTest {
 
     private static ZooKeeperPersistence persistence;
 
-    private static CassandraSchedulerConfiguration config;
+    private static DropwizardConfiguration config;
 
     private static IdentityManager manager;
 
@@ -45,9 +42,9 @@ public class IdentityResourceTest {
 
         server.start();
 
-        final ConfigurationFactory<CassandraSchedulerConfiguration> factory =
+        final ConfigurationFactory<DropwizardConfiguration> factory =
                 new ConfigurationFactory<>(
-                        CassandraSchedulerConfiguration.class,
+                        DropwizardConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
@@ -60,7 +57,7 @@ public class IdentityResourceTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
-        Identity initial = config.getIdentity();
+        Identity initial = config.getSchedulerConfiguration().getIdentity();
 
         persistence = (ZooKeeperPersistence) ZooKeeperPersistence.create(
                 initial,
@@ -96,6 +93,6 @@ public class IdentityResourceTest {
         Identity identity = resources.client().target("/v1/framework").request()
                 .get(Identity.class);
         System.out.println("identity = " + identity);
-        assertEquals(config.getIdentity(), identity);
+        assertEquals(config.getSchedulerConfiguration().getIdentity(), identity);
     }
 }

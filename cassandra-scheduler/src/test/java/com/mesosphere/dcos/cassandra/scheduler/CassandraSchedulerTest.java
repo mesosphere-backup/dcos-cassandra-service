@@ -3,9 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler;
 import com.google.common.eventbus.EventBus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
+import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
@@ -50,6 +48,7 @@ public class CassandraSchedulerTest {
     private Protos.FrameworkID frameworkId;
     private Protos.MasterInfo masterInfo;
     private StateStore stateStore;
+    private DefaultConfigurationManager defaultConfigurationManager;
     private static String testDaemonName = "test-daemon-name";
 
     @Before
@@ -71,8 +70,11 @@ public class CassandraSchedulerTest {
         mockSchedulerDriver = Mockito.mock(SchedulerDriver.class);
         frameworkId = TestUtils.generateFrameworkId();
         stateStore = Mockito.mock(StateStore.class);
+        defaultConfigurationManager = Mockito.mock(DefaultConfigurationManager.class);
+        CassandraSchedulerConfiguration mockConfig = Mockito.mock(CassandraSchedulerConfiguration.class);
 
-        Mockito.when(configurationManager.getServers()).thenReturn(3);
+        Mockito.when(defaultConfigurationManager.getTargetConfig()).thenReturn(mockConfig);
+        Mockito.when(mockConfig.getServers()).thenReturn(3);
         Mockito.when(cassandraTasks.getStateStore()).thenReturn(stateStore);
 
         stageManager = new CassandraStageManager(
@@ -100,7 +102,8 @@ public class CassandraSchedulerTest {
                 cleanup,
                 repair,
                 seeds,
-                executorService);
+                executorService,
+                defaultConfigurationManager);
 
         masterInfo = TestUtils.generateMasterInfo();
         scheduler.registered(null, frameworkId, masterInfo);

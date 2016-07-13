@@ -1,103 +1,126 @@
-framework_name : ${FRAMEWORK_NAME:-"cassandra"}
-framework_version : ${FRAMEWORK_VERSION:-"version"}
-executor:
-  command : ${EXECUTOR_COMMAND:-"ulimit -l $CASSANDRA_ULIMIT_MEMLOCK && ulimit -n $CASSANDRA_ULIMIT_NOFILE && ulimit -u $CASSANDRA_ULIMIT_NPROC && ulimit -a && ./executor/bin/cassandra-executor server executor/conf/executor.yml"}
-  arguments : ${EXECUTOR_ARGS:-[]}
-  cpus : ${EXECUTOR_CPUS:-0.1}
-  memory_mb : ${EXECUTOR_MEMORY_MB:-768}
-  heap_mb : ${EXECUTOR_HEAP_MB:-512}
-  api_port : ${EXECUTOR_API_PORT:-9000}
-  java_home : ${EXECUTOR_JAVA_HOME:-"./jre"}
-  jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
-  executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
-  cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
-  cassandra_ulimit_memlock : ${CASSANDRA_ULIMIT_MEMLOCK:-'unlimited'}
-  cassandra_ulimit_nofile : ${CASSANDRA_ULIMIT_NOFILE:-'100000'}
-  cassandra_ulimit_nproc : ${CASSANDRA_ULIMIT_NPROC:-'32768'}
-cluster_task:
-  cpus: ${CLUSTER_TASK_CPUS:-1}
-  memory_mb: ${CLUSTER_TASK_MEMORY_MB:-256}
-  disk_mb: ${CLUSTER_TASK_DISK_MB:-0}
-cassandra:
-  cpus: ${CASSANDRA_CPUS:-0.5}
-  memory_mb: ${CASSANDRA_MEMORY_MB:-4096}
-  disk_mb: ${CASSANDRA_DISK_MB:-10240}
-  disk_type: ${CASSANDRA_DISK_TYPE:-ROOT}
-  version: ${CASSANDRA_VERSION:-2.2.5}
-  heap:
-    size_mb : ${CASSANDRA_HEAP_SIZE_MB:-2048}
-    new_mb : ${CASSANDRA_HEAP_NEW_MB:-100}
-  location:
-    rack : ${CASSANDRA_LOCATION_RACK:-"rac1"}
-    data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
-  jmx_port: ${CASSANDRA_JMX_PORT:-7199}
-  num_tokens : ${CASSANDRA_NUM_TOKENS:-256}
-  hinted_handoff_enabled : ${CASSANDRA_HINTED_HANDOFF_ENABLED:-true}
-  max_hint_window_in_ms : ${CASSANDRA_MAX_HINT_WINDOW_IN_MS:-10800000}
-  hinted_handoff_throttle_in_kb : ${CASSANDRA_HINTED_HANDOFF_THROTTLE_IN_KB:-1024}
-  max_hints_delivery_threads : ${CASSANDRA_MAX_HINTS_DELIVERY_THREADS:-2}
-  batchlog_replay_throttle_in_kb :  ${CASSANDRA_BATCHLOG_REPLAY_THROTTLE_IN_KB:-1024}
-  partitioner : ${CASSANDRA_PARTITIONER:-"org.apache.cassandra.dht.Murmur3Partitioner"}
-  disk_failure_policy : ${CASSANDRA_DISK_FAILURE_POLICY:-"stop"}
-  commit_failure_policy : ${CASSANDRA_COMMIT_FAILURE_POLICY:-"stop"}
-  key_cache_size_in_mb : ${CASSANDRA_KEY_CACHE_SIZE_IN_MB:-null}
-  key_cache_save_period : ${CASSANDRA_KEY_CACHE_SAVE_PERIOD:-14400}
-  row_cache_size_in_mb : ${CASSANDRA_ROW_CACHE_SIZE_IN_MB:-0}
-  row_cache_save_period : ${CASSANDRA_ROW_CACHE_SAVE_PERIOD:-0}
-  counter_cache_size_in_mb : ${CASSANDRA_COUNTER_CACHE_SIZE_IN_MB:-null}
-  counter_cache_save_period : ${CASSANDRA_COUNTER_CACHE_SAVE_PERIOD:-7200}
-  commitlog_sync : ${CASSANDRA_COMMITLOG_SYNC:-"periodic"}
-  commitlog_sync_period_in_ms : ${CASSANDRA_COMMITLOG_SYNC_PERIOD_IN_MS:-10000}
-  commitlog_segment_size_in_mb : ${CASSANDRA_COMMITLOG_SEGMENT_SIZE_IN_MB:-32}
-  concurrent_reads : ${CASSANDRA_CONCURRENT_READS:-32}
-  concurrent_writes : ${CASSANDRA_CONCURRENT_WRITES:-32}
-  concurrent_counter_writes : ${CASSANDRA_CONCURRENT_COUNTER_WRITES:-32}
-  memtable_allocation_type : ${CASSANDRA_MEMTABLE_ALLOCATION_TYPE:-"heap_buffers"}
-  index_summary_capacity_in_mb : ${CASSANDRA_INDEX_SUMMARY_CAPACITY_IN_MB:-null}
-  index_summary_resize_interval_in_minutes : ${CASSANDRA_INDEX_SUMMARY_RESIZE_INTERVAL_IN_MINUTES:-60}
-  trickle_fsync : ${CASSANDRA_TRICKLE_FSYNC:-false}
-  trickle_fsync_interval_in_kb : ${CASSANDRA_TRICKLE_FSYNC_INTERVAL_IN_KB:-10240}
-  storage_port : ${CASSANDRA_STORAGE_PORT:-7000}
-  ssl_storage_port : ${CASSANDRA_SSL_STORAGE_PORT:-7001}
-  start_native_transport : ${CASSANDRA_START_NATIVE_TRANSPORT:-true}
-  native_transport_port : ${CASSANDRA_NATIVE_TRANSPORT_PORT:-9042}
-  start_rpc : ${CASSANDRA_START_RPC:-false}
-  rpc_port : ${CASSANDRA_RPC_PORT:-9160}
-  rpc_keepalive : ${CASSANDRA_RPC_KEEPALIVE:-true}
-  rpc_server_type : ${CASSANDRA_RPC_SERVER_TYPE:-"sync"}
-  thrift_framed_transport_size_in_mb : ${CASSANDRA_THRIFT_FRAMED_TRANSPORT_SIZE_IN_MB:-15}
-  tombstone_warn_threshold : ${CASSANDRA_TOMBSTONE_WARN_THRESHOLD:-1000}
-  tombstone_failure_threshold : ${CASSANDRA_TOMBSTONE_FAILURE_THRESHOLD:-100000}
-  column_index_size_in_kb : ${CASSANDRA_COLUMN_INDEX_SIZE_IN_KB:-64}
-  batch_size_warn_threshold_in_kb : ${CASSANDRA_BATCH_SIZE_WARN_THRESHOLD_IN_KB:-5}
-  batch_size_fail_threshold_in_kb : ${CASSANDRA_BATCH_SIZE_FAIL_THRESHOLD_IN_KB:-50}
-  compaction_throughput_mb_per_sec : ${CASSANDRA_COMPACTION_THROUGHPUT_MB_PER_SEC:-16}
-  compaction_large_partition_warning_threshold_mb : ${CASSANDRA_COMPACTION_LARGE_PARTITION_WARNING_THRESHOLD_MB:-100}
-  sstable_preemptive_open_interval_in_mb : ${CASSANDRA_SSTABLE_PREEMPTIVE_OPEN_INTERVAL_IN_MB:-50}
-  read_request_timeout_in_ms : ${CASSANDRA_READ_REQUEST_TIMEOUT_IN_MS:-5000}
-  range_request_timeout_in_ms : ${CASSANDRA_RANGE_REQUEST_TIMEOUT_IN_MS:-10000}
-  write_request_timeout_in_ms : ${CASSANDRA_WRITE_REQUEST_TIMEOUT_IN_MS:-2000}
-  counter_write_request_timeout_in_ms : ${CASSANDRA_COUNTER_WRITE_REQUEST_TIMEOUT_IN_MS:-5000}
-  cas_contention_timeout_in_ms : ${CASSANDRA_CAS_CONTENTION_TIMEOUT_IN_MS:-1000}
-  truncate_request_timeout_in_ms : ${CASSANDRA_TRUNCATE_REQUEST_TIMEOUT_IN_MS:-60000}
-  request_timeout_in_ms : ${CASSANDRA_REQUEST_TIMEOUT_IN_MS:-10000}
-  cross_node_timeout : ${CASSANDRA_CROSS_NODE_TIMEOUT:-false}
-  dynamic_snitch_update_interval_in_ms : ${CASSANDRA_DYNAMIC_SNITCH_UPDATE_INTERVAL_IN_MS:-100}
-  dynamic_snitch_reset_interval_in_ms : ${CASSANDRA_DYNAMIC_SNITCH_RESET_INTERVAL_IN_MS:-600000}
-  dynamic_snitch_badness_threshold : ${CASSANDRA_DYNAMIC_SNITCH_BADNESS_THRESHOLD:-0.1}
-  request_scheduler : ${CASSANDRA_REQUEST_SCHEDULER:-"org.apache.cassandra.scheduler.NoScheduler"}
-  internode_compression : ${CASSANDRA_INTERNODE_COMPRESSION:-"all"}
-  inter_dc_tcp_nodelay : ${CASSANDRA_INTER_DC_TCP_NODELAY:-false}
-  tracetype_query_ttl : ${CASSANDRA_TRACETYPE_QUERY_TTL:-86400}
-  tracetype_repair_ttl : ${CASSANDRA_TRACETYPE_REPAIR_TTL:-604800}
-  windows_timer_interval : ${CASSANDRA_WINDOWS_TIMER_INTERVAL:-1}
-nodes: ${NODES:-3}
-seed_nodes: ${SEED_NODES:-2}
-placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
-api_port : ${API_PORT:-8080}
-dc_sync_ms : ${DC_SYNC_MS:-60000}
-dc_url : "${DC_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/datacenter}"
-external_dcs : ${EXTERNAL_DCS:-""}
+schedulerConfiguration:
+  framework_name : ${FRAMEWORK_NAME:-"cassandra"}
+  framework_version : ${FRAMEWORK_VERSION:-"version"}
+  executor:
+    command : ${EXECUTOR_COMMAND:-"ulimit -l $CASSANDRA_ULIMIT_MEMLOCK && ulimit -n $CASSANDRA_ULIMIT_NOFILE && ulimit -u $CASSANDRA_ULIMIT_NPROC && ulimit -a && ./executor/bin/cassandra-executor server executor/conf/executor.yml"}
+    arguments : ${EXECUTOR_ARGS:-[]}
+    cpus : ${EXECUTOR_CPUS:-0.1}
+    memory_mb : ${EXECUTOR_MEMORY_MB:-768}
+    heap_mb : ${EXECUTOR_HEAP_MB:-512}
+    api_port : ${EXECUTOR_API_PORT:-9000}
+    java_home : ${EXECUTOR_JAVA_HOME:-"./jre"}
+    jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
+    executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
+    cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
+    cassandra_ulimit_memlock : ${CASSANDRA_ULIMIT_MEMLOCK:-'unlimited'}
+    cassandra_ulimit_nofile : ${CASSANDRA_ULIMIT_NOFILE:-'100000'}
+    cassandra_ulimit_nproc : ${CASSANDRA_ULIMIT_NPROC:-'32768'}
+  cluster_task:
+    cpus: ${CLUSTER_TASK_CPUS:-1}
+    memory_mb: ${CLUSTER_TASK_MEMORY_MB:-256}
+    disk_mb: ${CLUSTER_TASK_DISK_MB:-0}
+  cassandra:
+    cpus: ${CASSANDRA_CPUS:-0.5}
+    memory_mb: ${CASSANDRA_MEMORY_MB:-4096}
+    disk_mb: ${CASSANDRA_DISK_MB:-10240}
+    disk_type: ${CASSANDRA_DISK_TYPE:-ROOT}
+    version: ${CASSANDRA_VERSION:-2.2.5}
+    heap:
+      size_mb : ${CASSANDRA_HEAP_SIZE_MB:-2048}
+      new_mb : ${CASSANDRA_HEAP_NEW_MB:-100}
+    location:
+      rack : ${CASSANDRA_LOCATION_RACK:-"rac1"}
+      data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
+    jmx_port: ${CASSANDRA_JMX_PORT:-7199}
+    num_tokens : ${CASSANDRA_NUM_TOKENS:-256}
+    hinted_handoff_enabled : ${CASSANDRA_HINTED_HANDOFF_ENABLED:-true}
+    max_hint_window_in_ms : ${CASSANDRA_MAX_HINT_WINDOW_IN_MS:-10800000}
+    hinted_handoff_throttle_in_kb : ${CASSANDRA_HINTED_HANDOFF_THROTTLE_IN_KB:-1024}
+    max_hints_delivery_threads : ${CASSANDRA_MAX_HINTS_DELIVERY_THREADS:-2}
+    batchlog_replay_throttle_in_kb :  ${CASSANDRA_BATCHLOG_REPLAY_THROTTLE_IN_KB:-1024}
+    partitioner : ${CASSANDRA_PARTITIONER:-"org.apache.cassandra.dht.Murmur3Partitioner"}
+    disk_failure_policy : ${CASSANDRA_DISK_FAILURE_POLICY:-"stop"}
+    commit_failure_policy : ${CASSANDRA_COMMIT_FAILURE_POLICY:-"stop"}
+    key_cache_size_in_mb : ${CASSANDRA_KEY_CACHE_SIZE_IN_MB:-null}
+    key_cache_save_period : ${CASSANDRA_KEY_CACHE_SAVE_PERIOD:-14400}
+    row_cache_size_in_mb : ${CASSANDRA_ROW_CACHE_SIZE_IN_MB:-0}
+    row_cache_save_period : ${CASSANDRA_ROW_CACHE_SAVE_PERIOD:-0}
+    counter_cache_size_in_mb : ${CASSANDRA_COUNTER_CACHE_SIZE_IN_MB:-null}
+    counter_cache_save_period : ${CASSANDRA_COUNTER_CACHE_SAVE_PERIOD:-7200}
+    commitlog_sync : ${CASSANDRA_COMMITLOG_SYNC:-"periodic"}
+    commitlog_sync_period_in_ms : ${CASSANDRA_COMMITLOG_SYNC_PERIOD_IN_MS:-10000}
+    commitlog_segment_size_in_mb : ${CASSANDRA_COMMITLOG_SEGMENT_SIZE_IN_MB:-32}
+    concurrent_reads : ${CASSANDRA_CONCURRENT_READS:-32}
+    concurrent_writes : ${CASSANDRA_CONCURRENT_WRITES:-32}
+    concurrent_counter_writes : ${CASSANDRA_CONCURRENT_COUNTER_WRITES:-32}
+    memtable_allocation_type : ${CASSANDRA_MEMTABLE_ALLOCATION_TYPE:-"heap_buffers"}
+    index_summary_capacity_in_mb : ${CASSANDRA_INDEX_SUMMARY_CAPACITY_IN_MB:-null}
+    index_summary_resize_interval_in_minutes : ${CASSANDRA_INDEX_SUMMARY_RESIZE_INTERVAL_IN_MINUTES:-60}
+    trickle_fsync : ${CASSANDRA_TRICKLE_FSYNC:-false}
+    trickle_fsync_interval_in_kb : ${CASSANDRA_TRICKLE_FSYNC_INTERVAL_IN_KB:-10240}
+    storage_port : ${CASSANDRA_STORAGE_PORT:-7000}
+    ssl_storage_port : ${CASSANDRA_SSL_STORAGE_PORT:-7001}
+    start_native_transport : ${CASSANDRA_START_NATIVE_TRANSPORT:-true}
+    native_transport_port : ${CASSANDRA_NATIVE_TRANSPORT_PORT:-9042}
+    start_rpc : ${CASSANDRA_START_RPC:-false}
+    rpc_port : ${CASSANDRA_RPC_PORT:-9160}
+    rpc_keepalive : ${CASSANDRA_RPC_KEEPALIVE:-true}
+    rpc_server_type : ${CASSANDRA_RPC_SERVER_TYPE:-"sync"}
+    thrift_framed_transport_size_in_mb : ${CASSANDRA_THRIFT_FRAMED_TRANSPORT_SIZE_IN_MB:-15}
+    tombstone_warn_threshold : ${CASSANDRA_TOMBSTONE_WARN_THRESHOLD:-1000}
+    tombstone_failure_threshold : ${CASSANDRA_TOMBSTONE_FAILURE_THRESHOLD:-100000}
+    column_index_size_in_kb : ${CASSANDRA_COLUMN_INDEX_SIZE_IN_KB:-64}
+    batch_size_warn_threshold_in_kb : ${CASSANDRA_BATCH_SIZE_WARN_THRESHOLD_IN_KB:-5}
+    batch_size_fail_threshold_in_kb : ${CASSANDRA_BATCH_SIZE_FAIL_THRESHOLD_IN_KB:-50}
+    compaction_throughput_mb_per_sec : ${CASSANDRA_COMPACTION_THROUGHPUT_MB_PER_SEC:-16}
+    compaction_large_partition_warning_threshold_mb : ${CASSANDRA_COMPACTION_LARGE_PARTITION_WARNING_THRESHOLD_MB:-100}
+    sstable_preemptive_open_interval_in_mb : ${CASSANDRA_SSTABLE_PREEMPTIVE_OPEN_INTERVAL_IN_MB:-50}
+    read_request_timeout_in_ms : ${CASSANDRA_READ_REQUEST_TIMEOUT_IN_MS:-5000}
+    range_request_timeout_in_ms : ${CASSANDRA_RANGE_REQUEST_TIMEOUT_IN_MS:-10000}
+    write_request_timeout_in_ms : ${CASSANDRA_WRITE_REQUEST_TIMEOUT_IN_MS:-2000}
+    counter_write_request_timeout_in_ms : ${CASSANDRA_COUNTER_WRITE_REQUEST_TIMEOUT_IN_MS:-5000}
+    cas_contention_timeout_in_ms : ${CASSANDRA_CAS_CONTENTION_TIMEOUT_IN_MS:-1000}
+    truncate_request_timeout_in_ms : ${CASSANDRA_TRUNCATE_REQUEST_TIMEOUT_IN_MS:-60000}
+    request_timeout_in_ms : ${CASSANDRA_REQUEST_TIMEOUT_IN_MS:-10000}
+    cross_node_timeout : ${CASSANDRA_CROSS_NODE_TIMEOUT:-false}
+    dynamic_snitch_update_interval_in_ms : ${CASSANDRA_DYNAMIC_SNITCH_UPDATE_INTERVAL_IN_MS:-100}
+    dynamic_snitch_reset_interval_in_ms : ${CASSANDRA_DYNAMIC_SNITCH_RESET_INTERVAL_IN_MS:-600000}
+    dynamic_snitch_badness_threshold : ${CASSANDRA_DYNAMIC_SNITCH_BADNESS_THRESHOLD:-0.1}
+    request_scheduler : ${CASSANDRA_REQUEST_SCHEDULER:-"org.apache.cassandra.scheduler.NoScheduler"}
+    internode_compression : ${CASSANDRA_INTERNODE_COMPRESSION:-"all"}
+    inter_dc_tcp_nodelay : ${CASSANDRA_INTER_DC_TCP_NODELAY:-false}
+    tracetype_query_ttl : ${CASSANDRA_TRACETYPE_QUERY_TTL:-86400}
+    tracetype_repair_ttl : ${CASSANDRA_TRACETYPE_REPAIR_TTL:-604800}
+    windows_timer_interval : ${CASSANDRA_WINDOWS_TIMER_INTERVAL:-1}
+  nodes: ${NODES:-3}
+  seed_nodes: ${SEED_NODES:-2}
+  placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
+  api_port : ${API_PORT:-8080}
+  dc_sync_ms : ${DC_SYNC_MS:-60000}
+  dc_url : "${DC_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/datacenter}"
+  external_dcs : ${EXTERNAL_DCS:-""}
+  identity:
+    name : ${FRAMEWORK_NAME:-"cassandra"}
+    version : ${FRAMEWORK_VERSION:-"0.1.0"}
+    user : ${FRAMEWORK_USER:-"root"}
+    cluster : "${FRAMEWORK_CLUSTER:-${FRAMEWORK_NAME:-cassandra}-cluster}"
+    role : "${FRAMEWORK_ROLE:-${FRAMEWORK_NAME:-cassandra}-role}"
+    principal : "${FRAMEWORK_PRINCIPAL:-${FRAMEWORK_NAME:-cassandra}-principal}"
+    secret: ${FRAMEWORK_SECRET_FILE:-""}
+    failover_timeout_s : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
+    checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
+  seeds_url: "${SEEDS_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
+  phase_strategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
+  mesos:
+    servers: ${MESOS_SERVERS:-"master.mesos:2181"}
+    path: ${MESOS_PATH:-"/mesos"}
+    timeout_ms: ${MESOS_TIMEOUT_MS:-10000}
+  zookeeper:
+    servers: ${ZOOKEEPER_SERVERS:-"master.mesos:2181"}
+    session_timeout_ms: 10000
+    connection_timeout_ms: 10000
+    operation_timeout_ms: 10000
+    backoff_ms: 10000
 server:
   type: simple
   adminContextPath: /admin
@@ -119,25 +142,3 @@ logging:
       threshold: ALL
       timeZone: UTC
       target: stdout
-identity:
-  name : ${FRAMEWORK_NAME:-"cassandra"}
-  version : ${FRAMEWORK_VERSION:-"0.1.0"}
-  user : ${FRAMEWORK_USER:-"root"}
-  cluster : "${FRAMEWORK_CLUSTER:-${FRAMEWORK_NAME:-cassandra}-cluster}"
-  role : "${FRAMEWORK_ROLE:-${FRAMEWORK_NAME:-cassandra}-role}"
-  principal : "${FRAMEWORK_PRINCIPAL:-${FRAMEWORK_NAME:-cassandra}-principal}"
-  secret: ${FRAMEWORK_SECRET_FILE:-""}
-  failover_timeout_s : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
-  checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
-seeds_url: "${SEEDS_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
-phase_strategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
-mesos:
-  servers: ${MESOS_SERVERS:-"master.mesos:2181"}
-  path: ${MESOS_PATH:-"/mesos"}
-  timeout_ms: ${MESOS_TIMEOUT_MS:-10000}
-zookeeper:
-  servers: ${ZOOKEEPER_SERVERS:-"master.mesos:2181"}
-  session_timeout_ms: 10000
-  connection_timeout_ms: 10000
-  operation_timeout_ms: 10000
-  backoff_ms: 10000

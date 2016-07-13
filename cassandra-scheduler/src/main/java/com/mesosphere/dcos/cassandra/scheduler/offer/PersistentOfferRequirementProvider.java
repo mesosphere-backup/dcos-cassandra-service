@@ -2,18 +2,18 @@ package com.mesosphere.dcos.cassandra.scheduler.offer;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.PlacementStrategy;
 import org.apache.mesos.offer.VolumeRequirement;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,13 +24,13 @@ public class PersistentOfferRequirementProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             PersistentOfferRequirementProvider.class);
     private IdentityManager identityManager;
-    private ConfigurationManager configurationManager;
+    private DefaultConfigurationManager configurationManager;
     private CassandraTasks cassandraTasks;
 
     @Inject
     public PersistentOfferRequirementProvider(
             IdentityManager identityManager,
-            ConfigurationManager configurationManager,
+            DefaultConfigurationManager configurationManager,
             CassandraTasks cassandraTasks) {
         this.identityManager = identityManager;
         this.configurationManager = configurationManager;
@@ -40,10 +40,15 @@ public class PersistentOfferRequirementProvider {
     public OfferRequirement getNewOfferRequirement(CassandraContainer container) {
         // TODO: Should we version configs ?
         LOGGER.info("Getting new offer requirement for:  ", container.getId());
-        final PlacementStrategy placementStrategy =
-                PlacementStrategyManager.getPlacementStrategy(
+        PlacementStrategy placementStrategy = null;
+        try {
+            placementStrategy = PlacementStrategyManager.getPlacementStrategy(
                         configurationManager,
                         cassandraTasks);
+        } catch (ConfigStoreException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
 
         Protos.TaskInfo daemonTaskInfo = container.getDaemonTask().getTaskInfo();
         final List<Protos.SlaveID> agentsToAvoid =
@@ -56,8 +61,13 @@ public class PersistentOfferRequirementProvider {
 
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
         volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.CREATE);
-        volumeRequirement.setVolumeType(configurationManager.getCassandraConfig().getDiskType());
-
+        try {
+            volumeRequirement.setVolumeType(((CassandraSchedulerConfiguration)configurationManager.getTargetConfig())
+                    .getCassandraConfig().getDiskType());
+        } catch (ConfigStoreException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
         try {
             return new OfferRequirement(
                     container.getTaskInfos(),
@@ -86,7 +96,13 @@ public class PersistentOfferRequirementProvider {
         final Identity identity = identityManager.get();
         final VolumeRequirement volumeRequirement = VolumeRequirement.create();
         volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.EXISTING);
-        volumeRequirement.setVolumeType(configurationManager.getCassandraConfig().getDiskType());
+        try {
+            volumeRequirement.setVolumeType(((CassandraSchedulerConfiguration)configurationManager.getTargetConfig())
+                    .getCassandraConfig().getDiskType());
+        } catch (ConfigStoreException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
 
         ExecutorInfo execInfo = ExecutorInfo.newBuilder(taskInfo.getExecutor())
                 .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))

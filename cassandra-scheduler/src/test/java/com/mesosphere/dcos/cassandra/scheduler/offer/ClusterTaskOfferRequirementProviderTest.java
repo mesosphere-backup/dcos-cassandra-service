@@ -3,15 +3,10 @@ package com.mesosphere.dcos.cassandra.scheduler.offer;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
-import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
-import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
-import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -22,9 +17,9 @@ import io.dropwizard.validation.BaseValidator;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
-import org.apache.mesos.protobuf.TaskInfoBuilder;
-import org.apache.mesos.protobuf.ResourceBuilder;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.protobuf.ResourceBuilder;
+import org.apache.mesos.protobuf.TaskInfoBuilder;
 import org.junit.*;
 
 import java.util.Arrays;
@@ -61,9 +56,7 @@ public class ClusterTaskOfferRequirementProviderTest {
                 identity,
                 configuration,
                 curatorConfig,
-                clusterTaskConfig,
-                CassandraTask.PROTO_SERIALIZER,
-                persistence);
+                clusterTaskConfig);
 
         CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
         Protos.TaskInfo initTaskInfo = task.getTaskInfo();
@@ -93,9 +86,9 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         server.start();
 
-        final ConfigurationFactory<CassandraSchedulerConfiguration> factory =
+        final ConfigurationFactory<DropwizardConfiguration> factory =
                 new ConfigurationFactory<>(
-                        CassandraSchedulerConfiguration.class,
+                        DropwizardConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
@@ -106,7 +99,7 @@ public class ClusterTaskOfferRequirementProviderTest {
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile());
+                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
 
         Identity initial = config.getIdentity();
 
@@ -131,23 +124,13 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         identity.register("test_id");
 
-        configuration = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                "NODE",
-                config.getSeedsUrl(),
-                config.getDcUrl(),
-                config.getExternalDcsList(),
-                config.getExternalDcSyncMs(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
+        DefaultConfigurationManager configurationManager
+                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                "/" + config.getName(),
+                curatorConfig.getServers(),
+                config,
+                new ConfigValidator());
+        configuration = new ConfigurationManager(configurationManager);
 
         path = "/cassandra/" + config.getIdentity().getName() +"/tasks";
 

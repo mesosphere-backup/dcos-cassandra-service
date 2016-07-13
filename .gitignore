@@ -41,3 +41,6 @@ generated/
 cassandra-executor/apache-cassandra-2.2.5/
 cassandra-executor/volume/
 cassandra-bin-tmp/
+
+# Ignore dcos-tests
+dcos-tests/

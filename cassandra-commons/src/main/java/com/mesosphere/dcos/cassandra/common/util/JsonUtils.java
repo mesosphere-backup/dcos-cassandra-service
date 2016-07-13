@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
  * Contains static Json manipulation utilities.
@@ -40,6 +41,7 @@ public class JsonUtils {
      */
     public static final ObjectMapper MAPPER = new ObjectMapper()
             .registerModule(new GuavaModule())
+            .registerModule(new JavaTimeModule())
             .registerModule(new Jdk8Module());
 
     /**

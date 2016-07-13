@@ -8,6 +8,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +16,6 @@ import java.util.Optional;
 
 @Singleton
 public class IdentityManager implements Managed {
-
-
     private static final Logger LOGGER =
             LoggerFactory.getLogger(IdentityManager.class);
 

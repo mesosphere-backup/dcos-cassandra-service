@@ -9,6 +9,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
@@ -58,11 +59,11 @@ public class CassandraDaemonBlock implements Block {
         }
     }
 
-    private CassandraContainer getTask() throws PersistenceException {
+    private CassandraContainer getTask() throws PersistenceException, ConfigStoreException {
         return cassandraTasks.getOrCreateContainer(name);
     }
 
-    private boolean isComplete(final CassandraContainer container) {
+    private boolean isComplete(final CassandraContainer container) throws ConfigStoreException {
         return (Protos.TaskState.TASK_RUNNING.equals(
                 container.getState())
                 && CassandraMode.NORMAL.equals(
@@ -70,11 +71,11 @@ public class CassandraDaemonBlock implements Block {
                 !cassandraTasks.needsConfigUpdate(container.getDaemonTask()));
     }
 
-    private boolean needsConfigUpdate(final CassandraDaemonTask task) {
+    private boolean needsConfigUpdate(final CassandraDaemonTask task) throws ConfigStoreException {
         return cassandraTasks.needsConfigUpdate(task);
     }
 
-    private OfferRequirement reconfigureTask(final CassandraDaemonTask task) {
+    private OfferRequirement reconfigureTask(final CassandraDaemonTask task) throws ConfigStoreException {
 
         try {
             return provider.getReplacementOfferRequirement(
@@ -109,7 +110,7 @@ public class CassandraDaemonBlock implements Block {
             final String name,
             final PersistentOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
-            final SchedulerClient client) throws PersistenceException {
+            final SchedulerClient client) throws PersistenceException, ConfigStoreException {
 
         return new CassandraDaemonBlock(
                 name,
@@ -122,7 +123,7 @@ public class CassandraDaemonBlock implements Block {
             final String name,
             final PersistentOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
-            final SchedulerClient client) throws PersistenceException {
+            final SchedulerClient client) throws PersistenceException, ConfigStoreException {
         this.cassandraTasks = cassandraTasks;
         this.name = name;
         this.provider = provider;
@@ -156,39 +157,39 @@ public class CassandraDaemonBlock implements Block {
 
         try {
             container = getTask();
-        } catch (PersistenceException ex) {
+
+            if (isComplete(container)) {
+                LOGGER.info("Block {} - Task complete : id = {}",
+                        getName(),
+                        container.getId());
+                setStatus(Status.Complete);
+                return null;
+            } else if (needsConfigUpdate(container.getDaemonTask())) {
+                LOGGER.info("Block {} - Task requires config update : id = {}",
+                        getName(),
+                        container.getId());
+                if (!container.isTerminated()) {
+                    terminate(container.getDaemonTask());
+                    return null;
+                } else {
+                    return reconfigureTask(container.getDaemonTask());
+                }
+            } else if (StringUtils.isBlank(container.getAgentId())) {
+                LOGGER.info("Block {} - Launching new container : id = {}",
+                        getName(),
+                        container.getId());
+                return provider.getNewOfferRequirement(container);
+            } else if (container.isTerminated() || container.isLaunching()) {
+                LOGGER.info("Block {} - Replacing container : id = {}",
+                        getName(),
+                        container.getId());
+                return replaceTask(container.getDaemonTask());
+            } else {
+                return null;
+            }
+        } catch (PersistenceException | ConfigStoreException ex) {
             LOGGER.error(String.format("Block %s - Failed to get or create a " +
                     "container", getName()), ex);
-            return null;
-        }
-
-        if (isComplete(container)) {
-            LOGGER.info("Block {} - Task complete : id = {}",
-                    getName(),
-                    container.getId());
-            setStatus(Status.Complete);
-            return null;
-        } else if (needsConfigUpdate(container.getDaemonTask())) {
-            LOGGER.info("Block {} - Task requires config update : id = {}",
-                    getName(),
-                    container.getId());
-            if (!container.isTerminated()) {
-                terminate(container.getDaemonTask());
-                return null;
-            } else {
-                return reconfigureTask(container.getDaemonTask());
-            }
-        } else if (StringUtils.isBlank(container.getAgentId())) {
-            LOGGER.info("Block {} - Launching new container : id = {}",
-                    getName(),
-                    container.getId());
-            return provider.getNewOfferRequirement(container);
-        } else if (container.isTerminated() || container.isLaunching()) {
-            LOGGER.info("Block {} - Replacing container : id = {}",
-                    getName(),
-                    container.getId());
-            return replaceTask(container.getDaemonTask());
-        } else {
             return null;
         }
     }

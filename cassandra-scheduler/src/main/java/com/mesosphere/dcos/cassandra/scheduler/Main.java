@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.DropwizardConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
@@ -22,7 +23,7 @@ import org.apache.mesos.scheduler.plan.api.StageResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Main extends Application<CassandraSchedulerConfiguration> {
+public class Main extends Application<DropwizardConfiguration> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
@@ -35,7 +36,7 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
     }
 
     private Injector injector;
-    private CassandraSchedulerConfiguration configuration;
+    private DropwizardConfiguration configuration;
     private Environment environment;
 
     @Override
@@ -44,7 +45,7 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
     }
 
     @Override
-    public void initialize(Bootstrap<CassandraSchedulerConfiguration> bootstrap) {
+    public void initialize(Bootstrap<DropwizardConfiguration> bootstrap) {
         super.initialize(bootstrap);
 
         StrSubstitutor strSubstitutor = new StrSubstitutor(new EnvironmentVariableLookup(false));
@@ -58,7 +59,7 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
     }
 
     @Override
-    public void run(CassandraSchedulerConfiguration configuration,
+    public void run(DropwizardConfiguration configuration,
                     Environment environment) throws Exception {
 
         this.configuration = configuration;
@@ -66,7 +67,7 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
 
         logConfiguration(configuration);
 
-        final SchedulerModule baseModule = new SchedulerModule(configuration,
+        final SchedulerModule baseModule = new SchedulerModule(configuration.getSchedulerConfiguration(),
                 environment);
 
         this.injector = Guice.createInjector(baseModule);
@@ -124,7 +125,8 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
     }
 
 
-    private void logConfiguration(CassandraSchedulerConfiguration configuration) {
+    private void logConfiguration(DropwizardConfiguration config) {
+        final CassandraSchedulerConfiguration configuration = config.getSchedulerConfiguration();
         LOGGER.info("Framework Identity = {}",
                 configuration.getIdentity());
         LOGGER.info("Framework Mesos Configuration = {}",
@@ -149,7 +151,7 @@ public class Main extends Application<CassandraSchedulerConfiguration> {
         return injector;
     }
 
-    public CassandraSchedulerConfiguration getConfiguration() {
+    public DropwizardConfiguration getConfiguration() {
         return configuration;
     }
 

@@ -19,8 +19,6 @@ import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
@@ -31,6 +29,7 @@ import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.client.HttpClientBuilder;
+import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.setup.Environment;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -43,7 +42,6 @@ import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.StageManager;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -76,17 +74,6 @@ public class TestModule extends AbstractModule {
     protected void configure() {
         bind(CassandraSchedulerConfiguration.class).toInstance(
                 this.configuration);
-
-        bind(PersistenceFactory.class).toInstance(ZooKeeperPersistence
-                .create(
-                        configuration.getIdentity(),
-                        CuratorFrameworkConfig.create(
-                                configuration.getCuratorConfig().getServers(),
-                                10000L,
-                                10000L,
-                                Optional.empty(),
-                                250L
-                        )));
 
         bind(new TypeLiteral<Serializer<Integer>>() {
         }).toInstance(IntegerStringSerializer.get());
@@ -167,8 +154,8 @@ public class TestModule extends AbstractModule {
                 configuration.getPhaseStrategy()
         );
 
-        bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(
-                configuration.getHttpClientConfiguration())
+        HttpClientConfiguration httpClient = new HttpClientConfiguration();
+        bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(httpClient)
                 .build("http-client-test"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(configuration.getCuratorConfig());

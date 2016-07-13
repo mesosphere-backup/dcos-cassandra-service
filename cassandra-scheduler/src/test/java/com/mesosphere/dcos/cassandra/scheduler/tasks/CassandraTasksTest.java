@@ -3,11 +3,11 @@ package com.mesosphere.dcos.cassandra.scheduler.tasks;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
-import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
-import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
-import com.mesosphere.dcos.cassandra.common.tasks.*;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraData;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTemplateTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
@@ -32,11 +32,10 @@ import java.util.Optional;
  * This class tests the CassandraTasks class.
  */
 public class CassandraTasksTest {
-
     private static TestingServer server;
     private static CuratorFramework curator;
     private static ZooKeeperPersistence persistence;
-    private static CassandraSchedulerConfiguration config;
+    private static DropwizardConfiguration config;
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
     private static CuratorFrameworkConfig curatorConfig;
@@ -53,9 +52,7 @@ public class CassandraTasksTest {
                 identity,
                 configuration,
                 curatorConfig,
-                clusterTaskConfig,
-                CassandraTask.PROTO_SERIALIZER,
-                persistence);
+                clusterTaskConfig);
     }
 
     @BeforeClass
@@ -65,9 +62,9 @@ public class CassandraTasksTest {
 
         server.start();
 
-        final ConfigurationFactory<CassandraSchedulerConfiguration> factory =
+        final ConfigurationFactory<DropwizardConfiguration> factory =
                 new ConfigurationFactory<>(
-                        CassandraSchedulerConfiguration.class,
+                        DropwizardConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
@@ -80,7 +77,7 @@ public class CassandraTasksTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
-        Identity initial = config.getIdentity();
+        Identity initial = config.getSchedulerConfiguration().getIdentity();
 
         curatorConfig = CuratorFrameworkConfig.create(server.getConnectString(),
                 10000L,
@@ -88,7 +85,7 @@ public class CassandraTasksTest {
                 Optional.empty(),
                 250L);
 
-        clusterTaskConfig = config.getClusterTaskConfig();
+        clusterTaskConfig = config.getSchedulerConfiguration().getClusterTaskConfig();
 
         persistence = (ZooKeeperPersistence) ZooKeeperPersistence.create(
                 initial,
@@ -103,25 +100,16 @@ public class CassandraTasksTest {
 
         identity.register("test_id");
 
-        configuration = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                "NODE",
-                config.getSeedsUrl(),
-                config.getDcUrl(),
-                config.getExternalDcsList(),
-                config.getExternalDcSyncMs(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
+        DefaultConfigurationManager configurationManager
+                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                "/" + config.getSchedulerConfiguration().getName(),
+                curatorConfig.getServers(),
+                config.getSchedulerConfiguration(),
+                new ConfigValidator());
 
-        path = "/cassandra/" + config.getIdentity().getName() +"/tasks";
+        configuration = new ConfigurationManager(configurationManager);
+
+        path = "/" + config.getSchedulerConfiguration().getIdentity().getName() + "/state";
     }
 
     @After

@@ -3,42 +3,44 @@ package com.mesosphere.dcos.cassandra.scheduler.seeds;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentMap;
 import com.mesosphere.dcos.cassandra.scheduler.resources.SeedsResponse;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import org.apache.mesos.config.ConfigStoreException;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class SeedsManager implements Runnable {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(
             SeedsManager.class);
 
-    private final ConfigurationManager configuration;
     private final CassandraTasks tasks;
     private static final String DATA_CENTERS_KEY = "datacenters";
-    private final PersistentMap<DataCenterInfo> persistent;
     private volatile ImmutableMap<String, DataCenterInfo> dataCenters;
-    private final ScheduledExecutorService executor;
     private final SchedulerClient client;
+    private DefaultConfigurationManager configurationManager;
+    private StateStore stateStore;
+    private Serializer<DataCenterInfo> serializer;
+
     private boolean putLocalInfo(String url) {
         try {
             DataCenterInfo local = getLocalInfo();
@@ -95,41 +97,44 @@ public class SeedsManager implements Runnable {
     }
 
     @Inject
-    public SeedsManager(final ConfigurationManager configuration,
+    public SeedsManager(final DefaultConfigurationManager configurationManager,
                         final CassandraTasks tasks,
-                        final PersistenceFactory persistence,
                         final Serializer<DataCenterInfo> serializer,
                         final ScheduledExecutorService executor,
-                        final SchedulerClient client) {
-        this.configuration = configuration;
+                        final SchedulerClient client,
+                        final StateStore stateStore) throws ConfigStoreException {
         this.tasks = tasks;
-        persistent = persistence.createMap(DATA_CENTERS_KEY, serializer);
+        this.stateStore = stateStore;
+        this.serializer = serializer;
         ImmutableMap.Builder<String, DataCenterInfo> builder =
                 ImmutableMap.<String, DataCenterInfo>builder();
-        this.executor = executor;
         this.client = client;
         try {
-            synchronized (persistent) {
+            synchronized (stateStore) {
                 LOGGER.info("Loading data from persistent store");
-                for (String key : persistent.keySet()) {
+                final Collection<String> propertyKeys = stateStore.listPropertyKeys();
+                for (final String key : propertyKeys) {
+                    if (!key.startsWith(DATA_CENTERS_KEY)) {
+                        continue;
+                    }
                     LOGGER.info("Loaded key: {}", key);
-                    builder.put(key, persistent.get(key).get());
+                    builder.put(key, serializer.deserialize(stateStore.fetchProperty(key)));
                 }
                 dataCenters = builder.build();
                 LOGGER.info("Loaded data centers: {}",
                         JsonUtils.toJsonString(dataCenters));
-
             }
-        } catch (PersistenceException e) {
+        } catch (SerializationException e) {
             LOGGER.error("Error loading data centers", e);
             throw new RuntimeException(e);
         }
-        LOGGER.info("Starting synchronization delay = {} ms",
-                configuration.getDataCenterSyncDelayMs());
+        final CassandraSchedulerConfiguration configuration = (CassandraSchedulerConfiguration)
+                configurationManager.getTargetConfig();
+        LOGGER.info("Starting synchronization delay = {} ms", configuration.getExternalDcSyncMs());
         executor.scheduleWithFixedDelay(
                 this,
-                configuration.getDataCenterSyncDelayMs(),
-                configuration.getDataCenterSyncDelayMs(),
+                configuration.getExternalDcSyncMs(),
+                configuration.getExternalDcSyncMs(),
                 TimeUnit.MILLISECONDS);
     }
 
@@ -142,7 +147,7 @@ public class SeedsManager implements Runnable {
                         Collectors
                                 .toList());
 
-        final int seedCount = configuration.getSeeds();
+        final int seedCount = getConfiguredSeedsCount();
         final List<String> seeds = new ArrayList<>(active.size());
 
         for (int seed = 0; seed < seedCount && seed < active.size(); ++seed) {
@@ -153,16 +158,16 @@ public class SeedsManager implements Runnable {
         return seeds;
     }
 
-    public int getConfiguredSeedsCount() {
-        return configuration.getSeeds();
+    public int getConfiguredSeedsCount() throws ConfigStoreException {
+        return ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getSeeds();
     }
 
     public List<DataCenterInfo> getDataCenters() {
         return dataCenters.values().asList();
     }
 
-    public List<String> getConfiguredDataCenters() {
-        return configuration.getExternalDataCenters();
+    public List<String> getConfiguredDataCenters() throws ConfigStoreException {
+        return ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getExternalDcsList();
     }
 
     public boolean sync(String url) {
@@ -182,10 +187,11 @@ public class SeedsManager implements Runnable {
                 (List::stream).collect(Collectors.toList());
     }
 
-    public void update(final DataCenterInfo info) throws PersistenceException {
+    public void update(final DataCenterInfo info) throws PersistenceException, SerializationException {
         LOGGER.info("Updating data center {}", info);
-        synchronized (persistent) {
-            persistent.put(info.getDatacenter(), info);
+        synchronized (stateStore) {
+            final String propertyKey = DATA_CENTERS_KEY + "." + info.getDatacenter();
+            stateStore.storeProperty(propertyKey, serializer.serialize(info));
             dataCenters = ImmutableMap.<String, DataCenterInfo>builder().putAll(
                     dataCenters.entrySet().stream()
                             .filter(entry -> !entry.getKey().equals(
@@ -205,7 +211,7 @@ public class SeedsManager implements Runnable {
         try {
             update(info);
             return true;
-        } catch (PersistenceException e) {
+        } catch (SerializationException | PersistenceException e) {
             LOGGER.error(
                     String.format("Failed to update info: info = %s",
                             info),
@@ -216,13 +222,13 @@ public class SeedsManager implements Runnable {
 
     public DataCenterInfo getLocalInfo() throws IOException {
         return DataCenterInfo.create(
-                configuration.getCassandraConfig().getLocation().getDataCenter(),
-                configuration.getDataCenterUrl(),
+                ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig())
+                        .getCassandraConfig().getLocation().getDataCenter(),
+                ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getDcUrl(),
                 getLocalSeeds());
     }
 
     public SeedsResponse getSeeds() throws IOException {
-
         List<String> seeds = getLocalSeeds();
         boolean isSeed = seeds.size() < getConfiguredSeedsCount();
         seeds.addAll(getRemoteSeeds());
@@ -230,14 +236,11 @@ public class SeedsManager implements Runnable {
     }
 
     public final void run() {
-
         for (DataCenterInfo info : dataCenters.values()) {
-
             try {
                 LOGGER.info("Syncing data center {}", info);
                 update(getRemoteInfo(info.getUrl()).get());
             } catch (Throwable t) {
-
                 LOGGER.error(String.format("Error syncing data center %s",
                         info.getDatacenter()), t);
             }

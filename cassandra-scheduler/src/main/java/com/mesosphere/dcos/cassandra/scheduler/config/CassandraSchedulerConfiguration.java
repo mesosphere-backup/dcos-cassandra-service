@@ -5,8 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
-import io.dropwizard.Configuration;
-import io.dropwizard.client.HttpClientConfiguration;
+import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+import org.apache.mesos.config.ConfigStoreException;
+import org.apache.mesos.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +17,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class CassandraSchedulerConfiguration extends Configuration {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            CassandraSchedulerConfiguration.class
-    );
+public class CassandraSchedulerConfiguration implements Configuration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraSchedulerConfiguration.class);
 
     private ExecutorConfig executorConfig;
     private String name;
@@ -85,18 +84,6 @@ public class CassandraSchedulerConfiguration extends Configuration {
     public CassandraSchedulerConfiguration setName(String name) {
         this.name = name;
         return this;
-    }
-
-    private HttpClientConfiguration httpClient = new HttpClientConfiguration();
-
-    @JsonProperty("httpClient")
-    public HttpClientConfiguration getHttpClientConfiguration() {
-        return httpClient;
-    }
-
-    @JsonProperty("httpClient")
-    public void setHttpClientConfiguration(HttpClientConfiguration httpClient) {
-        this.httpClient = httpClient;
     }
 
     @JsonProperty("mesos")
@@ -274,5 +261,19 @@ public class CassandraSchedulerConfiguration extends Configuration {
                 getSeedsUrl());
     }
 
+    @Override
+    @JsonIgnore
+    public byte[] getBytes() throws ConfigStoreException {
+        try {
+            return toJsonString().getBytes();
+        } catch (Exception e) {
+            LOGGER.error("Error occured while serializing the object: " + e);
+            throw new ConfigStoreException(e);
+        }
+    }
 
+    @Override
+    public String toJsonString() throws Exception {
+        return JsonUtils.toJsonString(this);
+    }
 }
