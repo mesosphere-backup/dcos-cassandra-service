@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "Building wheel..."
 BASEDIR=`dirname $0`/..
 
 if [ ! -d "$BASEDIR/env" ]; then
@@ -23,15 +22,16 @@ if [ ! -d "$BASEDIR/env" ]; then
 fi
 
 cd $BASEDIR
-if [ "$(uname)" == "Darwin" ]; then
+uname -a
+if [ "$(uname)" = "Darwin" -o "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
     source $BASEDIR/env/bin/activate
-elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-    source $BASEDIR/env/bin/activate
-elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
-    source $BASEDIR/env/Scripts/activate
+    echo "Virtualenv activated."
+else
+    # apparently not needed on Windows
+    echo "Skipping virtualenv activation."
 fi
-echo "Virtualenv activated."
 
+echo "Building wheel..."
 python setup.py bdist_wheel
 
 echo "Building egg..."
