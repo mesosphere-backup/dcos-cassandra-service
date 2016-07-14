@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
-public class StartRestoreRequest {
+public class BackupRestoreRequest {
   @JsonProperty("backup_name")
   @NotEmpty
   private String name;
@@ -14,11 +14,9 @@ public class StartRestoreRequest {
   private String externalLocation;
 
   @JsonProperty("s3_access_key")
-  @NotEmpty
   private String s3AccessKey;
 
   @JsonProperty("s3_secret_key")
-  @NotEmpty
   private String s3SecretKey;
 
   @JsonProperty("azure_account")
@@ -76,8 +74,35 @@ public class StartRestoreRequest {
   }
 
   public boolean isValid() {
-    return (StringUtils.isNotBlank(name) && externalLocation != null) &&
-      ((s3AccessKey != null && s3SecretKey != null && externalLocation.startsWith("s3:")) ||
-        (azureAccount != null && azureKey != null && externalLocation.startsWith("azure:")));
+    return (StringUtils.isNotBlank(name) && externalLocation != null)
+            && (isValidS3Request() || isValidAzureRequest());
+  }
+
+  private boolean isValidS3Request() {
+    return s3AccessKey != null
+            && s3SecretKey != null
+            && isValidS3ExternalLocation();
+  }
+
+  private boolean isValidS3ExternalLocation() {
+    return externalLocation.startsWith("s3:")
+            || externalLocation.startsWith("http:")
+            || externalLocation.startsWith("https:");
+  }
+
+  private boolean isValidAzureRequest() {
+    return azureAccount != null && azureKey != null && externalLocation.startsWith("azure:");
+  }
+
+  @Override
+  public String toString() {
+    return "BackupRestoreRequest{" +
+            "name='" + name + '\'' +
+            ", externalLocation='" + externalLocation + '\'' +
+            ", s3AccessKey='" + s3AccessKey + '\'' +
+            ", s3SecretKey='" + s3SecretKey + '\'' +
+            ", azureAccount='" + azureAccount + '\'' +
+            ", azureKey='" + azureKey + '\'' +
+            '}';
   }
 }
