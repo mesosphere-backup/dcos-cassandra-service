@@ -1,5 +1,5 @@
 {
-  "packagingVersion": "2.0",
+  "packagingVersion": "3.0",
   "name": "cassandra",
   "version": "stub-universe",
   "maintainer": "support@mesosphere.io",
@@ -8,5 +8,6 @@
   "framework": true,
   "tags": ["data", "database", "nosql"],
   "postInstallNotes": "DCOS Cassandra has been successfully installed!\n\n\tDocumentation: https://docs.mesosphere.com/usage/services/cassandra/\n\tIssues: https://docs.mesosphere.com/support/",
-  "postUninstallNotes": "DCOS Cassandra service has been uninstalled. Please run the framework_cleaner to remove any persistent state if required."
+  "postUninstallNotes": "DCOS Cassandra service has been uninstalled. Please run the framework_cleaner to remove any persistent state if required.",
+  "minDcosReleaseVersion": "1.7"
 }
