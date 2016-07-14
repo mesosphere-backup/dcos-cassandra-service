@@ -7,10 +7,16 @@ import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskExecutor;
+import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Optional;
 
 public class ConfigurationManager implements Managed {
     private static final Logger LOGGER =
@@ -82,21 +88,30 @@ public class ConfigurationManager implements Managed {
 
 
     public boolean hasCurrentConfig(final CassandraDaemonTask task) throws ConfigStoreException {
-        CassandraSchedulerConfiguration targetConfig = ((CassandraSchedulerConfiguration)configurationManager
-                .getTargetConfig());
-        final CassandraConfig cassandraConfig = targetConfig.getCassandraConfig();
-        final ExecutorConfig executorConfig = targetConfig.getExecutorConfig();
-        LOGGER.info("ExecutorConfig: " + executorConfig);
-        LOGGER.info("CassandraConfig: " + cassandraConfig);
-        LOGGER.info("Task: ", task);
+        final Optional<String> taskConfig = getTaskConfig(task);
+        if (!taskConfig.isPresent()) {
+            throw new RuntimeException("Invalid task. Should have a CONFIG_TARGET: " + task.getTaskInfo());
+        }
+        final String taskConfigName = taskConfig.get();
+        final String targetConfigName = configurationManager.getTargetName().toString();
 
-        boolean executorMatches = task.getExecutor().matches(executorConfig);
-        boolean cassandraConfigMatches = task.getConfig().equals(cassandraConfig);
+        return targetConfigName.equals(taskConfigName);
+    }
 
-        LOGGER.info("Executor  matches: " + executorMatches);
-        LOGGER.info("Cassandra matches: " + cassandraConfigMatches);
+    private Optional<String> getTaskConfig(CassandraDaemonTask task) {
+        final Protos.TaskInfo taskInfo = task.getTaskInfo();
+        if (!taskInfo.hasLabels() || CollectionUtils.isEmpty(taskInfo.getLabels().getLabelsList())) {
+            return Optional.empty();
+        }
 
-        return executorMatches && cassandraConfigMatches;
+        for (Protos.Label label : taskInfo.getLabels().getLabelsList()) {
+            final String key = label.getKey();
+            if (PersistentOfferRequirementProvider.CONFIG_TARGET_KEY.equals(key)) {
+                return Optional.ofNullable(key);
+            }
+        }
+
+        return Optional.empty();
     }
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) throws ConfigStoreException {

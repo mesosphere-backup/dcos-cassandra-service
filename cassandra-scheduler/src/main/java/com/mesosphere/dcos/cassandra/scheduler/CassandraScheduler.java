@@ -332,7 +332,7 @@ public class CassandraScheduler implements Scheduler, Managed {
         LOGGER.info("Received {} offers", offers.size());
 
         for (Protos.Offer offer : offers) {
-            LOGGER.debug("Received Offer: {}", TextFormat.shortDebugString(offer));
+            LOGGER.info("Received Offer: {}", TextFormat.shortDebugString(offer));
         }
     }
 

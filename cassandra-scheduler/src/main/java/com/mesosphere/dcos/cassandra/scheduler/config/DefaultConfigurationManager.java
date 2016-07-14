@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class DefaultConfigurationManager {
@@ -36,16 +37,24 @@ public class DefaultConfigurationManager {
         LOGGER.error("Validation errors: {}", validationErrors);
 
         if (validationErrors.isEmpty()) {
-            final UUID uuid = store(newConfiguration);
-            LOGGER.info("Stored new configuration with UUID: " + uuid);
-            setTargetName(uuid);
-            LOGGER.info("Set new configuration target as UUID: " + uuid);
+            if (!Objects.equals(newConfiguration, oldConfig)) {
+                final UUID uuid = store(newConfiguration);
+                LOGGER.info("Stored new configuration with UUID: " + uuid);
+                setTargetName(uuid);
+                LOGGER.info("Set new configuration target as UUID: " + uuid);
+                // Sync
+
+                // Cleanup
+            } else {
+                LOGGER.info("No config change detected.");
+            }
         }
     }
 
     public Configuration fetch(UUID version) throws ConfigStoreException {
         try {
-            final ConfigurationFactory yamlConfigurationFactory = new YAMLConfigurationFactory(configClass);
+            final ConfigurationFactory yamlConfigurationFactory =
+                    new YAMLConfigurationFactory(configClass);
             return configStore.fetch(version, yamlConfigurationFactory);
         } catch (ConfigStoreException e) {
             LOGGER.error("Unable to fetch version: " + version, e);

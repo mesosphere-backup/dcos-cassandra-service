@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
@@ -13,6 +14,7 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +32,7 @@ public class CassandraDaemonBlock implements Block {
     private final String name;
     private boolean terminated = false;
     private volatile Status status = Status.Pending;
+    private StateStore stateStore;
 
     private void terminate(final CassandraDaemonTask task) {
         LOGGER.info("Block '{}' terminating task '{}' on host '{}'", getName(), task.getId(), task.getHostname());
@@ -76,11 +79,8 @@ public class CassandraDaemonBlock implements Block {
     }
 
     private OfferRequirement reconfigureTask(final CassandraDaemonTask task) throws ConfigStoreException {
-
         try {
-            return provider.getReplacementOfferRequirement(
-                    cassandraTasks.reconfigureDeamon(task).getTaskInfo()
-            );
+            return provider.getUpdateOfferRequirement(cassandraTasks.reconfigureDeamon(task).getTaskInfo());
         } catch (PersistenceException ex) {
             LOGGER.error(
                     String.format("Block %s failed to reconfigure task %s,"),
@@ -168,7 +168,8 @@ public class CassandraDaemonBlock implements Block {
                 LOGGER.info("Block {} - Task requires config update : id = {}",
                         getName(),
                         container.getId());
-                if (!container.isTerminated()) {
+                final Protos.TaskStatus status = cassandraTasks.getStateStore().fetchStatus(container.getId());
+                if (CassandraDaemonStatus.isTerminated(status.getState())) {
                     terminate(container.getDaemonTask());
                     return null;
                 } else {
