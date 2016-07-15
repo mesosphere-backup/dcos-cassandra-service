@@ -1,0 +1,12 @@
+{
+  "packagingVersion": "2.0",
+  "name": "datastax",
+  "version": "stub-universe",
+  "maintainer": "support@mesosphere.io",
+  "description":"DataStax running on DC/OS",
+  "selected": true,
+  "framework": true,
+  "tags": ["cassandra", "data", "database", "nosql"],
+  "postInstallNotes": "DC/OS DataStax service has been successfully installed!\n\n\tDocumentation: https://docs.mesosphere.com/usage/services/cassandra/\n\tIssues: https://docs.mesosphere.com/support/",
+  "postUninstallNotes": "DC/OS DataStax service has been uninstalled. Please run the framework_cleaner to remove any persistent state if required."
+}

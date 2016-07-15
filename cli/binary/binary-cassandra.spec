@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['../dcos_cassandra/cli.py'],
+a = Analysis(['../dcos_cassandra/cli_cassandra.py'],
              pathex=[os.getcwd(), 'env/lib/python2.7/site-packages'],
              binaries=None,
              datas=[('../dcos_cassandra/data/config-schema/*', 'dcos_cassandra/data/config-schema')],

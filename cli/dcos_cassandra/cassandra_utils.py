@@ -18,12 +18,18 @@ from dcos import util
 
 
 __fwk = None
+__service = "cassandra"
+
+
+def override_service_name(name):
+    global __service
+    __service = name
 
 
 def get_fwk_name():
     return __fwk \
-        or util.get_config().get('cassandra.service_name') \
-        or "cassandra"
+        or util.get_config().get(__service + '.service_name') \
+        or __service
 
 
 def set_fwk_name(name):
@@ -40,7 +46,7 @@ def marathon_url(slash_command):
 
 
 def api_url(slash_command):
-    base_config_url = util.get_config().get('cassandra.url')
+    base_config_url = util.get_config().get(__service + '.url')
     if base_config_url is not None:
         base_config_url = base_config_url.rstrip("/")
     else:

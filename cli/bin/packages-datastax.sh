@@ -17,7 +17,7 @@
 BASEDIR=`dirname $0`/..
 
 if [ ! -d "$BASEDIR/env" ]; then
-    virtualenv -q $BASEDIR/env --prompt='(dcos-cassandra-cli) '
+    virtualenv -q $BASEDIR/env --prompt='(dcos-datastax-cli) '
     echo "Virtualenv created."
 fi
 
@@ -31,9 +31,22 @@ else
     echo "Skipping virtualenv activation."
 fi
 
-echo "Building wheel..."
+cd pkg-datastax
+# hack: create temp copies for packaging (somehow symlinks end up going recursive, something in python?)
+rm -rf dcos_cassandra/ README.rst ../dcos_cassandra/__pycache__/
+if [ "$(uname -s)" = "Windows_NT" ]; then
+    echo "Ignoring failure return code:"
+    cp -av ../dcos_cassandra/ . || true # windows returns an error code here, even on success??
+else
+    cp -av ../dcos_cassandra/ .
+fi
+cp -v ../README.rst .
+
+echo "Building datastax wheel..."
 python setup.py bdist_wheel
 
-echo "Building egg..."
+echo "Building datastax egg..."
 python setup.py sdist
 
+# clean up copies:
+rm -rf dcos_cassandra/ README.rst

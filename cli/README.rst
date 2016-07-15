@@ -27,7 +27,8 @@ Setup
 
 #. Call the CLI code directly::
 
-    python dcos_cassandra/cli.py cassandra connection
+    python dcos_cassandra/cli_cassandra.py cassandra connection
+    python dcos_cassandra/cli_datastax.py datastax connection
 
 Binary:
 -----------

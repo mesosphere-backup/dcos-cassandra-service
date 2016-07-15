@@ -10,7 +10,9 @@ test:
 	bin/test.sh
 
 packages:
-	bin/packages.sh
+	bin/packages-datastax.sh
+	bin/packages-cassandra.sh
 
 binary:  clean env packages
-	pyinstaller binary/binary.spec
+	pyinstaller binary/binary-datastax.spec
+	pyinstaller binary/binary-cassandra.spec

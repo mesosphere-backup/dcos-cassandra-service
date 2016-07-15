@@ -12,13 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""DCOS Cassandra"""
+"""DC/OS DataStax"""
 
 import click
 import pkg_resources
 from dcos_cassandra import cassandra_utils as cu
 from dcos_cassandra import (backup_api, cleanup_api, nodes_api, repair_api,
                             restore_api, seeds_api)
+
+cu.override_service_name('datastax')
 
 
 @click.group()
@@ -28,13 +30,13 @@ def cli():
 
 @cli.group(invoke_without_command=True)
 @click.option('--info/--no-info', default=False)
-@click.option('--name', help='Name of the Cassandra instance to query.')
+@click.option('--name', help='Name of the DataStax instance to query.')
 @click.option('--config-schema',
-              help='Prints the config schema for Cassandra.',
+              help='Prints the config schema for DataStax.',
               is_flag=True)
-def cassandra(info, name, config_schema):
+def datastax(info, name, config_schema):
     if info:
-        print("Deploy and manage Cassandra clusters")
+        print("Deploy and manage DataStax clusters")
     if name:
         cu.set_fwk_name(name)
     if config_schema:
@@ -49,16 +51,16 @@ def print_schema():
     print(schema)
 
 
-@cassandra.group()
-@click.option('--name', help='Name of the cassandra cluster to query')
+@datastax.group()
+@click.option('--name', help='Name of the DataStax cluster to query')
 def node(name):
-    """Manage Cassandra nodes"""
+    """Manage DataStax nodes"""
     if name:
         cu.set_fwk_name(name)
 
 
-@cassandra.command()
-@click.option('--name', help='Name of the cassandra cluster to query')
+@datastax.command()
+@click.option('--name', help='Name of the DataStax cluster to query')
 def seeds(name):
     """Retrieve seed node information"""
     if name:
@@ -66,32 +68,32 @@ def seeds(name):
     cu.print_json(seeds_api.seeds())
 
 
-@cassandra.group()
-@click.option('--name', help='Name of the cassandra cluster to query')
+@datastax.group()
+@click.option('--name', help='Name of the DataStax cluster to query')
 def backup(name):
-    """Backup Cassandra data"""
+    """Backup DataStax data"""
     if name:
         cu.set_fwk_name(name)
 
 
-@cassandra.group()
-@click.option('--name', help='Name of the cassandra cluster to query')
+@datastax.group()
+@click.option('--name', help='Name of the DataStax cluster to query')
 def restore(name):
-    """Restore Cassandra cluster from backup"""
+    """Restore DataStax cluster from backup"""
     if name:
         cu.set_fwk_name(name)
 
 
-@cassandra.group()
-@click.option('--name', help='Name of the cassandra cluster to query')
+@datastax.group()
+@click.option('--name', help='Name of the DataStax cluster to query')
 def cleanup(name):
     """Cleanup old token mappings"""
     if name:
         cu.set_fwk_name(name)
 
 
-@cassandra.group()
-@click.option('--name', help='Name of the cassandra cluster to query')
+@datastax.group()
+@click.option('--name', help='Name of the DataStax cluster to query')
 def repair(name):
     """Perform primary range repair."""
     if name:
@@ -104,8 +106,8 @@ def list():
     cu.print_json(nodes_api.list())
 
 
-@cassandra.command()
-@click.option('--name', help='Name of the cassandra cluster to query')
+@datastax.command()
+@click.option('--name', help='Name of the DataStax cluster to query')
 @click.option('--address',
               is_flag=True,
               help='If set the addresses of the nodes are returned')

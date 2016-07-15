@@ -2,10 +2,11 @@
   "packages":[
     {
       "currentVersion":"stub-universe",
-      "description":"Apache Cassandra running on DC/OS",
+      "description":"DataStax running on DC/OS",
       "framework":true,
-      "name":"cassandra",
+      "name":"datastax",
       "tags":[
+        "cassandra",
         "data",
         "database",
         "nosql"
