@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * BackupManager is responsible for orchestrating cluster-wide backup.
@@ -109,6 +110,8 @@ public class BackupManager {
         LOGGER.info("Stopping backup");
         try {
             this.persistentBackupContext.delete();
+            cassandraTasks.remove(cassandraTasks.getBackupSnapshotTasks().keySet());
+            cassandraTasks.remove(cassandraTasks.getBackupUploadTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error deleting backup context from persistence store. Reason: {}",

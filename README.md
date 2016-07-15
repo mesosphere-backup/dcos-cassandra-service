@@ -658,7 +658,7 @@ The service configuration object contains properties that MUST be specified duri
     router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
     </tr>
     <tr>
-    <td>data_center_url</td>
+    <td>external_data_centers</td>
     <td>string</td>
     <td>This specifies the URLs of the external data centers that contain a cluster the DCOS Cassandra service will join as a comma separated list.
     This value should only be included when your deploying a DCOS Cassandra service instance that will extend an existing cluster. Otherwise, this
@@ -1421,7 +1421,10 @@ Result:
 
 </table>
 
-## Cleanup
+## Maintenance
+Cassandra supports several maintenance operations including Cleanup, Repair, Backup, and Restore.  In general, attempting to run multiple maintenance operations simultaneously (e.g. Repair and Backup) against a single cluster is not recommended.  Likewise, running maintenance operations against multiple Cassandra clusters linked in a multi-datacenter configuration is not recommended.
+
+### Cleanup
 
 When nodes are added or removed from the ring, a node can lose part of its partition range. Cassandra does not automatically remove data when this happens. You can tube cleanup to remove the unnecessary data.
 
@@ -1436,7 +1439,7 @@ $ dcos cassandra --name=<service-name> cleanup --nodes=<nodes> --key_spaces=<key
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup, `<key_spaces>` is an optional comma-separated list of the key spaces to cleanup, and `<column-families>` is an optional comma-separated list of the column-families to cleanup.
 If no arguments are specified a cleanup will be performed for all nodes, key spaces, and column families.
 
-## Repair
+### Repair
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed.
 Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DCOS Cassandra Service will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
@@ -1449,17 +1452,17 @@ $ dcos cassandra --name=<service-name> repair --nodes=<nodes> --key_spaces=<key_
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
 If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
 
-## Backup and Restore
+### Backup and Restore
 
 DCOS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
 
 Cassandra takes a snapshot your tables and ships them to a remote location. Once the snapshots have been uploaded to a remote location, you can restore the data to a new cluster, in the event of a disaster, or restore them to an existing cluster, in the event that a user error has caused a data loss.
 
-### Backup
+#### Backup
 
 You can take a complete snapshot of your DCOS Cassandra ring and upload the artifacts to S3 or to Azure.
 
-#### S3 Backup
+##### S3 Backup
 
 To perform a backup to S3, enter the following command on the DCOS CLI:
 
@@ -1477,7 +1480,7 @@ Check status of the backup:
 
     $ dcos cassandra --name=<service-name> backup status
 
-#### Azure Backup
+##### Azure Backup
 
 To perform a backup to Azure, enter the following command on the DCOS CLI:
 
@@ -1497,11 +1500,11 @@ Check status of the backup:
 $ dcos cassandra --name=<service-name> backup status
 ```
 
-### Restore
+#### Restore
 
 You can restore your DCOS Cassandra snapshots on a new Cassandra ring from S3 or from Azure storage.
 
-#### S3 Restore
+##### S3 Restore
 
 To restore, enter the following command on the DCOS CLI:
 
@@ -1519,7 +1522,7 @@ Check the status of the restore:
 
     $ dcos cassandra --name=<service-name> restore status
 
-#### Azure Restore
+##### Azure Restore
 
 To restore, enter the following command on the DCOS CLI:
 
@@ -1599,11 +1602,32 @@ To proceed with the installation or configuration update fix the indicated error
 ## Replacing a Permanently Failed Node
 The DCOS Cassandra Service is resilient to temporary node failures. However, if a DCOS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server.
 
+Via CLI:
 ```
-$ dcos cassandra --name=<service-name> node replace <node_id>
+$ dcos cassandra --name=cassandra node replace 0
+```
+
+Via API:
+```
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "$DCOS_URI/service/cassandra/v1/nodes/replace?node=node-0"
 ```
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
+
+## Restarting a Node
+To restart a given Cassandra node please use following:
+
+CLI:
+```
+$ dcos cassandra --name=cassandra node restart 0
+```
+
+API:
+```
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "$DCOS_URI/service/cassandra/v1/nodes/restart?node=node-0"
+```
+
+This will restart the node with the same name running on the same server. 
 
 # API Reference
 The DCOS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DCOS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.

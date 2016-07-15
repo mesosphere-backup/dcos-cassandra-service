@@ -17,7 +17,9 @@ import org.apache.mesos.offer.VolumeRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class PersistentOfferRequirementProvider {
@@ -60,8 +62,8 @@ public class PersistentOfferRequirementProvider {
 
         try {
             return new OfferRequirement(
-                    container.getTaskInfos(),
-                    container.getExecutorInfo(),
+                    clearTaskIds(container.getTaskInfos()),
+                    clearExecutorId(container.getExecutorInfo()),
                     agentsToAvoid,
                     agentsToColocate);
         } catch (InvalidRequirementException e) {
@@ -70,14 +72,40 @@ public class PersistentOfferRequirementProvider {
         }
     }
 
-    public OfferRequirement getReplacementOfferRequirement(Protos.TaskInfo taskInfo) {
-        LOGGER.info("Getting replacement requirement for task: {}", taskInfo.getTaskId().getValue());
-        return getExistingOfferRequirement(taskInfo);
+    public OfferRequirement getReplacementOfferRequirement(CassandraContainer container) {
+        LOGGER.info("Getting replacement requirement for task: {}", container.getId());
+        try {
+            return new OfferRequirement(
+                    clearTaskIds(container.getTaskInfos()),
+                    clearExecutorId(container.getExecutorInfo()),
+                    null,
+                    null);
+        } catch (InvalidRequirementException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
     }
 
     public OfferRequirement getUpdateOfferRequirement(Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting updated requirement for task: {}", taskInfo.getTaskId().getValue());
         return getExistingOfferRequirement(taskInfo);
+    }
+
+    private List<Protos.TaskInfo> clearTaskIds(Collection<Protos.TaskInfo> taskInfos) {
+        List<Protos.TaskInfo> outTaskInfos = new ArrayList<>();
+        for (Protos.TaskInfo restartTaskInfo : taskInfos) {
+            outTaskInfos.add(
+                    Protos.TaskInfo.newBuilder(restartTaskInfo)
+                            .setTaskId(Protos.TaskID.newBuilder().setValue(""))
+                            .build());
+        }
+        return outTaskInfos;
+    }
+
+    private ExecutorInfo clearExecutorId(ExecutorInfo executorInfo) {
+        return ExecutorInfo.newBuilder(executorInfo)
+                .setExecutorId(Protos.ExecutorID.newBuilder().setValue("").build())
+                .build();
     }
 
     private OfferRequirement getExistingOfferRequirement(
@@ -88,9 +116,7 @@ public class PersistentOfferRequirementProvider {
         volumeRequirement.setVolumeMode(VolumeRequirement.VolumeMode.EXISTING);
         volumeRequirement.setVolumeType(configurationManager.getCassandraConfig().getDiskType());
 
-        ExecutorInfo execInfo = ExecutorInfo.newBuilder(taskInfo.getExecutor())
-                .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
-                .build();
+        ExecutorInfo execInfo = clearExecutorId(taskInfo.getExecutor());
         LOGGER.info("ExecutorInfo: ", execInfo);
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 

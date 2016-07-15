@@ -74,17 +74,17 @@ public class BackupContext implements ClusterTaskContext {
         final String externalLocation,
         @JsonProperty("local_location")
         final String localLocation,
-        @JsonProperty("s3_access_key")
-        final String s3AccessKey,
-        @JsonProperty("s3_secret_key")
-        final String s3SecretKey) {
+        @JsonProperty("account_id")
+        final String accountId,
+        @JsonProperty("secret_key")
+        final String secretKey) {
         return new BackupContext(
             nodeId,
             name,
             externalLocation,
             localLocation,
-            s3AccessKey,
-            s3SecretKey);
+            accountId,
+            secretKey);
     }
 
     @JsonProperty("node_id")
@@ -97,7 +97,7 @@ public class BackupContext implements ClusterTaskContext {
     private final String localLocation;
     @JsonProperty("account_id")
     private final String accountId;
-    @JsonProperty("s3_secret_key")
+    @JsonProperty("secret_key")
     private final String secretKey;
 
 
@@ -121,6 +121,7 @@ public class BackupContext implements ClusterTaskContext {
    *
    * @return The name of the backup.
    */
+  @JsonProperty("name")
   public String getName() {
     return name;
   }
@@ -139,6 +140,7 @@ public class BackupContext implements ClusterTaskContext {
    *
    * @return The local location of the keyspace files that will be backed up.
    */
+  @JsonProperty("local_location")
   public String getLocalLocation() {
     return localLocation;
   }
@@ -149,6 +151,7 @@ public class BackupContext implements ClusterTaskContext {
    * @return The S3 access key for the bucket or azure storage account where the keyspace files will
    * be stored.
    */
+  @JsonProperty("account_id")
   public String getAcccountId() {
     return accountId;
   }
@@ -159,6 +162,7 @@ public class BackupContext implements ClusterTaskContext {
    * @return The S3 secret key for the bucket or azure account key where the keyspace files will
    * be stored.
    */
+  @JsonProperty("secret_key")
   public String getSecretKey() {
     return secretKey;
   }
@@ -168,6 +172,7 @@ public class BackupContext implements ClusterTaskContext {
      *
      * @return The id of the node for the backup.
      */
+    @JsonProperty("node_id")
     public String getNodeId() {
         return nodeId;
     }
