@@ -19,6 +19,7 @@ out/
 .classpath
 .project
 .settings/
+cassandra-*/bin/
 
 # Mac
 .DS_Store
@@ -41,3 +42,4 @@ generated/
 cassandra-executor/apache-cassandra-2.2.5/
 cassandra-executor/volume/
 cassandra-bin-tmp/
+dcos-tests/

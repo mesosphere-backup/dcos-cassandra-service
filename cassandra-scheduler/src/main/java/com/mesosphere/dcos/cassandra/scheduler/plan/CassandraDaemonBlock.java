@@ -1,8 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
@@ -78,8 +76,7 @@ public class CassandraDaemonBlock implements Block {
 
         try {
             return provider.getReplacementOfferRequirement(
-                    cassandraTasks.reconfigureDeamon(task).getTaskInfo()
-            );
+                    cassandraTasks.createCassandraContainer(cassandraTasks.reconfigureDaemon(task)));
         } catch (PersistenceException ex) {
             LOGGER.error(
                     String.format("Block %s failed to reconfigure task %s,"),
@@ -93,8 +90,7 @@ public class CassandraDaemonBlock implements Block {
     private OfferRequirement replaceTask(final CassandraDaemonTask task) {
         try {
             return provider.getReplacementOfferRequirement(
-                    cassandraTasks.replaceDaemon(task).getTaskInfo()
-            );
+                    cassandraTasks.createCassandraContainer(cassandraTasks.replaceDaemon(task)));
         } catch (PersistenceException ex) {
             LOGGER.error(
                     String.format("Block %s failed to replace task %s,"),
