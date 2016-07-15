@@ -15,7 +15,7 @@
 set -o errexit -o nounset -o pipefail
 
 # VERSION SETTINGS
-CASSANDRA_VERSION="2.2.5"
+CASSANDRA_VERSION="3.0.7"
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
 STATSD_REPORTER_VERSION="4.1.2"
 REPORTER_CONFIG_VERSION_IN="3.0.1-SNAPSHOT"

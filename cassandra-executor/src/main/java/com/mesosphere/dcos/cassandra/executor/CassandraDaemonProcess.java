@@ -175,8 +175,6 @@ public class CassandraDaemonProcess {
         public void run() {
 
             if (open.get()) {
-
-
                 CassandraMode current = CassandraMode.valueOf(
                         probe.getOperationMode());
                 if (!mode.get().equals(current)) {
