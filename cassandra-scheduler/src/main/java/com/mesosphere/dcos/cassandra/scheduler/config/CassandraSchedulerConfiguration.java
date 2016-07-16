@@ -11,10 +11,7 @@ import org.apache.mesos.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CassandraSchedulerConfiguration implements Configuration {
@@ -275,5 +272,36 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @Override
     public String toJsonString() throws Exception {
         return JsonUtils.toJsonString(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CassandraSchedulerConfiguration that = (CassandraSchedulerConfiguration) o;
+        return servers == that.servers &&
+                seeds == that.seeds &&
+                apiPort == that.apiPort &&
+                externalDcSyncMs == that.externalDcSyncMs &&
+                Objects.equals(executorConfig, that.executorConfig) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(version, that.version) &&
+                Objects.equals(placementStrategy, that.placementStrategy) &&
+                Objects.equals(cassandraConfig, that.cassandraConfig) &&
+                Objects.equals(clusterTaskConfig, that.clusterTaskConfig) &&
+                Objects.equals(identity, that.identity) &&
+                Objects.equals(phaseStrategy, that.phaseStrategy) &&
+                Objects.equals(mesosConfig, that.mesosConfig) &&
+                Objects.equals(curatorConfig, that.curatorConfig) &&
+                Objects.equals(seedsUrl, that.seedsUrl) &&
+                Objects.equals(externalDcs, that.externalDcs) &&
+                Objects.equals(dcUrl, that.dcUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(executorConfig, name, version, servers, seeds, placementStrategy, cassandraConfig,
+                clusterTaskConfig, apiPort, identity, phaseStrategy, mesosConfig, curatorConfig, seedsUrl,
+                externalDcSyncMs, externalDcs, dcUrl);
     }
 }

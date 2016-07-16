@@ -93,7 +93,7 @@ public class ConfigurationManager implements Managed {
         }
         final String taskConfigName = taskConfig.get();
         final String targetConfigName = configurationManager.getTargetName().toString();
-
+        LOGGER.info("TaskConfigName: {} TargetConfigName: {}", taskConfigName, targetConfigName);
         return targetConfigName.equals(taskConfigName);
     }
 
@@ -106,7 +106,7 @@ public class ConfigurationManager implements Managed {
         for (Protos.Label label : taskInfo.getLabels().getLabelsList()) {
             final String key = label.getKey();
             if (PersistentOfferRequirementProvider.CONFIG_TARGET_KEY.equals(key)) {
-                return Optional.ofNullable(key);
+                return Optional.ofNullable(label.getValue());
             }
         }
 

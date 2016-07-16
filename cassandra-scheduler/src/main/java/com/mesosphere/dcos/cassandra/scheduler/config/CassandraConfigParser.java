@@ -23,6 +23,8 @@ import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
 import com.mesosphere.dcos.cassandra.common.config.Location;
 import org.apache.mesos.offer.VolumeRequirement;
 
+import java.util.Objects;
+
 import static com.mesosphere.dcos.cassandra.common.config
         .CassandraApplicationConfig.*;
 
@@ -877,5 +879,85 @@ public class CassandraConfigParser {
     public CassandraConfigParser setLocation(Location location) {
         this.location = location;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CassandraConfigParser that = (CassandraConfigParser) o;
+        return Double.compare(that.cpus, cpus) == 0 &&
+                memoryMb == that.memoryMb &&
+                diskMb == that.diskMb &&
+                numTokens == that.numTokens &&
+                hintedHandoffEnabled == that.hintedHandoffEnabled &&
+                maxHintWindowInMs == that.maxHintWindowInMs &&
+                hintedHandoffThrottleInKb == that.hintedHandoffThrottleInKb &&
+                maxHintsDeliveryThreads == that.maxHintsDeliveryThreads &&
+                batchlogReplayThrottleInKb == that.batchlogReplayThrottleInKb &&
+                keyCacheSavePeriod == that.keyCacheSavePeriod &&
+                rowCacheSizeInMb == that.rowCacheSizeInMb &&
+                rowCacheSavePeriod == that.rowCacheSavePeriod &&
+                counterCacheSavePeriod == that.counterCacheSavePeriod &&
+                commitlogSyncPeriodInMs == that.commitlogSyncPeriodInMs &&
+                commitlogSegmentSizeInMb == that.commitlogSegmentSizeInMb &&
+                concurrentReads == that.concurrentReads &&
+                concurrentWrites == that.concurrentWrites &&
+                concurrentCounterWrites == that.concurrentCounterWrites &&
+                indexSummaryResizeIntervalInMinutes == that.indexSummaryResizeIntervalInMinutes &&
+                trickleFsync == that.trickleFsync &&
+                trickleFsyncIntervalInKb == that.trickleFsyncIntervalInKb &&
+                storagePort == that.storagePort &&
+                sslStoragePort == that.sslStoragePort &&
+                startNativeTransport == that.startNativeTransport &&
+                nativeTransportPort == that.nativeTransportPort &&
+                startRpc == that.startRpc &&
+                rpcPort == that.rpcPort &&
+                rpcKeepalive == that.rpcKeepalive &&
+                thriftFramedTransportSizeInMb == that.thriftFramedTransportSizeInMb &&
+                tombstoneWarnThreshold == that.tombstoneWarnThreshold &&
+                tombstoneFailureThreshold == that.tombstoneFailureThreshold &&
+                columnIndexSizeInKb == that.columnIndexSizeInKb &&
+                batchSizeWarnThresholdInKb == that.batchSizeWarnThresholdInKb &&
+                batchSizeFailThresholdInKb == that.batchSizeFailThresholdInKb &&
+                compactionThroughputMbPerSec == that.compactionThroughputMbPerSec &&
+                compactionLargePartitionWarningThresholdMb == that.compactionLargePartitionWarningThresholdMb &&
+                sstablePreemptiveOpenIntervalInMb == that.sstablePreemptiveOpenIntervalInMb &&
+                readRequestTimeoutInMs == that.readRequestTimeoutInMs &&
+                rangeRequestTimeoutInMs == that.rangeRequestTimeoutInMs &&
+                writeRequestTimeoutInMs == that.writeRequestTimeoutInMs &&
+                counterWriteRequestTimeoutInMs == that.counterWriteRequestTimeoutInMs &&
+                casContentionTimeoutInMs == that.casContentionTimeoutInMs &&
+                truncateRequestTimeoutInMs == that.truncateRequestTimeoutInMs &&
+                requestTimeoutInMs == that.requestTimeoutInMs &&
+                crossNodeTimeout == that.crossNodeTimeout &&
+                dynamicSnitchUpdateIntervalInMs == that.dynamicSnitchUpdateIntervalInMs &&
+                dynamicSnitchResetIntervalInMs == that.dynamicSnitchResetIntervalInMs &&
+                Double.compare(that.dynamicSnitchBadnessThreshold, dynamicSnitchBadnessThreshold) == 0 &&
+                interDcTcpNodelay == that.interDcTcpNodelay &&
+                tracetypeQueryTtl == that.tracetypeQueryTtl &&
+                tracetypeRepairTtl == that.tracetypeRepairTtl &&
+                windowsTimerInterval == that.windowsTimerInterval &&
+                jmxPort == that.jmxPort &&
+                diskType == that.diskType &&
+                Objects.equals(version, that.version) &&
+                Objects.equals(partitioner, that.partitioner) &&
+                Objects.equals(diskFailurePolicy, that.diskFailurePolicy) &&
+                Objects.equals(commitFailurePolicy, that.commitFailurePolicy) &&
+                Objects.equals(keyCacheSizeInMb, that.keyCacheSizeInMb) &&
+                Objects.equals(counterCacheSizeInMb, that.counterCacheSizeInMb) &&
+                Objects.equals(commitlogSync, that.commitlogSync) &&
+                Objects.equals(memtableAllocationType, that.memtableAllocationType) &&
+                Objects.equals(indexSummaryCapacityInMb, that.indexSummaryCapacityInMb) &&
+                Objects.equals(rpcServerType, that.rpcServerType) &&
+                Objects.equals(requestScheduler, that.requestScheduler) &&
+                Objects.equals(internodeCompression, that.internodeCompression) &&
+                Objects.equals(heap, that.heap) &&
+                Objects.equals(location, that.location);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(cpus, memoryMb, diskMb, diskType, version, numTokens, hintedHandoffEnabled, maxHintWindowInMs, hintedHandoffThrottleInKb, maxHintsDeliveryThreads, batchlogReplayThrottleInKb, partitioner, diskFailurePolicy, commitFailurePolicy, keyCacheSizeInMb, keyCacheSavePeriod, rowCacheSizeInMb, rowCacheSavePeriod, counterCacheSizeInMb, counterCacheSavePeriod, commitlogSync, commitlogSyncPeriodInMs, commitlogSegmentSizeInMb, concurrentReads, concurrentWrites, concurrentCounterWrites, memtableAllocationType, indexSummaryCapacityInMb, indexSummaryResizeIntervalInMinutes, trickleFsync, trickleFsyncIntervalInKb, storagePort, sslStoragePort, startNativeTransport, nativeTransportPort, startRpc, rpcPort, rpcKeepalive, rpcServerType, thriftFramedTransportSizeInMb, tombstoneWarnThreshold, tombstoneFailureThreshold, columnIndexSizeInKb, batchSizeWarnThresholdInKb, batchSizeFailThresholdInKb, compactionThroughputMbPerSec, compactionLargePartitionWarningThresholdMb, sstablePreemptiveOpenIntervalInMb, readRequestTimeoutInMs, rangeRequestTimeoutInMs, writeRequestTimeoutInMs, counterWriteRequestTimeoutInMs, casContentionTimeoutInMs, truncateRequestTimeoutInMs, requestTimeoutInMs, crossNodeTimeout, dynamicSnitchUpdateIntervalInMs, dynamicSnitchResetIntervalInMs, dynamicSnitchBadnessThreshold, requestScheduler, internodeCompression, interDcTcpNodelay, tracetypeQueryTtl, tracetypeRepairTtl, windowsTimerInterval, heap, jmxPort, location);
     }
 }
