@@ -17,10 +17,12 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.VolumeRequirement;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -45,9 +47,10 @@ public class CassandraDaemonTask extends CassandraTask {
 
     public static CassandraDaemonTask create(
         final String name,
+        final String configName,
         final CassandraTaskExecutor executor,
         final CassandraConfig config) {
-        return new CassandraDaemonTask(name, executor, config);
+        return new CassandraDaemonTask(name, configName, executor, config);
     }
 
     private static CassandraConfig updateConfig(
@@ -69,12 +72,14 @@ public class CassandraDaemonTask extends CassandraTask {
      */
     protected CassandraDaemonTask(
         final String name,
+        final String configName,
         final CassandraTaskExecutor executor,
         final CassandraConfig config,
         final CassandraData data) {
 
         super(
             name,
+            configName,
             executor,
             config.getCpus(),
             config.getMemoryMb(),
@@ -91,10 +96,12 @@ public class CassandraDaemonTask extends CassandraTask {
 
     protected CassandraDaemonTask(
             final String name,
+            final String configName,
             final CassandraTaskExecutor executor,
             final CassandraConfig config) {
         this(
             name,
+            configName,
             executor,
             config,
             CassandraData.createDaemonData(
@@ -196,8 +203,19 @@ public class CassandraDaemonTask extends CassandraTask {
     }
 
     public CassandraDaemonTask move(CassandraTaskExecutor executor) {
+        final List<Protos.Label> labelsList = getTaskInfo().getLabels().getLabelsList();
+        String configName = "";
+        for (Protos.Label label : labelsList) {
+            if ("config_target".equals(label.getKey())) {
+                configName = label.getValue();
+            }
+        }
+        if (StringUtils.isBlank(configName)) {
+            throw new IllegalStateException("Task should have 'config_target'");
+        }
         CassandraDaemonTask replacementDaemon = new CassandraDaemonTask(
             getName(),
+            configName,
             executor,
             getConfig(),
             getData().replacing(getData().getHostname()));

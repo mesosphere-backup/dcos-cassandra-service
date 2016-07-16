@@ -12,11 +12,13 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.config.ConfigStoreException;
@@ -38,7 +40,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraTasks.class);
 
-    private final IdentityManager identity;
     private final ConfigurationManager configuration;
     private final ClusterTaskConfig clusterTaskConfig;
 
@@ -50,12 +51,10 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     @Inject
     public CassandraTasks(
-            final IdentityManager identity,
             final ConfigurationManager configuration,
             final CuratorFrameworkConfig curatorConfig,
             final ClusterTaskConfig clusterTaskConfig,
             final StateStore stateStore) {
-        this.identity = identity;
         this.configuration = configuration;
         this.clusterTaskConfig = clusterTaskConfig;
         this.stateStore = stateStore;
@@ -181,21 +180,28 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public CassandraDaemonTask createDaemon(String name) throws
             PersistenceException, ConfigStoreException {
+        final CassandraSchedulerConfiguration targetConfig = configuration.getTargetConfig();
+        final UUID targetConfigName = configuration.getTargetConfigName();
+        final Identity identity = targetConfig.getIdentity();
+        final String frameworkId = stateStore.fetchFrameworkId().getValue();
         return configuration.createDaemon(
-            identity.get().getId(),
+            frameworkId,
             name,
-            identity.get().getRole(),
-            identity.get().getPrincipal()
+            identity.getRole(),
+            identity.getPrincipal(),
+            targetConfigName.toString()
         );
     }
 
     public CassandraDaemonTask moveDaemon(CassandraDaemonTask daemon)
             throws PersistenceException, ConfigStoreException {
+        final CassandraSchedulerConfiguration targetConfig = configuration.getTargetConfig();
+        final Identity identity = targetConfig.getIdentity();
         CassandraDaemonTask updated = configuration.moveDaemon(
             daemon,
-            identity.get().getId(),
-            identity.get().getRole(),
-            identity.get().getPrincipal());
+            identity.getId(),
+            identity.getRole(),
+            identity.getPrincipal());
         update(updated);
         return updated;
     }
@@ -443,31 +449,59 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     @Subscribe
     public void update(Protos.TaskStatus status) throws IOException {
         synchronized (stateStore) {
-            if (byId.containsKey(status.getTaskId().getValue())) {
-                CassandraTask updated;
+            try {
+                stateStore.storeStatus(status);
+                LOGGER.info("Updated status for task {}", status.getTaskId().getValue());
 
-                if (status.hasData()) {
-                    updated = tasks.get(
-                            byId.get(status.getTaskId().getValue())).update(
-                            CassandraTaskStatus.parse(status));
+                if (byId.containsKey(status.getTaskId().getValue())) {
+                    CassandraTask updated;
+
+                    if (status.hasData()) {
+                        updated = tasks.get(
+                                byId.get(status.getTaskId().getValue())).update(
+                                CassandraTaskStatus.parse(status));
+                    } else {
+                        updated = tasks.get(
+                                byId.get(status.getTaskId().getValue())).update(
+                                status.getState());
+                    }
+
+                    update(updated);
+
+                    LOGGER.info("Updated task {}", updated);
                 } else {
-                    updated = tasks.get(
-                            byId.get(status.getTaskId().getValue())).update(
-                            status.getState());
+                    LOGGER.info("Received status update for unrecorded task: " +
+                            "status = {}", status);
+                    LOGGER.info("Tasks = {}", tasks);
+                    LOGGER.info("Ids = {}", byId);
                 }
 
-                update(updated);
-
-                stateStore.storeStatus(status);
-
-                LOGGER.info("Updated task {}", updated);
-            } else {
-                LOGGER.info("Received status update for unrecorded task: " +
-                        "status = {}", status);
-                LOGGER.info("Tasks = {}", tasks);
-                LOGGER.info("Ids = {}", byId);
+//                final String taskId = status.getTaskId().getValue();
+//                final String taskName = byId.get(taskId);
+//                final CassandraTask cassandraTask = tasks.get(taskName);
+//                cassandraTask.update(CassandraTaskStatus.parse(status));
+            } catch (StateStoreException e) {
+                LOGGER.info("Unable to store status. Reason: ", e);
             }
         }
+    }
+
+    public boolean isTerminated(CassandraTask task) {
+        try {
+            final String name = task.getName();
+            final Collection<String> taskNames = stateStore.fetchTaskNames();
+            if (CollectionUtils.isNotEmpty(taskNames) && taskNames.contains(name)) {
+                final Protos.TaskStatus status = stateStore.fetchStatus(name);
+                return CassandraDaemonStatus.isTerminated(status.getState());
+            }
+        } catch (StateStoreException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return false;
+    }
+    public void refreshTasks() {
+        LOGGER.info("Refreshing tasks");
+        loadTasks();
     }
 
     public void remove(String name) throws PersistenceException {
@@ -486,22 +520,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         return tasks;
     }
 
-    public List<CassandraTask> getTerminatedTasks() {
-        List<CassandraTask> terminatedTasks = tasks
-                .values().stream()
-                .filter(task -> task.isTerminated()).collect(
-                        Collectors.toList());
-
-        return terminatedTasks;
-    }
-
-    public List<CassandraTask> getRunningTasks() {
-        return tasks.values().stream()
-                .filter(task -> isRunning(task)).collect(
-                        Collectors.toList());
-
-    }
-
     @Override
     public void start() throws Exception {
 
@@ -512,40 +530,8 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     }
 
-    private boolean isRunning(CassandraTask task) {
-        return Protos.TaskState.TASK_RUNNING == task.getState();
-    }
-
     @Override
     public Set<Protos.TaskStatus> getTaskStatuses()  {
-        return get().values().stream().map(
-                task -> task.getCurrentStatus()).collect(Collectors.toSet());
-    }
-
-    public Protos.FrameworkID getFrameworkId() {
-        try {
-            return stateStore.fetchFrameworkId();
-        } catch (StateStoreException e) {
-            LOGGER.warn("Failed to get FrameworkID. "
-                    + "This is expected when the service is starting for the first time.", e);
-        }
-        return null;
-    }
-
-    public void setFrameworkId(String frameworkId) throws StateStoreException {
-        try {
-            final Protos.FrameworkID fwkId = Protos.FrameworkID.newBuilder()
-                    .setValue(frameworkId).build();
-            LOGGER.info(String.format("Storing framework id: %s", fwkId));
-            stateStore.storeFrameworkId(fwkId);
-        } catch (StateStoreException e) {
-            LOGGER.error("Failed to set FrameworkID: " + frameworkId, e);
-            throw e;
-        }
-    }
-
-    public boolean isRegistered() {
-        final Protos.FrameworkID frameworkId = getFrameworkId();
-        return frameworkId != null && frameworkId.hasValue();
+        return new HashSet<>(stateStore.fetchStatuses());
     }
 }

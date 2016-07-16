@@ -4,10 +4,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraData;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTemplateTask;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -25,7 +22,10 @@ import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.state.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -43,7 +43,7 @@ public class CassandraTasksTest {
     private static ClusterTaskConfig clusterTaskConfig;
     private static String testDaemonName = "test-daemon-name";
     private static String testHostName = "test-host-name";
-    private static String testTaskId = "test-task-id";
+    private static String testTaskId = "test-task-id__1234";
     private CassandraTasks cassandraTasks;
     private static StateStore stateStore;
 
@@ -93,7 +93,7 @@ public class CassandraTasksTest {
                 "/" + targetConfig.getName(),
                 server.getConnectString(),
                 retryPolicy);
-
+        stateStore.storeFrameworkId(Protos.FrameworkID.newBuilder().setValue("1234").build());
         identity = new IdentityManager(
                 initial,stateStore);
 
@@ -109,7 +109,6 @@ public class CassandraTasksTest {
         configuration = new ConfigurationManager(configurationManager);
 
         cassandraTasks = new CassandraTasks(
-                identity,
                 configuration,
                 curatorConfig,
                 clusterTaskConfig,
@@ -185,9 +184,8 @@ public class CassandraTasksTest {
         Assert.assertEquals(Protos.TaskState.TASK_STAGING, updatedDaemonTask.getState());
 
         // TaskStatus update with RUNNING should result in RUNNING state.
-        cassandraTasks.update(getTestTaskStatus(daemonTask.getTaskInfo().getTaskId().getValue()));
-        updatedDaemonTask = cassandraTasks.getDaemons().entrySet().iterator().next().getValue();
-        Assert.assertEquals(Protos.TaskState.TASK_RUNNING, updatedDaemonTask.getState());
+        cassandraTasks.update(getTestTaskStatus(daemonTask));
+        Assert.assertEquals(Protos.TaskState.TASK_RUNNING, stateStore.fetchStatus(updatedDaemonTask.getName()).getState());
     }
 
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) throws TaskException {
@@ -228,15 +226,16 @@ public class CassandraTasksTest {
     }
 
     private Protos.TaskStatus getTestTaskStatus() {
-        return getTestTaskStatus(testTaskId);
-    }
-
-    private Protos.TaskStatus getTestTaskStatus(String taskId) {
         return Protos.TaskStatus.newBuilder()
                 .setTaskId(Protos.TaskID.newBuilder()
-                        .setValue(taskId)
+                        .setValue(testTaskId)
                         .build())
                 .setState(Protos.TaskState.TASK_RUNNING)
                 .build();
+    }
+
+    private Protos.TaskStatus getTestTaskStatus(CassandraDaemonTask task) {
+        final CassandraDaemonStatus status = task.createStatus(Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL, Optional.empty());
+        return status.getTaskStatus();
     }
 }

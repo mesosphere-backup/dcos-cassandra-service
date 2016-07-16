@@ -3,10 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
-import com.mesosphere.dcos.cassandra.scheduler.config.DropwizardConfiguration;
-import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -18,6 +15,7 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.AfterClass;
@@ -30,12 +28,12 @@ import static org.junit.Assert.assertEquals;
 public class IdentityResourceTest {
     private static TestingServer server;
     private static DropwizardConfiguration config;
-    private static IdentityManager manager;
+    private static ConfigurationManager configurationManager;
     private static StateStore stateStore;
 
     @Rule
     public final ResourceTestRule resources = ResourceTestRule.builder()
-            .addResource(new IdentityResource(manager)).build();
+            .addResource(new IdentityResource(configurationManager)).build();
 
     @BeforeClass
     public static void beforeAll() throws Exception {
@@ -76,17 +74,23 @@ public class IdentityResourceTest {
                 server.getConnectString(),
                 retryPolicy);
 
-        manager = new IdentityManager(
-                initial,
-                stateStore);
-
-        manager.start();
-
+        final CassandraSchedulerConfiguration configuration = config.getSchedulerConfiguration();
+        try {
+            final ConfigValidator configValidator = new ConfigValidator();
+            final DefaultConfigurationManager defaultConfigurationManager
+                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                    "/" + configuration.getName(),
+                    server.getConnectString(),
+                    configuration,
+                    configValidator);
+            configurationManager = new ConfigurationManager(defaultConfigurationManager);
+        } catch (ConfigStoreException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @AfterClass
     public static void afterAll() throws Exception {
-        manager.stop();
         server.close();
         server.stop();
     }

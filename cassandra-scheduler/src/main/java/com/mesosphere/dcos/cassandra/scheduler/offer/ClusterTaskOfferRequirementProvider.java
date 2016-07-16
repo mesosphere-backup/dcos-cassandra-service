@@ -38,8 +38,7 @@ public class ClusterTaskOfferRequirementProvider
     }
 
     private OfferRequirement getCreateOfferRequirement(Protos.TaskInfo taskInfo) {
-        final PlacementStrategy placementStrategy = new ClusterTaskPlacementStrategy(
-                cassandraTasks);
+        final PlacementStrategy placementStrategy = new ClusterTaskPlacementStrategy();
         final List<Protos.SlaveID> agentsToAvoid =
                 placementStrategy.getAgentsToAvoid(taskInfo);
         final List<Protos.SlaveID> agentsToColocate =
@@ -69,7 +68,7 @@ public class ClusterTaskOfferRequirementProvider
         LOGGER.info("Getting replacement requirement for task: {}",
                 taskInfo.getTaskId().getValue());
         final PlacementStrategy placementStrategy =
-                new ClusterTaskPlacementStrategy(cassandraTasks);
+                new ClusterTaskPlacementStrategy();
 
         ExecutorInfo execInfo = taskInfo.getExecutor();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();

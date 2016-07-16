@@ -53,7 +53,6 @@ public class ClusterTaskOfferRequirementProviderTest {
     @Before
     public void beforeEach() throws Exception {
         cassandraTasks = new CassandraTasks(
-                identity,
                 configuration,
                 curatorConfig,
                 clusterTaskConfig,
@@ -126,6 +125,7 @@ public class ClusterTaskOfferRequirementProviderTest {
                 "/" + config.getName(),
                 server.getConnectString(),
                 retryPolicy);
+        stateStore.storeFrameworkId(Protos.FrameworkID.newBuilder().setValue("1234").build());
 
         identity = new IdentityManager(
                 initial,stateStore);

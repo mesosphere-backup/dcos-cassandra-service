@@ -102,8 +102,6 @@ public class Main extends Application<DropwizardConfiguration> {
 
     private void registerManagedObjects(Environment environment, Injector injector) {
         environment.lifecycle().manage(
-                injector.getInstance(IdentityManager.class));
-        environment.lifecycle().manage(
                 injector.getInstance(ConfigurationManager.class));
         environment.lifecycle().manage(
                 injector.getInstance(CassandraTasks.class));

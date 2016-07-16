@@ -20,9 +20,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
+import org.apache.mesos.config.ConfigStoreException;
 import org.glassfish.jersey.server.ManagedAsync;
 
 import javax.ws.rs.*;
@@ -41,8 +43,8 @@ import java.util.stream.Collectors;
 public class TasksResource {
 
     private final CassandraTasks tasks;
-    private final IdentityManager id;
     private final SchedulerClient client;
+    private final ConfigurationManager configurationManager;
 
     private List<CassandraDaemonTask> getRunningDeamons() {
         return tasks.getDaemons().values().stream()
@@ -64,11 +66,11 @@ public class TasksResource {
             .collect(Collectors.toList());
     }
 
-    private List<String> getRunningDns() {
-
+    private List<String> getRunningDns() throws ConfigStoreException {
+        final Identity identity = configurationManager.getTargetConfig().getIdentity();
         return getRunningDeamons().stream().map(daemonTask ->
             daemonTask.getName() +
-                "." + id.get().getName() + ".mesos:" +
+                "." + identity.getName() + ".mesos:" +
                 daemonTask.getConfig()
                     .getApplication()
                     .getNativeTransportPort()
@@ -77,11 +79,11 @@ public class TasksResource {
 
     @Inject
     public TasksResource(final CassandraTasks tasks,
-                         final IdentityManager id,
+                         final ConfigurationManager configurationManager,
                          final SchedulerClient client) {
         this.tasks = tasks;
         this.client = client;
-        this.id = id;
+        this.configurationManager = configurationManager;
     }
 
     @GET
@@ -162,7 +164,7 @@ public class TasksResource {
 
     @GET
     @Path("connect")
-    public Map<String, List<String>> connect() {
+    public Map<String, List<String>> connect() throws ConfigStoreException {
 
         return ImmutableMap.of("address", getRunningAddresses(),
             "dns", getRunningDns());
@@ -176,7 +178,7 @@ public class TasksResource {
 
     @GET
     @Path("connect/dns")
-    public List<String> connectDns() {
+    public List<String> connectDns() throws ConfigStoreException {
         return getRunningDns();
     }
 }

@@ -15,8 +15,8 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class ConfigurationManager implements Managed {
     private static final Logger LOGGER =
@@ -32,8 +32,7 @@ public class ConfigurationManager implements Managed {
 
     public CassandraTaskExecutor updateExecutor(
         final CassandraTask task) throws ConfigStoreException {
-        final ExecutorConfig executorConfig = ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig())
-                .getExecutorConfig();
+        final ExecutorConfig executorConfig = getTargetConfig().getExecutorConfig();
         return task.getExecutor().matches(executorConfig) ?
             task.getExecutor() :
             task.getExecutor().update(executorConfig);
@@ -43,8 +42,7 @@ public class ConfigurationManager implements Managed {
                                                 String name,
                                                 String role,
                                                 String principal) throws ConfigStoreException {
-        final ExecutorConfig executorConfig = ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig())
-                .getExecutorConfig();
+        final ExecutorConfig executorConfig = getTargetConfig().getExecutorConfig();
         return CassandraTaskExecutor.create(
             frameworkId,
             name,
@@ -56,12 +54,13 @@ public class ConfigurationManager implements Managed {
     public CassandraDaemonTask createDaemon(String frameworkId,
                                             String name,
                                             String role,
-                                            String principal) throws ConfigStoreException {
-        final CassandraSchedulerConfiguration targetConfig = ((CassandraSchedulerConfiguration)configurationManager
-                .getTargetConfig());
+                                            String principal,
+                                            String configName) throws ConfigStoreException {
+        final CassandraSchedulerConfiguration targetConfig = getTargetConfig();
         final CassandraConfig cassandraConfig = targetConfig.getCassandraConfig();
         return CassandraDaemonTask.create(
             name,
+            configName,
             createExecutor(frameworkId, name + "_executor", role, principal),
             cassandraConfig.mutable().setApplication(cassandraConfig
                 .getApplication()
@@ -115,9 +114,16 @@ public class ConfigurationManager implements Managed {
     }
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) throws ConfigStoreException {
-        CassandraConfig cassandraConfig = ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig())
-                .getCassandraConfig();
+        CassandraConfig cassandraConfig = getTargetConfig().getCassandraConfig();
         return task.updateConfig(cassandraConfig);
+    }
+
+    public CassandraSchedulerConfiguration getTargetConfig() throws ConfigStoreException {
+        return ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig());
+    }
+
+    public UUID getTargetConfigName() throws ConfigStoreException {
+        return configurationManager.getTargetName();
     }
 
     @Override

@@ -85,11 +85,87 @@ public class ConfigValidator {
         return errors;
     };
 
+    public ConfigValidation frameworkNameValidation = ((oldConfig, newConfig) -> {
+        List<ConfigValidationError> errors = new LinkedList<>();
+        if (oldConfig == null) {
+            return errors;
+        }
+        CassandraSchedulerConfiguration oldConfiguration = (CassandraSchedulerConfiguration) oldConfig;
+        CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
+        final String newName = newConfiguration.getIdentity().getName();
+        final String oldName = oldConfiguration.getIdentity().getName();
+        if (!Objects.equals(newName, oldName)) {
+            final String errorMessage = String.format("The configured name can not be changed. Old name is (%s). " +
+                            "New name is (%s)", oldName, newName);
+            final ConfigValidationError error = new ConfigValidationError("name", errorMessage);
+            errors.add(error);
+        }
+        return errors;
+    });
+
+    public ConfigValidation principalValidation = ((oldConfig, newConfig) -> {
+        List<ConfigValidationError> errors = new LinkedList<>();
+        if (oldConfig == null) {
+            return errors;
+        }
+        CassandraSchedulerConfiguration oldConfiguration = (CassandraSchedulerConfiguration) oldConfig;
+        CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
+        final String newPrincipal = newConfiguration.getIdentity().getPrincipal();
+        final String oldPrincipal = oldConfiguration.getIdentity().getPrincipal();
+        if (!Objects.equals(newPrincipal, oldPrincipal)) {
+            final String errorMessage = String.format("The configured principal can not be changed. Old principal is (%s). " +
+                    "New principal is (%s)", oldPrincipal, newPrincipal);
+            final ConfigValidationError error = new ConfigValidationError("principal", errorMessage);
+            errors.add(error);
+        }
+        return errors;
+    });
+
+    public ConfigValidation roleValidation = ((oldConfig, newConfig) -> {
+        List<ConfigValidationError> errors = new LinkedList<>();
+        if (oldConfig == null) {
+            return errors;
+        }
+        CassandraSchedulerConfiguration oldConfiguration = (CassandraSchedulerConfiguration) oldConfig;
+        CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
+        final String newRole = newConfiguration.getIdentity().getRole();
+        final String oldRole = oldConfiguration.getIdentity().getRole();
+        if (!Objects.equals(newRole, oldRole)) {
+            final String errorMessage = String.format("The configured role can not be changed. Old role is (%s). " +
+                    "New role is (%s)", oldRole, newRole);
+            final ConfigValidationError error = new ConfigValidationError("role", errorMessage);
+            errors.add(error);
+        }
+        return errors;
+    });
+
+    public ConfigValidation clusterValidation = ((oldConfig, newConfig) -> {
+        List<ConfigValidationError> errors = new LinkedList<>();
+        if (oldConfig == null) {
+            return errors;
+        }
+        CassandraSchedulerConfiguration oldConfiguration = (CassandraSchedulerConfiguration) oldConfig;
+        CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
+        final String newCluster = newConfiguration.getIdentity().getCluster();
+        final String oldCluster = oldConfiguration.getIdentity().getCluster();
+        if (!Objects.equals(newCluster, oldCluster)) {
+            final String errorMessage = String.format("The configured cluster can not be changed. Old cluster is (%s). " +
+                    "New cluster is (%s)", oldCluster, newCluster);
+            final ConfigValidationError error = new ConfigValidationError("cluster", errorMessage);
+            errors.add(error);
+        }
+        return errors;
+    });
+
     public Collection<ConfigValidation> validations = Arrays.asList(
             serversValidation,
             seedValidation,
             diskTypeValidation,
-            diskSizeValidation);
+            diskSizeValidation,
+            frameworkNameValidation,
+            principalValidation,
+            roleValidation,
+            clusterValidation);
 
     public List<ConfigValidationError> validate(Configuration oldConfig, Configuration newConfig) {
         List<ConfigValidationError> errors = new ArrayList<>();

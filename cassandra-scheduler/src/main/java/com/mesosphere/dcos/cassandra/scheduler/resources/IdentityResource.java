@@ -1,8 +1,8 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Counted;
+import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -14,17 +14,17 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class IdentityResource {
 
-    private final IdentityManager manager;
+    private final ConfigurationManager configurationManager;
 
     @Inject
-    public IdentityResource(final IdentityManager manager) {
-        this.manager = manager;
+    public IdentityResource(ConfigurationManager configurationManager) {
+        this.configurationManager = configurationManager;
     }
 
     @GET
     @Counted
-    public Identity getIdentity() {
-        return manager.get();
+    public Identity getIdentity() throws Exception {
+        return configurationManager.getTargetConfig().getIdentity();
     }
 
 }

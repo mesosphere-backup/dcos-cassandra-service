@@ -78,10 +78,10 @@ public class CassandraRepairScheduler {
 
     private Optional<CassandraDaemonTask> getTerminatedTask(
             final Set<String> ignore) {
-
+        cassandraTasks.refreshTasks();
         List<CassandraDaemonTask> terminated =
                 cassandraTasks.getDaemons().values().stream()
-                        .filter(task -> task.isTerminated())
+                        .filter(task -> cassandraTasks.isTerminated(task))
                         .filter(task -> !ignore.contains(task.getName()))
                         .collect(Collectors.toList());
         LOGGER.info("Terminated tasks size: {}", terminated.size());
