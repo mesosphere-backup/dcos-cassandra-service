@@ -18,6 +18,7 @@ package com.mesosphere.dcos.cassandra.executor.backup;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.internal.Constants;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -74,20 +75,26 @@ public class S3StorageDriver implements BackupStorageDriver {
             S3StorageDriver.class);
 
     public static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
-
     public static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
     private StorageUtil storageUtil = new StorageUtil();
 
-    private String getBucketName(BackupRestoreContext ctx) throws URISyntaxException {
-        return new URI(ctx.getExternalLocation()).getPath().split("/")[1];
+    String getBucketName(BackupRestoreContext ctx) throws URISyntaxException {
+        URI uri = new URI(ctx.getExternalLocation());
+        if (uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME)) {
+            return uri.getHost();
+        } else {
+            return uri.getPath().split("/")[1];
+        }
     }
 
-    private String getPrefixKey(BackupRestoreContext ctx) throws URISyntaxException {
-        String[] segments = new URI(ctx.getExternalLocation()).getPath().split("/");
+    String getPrefixKey(BackupRestoreContext ctx) throws URISyntaxException {
+        URI uri = new URI(ctx.getExternalLocation());
+        String[] segments = uri.getPath().split("/");
 
+        int startIndex = uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME) ? 1 : 2;
         String prefixKey = "";
-        for (int i=2; i<segments.length; i++) {
+        for (int i=startIndex; i<segments.length; i++) {
             prefixKey += segments[i];
         }
 
@@ -97,8 +104,13 @@ public class S3StorageDriver implements BackupStorageDriver {
         return prefixKey;
     }
 
-    private String getEndpoint(BackupRestoreContext ctx) throws URISyntaxException {
-        return new URI(ctx.getExternalLocation()).getHost();
+    String getEndpoint(BackupRestoreContext ctx) throws URISyntaxException {
+        URI uri = new URI(ctx.getExternalLocation());
+        if (uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME)) {
+            return Constants.S3_HOSTNAME;
+        } else {
+            return new URI(ctx.getExternalLocation()).getHost();
+        }
     }
 
     private AmazonS3Client getAmazonS3Client(BackupRestoreContext ctx) throws URISyntaxException {
