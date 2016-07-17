@@ -202,7 +202,9 @@ public class HeapConfig {
 
   @JsonIgnore
   public List<String> getHeapSettings() {
-    List<String> config = Arrays.asList(getXms(), getXmx());
+    List<String> config = new ArrayList<>();
+    config.add(getXms());
+    config.add(getXmx());
     if (gcType.equals(GC_TYPE.CMS)) {
       config.add(getXmn());
       config.addAll(CMS_SETTINGS);
