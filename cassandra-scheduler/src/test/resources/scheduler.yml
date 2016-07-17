@@ -27,6 +27,7 @@ cassandra:
   heap:
     size_mb : ${CASSANDRA_HEAP_SIZE_MB:-2048}
     new_mb : ${CASSANDRA_HEAP_NEW_MB:-100}
+    gc_type : ${CASSANDRA_GC_TYPE:-"CMS"}
   location:
     rack : ${CASSANDRA_LOCATION_RACK:-"rac1"}
     data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
