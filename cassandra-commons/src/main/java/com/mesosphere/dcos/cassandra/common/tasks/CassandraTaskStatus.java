@@ -15,6 +15,7 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotStatus;
@@ -238,6 +239,6 @@ public abstract class CassandraTaskStatus {
 
     @Override
     public String toString() {
-        return status.toString();
+        return TextFormat.shortDebugString(status);
     }
 }

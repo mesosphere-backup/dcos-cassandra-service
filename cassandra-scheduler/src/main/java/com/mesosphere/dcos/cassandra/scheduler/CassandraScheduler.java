@@ -276,8 +276,7 @@ public class CassandraScheduler implements Scheduler, Managed {
                              Protos.SlaveID slaveId,
                              int status) {
         LOGGER.info("Executor lost: executorId: {} slaveId: {} status: {}",
-                executorId.getValue()
-                , slaveId.getValue(), status);
+                executorId.getValue(), slaveId.getValue(), status);
     }
 
     @Override

@@ -150,11 +150,8 @@ public class SeedsManager implements Runnable {
     public List<String> getLocalSeeds() throws IOException {
         final List<CassandraDaemonTask> active = tasks.getDaemons().values()
                 .stream()
-                .filter(daemon -> daemon.getMode() ==
-                        CassandraMode.NORMAL &&
-                        daemon.getHostname().isEmpty() == false).collect(
-                        Collectors
-                                .toList());
+                .filter(daemon -> daemon.getMode() == CassandraMode.NORMAL && daemon.getHostname().isEmpty() == false)
+                .collect(Collectors.toList());
 
         final int seedCount = getConfiguredSeedsCount();
         final List<String> seeds = new ArrayList<>(active.size());

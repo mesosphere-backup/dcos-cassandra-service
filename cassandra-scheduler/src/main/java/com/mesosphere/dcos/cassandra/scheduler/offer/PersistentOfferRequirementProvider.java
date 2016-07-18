@@ -33,7 +33,7 @@ public class PersistentOfferRequirementProvider {
 
     public OfferRequirement getNewOfferRequirement(CassandraContainer container) {
         // TODO: Should we version configs ?
-        LOGGER.info("Getting new offer requirement for:  ", container.getId());
+        LOGGER.info("Getting new offer requirement for: ", container.getId());
         PlacementStrategy placementStrategy;
         try {
             placementStrategy = PlacementStrategyManager.getPlacementStrategy(

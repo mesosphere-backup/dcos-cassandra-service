@@ -78,7 +78,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                         LOGGER.info("Loaded task: {}", cassandraTask.getName());
                         builder.put(cassandraTask.getName(), cassandraTask);
                     } catch (IOException e) {
-                        LOGGER.error("Error parsing task: {}. Reason: {}", taskInfo, e);
+                        LOGGER.error("Error parsing task: {}. Reason: {}", TextFormat.shortDebugString(taskInfo), e);
                         throw new RuntimeException(e);
                     }
                 }
@@ -87,7 +87,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                 tasks.forEach((name, task) -> {
                     byId.put(task.getId(), name);
                 });
-                LOGGER.info("Loaded tasks: {}", tasks);
+                LOGGER.debug("Loaded tasks: {}", tasks);
             }
         } catch (StateStoreException e) {
             LOGGER.error("Error loading tasks. Reason: {}", e);
@@ -115,6 +115,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public Map<String, CassandraDaemonTask> getDaemons() {
+        refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
                 .getType() == CassandraTask.TYPE.CASSANDRA_DAEMON).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
@@ -122,6 +123,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public Map<String, BackupSnapshotTask> getBackupSnapshotTasks() {
+        refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
                 .getType() == CassandraTask.TYPE.BACKUP_SNAPSHOT).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
@@ -129,6 +131,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public Map<String, BackupUploadTask> getBackupUploadTasks() {
+        refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
                 .getType() == CassandraTask.TYPE.BACKUP_UPLOAD).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
@@ -136,6 +139,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public Map<String, DownloadSnapshotTask> getDownloadSnapshotTasks() {
+        refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
                 .getType() == CassandraTask.TYPE.SNAPSHOT_DOWNLOAD).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
@@ -143,6 +147,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public Map<String, RestoreSnapshotTask> getRestoreSnapshotTasks() {
+        refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
                 .getType() == CassandraTask.TYPE.SNAPSHOT_RESTORE).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
@@ -150,6 +155,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public Map<String, CleanupTask> getCleanupTasks() {
+        refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
                 .getType() == CassandraTask.TYPE.CLEANUP).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
@@ -157,6 +163,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public Map<String, RepairTask> getRepairTasks() {
+        refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
                 .getType() == CassandraTask.TYPE.REPAIR).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
@@ -199,7 +206,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         final Identity identity = targetConfig.getIdentity();
         CassandraDaemonTask updated = configuration.moveDaemon(
             daemon,
-            identity.getId(),
+            stateStore.fetchFrameworkId().getValue(),
             identity.getRole(),
             identity.getPrincipal());
         update(updated);
@@ -475,11 +482,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                     LOGGER.info("Tasks = {}", tasks);
                     LOGGER.info("Ids = {}", byId);
                 }
-
-//                final String taskId = status.getTaskId().getValue();
-//                final String taskName = byId.get(taskId);
-//                final CassandraTask cassandraTask = tasks.get(taskName);
-//                cassandraTask.update(CassandraTaskStatus.parse(status));
             } catch (StateStoreException e) {
                 LOGGER.info("Unable to store status. Reason: ", e);
             }
@@ -499,7 +501,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         }
         return false;
     }
-    public void refreshTasks() {
+    public synchronized void refreshTasks() {
         LOGGER.info("Refreshing tasks");
         loadTasks();
     }

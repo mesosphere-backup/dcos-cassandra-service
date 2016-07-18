@@ -17,6 +17,7 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 
 import java.util.*;
@@ -244,6 +245,12 @@ public class CassandraTaskExecutor {
                 .setExecutorId(ExecutorUtils.toExecutorId(getName())).build());
     }
 
+    public CassandraTaskExecutor clearId() {
+        return parse(
+                Protos.ExecutorInfo.newBuilder(getExecutorInfo())
+                        .setExecutorId(Protos.ExecutorID.newBuilder().setValue("")).build());
+    }
+
     public boolean matches(final ExecutorConfig config) {
         return Double.compare(getCpus(), config.getCpus()) == 0 &&
                 Objects.equals(getCommand(), config.getCommand()) &&
@@ -277,6 +284,6 @@ public class CassandraTaskExecutor {
 
     @Override
     public String toString() {
-        return this.info.toString();
+        return TextFormat.shortDebugString(this.info);
     }
 }

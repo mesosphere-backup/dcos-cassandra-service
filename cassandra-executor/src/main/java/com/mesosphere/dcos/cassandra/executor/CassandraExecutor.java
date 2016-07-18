@@ -25,17 +25,10 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.executor.backup.StorageDriverFactory;
-import com.mesosphere.dcos.cassandra.executor.tasks.BackupSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.Cleanup;
-import com.mesosphere.dcos.cassandra.executor.tasks.DownloadSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.Repair;
-import com.mesosphere.dcos.cassandra.executor.tasks.RestoreSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.UploadSnapshot;
+import com.mesosphere.dcos.cassandra.executor.tasks.*;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
-import org.apache.mesos.executor.CustomExecutor;
-import org.apache.mesos.executor.ExecutorTaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

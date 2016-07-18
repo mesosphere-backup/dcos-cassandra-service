@@ -231,7 +231,7 @@ public class CassandraDaemonTask extends CassandraTask {
     public CassandraDaemonTask updateId() {
         return new CassandraDaemonTask(getBuilder()
             .setTaskId(createId(getName()))
-            .setExecutor(getExecutor().withNewId().getExecutorInfo())
+            .setExecutor(getExecutor().clearId().getExecutorInfo())
             .setData(getData()
                 .withState(Protos.TaskState.TASK_STAGING).getBytes())
             .build());

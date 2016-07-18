@@ -18,6 +18,8 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.protobuf.TextFormat;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
@@ -26,6 +28,8 @@ import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
 import org.glassfish.jersey.server.ManagedAsync;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
@@ -41,7 +45,8 @@ import java.util.stream.Collectors;
 @Path("/v1/nodes")
 @Produces(MediaType.APPLICATION_JSON)
 public class TasksResource {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger
+            (TasksResource.class);
     private final CassandraTasks tasks;
     private final SchedulerClient client;
     private final ConfigurationManager configurationManager;
@@ -152,7 +157,9 @@ public class TasksResource {
             Optional.ofNullable(tasks.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
-            tasks.moveCassandraContainer(task);
+            final CassandraContainer movedContainer = tasks.moveCassandraContainer(task);
+            LOGGER.info("Moved container ExecutorInfo: {}",
+                    TextFormat.shortDebugString(movedContainer.getExecutorInfo()));
             if (!task.isTerminated()) {
                 client.shutdown(task.getHostname(),
                     task.getExecutor().getApiPort());

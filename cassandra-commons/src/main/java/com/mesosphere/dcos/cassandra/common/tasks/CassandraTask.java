@@ -17,6 +17,7 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.google.inject.Inject;
 
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import org.apache.mesos.offer.VolumeRequirement;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
@@ -404,6 +405,6 @@ public abstract class CassandraTask {
 
     @Override
     public String toString() {
-        return info.toString();
+        return TextFormat.shortDebugString(info);
     }
 }
