@@ -92,6 +92,10 @@ cassandra:
   tracetype_query_ttl : ${CASSANDRA_TRACETYPE_QUERY_TTL:-86400}
   tracetype_repair_ttl : ${CASSANDRA_TRACETYPE_REPAIR_TTL:-604800}
   windows_timer_interval : ${CASSANDRA_WINDOWS_TIMER_INTERVAL:-1}
+  max_hints_file_size_in_mb : ${CASSANDRA_MAX_HINTS_FILE_SIZE_IN_MB:-128}
+  hints_flush_period_in_ms : ${CASSANDRA_HINTS_FLUSH_PERIOD_IN_MS:-10000}
+  concurrent_materialized_view_writes : ${CASSANDRA_MATERIALIZED_VIEW_WRITES:-32}
+  commitlog_total_space_in_mb : ${CASSANDRA_COMMITLOG_TOTAL_SPACE_IN_MB:-8192}
 nodes: ${NODES:-3}
 seed_nodes: ${SEED_NODES:-2}
 placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
