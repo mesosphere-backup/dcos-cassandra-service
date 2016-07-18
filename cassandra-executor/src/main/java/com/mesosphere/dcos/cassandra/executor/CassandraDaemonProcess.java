@@ -175,8 +175,6 @@ public class CassandraDaemonProcess {
         public void run() {
 
             if (open.get()) {
-
-
                 CassandraMode current = CassandraMode.valueOf(
                         probe.getOperationMode());
                 if (!mode.get().equals(current)) {
@@ -348,6 +346,8 @@ public class CassandraDaemonProcess {
                 .setListenAddress(getListenAddress())
                 .setRpcAddress(getListenAddress())
                 .build().writeDaemonConfiguration(paths.cassandra().cassandraConfig());
+
+        task.getConfig().getHeap().writeHeapSettings(paths.heapConfig());
 
         if (metricsEnabled) {
             metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());

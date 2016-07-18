@@ -286,7 +286,7 @@ public class CassandraTaskExecutor {
         if (this == o) return true;
         if (!(o instanceof CassandraTaskExecutor)) return false;
         CassandraTaskExecutor that = (CassandraTaskExecutor) o;
-        return this.info.equals(this.info);
+        return this.info.equals(that.info);
     }
 
     @Override
