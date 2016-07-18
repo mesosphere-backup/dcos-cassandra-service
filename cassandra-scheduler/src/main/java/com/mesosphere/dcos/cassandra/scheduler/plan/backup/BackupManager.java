@@ -100,7 +100,7 @@ public class BackupManager {
     public void stopBackup() {
         LOGGER.info("Stopping backup");
         try {
-            // TODO: Clear backup context from PropertyStore
+            stateStore.clearProperty(BACKUP_KEY);
             cassandraTasks.remove(cassandraTasks.getBackupSnapshotTasks().keySet());
             cassandraTasks.remove(cassandraTasks.getBackupUploadTasks().keySet());
         } catch (PersistenceException e) {

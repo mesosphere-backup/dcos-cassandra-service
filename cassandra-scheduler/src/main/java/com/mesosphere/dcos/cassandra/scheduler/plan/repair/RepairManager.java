@@ -80,7 +80,7 @@ public class RepairManager {
     public void stopRepair() {
         LOGGER.info("Stopping repair");
         try {
-            // TODO: Delete repair context from Property store
+            stateStore.clearProperty(REPAIR_KEY);
             cassandraTasks.remove(cassandraTasks.getRepairTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(

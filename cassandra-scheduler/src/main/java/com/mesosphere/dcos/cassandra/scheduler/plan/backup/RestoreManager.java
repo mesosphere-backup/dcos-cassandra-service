@@ -101,6 +101,7 @@ public class RestoreManager {
         LOGGER.info("Stopping restore");
         try {
             // TODO: Delete restore context from Property store
+            stateStore.clearProperty(RESTORE_KEY);
             cassandraTasks.remove(cassandraTasks.getRestoreSnapshotTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(

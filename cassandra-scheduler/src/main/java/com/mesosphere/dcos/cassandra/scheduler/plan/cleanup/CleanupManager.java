@@ -81,7 +81,7 @@ public class CleanupManager {
     public void stopCleanup() {
         LOGGER.info("Stopping cleanup");
         try {
-            // TODO: Delete Cleanup Manager from Property Store.
+            stateStore.clearProperty(CLEANUP_KEY);
             cassandraTasks.remove(cassandraTasks.getCleanupTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
