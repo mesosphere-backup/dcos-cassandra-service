@@ -140,7 +140,7 @@ public class ClusterTaskOfferRequirementProviderTest {
                 new ConfigValidator());
         configuration = new ConfigurationManager(configurationManager);
 
-        provider = new ClusterTaskOfferRequirementProvider(identity, cassandraTasks);
+        provider = new ClusterTaskOfferRequirementProvider();
     }
 
     @After
@@ -155,8 +155,7 @@ public class ClusterTaskOfferRequirementProviderTest {
 
     @Test
     public void testConstructor() throws Exception {
-        ClusterTaskOfferRequirementProvider provider = new ClusterTaskOfferRequirementProvider(
-            identity, cassandraTasks);
+        ClusterTaskOfferRequirementProvider provider = new ClusterTaskOfferRequirementProvider();
         CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
         Protos.TaskInfo taskInfo = task.getTaskInfo();
 

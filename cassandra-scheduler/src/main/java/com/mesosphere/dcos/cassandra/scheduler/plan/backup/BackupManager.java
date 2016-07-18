@@ -103,12 +103,10 @@ public class BackupManager {
     }
 
     public boolean inProgress() {
-
         return (backupContext != null && !isComplete());
     }
 
     public boolean isComplete() {
-
         return (backupContext != null &&
                 backup != null && backup.isComplete() &&
                 upload != null && upload.isComplete());
