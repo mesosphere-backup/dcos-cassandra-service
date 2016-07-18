@@ -101,7 +101,7 @@ use_dse_role_manager : ${USE_DSE_ROLE_MANAGER:- false}
 dse :
   authentication_options:
     enabled: ${DSE_AUTHENTICATION_ENABLED:-false}
-    default_scheme: ${DSE_AUTHENTICATION_DEFAULT_SCHEME:-false}
+    default_scheme: ${DSE_AUTHENTICATION_DEFAULT_SCHEME:-kerberos}
     other_schemes:
       - internal
     scheme_permissions: ${DSE_AUTHENTICATION_SCHEME_PERMISSIONS:-true}
@@ -179,11 +179,11 @@ identity:
 seeds_url: "${SEEDS_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
 phase_strategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
 mesos:
-  servers: ${MESOS_SERVERS:-"localhost:40000"}
+  servers: ${MESOS_SERVERS:-"master.mesos:2181"}
   path: ${MESOS_PATH:-"/mesos"}
   timeout_ms: ${MESOS_TIMEOUT_MS:-10000}
 zookeeper:
-  servers: ${ZOOKEEPER_SERVERS:-"localhost:40000"}
+  servers: ${ZOOKEEPER_SERVERS:-"master.mesos:2181"}
   session_timeout_ms: 10000
   connection_timeout_ms: 10000
   operation_timeout_ms: 10000
