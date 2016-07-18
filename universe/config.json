@@ -48,7 +48,7 @@
 					"description": "The JVM heap used by the DSE Cassandra service scheduler in Mb.",
 					"default": 1024
 				},
-				"api_port" : {
+				"api_port": {
 					"id": "http://cassandra/docs/mesosphere.com/service/api_port",
 					"type": "integer",
 					"description": "The port that the DSE Cassandra service API will accept on.",
@@ -140,10 +140,10 @@
 							"description": "The amount of JVM new generation heap, in MB, allocated to the Cassandra process.",
 							"default": 100
 						},
-						"gc" : {
+						"gc": {
 							"id": "http://cassandra/docs/mesosphere.com/node/heap/gc",
 							"type": "string",
-							"enum": [ "G1", "CMS" ],
+							"enum": ["G1", "CMS"],
 							"description": "The Garbage collector for JVM (Either G1 or CMS).",
 							"default": "CMS"
 						}
@@ -520,6 +520,233 @@
 				"commitlog_total_space_in_mb"
 			]
 		},
+		"dse": {
+			"type": "object",
+			"properties": {
+				"authentication_options": {
+					"type": "object",
+					"properties": {
+						"enabled": {
+							"type": "boolean",
+							"default": false
+						},
+						"default_scheme": {
+							"type": "string",
+							"default": "false"
+						},
+						"other_schemes": {
+							"type": "array",
+							"items": {
+								"type": "string",
+								"default": "internal"
+							}
+						},
+						"scheme_permissions": {
+							"type": "boolean",
+							"default": true
+						},
+						"allow_digest_with_kerberos": {
+							"type": "boolean",
+							"default": true
+						},
+						"plain_text_without_ssl": {
+							"type": "string",
+							"default": "warn"
+						},
+						"transitional_mode": {
+							"type": "string",
+							"default": "disabled"
+						}
+					},
+					"required": [
+						"enabled",
+						"default_scheme",
+						"other_schemes",
+						"scheme_permissions",
+						"allow_digest_with_kerberos",
+						"plain_text_without_ssl",
+						"transitional_mode"
+					]
+				},
+				"role_management_options": {
+					"type": "object",
+					"properties": {
+						"mode": {
+							"type": "string",
+							"default": "internal"
+						}
+					},
+					"required": [
+						"mode"
+					]
+				},
+				"authorization_options": {
+					"type": "object",
+					"properties": {
+						"enabled": {
+							"type": "boolean",
+							"default": false
+						},
+						"transitional_mode": {
+							"type": "string",
+							"default": "disabled"
+						}
+					},
+					"required": [
+						"enabled",
+						"transitional_mode"
+					]
+				},
+				"kerberos_options": {
+					"type": "object",
+					"properties": {
+						"keytab": {
+							"type": "string",
+							"default": "dse.keytab"
+						},
+						"service_principal": {
+							"type": "string",
+							"default": "dse/_HOST@REALM"
+						},
+						"http_principal": {
+							"type": "string",
+							"default": "HTTP/_HOST@REALM"
+						},
+						"qop": {
+							"type": "string",
+							"default": "auth"
+						}
+					},
+					"required": [
+						"keytab",
+						"service_principal",
+						"http_principal",
+						"qop"
+					]
+				},
+				"node_health_options": {
+					"type": "object",
+					"properties": {
+						"refresh_rate_ms": {
+							"type": "integer",
+							"default": 60000
+						},
+						"uptime_ramp_up_period_seconds": {
+							"type": "integer",
+							"default": 86400
+						},
+						"dropped_mutation_window_minutes": {
+							"type": "integer",
+							"default": 30
+						}
+					},
+					"required": [
+						"refresh_rate_ms",
+						"uptime_ramp_up_period_seconds",
+						"dropped_mutation_window_minutes"
+					]
+				},
+				"lease_metrics_options": {
+					"type": "object",
+					"properties": {
+						"enabled": {
+							"type": "boolean",
+							"default": false
+						},
+						"ttl_seconds": {
+							"type": "integer",
+							"default": 604800
+						}
+					},
+					"required": [
+						"enabled",
+						"ttl_seconds"
+					]
+				},
+				"audit_logging_options": {
+					"type": "object",
+					"properties": {
+						"enabled": {
+							"type": "boolean",
+							"default": false
+						},
+						"logger": {
+							"type": "string",
+							"default": "SLF4JAuditWriter"
+						},
+						"retention_time": {
+							"type": "integer",
+							"default": 0
+						},
+						"cassandra_audit_writer_options": {
+							"type": "object",
+							"properties": {
+								"mode": {
+									"type": "string",
+									"default": "sync"
+								},
+								"batch_size": {
+									"type": "integer",
+									"default": 50
+								},
+								"flush_time": {
+									"type": "integer",
+									"default": 500
+								},
+								"num_writers": {
+									"type": "integer",
+									"default": 10
+								},
+								"queue_size": {
+									"type": "integer",
+									"default": 10000
+								},
+								"write_consistency": {
+									"type": "string",
+									"default": "QUORUM"
+								}
+							},
+							"required": [
+								"mode",
+								"batch_size",
+								"flush_time",
+								"num_writers",
+								"queue_size",
+								"write_consistency"
+							]
+						}
+					},
+					"required": [
+						"enabled",
+						"logger",
+						"retention_time",
+						"cassandra_audit_writer_options"
+					]
+				},
+				"internode_messaging_options": {
+					"type": "object",
+					"properties": {
+						"port": {
+							"type": "integer",
+							"default": 8609
+						}
+					},
+					"required": [
+						"port"
+					]
+				}
+			},
+			"required": [
+				"authentication_options",
+				"role_management_options",
+				"authorization_options",
+				"kerberos_options",
+				"node_health_options",
+				"lease_metrics_options",
+				"audit_logging_options",
+				"internode_messaging_options"
+			]
+		},
 		"executor": {
 			"id": "http://cassandra/docs/mesosphere.com/executor",
 			"type": "object",
@@ -549,16 +776,16 @@
 					"description": "The amount of disk used by the Cassandra service executor in Mb.",
 					"default": 1024
 				},
-				"api_port" : {
+				"api_port": {
 					"id": "http://cassandra/docs/mesosphere.com/executor/api_port",
 					"type": "integer",
 					"description": "The port that the Cassandra executor API will accept on.",
 					"default": 9001
 				},
-				"keytab_location" : {
+				"keytab_location": {
 					"id": "http://cassandra/docs/mesosphere.com/executor/keytab_location",
 					"type": "string",
-					"description": "URL for the Kerberos keyfile supplied to DSE."
+					"description": "Location."
 				}
 			},
 			"additionalProperties": false,
@@ -600,6 +827,7 @@
 		"service",
 		"nodes",
 		"cassandra",
+		"dse",
 		"executor",
 		"task"
 	]
