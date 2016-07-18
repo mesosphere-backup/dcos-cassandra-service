@@ -278,7 +278,6 @@ public class CassandraDaemonProcess {
                 .directory(new File(System.getProperty("user.dir")))
                 .redirectOutput(new File("cassandra-stdout.log"))
                 .redirectError(new File("cassandra-stderr.log"));
-        builder.environment().putAll(task.getConfig().getHeap().toEnv());
         builder.environment().put(
                 "JMX_PORT",
                 Integer.toString(task.getConfig().getJmxPort()));
@@ -347,7 +346,8 @@ public class CassandraDaemonProcess {
                 .setRpcAddress(getListenAddress())
                 .build().writeDaemonConfiguration(paths.cassandra().cassandraConfig());
 
-        task.getConfig().getHeap().writeHeapSettings(paths.heapConfig());
+        task.getConfig().getHeap().writeHeapSettings(
+          paths.cassandra().heapConfig());
 
         if (metricsEnabled) {
             metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());
