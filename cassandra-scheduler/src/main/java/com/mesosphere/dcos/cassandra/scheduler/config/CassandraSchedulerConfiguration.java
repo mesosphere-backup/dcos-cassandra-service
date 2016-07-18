@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.DseConfig;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.config.ConfigStoreException;
@@ -14,88 +15,110 @@ import org.apache.mesos.config.Configuration;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CassandraSchedulerConfiguration implements Configuration {
+public class CassandraSchedulerConfiguration extends Configuration {
+  private static final Logger LOGGER = LoggerFactory.getLogger(
+    CassandraSchedulerConfiguration.class
+  );
 
-  @JsonCreator
-  public static CassandraSchedulerConfiguration create(
-    @JsonProperty("executor") final ExecutorConfig executorConfig,
-    @JsonProperty("servers") final int servers,
-    @JsonProperty("seeds") final int seeds,
-    @JsonProperty("placement_strategy") final String placementStrategy,
-    @JsonProperty("cassandra") final CassandraConfig cassandraConfig,
-    @JsonProperty("cluster_task") final ClusterTaskConfig clusterTaskConfig,
-    @JsonProperty("api_port") final int apiPort,
-    @JsonProperty("service") final ServiceConfig serviceConfig,
-    @JsonProperty("external_dc_sync_ms") final long externalDcSyncMs,
-    @JsonProperty("external_dcs") final String externalDcs,
-    @JsonProperty("dc_url") final String dcUrl,
-    @JsonProperty("phase_strategy") final String phaseStrategy) {
-
-    return new CassandraSchedulerConfiguration(
-      executorConfig,
-      servers,
-      seeds,
-      placementStrategy,
-      cassandraConfig,
-      clusterTaskConfig,
-      apiPort,
-      serviceConfig,
-      externalDcSyncMs,
-      externalDcs,
-      dcUrl,
-      phaseStrategy
+  private ExecutorConfig executorConfig;
+  private String name;
+  private String version;
+  private int servers;
+  private int seeds;
+  private String placementStrategy;
+  private CassandraConfigParser cassandraConfig;
+  private ClusterTaskConfig clusterTaskConfig;
+  private int apiPort;
+  private Identity identity;
+  private String phaseStrategy;
+  private MesosConfig mesosConfig =
+    MesosConfig.create(
+      "master.mesos:2181",
+      "/mesos",
+      10000L
     );
+  private CuratorFrameworkConfig curatorConfig =
+    CuratorFrameworkConfig.create(
+      "master.mesos:2181",
+      10000L,
+      10000L,
+      Optional.empty(),
+      250L);
+  private String seedsUrl;
+  private long externalDcSyncMs;
+  private String externalDcs;
+  private String dcUrl;
+  private boolean useDseRoleManager;
+  private DseConfig dseConfig;
+
+  @JsonProperty("framework_version")
+  public String getVersion() {
+    return version;
   }
 
-  @JsonIgnore
-  private final ExecutorConfig executorConfig;
-  @JsonIgnore
-  private final int servers;
-  @JsonIgnore
-  private final int seeds;
-  @JsonIgnore
-  private final String placementStrategy;
-  @JsonIgnore
-  private final CassandraConfig cassandraConfig;
-  @JsonIgnore
-  private final ClusterTaskConfig clusterTaskConfig;
-  @JsonIgnore
-  private final int apiPort;
-  @JsonIgnore
-  private final ServiceConfig serviceConfig;
-  @JsonIgnore
-  private final long externalDcSyncMs;
-  @JsonIgnore
-  private final String externalDcs;
-  @JsonIgnore
-  private final String dcUrl;
-  @JsonIgnore
-  private final String phaseStrategy;
+  @JsonProperty("framework_version")
+  public CassandraSchedulerConfiguration setVersion(String version) {
+    this.version = version;
+    return this;
+  }
 
-  private CassandraSchedulerConfiguration(
-    ExecutorConfig executorConfig,
-    int servers,
-    int seeds,
-    String placementStrategy,
-    CassandraConfig cassandraConfig,
-    ClusterTaskConfig clusterTaskConfig,
-    int apiPort, ServiceConfig serviceConfig,
-    long externalDcSyncMs,
-    String externalDcs,
-    String dcUrl,
-    String phaseStrategy) {
-    this.executorConfig = executorConfig;
-    this.servers = servers;
-    this.seeds = seeds;
-    this.placementStrategy = placementStrategy;
+  @JsonProperty("framework_name")
+  public String getName() {
+    return name;
+  }
+
+  @JsonProperty("mesos")
+  public MesosConfig getMesosConfig() {
+    return mesosConfig;
+  }
+
+  @JsonProperty("zookeeper")
+  public CuratorFrameworkConfig getCuratorConfig() {
+    return curatorConfig;
+  }
+
+  @JsonProperty("cassandra")
+  public CassandraConfigParser getCassandraConfigParser() {
+    return cassandraConfig;
+  }
+
+  @JsonProperty("framework_name")
+  public CassandraSchedulerConfiguration setName(String name) {
+    this.name = name;
+    return this;
+  }
+
+  private HttpClientConfiguration httpClient = new HttpClientConfiguration();
+
+  @JsonProperty("httpClient")
+  public HttpClientConfiguration getHttpClientConfiguration() {
+    return httpClient;
+  }
+
+  @JsonProperty("httpClient")
+  public void setHttpClientConfiguration(HttpClientConfiguration httpClient) {
+    this.httpClient = httpClient;
+  }
+
+  @JsonProperty("mesos")
+  public CassandraSchedulerConfiguration setMesosConfig(MesosConfig mesosConfig) {
+    this.mesosConfig = mesosConfig;
+    return this;
+  }
+
+  @JsonProperty("zookeeper")
+  public CassandraSchedulerConfiguration setCuratorConfig(
+    CuratorFrameworkConfig curatorConfig) {
+    this.curatorConfig = curatorConfig;
+    return this;
+  }
+
+  @JsonProperty("cassandra")
+  public CassandraSchedulerConfiguration setCassandraConfigParser
+    (CassandraConfigParser
+       cassandraConfig) {
     this.cassandraConfig = cassandraConfig;
-    this.clusterTaskConfig = clusterTaskConfig;
-    this.apiPort = apiPort;
-    this.serviceConfig = serviceConfig;
-    this.externalDcSyncMs = externalDcSyncMs;
-    this.externalDcs = externalDcs;
-    this.dcUrl = dcUrl;
-    this.phaseStrategy = phaseStrategy;
+    return this;
   }
 
   @JsonProperty("executor")
@@ -103,24 +126,10 @@ public class CassandraSchedulerConfiguration implements Configuration {
     return executorConfig;
   }
 
-  @JsonProperty("servers")
-  public int getServers() {
-    return servers;
-  }
-
-  @JsonProperty("seeds")
-  public int getSeeds() {
-    return seeds;
-  }
-
-  @JsonProperty("placement_strategy")
-  public String getPlacementStrategy() {
-    return placementStrategy;
-  }
-
-  @JsonProperty("cassandra")
-  public CassandraConfig getCassandraConfig() {
-    return cassandraConfig;
+  @JsonProperty("executor")
+  public CassandraSchedulerConfiguration setExecutorConfig(ExecutorConfig executorConfig) {
+    this.executorConfig = executorConfig;
+    return this;
   }
 
   @JsonProperty("cluster_task")
@@ -128,29 +137,78 @@ public class CassandraSchedulerConfiguration implements Configuration {
     return clusterTaskConfig;
   }
 
+  @JsonProperty("cluster_task")
+  public CassandraSchedulerConfiguration setClusterTaskConfig(
+    ClusterTaskConfig clusterTaskConfig) {
+    this.clusterTaskConfig = clusterTaskConfig;
+    return this;
+  }
+
+  @JsonProperty("seed_nodes")
+  public int getSeeds() {
+    return seeds;
+  }
+
+  @JsonProperty("seed_nodes")
+  public CassandraSchedulerConfiguration setSeeds(int seeds) {
+    this.seeds = seeds;
+    return this;
+  }
+
+  @JsonProperty("nodes")
+  public int getServers() {
+    return servers;
+  }
+
+  @JsonProperty("nodes")
+  public CassandraSchedulerConfiguration setServers(int servers) {
+    this.servers = servers;
+    return this;
+  }
+
+  @JsonProperty("placement_strategy")
+  public String getPlacementStrategy() {
+    return placementStrategy;
+  }
+
+  @JsonProperty("placement_strategy")
+  public CassandraSchedulerConfiguration setPlacementStrategy(String placementStrategy) {
+    this.placementStrategy = placementStrategy;
+    return this;
+  }
+
   @JsonProperty("api_port")
   public int getApiPort() {
     return apiPort;
   }
 
-  @JsonProperty("service")
-  public ServiceConfig getServiceConfig() {
-    return serviceConfig;
+  @JsonProperty("api_port")
+  public CassandraSchedulerConfiguration setApiPort(int port) {
+    this.apiPort = port;
+    return this;
   }
 
-  @JsonProperty("external_dc_sync_ms")
-  public long getExternalDcSyncMs() {
-    return externalDcSyncMs;
+  @JsonProperty("seeds_url")
+  public String getSeedsUrl() {
+    return seedsUrl;
   }
 
-  @JsonProperty("external_dcs")
-  public String getExternalDcs() {
-    return externalDcs;
+  @JsonProperty("seeds_url")
+  public CassandraSchedulerConfiguration setSeedsUrl(String seedsUrl) {
+    this.seedsUrl = seedsUrl;
+    return this;
   }
 
-  @JsonProperty("dc_url")
-  public String getDcUrl() {
-    return dcUrl;
+  @JsonProperty("identity")
+  public Identity getIdentity() {
+    return identity;
+  }
+
+
+  @JsonProperty("identity")
+  public CassandraSchedulerConfiguration setIdentity(Identity identity) {
+    this.identity = identity;
+    return this;
   }
 
   @JsonProperty("phase_strategy")
@@ -158,40 +216,66 @@ public class CassandraSchedulerConfiguration implements Configuration {
     return phaseStrategy;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    CassandraSchedulerConfiguration that = (CassandraSchedulerConfiguration) o;
-    return servers == that.servers &&
-      seeds == that.seeds &&
-      apiPort == that.apiPort &&
-      externalDcSyncMs == that.externalDcSyncMs &&
-      Objects.equals(executorConfig, that.executorConfig) &&
-      Objects.equals(placementStrategy, that.placementStrategy) &&
-      Objects.equals(cassandraConfig, that.cassandraConfig) &&
-      Objects.equals(clusterTaskConfig, that.clusterTaskConfig) &&
-      Objects.equals(serviceConfig, that.serviceConfig) &&
-      Objects.equals(externalDcs, that.externalDcs) &&
-      Objects.equals(dcUrl, that.dcUrl) &&
-      Objects.equals(phaseStrategy, that.phaseStrategy);
+  @JsonProperty("phase_strategy")
+  public CassandraSchedulerConfiguration setPhaseStrategy(
+    String phaseStrategy) {
+    this.phaseStrategy = phaseStrategy;
+    return this;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-      executorConfig,
-      servers,
-      seeds,
-      placementStrategy,
-      cassandraConfig,
-      clusterTaskConfig,
-      apiPort,
-      serviceConfig,
-      externalDcSyncMs,
-      externalDcs,
-      dcUrl,
-      phaseStrategy);
+  @JsonProperty("dc_sync_ms")
+  public long getExternalDcSyncMs() {
+    return externalDcSyncMs;
+  }
+
+  @JsonProperty("dc_sync_ms")
+  public CassandraSchedulerConfiguration setExternalDcSyncMs(long externalDcSyncMs) {
+    this.externalDcSyncMs = externalDcSyncMs;
+    return this;
+  }
+
+  @JsonProperty("dc_url")
+  public String getDcUrl() {
+    return dcUrl;
+  }
+
+  @JsonProperty("dc_url")
+  public CassandraSchedulerConfiguration setDcUrl(String dcUrl) {
+    this.dcUrl = dcUrl;
+    return this;
+  }
+
+  @JsonProperty("external_dcs")
+  public String getExternalDcs() {
+    return externalDcs;
+  }
+
+  @JsonProperty("external_dcs")
+  public CassandraSchedulerConfiguration setExternalDcs(String externalDcs) {
+    this.externalDcs = externalDcs;
+    return this;
+  }
+
+  @JsonProperty("use_dse_role_manager")
+  public boolean useDseRoleManager() {
+    return useDseRoleManager;
+  }
+
+  @JsonProperty("use_dse_role_manager")
+  public CassandraSchedulerConfiguration setUseDseRoleManager(boolean useDseRoleManager) {
+    this.useDseRoleManager = useDseRoleManager;
+    return this;
+  }
+
+  @JsonProperty("dse")
+  public DseConfig getDseConfig() {
+    return dseConfig;
+  }
+
+  @JsonProperty("dse")
+  public CassandraSchedulerConfiguration setDseConfig(final DseConfig dseConfig) {
+    this.dseConfig = dseConfig;
+    return this;
   }
 
   @JsonIgnore
@@ -207,19 +291,11 @@ public class CassandraSchedulerConfiguration implements Configuration {
   }
 
   @JsonIgnore
-  @Override
-  public byte[] getBytes() throws ConfigStoreException {
-    try {
-      return JsonUtils.MAPPER.writeValueAsBytes(this);
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-      throw new ConfigStoreException(e);
-    }
-  }
-
-  @JsonIgnore
-  @Override
-  public String toJsonString() throws Exception {
-    return JsonUtils.toJsonString(this);
+  public CassandraConfig getCassandraConfig() {
+    return cassandraConfig.getCassandraConfig(
+      identity.getCluster(),
+      getSeedsUrl(),
+      useDseRoleManager,
+      dseConfig);
   }
 }

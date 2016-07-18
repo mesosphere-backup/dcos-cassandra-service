@@ -46,11 +46,8 @@ public class ConfigurationManager implements Managed {
     public CassandraDaemonTask createDaemon(String frameworkId,
                                             String name,
                                             String role,
-                                            String principal,
-                                            String configName) throws ConfigStoreException {
-        final CassandraSchedulerConfiguration targetConfig = getTargetConfig();
-        final CassandraConfig cassandraConfig = targetConfig.getCassandraConfig();
-        return cassandraDaemonTaskFactory.create(
+                                            String principal) {
+        return CassandraDaemonTask.create(
             name,
             configName,
             createExecutor(frameworkId, name + "_executor", role, principal),

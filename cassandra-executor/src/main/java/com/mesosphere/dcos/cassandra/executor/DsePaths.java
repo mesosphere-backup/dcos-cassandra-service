@@ -40,13 +40,12 @@ public class DsePaths {
     return root;
   }
 
-  /**
-   * Gets the configuration directory
-   *
-   * @return The Cassandra configuration directory.
-   */
-  public Path conf() {
-    return root.resolve("conf");
+
+  public Path dseConfig() {
+    return  root.resolve("resources")
+      .resolve("dse")
+      .resolve("conf")
+      .resolve("dse.yaml");
   }
 
   /**
