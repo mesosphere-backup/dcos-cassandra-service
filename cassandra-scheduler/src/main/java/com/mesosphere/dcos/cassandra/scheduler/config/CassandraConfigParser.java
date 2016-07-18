@@ -17,10 +17,7 @@ package com.mesosphere.dcos.cassandra.scheduler.config;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
-import com.mesosphere.dcos.cassandra.common.config.Location;
+import com.mesosphere.dcos.cassandra.common.config.*;
 import org.apache.mesos.offer.VolumeRequirement;
 
 import static com.mesosphere.dcos.cassandra.common.config
@@ -344,7 +341,9 @@ public class CassandraConfigParser {
 
   public CassandraConfig getCassandraConfig(
     final String name,
-    final String seedsUrl
+    final String seedsUrl,
+    final boolean useDseRoleManager,
+    final DseConfig dse
   ) {
 
     return CassandraConfig.create(
@@ -357,7 +356,9 @@ public class CassandraConfigParser {
       heap,
       location,
       jmxPort,
-      getApplicationConfig(name, seedsUrl));
+      dse.update(getApplicationConfig(name, seedsUrl),
+        useDseRoleManager),
+      dse);
   }
 
   public int getBatchlogReplayThrottleInKb() {

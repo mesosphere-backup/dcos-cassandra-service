@@ -11,6 +11,7 @@ executor:
   jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
   cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
+  keytab_location : ${EXECUTOR_CASSANDRA_LOCATION:-""}
   cassandra_ulimit_memlock : ${CASSANDRA_ULIMIT_MEMLOCK:-'unlimited'}
   cassandra_ulimit_nofile : ${CASSANDRA_ULIMIT_NOFILE:-'100000'}
   cassandra_ulimit_nproc : ${CASSANDRA_ULIMIT_NPROC:-'32768'}
@@ -96,6 +97,47 @@ cassandra:
   hints_flush_period_in_ms : ${CASSANDRA_HINTS_FLUSH_PERIOD_IN_MS:-10000}
   concurrent_materialized_view_writes : ${CASSANDRA_MATERIALIZED_VIEW_WRITES:-32}
   commitlog_total_space_in_mb : ${CASSANDRA_COMMITLOG_TOTAL_SPACE_IN_MB:-8192}
+use_dse_role_manager : ${USE_DSE_ROLE_MANAGER:- false}
+dse :
+  authentication_options:
+    enabled: ${DSE_AUTHENTICATION_ENABLED:-false}
+    default_scheme: ${DSE_AUTHENTICATION_DEFAULT_SCHEME:-false}
+    other_schemes:
+      - internal
+    scheme_permissions: ${DSE_AUTHENTICATION_SCHEME_PERMISSIONS:-true}
+    allow_digest_with_kerberos:  ${DSE_ALLOW_DIGEST_WITH_KERBEROS:-true}
+    plain_text_without_ssl : warn
+    transitional_mode : ${DSE_TRANSITIONAL_MODE:-disabled}
+  role_management_options:
+    mode : ${DES_ROLE_MANAGEMENT_MODE:-"internal"}
+  authorization_options:
+    enabled: ${DSE_AUTHORIZATION_ENABLED:-false}
+    transitional_mode : ${DSE_TRANSITIONAL_MODE:-disabled}
+  kerberos_options:
+    keytab: "dse.keytab"
+    service_principal: ${DSE_SERVICE_PRINCIPAL:-"dse/_HOST@REALM"}
+    http_principal: ${DSE_HTTP_PRINCIPAL:-"HTTP/_HOST@REALM"}
+    qop: ${DSE_QOP:-auth}
+  node_health_options:
+    refresh_rate_ms: ${DSE_NODE_HEALTH_REFRESH_MS:-60000}
+    uptime_ramp_up_period_seconds: ${DSE_NODE_HEALTH_RAMPUP_S:-86400}
+    dropped_mutation_window_minutes: ${DSE_DROPPED_MUTATION_WINDOW_M:-30}
+  lease_metrics_options:
+    enabled: ${DSE_LEASE_METRICS_ENABLED:-false}
+    ttl_seconds: ${DSE_LEASE_METRICS_TTL_S:-604800}
+  audit_logging_options:
+    enabled: ${DSE_AUDIT_LOGGING_ENABLED:-false}
+    logger: ${DSE_AUDIT_LOGGER:-SLF4JAuditWriter}
+    retention_time: ${DSE_AUDIT_LOG_RETENTION_TIME:-0}
+    cassandra_audit_writer_options:
+      mode: ${DSE_AUDIT_LOG_MODE:-sync}
+      batch_size: ${DSE_AUID_LOG_BATCH:-50}
+      flush_time: ${DSE_AUID_LOG_FLUSH_TIME:-500}
+      num_writers: ${DSE_AUID_LOG_WRITERS:-10}
+      queue_size: ${DSE_AUID_LOG_QUEUE_SIZE:-10000}
+      write_consistency: ${DSE_AUID_LOG_CONSISTENCY:-QUORUM}
+  internode_messaging_options:
+    port: ${DSE_MESSAGING_PORT:-8609}
 nodes: ${NODES:-3}
 seed_nodes: ${SEED_NODES:-2}
 placement_strategy: ${PLACEMENT_STRATEGY:-NODE}

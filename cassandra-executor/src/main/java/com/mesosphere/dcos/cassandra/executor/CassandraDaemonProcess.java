@@ -345,12 +345,14 @@ public class CassandraDaemonProcess {
                 .setListenAddress(getListenAddress())
                 .setRpcAddress(getListenAddress())
                 .build().writeDaemonConfiguration(paths.cassandra().cassandraConfig());
+        task.getConfig().getDse().writeYaml(paths.dseConfig());
 
         task.getConfig().getHeap().writeHeapSettings(
           paths.cassandra().heapConfig());
 
         if (metricsEnabled) {
-            metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());
+            metricsEnabled = MetricsConfig.writeMetricsConfig(
+              paths.cassandra().conf());
         }
 
         process = createDaemon();

@@ -272,8 +272,6 @@ public class ConfigurationManager implements Managed {
                                             String name,
                                             String role,
                                             String principal) {
-
-
         return CassandraDaemonTask.create(
             name,
             createExecutor(frameworkId, name + "_executor", role, principal),

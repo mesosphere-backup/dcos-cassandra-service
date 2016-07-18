@@ -152,6 +152,9 @@
 ,"EXECUTOR_JRE_LOCATION":"{{resource.assets.uris.jre-tar-gz}}"
 ,"EXECUTOR_LOCATION":"{{resource.assets.uris.executor-zip}}"
 ,"EXECUTOR_CASSANDRA_LOCATION":"{{resource.assets.uris.apache-cassandra-bin-tar-gz}}"
+{{#executor.keytab_location}}
+    ,"EXECUTOR_KEYTAB_LOCATION":"{{executor.keytab_location}}"
+{{/executor.keytab_location}}
 ,"CLUSTER_TASK_CPUS":"{{task.cpus}}"
 ,"CLUSTER_TASK_MEMORY_MB":"{{task.mem}}"
 ,"NODES":"{{nodes.count}}"

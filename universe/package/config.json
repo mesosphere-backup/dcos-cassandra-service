@@ -521,6 +521,11 @@
 					"type": "integer",
 					"description": "The port that the Cassandra executor API will accept on.",
 					"default": 9001
+				},
+				"keytab_location" : {
+					"id": "http://cassandra/docs/mesosphere.com/executor/keytab_location",
+					"type": "string",
+					"description": "URL for the Kerberos keyfile supplied to DSE."
 				}
 			},
 			"additionalProperties": false,
