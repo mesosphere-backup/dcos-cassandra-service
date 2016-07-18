@@ -82,7 +82,8 @@ public class IdentityResourceTest {
                     "/" + configuration.getName(),
                     server.getConnectString(),
                     configuration,
-                    configValidator);
+                    configValidator,
+                    stateStore);
             configurationManager = new ConfigurationManager(defaultConfigurationManager);
         } catch (ConfigStoreException e) {
             throw new RuntimeException(e);

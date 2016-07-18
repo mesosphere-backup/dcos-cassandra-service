@@ -1,13 +1,17 @@
 package com.mesosphere.dcos.cassandra.scheduler.config;
 
+import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
+import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
+import org.apache.mesos.Protos;
 import org.apache.mesos.config.*;
+import org.apache.mesos.protobuf.LabelBuilder;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class DefaultConfigurationManager {
     private static final Logger LOGGER =
@@ -19,13 +23,17 @@ public class DefaultConfigurationManager {
 
     private List<ConfigValidationError> validationErrors;
 
+    private StateStore stateStore;
+
     public DefaultConfigurationManager(
             Class configClass,
             String storageRoot,
             String connectionHost,
             Configuration newConfiguration,
-            ConfigValidator configValidator) throws ConfigStoreException {
+            ConfigValidator configValidator,
+            StateStore stateStore) throws ConfigStoreException {
         this.configClass = configClass;
+        this.stateStore = stateStore;
         configStore = new CuratorConfigStore<>(storageRoot, connectionHost);
         Configuration oldConfig = null;
         try {
@@ -42,13 +50,135 @@ public class DefaultConfigurationManager {
                 LOGGER.info("Stored new configuration with UUID: " + uuid);
                 setTargetName(uuid);
                 LOGGER.info("Set new configuration target as UUID: " + uuid);
-                // Sync
 
-                // Cleanup
+                syncConfigs();
+
+                cleanConfigs();
             } else {
                 LOGGER.info("No config change detected.");
             }
         }
+    }
+
+    private void cleanConfigs() throws ConfigStoreException {
+        Set<UUID> activeConfigs = new HashSet<>();
+        activeConfigs.add(getTargetName());
+        activeConfigs.addAll(getTaskConfigs());
+
+        LOGGER.info("Cleaning configs which are NOT in the active list: {}", activeConfigs);
+
+        for (UUID configName : getConfigNames()) {
+            if (!activeConfigs.contains(configName)) {
+                try {
+                    LOGGER.info("Removing config: {}", configName);
+                    configStore.clear(configName);
+                } catch (ConfigStoreException e) {
+                    LOGGER.error("Unable to clear config: {} Reason: {}", configName, e);
+                }
+            }
+        }
+    }
+
+    public Set<UUID> getTaskConfigs() {
+        final Collection<Protos.TaskInfo> taskInfos = stateStore.fetchTasks();
+        final Set<UUID> activeConfigs = new HashSet<>();
+        try {
+            for (Protos.TaskInfo taskInfo : taskInfos) {
+                final Protos.Labels labels = taskInfo.getLabels();
+                for(Protos.Label label : labels.getLabelsList()) {
+                    if (label.getKey().equals(PersistentOfferRequirementProvider.CONFIG_TARGET_KEY)) {
+                        activeConfigs.add(UUID.fromString(label.getValue()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to fetch configurations from taskInfos.", e);
+        }
+
+        return activeConfigs;
+    }
+
+    private void syncConfigs() throws ConfigStoreException {
+        try {
+            final UUID targetConfigName = getTargetName();
+            final List<String> duplicateConfigs = getDuplicateConfigs();
+
+            LOGGER.info("Syncing configs. Target: {} Duplicate: {}", targetConfigName.toString(), duplicateConfigs);
+
+            final Collection<Protos.TaskInfo> taskInfos = stateStore.fetchTasks();
+
+            for(Protos.TaskInfo taskInfo : taskInfos) {
+                replaceDuplicateConfig(taskInfo, stateStore, duplicateConfigs, targetConfigName);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to sync configurations", e);
+            throw new ConfigStoreException(e);
+        }
+    }
+
+    private void replaceDuplicateConfig(Protos.TaskInfo taskInfo,
+                                        StateStore stateStore,
+                                        List<String> duplicateConfigs,
+                                        UUID targetName) throws ConfigStoreException {
+        try {
+            final String taskConfigName = getConfigName(taskInfo);
+            final String targetConfigName = targetName.toString();
+
+            for(String duplicateConfig : duplicateConfigs) {
+                if (duplicateConfig.equals(taskConfigName)) {
+                    final Protos.Labels labels = new LabelBuilder()
+                            .addLabel(PersistentOfferRequirementProvider.CONFIG_TARGET_KEY, targetConfigName)
+                            .build();
+
+                    final Protos.TaskInfo updatedTaskInfo = Protos.TaskInfo.newBuilder(taskInfo)
+                            .setLabels(labels).build();
+                    stateStore.storeTasks(Arrays.asList(updatedTaskInfo));
+                    LOGGER.info("Updated task: {} from duplicate config: {} to current target: {}",
+                            updatedTaskInfo.getName(), taskConfigName, targetConfigName);
+                    return;
+                }
+            }
+            LOGGER.info("Task: {} is update to date with target config: {}", taskInfo.getName(), targetConfigName);
+        } catch (Exception e) {
+            LOGGER.error("Failed to replace duplicate config for task: {} Reason: {}", taskInfo, e);
+            throw new ConfigStoreException(e);
+        }
+    }
+
+    public static String getConfigName(Protos.TaskInfo taskInfo) {
+        for (Protos.Label label : taskInfo.getLabels().getLabelsList()) {
+            if (label.getKey().equals("config_target")) {
+                return label.getValue();
+            }
+        }
+
+        return null;
+    }
+
+    private List<String> getDuplicateConfigs() throws ConfigStoreException {
+        final CassandraSchedulerConfiguration targetConfig = (CassandraSchedulerConfiguration) getTargetConfig();
+
+        final List<String> duplicateConfigs = new ArrayList<>();
+        final CassandraConfig targetCassandraConfig = targetConfig.getCassandraConfig();
+        final ClusterTaskConfig targetClusterTaskConfig = targetConfig.getClusterTaskConfig();
+        final ExecutorConfig targetExecutorConfig = targetConfig.getExecutorConfig();
+
+        final Collection<UUID> configNames = getConfigNames();
+        for (UUID configName : configNames) {
+            final CassandraSchedulerConfiguration config = (CassandraSchedulerConfiguration) fetch(configName);
+            final CassandraConfig cassandraConfig = config.getCassandraConfig();
+            final ClusterTaskConfig clusterTaskConfig = config.getClusterTaskConfig();
+            final ExecutorConfig executorConfig = config.getExecutorConfig();
+
+            if (cassandraConfig.equals(targetCassandraConfig) &&
+                    clusterTaskConfig.equals(targetClusterTaskConfig) &&
+                    executorConfig.equals(targetExecutorConfig)) {
+                LOGGER.info("Duplicate config detected: {}", configName);
+                duplicateConfigs.add(configName.toString());
+            }
+        }
+
+        return duplicateConfigs;
     }
 
     public Configuration fetch(UUID version) throws ConfigStoreException {

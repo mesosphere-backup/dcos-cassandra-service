@@ -13,7 +13,12 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import io.dropwizard.validation.BaseValidator;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -48,12 +53,28 @@ public class ConfigurationResourceTest {
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
+
+        final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        StateStore stateStore = new CuratorStateStore(
+                "/" + config.getName(),
+                server.getConnectString(),
+                retryPolicy);
         configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
                 "/" + config.getName(),
                 server.getConnectString(),
                 config,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         config = (CassandraSchedulerConfiguration) configurationManager.getTargetConfig();
     }
 

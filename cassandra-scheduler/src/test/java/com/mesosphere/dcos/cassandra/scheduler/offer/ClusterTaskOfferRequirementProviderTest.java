@@ -137,7 +137,8 @@ public class ClusterTaskOfferRequirementProviderTest {
                 "/" + config.getName(),
                 server.getConnectString(),
                 config,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         configuration = new ConfigurationManager(configurationManager);
 
         provider = new ClusterTaskOfferRequirementProvider();

@@ -104,7 +104,8 @@ public class CassandraTasksTest {
                 "/" + config.getSchedulerConfiguration().getName(),
                 server.getConnectString(),
                 config.getSchedulerConfiguration(),
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
 
         configuration = new ConfigurationManager(configurationManager);
 

@@ -13,7 +13,12 @@ import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.validation.BaseValidator;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,12 +57,27 @@ public class ConfigurationManagerTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 configFilePath);
         final CassandraSchedulerConfiguration originalConfiguration = dropwizardConfiguration.getSchedulerConfiguration();
+        final CuratorFrameworkConfig curatorConfig = originalConfiguration.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        StateStore stateStore = new CuratorStateStore(
+                "/" + originalConfiguration.getName(),
+                server.getConnectString(),
+                retryPolicy);
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
                 "/" + originalConfiguration.getName(),
                 connectString,
                 originalConfiguration,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         ConfigurationManager manager = new ConfigurationManager(configurationManager);
         CassandraSchedulerConfiguration targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
@@ -86,12 +106,27 @@ public class ConfigurationManagerTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
         CassandraSchedulerConfiguration originalConfig = dropwizardConfiguration.getSchedulerConfiguration();
+        final CuratorFrameworkConfig curatorConfig = originalConfig.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        StateStore stateStore = new CuratorStateStore(
+                "/" + originalConfig.getName(),
+                server.getConnectString(),
+                retryPolicy);
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
                 "/" + originalConfig.getName(),
                 connectString,
                 originalConfig,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         ConfigurationManager manager = new ConfigurationManager(configurationManager);
         CassandraSchedulerConfiguration targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
@@ -147,7 +182,8 @@ public class ConfigurationManagerTest {
                 "/" + originalConfig.getName(),
                 connectString,
                 updatedConfig,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         configurationManager.store(updatedConfig);
         manager = new ConfigurationManager(configurationManager);
         targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
@@ -171,12 +207,27 @@ public class ConfigurationManagerTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
         CassandraSchedulerConfiguration originalConfig = dropwizardConfiguration.getSchedulerConfiguration();
+        final CuratorFrameworkConfig curatorConfig = originalConfig.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        StateStore stateStore = new CuratorStateStore(
+                "/" + originalConfig.getName(),
+                server.getConnectString(),
+                retryPolicy);
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
                 "/" + originalConfig.getName(),
                 connectString,
                 originalConfig,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         ConfigurationManager manager = new ConfigurationManager(configurationManager);
         CassandraSchedulerConfiguration targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
@@ -197,7 +248,8 @@ public class ConfigurationManagerTest {
                 "/" + originalConfig.getName(),
                 connectString,
                 originalConfig,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         manager = new ConfigurationManager(configurationManager);
 
         manager.start();
@@ -213,12 +265,27 @@ public class ConfigurationManagerTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
         CassandraSchedulerConfiguration originalConfig = dropwizardConfiguration.getSchedulerConfiguration();
+        final CuratorFrameworkConfig curatorConfig = originalConfig.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        StateStore stateStore = new CuratorStateStore(
+                "/" + originalConfig.getName(),
+                server.getConnectString(),
+                retryPolicy);
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
                 "/" + originalConfig.getName(),
                 connectString,
                 originalConfig,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         ConfigurationManager manager = new ConfigurationManager(configurationManager);
         CassandraSchedulerConfiguration targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
@@ -239,7 +306,8 @@ public class ConfigurationManagerTest {
                 "/" + originalConfig.getName(),
                 connectString,
                 originalConfig,
-                new ConfigValidator());
+                new ConfigValidator(),
+                stateStore);
         manager = new ConfigurationManager(configurationManager);
         manager.start();
         assertEquals(1, configurationManager.getErrors().size());

@@ -71,20 +71,6 @@ public class SchedulerModule extends AbstractModule {
         bind(CassandraSchedulerConfiguration.class).toInstance(
                 this.configuration);
 
-        try {
-            final ConfigValidator configValidator = new ConfigValidator();
-            final CuratorFrameworkConfig curatorConfig = configuration.getCuratorConfig();
-            final DefaultConfigurationManager configurationManager
-                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                    "/" + configuration.getName(),
-                    curatorConfig.getServers(),
-                    configuration,
-                    configValidator);
-            bind(DefaultConfigurationManager.class).toInstance(configurationManager);
-        } catch (ConfigStoreException e) {
-            throw new RuntimeException(e);
-        }
-
         final CuratorFrameworkConfig curatorConfig = configuration.getCuratorConfig();
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
@@ -100,6 +86,20 @@ public class SchedulerModule extends AbstractModule {
                 curatorConfig.getServers(),
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
+
+        try {
+            final ConfigValidator configValidator = new ConfigValidator();
+            final DefaultConfigurationManager configurationManager
+                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                    "/" + configuration.getName(),
+                    curatorConfig.getServers(),
+                    configuration,
+                    configValidator,
+                    curatorStateStore);
+            bind(DefaultConfigurationManager.class).toInstance(configurationManager);
+        } catch (ConfigStoreException e) {
+            throw new RuntimeException(e);
+        }
 
         bind(new TypeLiteral<Serializer<Integer>>() {
         }).toInstance(IntegerStringSerializer.get());
