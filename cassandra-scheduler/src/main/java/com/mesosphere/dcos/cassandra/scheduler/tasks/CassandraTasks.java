@@ -407,7 +407,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         }
     }
 
-    public CassandraDaemonTask reconfigureDeamon(
+    public CassandraDaemonTask reconfigureDaemon(
             final CassandraDaemonTask daemon) throws PersistenceException, ConfigStoreException {
         synchronized (stateStore) {
             return configuration.updateConfig(daemon);
@@ -455,6 +455,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     @Subscribe
     public void update(Protos.TaskStatus status) throws IOException {
+        LOGGER.info("Received status update: {}", status);
         synchronized (stateStore) {
             try {
                 stateStore.storeStatus(status);
@@ -462,6 +463,13 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
                 if (byId.containsKey(status.getTaskId().getValue())) {
                     CassandraTask updated;
+
+                    CassandraTask cassandraTask = tasks.get(byId.get(status.getTaskId().getValue()));
+                    if (cassandraTask.getState().equals(Protos.TaskState.TASK_FINISHED)
+                            && status.getState().equals(Protos.TaskState.TASK_LOST)) {
+                        LOGGER.warn("Ignoring TASK_LOST task update for finished Task.");
+                        return;
+                    }
 
                     if (status.hasData()) {
                         updated = tasks.get(
@@ -472,7 +480,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                                 byId.get(status.getTaskId().getValue())).update(
                                 status.getState());
                     }
-
                     update(updated);
 
                     LOGGER.info("Updated task {}", updated);
@@ -511,6 +518,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             if (tasks.containsKey(name)) {
                 removeTask(name);
             }
+        }
+    }
+
+    public void remove(Set<String> names) throws PersistenceException {
+        for (String name : names) {
+            remove(name);
         }
     }
 

@@ -165,7 +165,7 @@ public class CassandraDaemonBlockTest {
         when(cassandraContainer.isTerminated()).thenReturn(true);
         final CassandraDaemonTask mockDaemonTask = Mockito.mock(CassandraDaemonTask.class);
         when(cassandraContainer.getDaemonTask()).thenReturn(mockDaemonTask);
-        when(cassandraTasks.reconfigureDeamon(mockDaemonTask)).thenReturn(mockDaemonTask);
+        when(cassandraTasks.reconfigureDaemon(mockDaemonTask)).thenReturn(mockDaemonTask);
         final Protos.TaskInfo mockTaskInfo = Protos.TaskInfo.getDefaultInstance();
         when(mockDaemonTask.getTaskInfo()).thenReturn(mockTaskInfo);
         final OfferRequirement mockOR = Mockito.mock(OfferRequirement.class);
@@ -198,7 +198,7 @@ public class CassandraDaemonBlockTest {
         final Protos.TaskInfo mockTaskInfo = Protos.TaskInfo.getDefaultInstance();
         when(mockDaemonTask.getTaskInfo()).thenReturn(mockTaskInfo);
         final OfferRequirement mockOR = Mockito.mock(OfferRequirement.class);
-        when(persistentOfferRequirementProvider.getReplacementOfferRequirement(mockTaskInfo)).thenReturn(mockOR);
+        when(persistentOfferRequirementProvider.getReplacementOfferRequirement(any())).thenReturn(mockOR);
 
         Assert.assertEquals(mockOR, block.start());
     }
@@ -222,7 +222,7 @@ public class CassandraDaemonBlockTest {
         final Protos.TaskInfo mockTaskInfo = Protos.TaskInfo.getDefaultInstance();
         when(mockDaemonTask.getTaskInfo()).thenReturn(mockTaskInfo);
         final OfferRequirement mockOR = Mockito.mock(OfferRequirement.class);
-        when(persistentOfferRequirementProvider.getReplacementOfferRequirement(mockTaskInfo)).thenReturn(mockOR);
+        when(persistentOfferRequirementProvider.getReplacementOfferRequirement(any())).thenReturn(mockOR);
 
         Assert.assertEquals(mockOR, block.start());
     }

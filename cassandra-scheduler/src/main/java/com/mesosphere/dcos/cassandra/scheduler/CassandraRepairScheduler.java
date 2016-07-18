@@ -6,6 +6,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.OfferRecommendation;
@@ -49,10 +50,9 @@ public class CassandraRepairScheduler {
 
                 OfferRequirement offerReq;
                 if (terminated.getConfig().getReplaceIp().isEmpty()) {
-                    offerReq = offerRequirementProvider.getReplacementOfferRequirement(terminated.getTaskInfo());
+                    offerReq = offerRequirementProvider.getReplacementOfferRequirement(cassandraTasks.getOrCreateContainer(terminated.getName()));
                 } else {
-                    offerReq = offerRequirementProvider.getNewOfferRequirement(
-                            cassandraTasks.createCassandraContainer(terminated));
+                    offerReq = offerRequirementProvider.getNewOfferRequirement(cassandraTasks.createCassandraContainer(terminated));
                 }
 
                 List<OfferRecommendation> recommendations =
@@ -65,7 +65,7 @@ public class CassandraRepairScheduler {
                         recommendations);
 
 
-            } catch (PersistenceException ex) {
+            } catch (PersistenceException | ConfigStoreException ex) {
                 LOGGER.error(
                         String.format("Persistence error recovering " +
                                 "terminated task %s", terminatedOption),

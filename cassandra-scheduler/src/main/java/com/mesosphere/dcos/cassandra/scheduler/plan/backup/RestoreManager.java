@@ -97,6 +97,21 @@ public class RestoreManager {
         }
     }
 
+    public void stopRestore() {
+        LOGGER.info("Stopping restore");
+        try {
+            // TODO: Delete restore context from Property store
+            cassandraTasks.remove(cassandraTasks.getRestoreSnapshotTasks().keySet());
+        } catch (PersistenceException e) {
+            LOGGER.error(
+                    "Error deleting restore context from persistence store. Reason: {}",
+                    e);
+        }
+        this.context = null;
+        this.download = null;
+        this.restore = null;
+    }
+
     public boolean canStartRestore() {
         // If restoreContext is null, then we can start restore; otherwise, not.
         return context == null || isComplete();

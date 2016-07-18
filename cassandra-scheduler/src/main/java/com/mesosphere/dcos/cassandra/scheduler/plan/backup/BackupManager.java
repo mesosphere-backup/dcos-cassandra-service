@@ -97,6 +97,20 @@ public class BackupManager {
         }
     }
 
+    public void stopBackup() {
+        LOGGER.info("Stopping backup");
+        try {
+            // TODO: Clear backup context from PropertyStore
+            cassandraTasks.remove(cassandraTasks.getBackupSnapshotTasks().keySet());
+            cassandraTasks.remove(cassandraTasks.getBackupUploadTasks().keySet());
+        } catch (PersistenceException e) {
+            LOGGER.error(
+                    "Error deleting backup context from persistence store. Reason: {}",
+                    e);
+        }
+        this.backupContext = null;
+    }
+
     public boolean canStartBackup() {
         // If backupContext is null, then we can start backup; otherwise, not.
         return backupContext == null || isComplete();

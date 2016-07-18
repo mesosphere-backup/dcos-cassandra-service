@@ -19,6 +19,7 @@ out/
 .classpath
 .project
 .settings/
+cassandra-*/bin/
 
 # Mac
 .DS_Store

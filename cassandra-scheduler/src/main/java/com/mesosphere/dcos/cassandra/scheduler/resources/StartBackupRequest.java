@@ -78,4 +78,16 @@ public class StartBackupRequest {
       ((s3AccessKey != null && s3SecretKey != null && externalLocation.startsWith("s3:")) ||
         (azureAccount != null && azureKey != null && externalLocation.startsWith("azure:")));
   }
+
+  @Override
+  public String toString() {
+    return "StartBackupRequest{" +
+            "name='" + name + '\'' +
+            ", externalLocation='" + externalLocation + '\'' +
+            ", s3AccessKey='" + s3AccessKey + '\'' +
+            ", s3SecretKey='" + s3SecretKey + '\'' +
+            ", azureAccount='" + azureAccount + '\'' +
+            ", azureKey='" + azureKey + '\'' +
+            '}';
+  }
 }

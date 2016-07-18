@@ -77,6 +77,20 @@ public class RepairManager {
         }
     }
 
+    public void stopRepair() {
+        LOGGER.info("Stopping repair");
+        try {
+            // TODO: Delete repair context from Property store
+            cassandraTasks.remove(cassandraTasks.getRepairTasks().keySet());
+        } catch (PersistenceException e) {
+            LOGGER.error(
+                    "Error deleting repair context from persistence store. " +
+                            "Reason: {}",
+                    e);
+        }
+        this.context = null;
+    }
+
     public boolean canStartRepair() {
         return context == null || isComplete();
     }

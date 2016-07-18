@@ -59,8 +59,8 @@ public class PersistentOfferRequirementProvider {
             final Collection<Protos.TaskInfo> updatedTaskInfos = updateConfigLabel(taskInfos, targetName.toString());
 
             return new OfferRequirement(
-                    updatedTaskInfos,
-                    container.getExecutorInfo(),
+                    clearTaskIds(updatedTaskInfos),
+                    clearExecutorId(container.getExecutorInfo()),
                     agentsToAvoid,
                     agentsToColocate);
         } catch (InvalidRequirementException | ConfigStoreException e) {
@@ -96,9 +96,18 @@ public class PersistentOfferRequirementProvider {
                 .build();
     }
 
-    public OfferRequirement getReplacementOfferRequirement(Protos.TaskInfo taskInfo) {
-        LOGGER.info("Getting replacement requirement for task: {}", taskInfo.getTaskId().getValue());
-        return getExistingOfferRequirement(taskInfo);
+    public OfferRequirement getReplacementOfferRequirement(CassandraContainer container) {
+        LOGGER.info("Getting replacement requirement for task: {}", container.getId());
+        try {
+            return new OfferRequirement(
+                    clearTaskIds(container.getTaskInfos()),
+                    clearExecutorId(container.getExecutorInfo()),
+                    null,
+                    null);
+        } catch (InvalidRequirementException e) {
+            LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
+            return null;
+        }
     }
 
     public OfferRequirement getUpdateOfferRequirement(Protos.TaskInfo taskInfo) {
@@ -113,13 +122,28 @@ public class PersistentOfferRequirementProvider {
         }
     }
 
+    private List<Protos.TaskInfo> clearTaskIds(Collection<Protos.TaskInfo> taskInfos) {
+        List<Protos.TaskInfo> outTaskInfos = new ArrayList<>();
+        for (Protos.TaskInfo restartTaskInfo : taskInfos) {
+            outTaskInfos.add(
+                    Protos.TaskInfo.newBuilder(restartTaskInfo)
+                            .setTaskId(Protos.TaskID.newBuilder().setValue(""))
+                            .build());
+        }
+        return outTaskInfos;
+    }
+
+    private ExecutorInfo clearExecutorId(ExecutorInfo executorInfo) {
+        return ExecutorInfo.newBuilder(executorInfo)
+                .setExecutorId(Protos.ExecutorID.newBuilder().setValue("").build())
+                .build();
+    }
+
     private OfferRequirement getExistingOfferRequirement(
             Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
 
-        final ExecutorInfo execInfo = ExecutorInfo.newBuilder(taskInfo.getExecutor())
-                .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
-                .build();
+        ExecutorInfo execInfo = clearExecutorId(taskInfo.getExecutor());
         LOGGER.info("ExecutorInfo: ", execInfo);
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 

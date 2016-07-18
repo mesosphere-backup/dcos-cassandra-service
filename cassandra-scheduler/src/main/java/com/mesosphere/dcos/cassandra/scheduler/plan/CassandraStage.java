@@ -9,11 +9,18 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class CassandraStage implements Stage {
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(
+                    CassandraStage.class);
+
+
     public static final CassandraStage create(
             final ConfigurationManager configuration,
             final DefaultConfigurationManager defaultConfigurationManager,
@@ -92,5 +99,23 @@ public class CassandraStage implements Stage {
                 (cleanup.inProgress() ? cleanup.isComplete() : true) &&
                 (repair.inProgress() ? repair.isComplete() : true);
 
+    }
+
+    public void update() {
+        if (backup.isComplete()) {
+            backup.stopBackup();
+        }
+
+        if (restore.isComplete()) {
+            restore.stopRestore();
+        }
+
+        if (cleanup.isComplete()) {
+            cleanup.stopCleanup();
+        }
+
+        if (repair.isComplete()) {
+            repair.stopRepair();
+        }
     }
 }
