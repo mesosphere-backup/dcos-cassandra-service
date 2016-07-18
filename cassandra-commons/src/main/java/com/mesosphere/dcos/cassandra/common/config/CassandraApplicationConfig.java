@@ -1340,7 +1340,7 @@ public class CassandraApplicationConfig {
       Objects.equals(getHintsFlushPeriodInMs(),
         that.getHintsFlushPeriodInMs()) &&
       Objects.equals(getConcurrentMaterializedViewWrites(),
-        that.getConcurrentCounterWrites()) &&
+        that.getConcurrentMaterializedViewWrites()) &&
       Objects.equals(getCommitlogTotalSpaceInMb(),
         that.getCommitlogTotalSpaceInMb());
   }
