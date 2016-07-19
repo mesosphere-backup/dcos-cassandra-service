@@ -11,7 +11,6 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
-import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +18,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 public class CassandraDaemonBlock implements Block {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraDaemonBlock.class);
 
@@ -30,7 +28,6 @@ public class CassandraDaemonBlock implements Block {
     private final String name;
     private boolean terminated = false;
     private volatile Status status = Status.Pending;
-    private StateStore stateStore;
 
     private void terminate(final CassandraDaemonTask task) {
         LOGGER.info("Block '{}' terminating task '{}' on host '{}'", getName(), task.getId(), task.getHostname());
@@ -57,6 +54,8 @@ public class CassandraDaemonBlock implements Block {
                         , t);
                 terminated = false;
             }
+        } else {
+            LOGGER.info("Task '{}' is already terminated on host '{}'", getName(), task.getId(), task.getHostname());
         }
     }
 
@@ -136,7 +135,7 @@ public class CassandraDaemonBlock implements Block {
         this.client = client;
 
         CassandraContainer container = cassandraTasks.getOrCreateContainer(name);
-        if (!needsConfigUpdate(container.getDaemonTask()) && isComplete(container)) {
+        if (isComplete(container)) {
             setStatus(Status.Complete);
         }
     }
@@ -164,8 +163,13 @@ public class CassandraDaemonBlock implements Block {
         try {
             container = getTask();
 
+            if (!isPending()) {
+                LOGGER.warn("Block {} is not pending. start() should not be called.", getName());
+                return null;
+            }
+
             if (isComplete(container)) {
-                LOGGER.info("Block {} - Task complete : id = {}",
+                LOGGER.info("Block {} - Task complete: id = {}",
                         getName(),
                         container.getId());
                 setStatus(Status.Complete);
@@ -176,7 +180,7 @@ public class CassandraDaemonBlock implements Block {
                         container.getId());
                 return provider.getNewOfferRequirement(container);
             } else if (needsConfigUpdate(container.getDaemonTask())) {
-                LOGGER.info("Block {} - Task requires config update : id = {}",
+                LOGGER.info("Block {} - Task requires config update: id = {}",
                         getName(),
                         container.getId());
                 final String name = container.getDaemonTask().getName();
@@ -205,6 +209,12 @@ public class CassandraDaemonBlock implements Block {
     @Override
     public void update(Protos.TaskStatus status) {
         try {
+            final String taskName = org.apache.mesos.offer.TaskUtils.toTaskName(status.getTaskId());
+            if (!getName().equals(taskName)) {
+                LOGGER.info("TaskStatus was meant for block: {} and doesn't affect block {}. Status: {}",
+                        taskName, getName(), status);
+                return;
+            }
             if (isPending()) {
                 LOGGER.info("Ignoring TaskStatus (Block {} is Pending): {}", getName(), status);
                 return;
@@ -213,16 +223,15 @@ public class CassandraDaemonBlock implements Block {
                 LOGGER.info("Ignoring TaskStatus (Reason is RECONCILIATION): {}", status);
                 return;
             }
-            final CassandraContainer task = getTask();
             final CassandraData cassandraData = CassandraData.parse(status.getData());
             LOGGER.info("{} Block: {} received status: {} with mode: {}",
                     Block.getStatus(this), getName(), status, cassandraData.getMode());
             if (isComplete(status)) {
                 setStatus(Status.Complete);
-                LOGGER.info("Updating block: {} with: ", getName(), Status.Complete);
+                LOGGER.info("Updating block: {} with: {}", getName(), Status.Complete);
             } else if (CassandraTaskStatus.isTerminated(status.getState())) {
                 setStatus(Status.Pending);
-                LOGGER.info("Updating block: {} with: ", getName(), Status.Pending);
+                LOGGER.info("Updating block: {} with: {}", getName(), Status.Pending);
             } else {
                 LOGGER.info("TaskStatus doesn't affect block: {}", status);
             }
@@ -240,7 +249,9 @@ public class CassandraDaemonBlock implements Block {
         if (accepted) {
             setStatus(Status.InProgress);
         } else {
-            setStatus(Status.Pending);
+            if (!isComplete()) {
+                setStatus(Status.Pending);
+            }
         }
     }
 

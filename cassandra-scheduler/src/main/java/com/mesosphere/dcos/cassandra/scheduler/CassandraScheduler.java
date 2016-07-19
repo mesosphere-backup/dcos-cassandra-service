@@ -133,7 +133,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         try {
             stateStore.storeFrameworkId(frameworkId);
             stageManager.setStage(CassandraStage.create(
-                    configurationManager,
                     defaultConfigurationManager,
                     DeploymentManager.create(
                             offerRequirementProvider,
@@ -192,13 +191,13 @@ public class CassandraScheduler implements Scheduler, Managed {
             final List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(
                     offers,
                     acceptedOffers);
+
             acceptedOffers.addAll(
                     repairScheduler.resourceOffers(
                             driver,
                             unacceptedOffers,
                             (currentBlock != null) ?
-                                    ImmutableSet.of(
-                                            currentBlock.getName()) :
+                                    ImmutableSet.of(currentBlock.getName()):
                                     Collections.emptySet()));
 
             ResourceCleanerScheduler cleanerScheduler = getCleanerScheduler();

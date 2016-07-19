@@ -38,6 +38,7 @@ public class DefaultConfigurationManager {
         Configuration oldConfig = null;
         try {
             oldConfig = getTargetConfig();
+            LOGGER.info("Current target config: {}", getTargetName());
         } catch (ConfigStoreException e) {
             LOGGER.error("Failed to read existing target config from config store.", e);
         }
@@ -46,13 +47,12 @@ public class DefaultConfigurationManager {
 
         if (validationErrors.isEmpty()) {
             if (!Objects.equals(newConfiguration, oldConfig)) {
+                LOGGER.info("Config change detected");
                 final UUID uuid = store(newConfiguration);
                 LOGGER.info("Stored new configuration with UUID: " + uuid);
                 setTargetName(uuid);
                 LOGGER.info("Set new configuration target as UUID: " + uuid);
-
                 syncConfigs();
-
                 cleanConfigs();
             } else {
                 LOGGER.info("No config change detected.");

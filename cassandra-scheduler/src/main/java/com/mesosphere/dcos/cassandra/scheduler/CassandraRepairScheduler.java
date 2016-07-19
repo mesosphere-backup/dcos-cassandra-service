@@ -77,6 +77,7 @@ public class CassandraRepairScheduler {
 
     private Optional<CassandraDaemonTask> getTerminatedTask(
             final Set<String> ignore) {
+        LOGGER.info("Ignoring blocks: {}", ignore);
         cassandraTasks.refreshTasks();
         List<CassandraDaemonTask> terminated =
                 cassandraTasks.getDaemons().values().stream()

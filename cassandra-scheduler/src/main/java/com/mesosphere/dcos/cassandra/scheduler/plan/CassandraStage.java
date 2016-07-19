@@ -20,9 +20,7 @@ public class CassandraStage implements Stage {
             LoggerFactory.getLogger(
                     CassandraStage.class);
 
-
     public static final CassandraStage create(
-            final ConfigurationManager configuration,
             final DefaultConfigurationManager defaultConfigurationManager,
             final DeploymentManager deployment,
             final BackupManager backup,
@@ -31,7 +29,6 @@ public class CassandraStage implements Stage {
             final RepairManager repair) {
 
         return new CassandraStage(
-                configuration,
                 defaultConfigurationManager,
                 deployment,
                 backup,
@@ -44,21 +41,17 @@ public class CassandraStage implements Stage {
     private final DeploymentManager deployment;
     private final BackupManager backup;
     private final RestoreManager restore;
-    private final ConfigurationManager configuration;
     private final DefaultConfigurationManager defaultConfigurationManager;
     private final CleanupManager cleanup;
     private final RepairManager repair;
 
     public CassandraStage(
-            final ConfigurationManager configuration,
             final DefaultConfigurationManager defaultConfigurationManager,
             final DeploymentManager deployment,
             final BackupManager backup,
             final RestoreManager restore,
             final CleanupManager cleanup,
             final RepairManager repair) {
-
-        this.configuration = configuration;
         this.defaultConfigurationManager = defaultConfigurationManager;
         this.deployment = deployment;
         this.backup = backup;

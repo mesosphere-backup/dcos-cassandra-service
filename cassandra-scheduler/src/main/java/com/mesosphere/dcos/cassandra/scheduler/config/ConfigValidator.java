@@ -74,9 +74,9 @@ public class ConfigValidator {
         CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
         if (!Objects.equals(newConfiguration.getCassandraConfig().getDiskMb()
                 , oldConfiguration.getCassandraConfig().getDiskMb())) {
-            final String errorMessage = String.format("The configured volume size can" +
-                            " not be changed. Old volume size is " +
-                            "(%d) Mb. New volume size is (%d) Mb",
+            final String errorMessage = String.format("The configured disk size can" +
+                            " not be changed. Persisted disk size is " +
+                            "(%d) Mb. Configured disk size is (%d) Mb",
                     oldConfiguration.getCassandraConfig().getDiskMb(),
                     newConfiguration.getCassandraConfig().getDiskMb());
             final ConfigValidationError error = new ConfigValidationError("diskMb", errorMessage);

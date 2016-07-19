@@ -20,10 +20,14 @@ import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.VolumeRequirement;
+import org.apache.mesos.protobuf.LabelBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * CassandraDaemonTask extends CassandraTask to implement the task for a
@@ -34,7 +38,8 @@ import java.util.Optional;
  * for the Cassandra node.
  */
 public class CassandraDaemonTask extends CassandraTask {
-
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(CassandraDaemonTask.class);
     /**
      * String prefix for the CassandraDaemon task.
      */
@@ -189,7 +194,9 @@ public class CassandraDaemonTask extends CassandraTask {
                 .build());
     }
 
-    public CassandraDaemonTask updateConfig(CassandraConfig config) {
+    public CassandraDaemonTask updateConfig(CassandraConfig config, UUID targetConfigName) {
+        LOGGER.info("Updating config for task: {} to config: {}", getTaskInfo().getName(), targetConfigName.toString());
+        final Protos.Label label = LabelBuilder.createLabel("config_target", targetConfigName.toString());
         return new CassandraDaemonTask(getBuilder()
             .setExecutor(getExecutor().withNewId().getExecutorInfo())
             .setTaskId(createId(getName()))
@@ -197,9 +204,11 @@ public class CassandraDaemonTask extends CassandraTask {
             .clearResources()
             .addAllResources(TaskUtils.updateResources(
                 config.getCpus(),
-                config.getDiskMb(),
+                config.getMemoryMb(),
                 getTaskInfo().getResourcesList()
-            )).build());
+            ))
+            .clearLabels()
+            .setLabels(Protos.Labels.newBuilder().addLabels(label).build()).build());
     }
 
     public CassandraDaemonTask move(CassandraTaskExecutor executor) {

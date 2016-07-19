@@ -28,7 +28,6 @@ public class DeploymentManager {
             final SeedsManager seeds,
             final ExecutorService executor) throws ConfigStoreException {
         return new DeploymentManager(provider,
-                configurationManager,
                 defaultConfigurationManager,
                 cassandraTasks,
                 client,
@@ -43,7 +42,6 @@ public class DeploymentManager {
 
     public DeploymentManager(
             final PersistentOfferRequirementProvider provider,
-            final ConfigurationManager configurationManager,
             final DefaultConfigurationManager defaultConfigurationManager,
             final CassandraTasks cassandraTasks,
             final SchedulerClient client,
@@ -62,7 +60,6 @@ public class DeploymentManager {
     }
 
     public List<? extends Phase> getPhases() {
-
         return Arrays.asList(reconciliation, syncDc, deploy);
     }
 

@@ -30,14 +30,6 @@ public class ConfigurationManager implements Managed {
         this.configurationManager = configurationManager;
     }
 
-    public CassandraTaskExecutor updateExecutor(
-        final CassandraTask task) throws ConfigStoreException {
-        final ExecutorConfig executorConfig = getTargetConfig().getExecutorConfig();
-        return task.getExecutor().matches(executorConfig) ?
-            task.getExecutor() :
-            task.getExecutor().update(executorConfig);
-    }
-
     public CassandraTaskExecutor createExecutor(String frameworkId,
                                                 String name,
                                                 String role,
@@ -115,7 +107,7 @@ public class ConfigurationManager implements Managed {
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) throws ConfigStoreException {
         CassandraConfig cassandraConfig = getTargetConfig().getCassandraConfig();
-        return task.updateConfig(cassandraConfig);
+        return task.updateConfig(cassandraConfig, getTargetConfigName());
     }
 
     public CassandraSchedulerConfiguration getTargetConfig() throws ConfigStoreException {

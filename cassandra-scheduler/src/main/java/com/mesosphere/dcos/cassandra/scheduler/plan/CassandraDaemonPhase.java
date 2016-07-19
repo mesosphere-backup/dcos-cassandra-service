@@ -29,7 +29,6 @@ public class CassandraDaemonPhase extends DefaultPhase {
             final List<String> errors,
             final DefaultConfigurationManager configurationManager)
                 throws ConfigStoreException {
-
         final int servers = ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig())
                 .getServers();
 
