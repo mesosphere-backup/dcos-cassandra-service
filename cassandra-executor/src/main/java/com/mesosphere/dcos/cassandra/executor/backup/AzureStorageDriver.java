@@ -52,7 +52,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
   @Override
   public void upload(BackupContext ctx) throws IOException {
 
-    final String accountName = ctx.getAcccountId();
+    final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
     final String localLocation = ctx.getLocalLocation();
     final String backupName = ctx.getName();
@@ -160,7 +160,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
   @Override
   public void download(RestoreContext ctx) throws IOException {
 
-    final String accountName = ctx.getAcccountId();
+    final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
     final String localLocation = ctx.getLocalLocation();
     final String backupName = ctx.getName();

@@ -90,7 +90,7 @@ public class CassandraData {
             context.getName(),
             context.getExternalLocation(),
             context.getLocalLocation(),
-            context.getAcccountId(),
+            context.getAccountId(),
             context.getSecretKey());
     }
 
@@ -108,7 +108,7 @@ public class CassandraData {
             context.getName(),
             context.getExternalLocation(),
             context.getLocalLocation(),
-            context.getAcccountId(),
+            context.getAccountId(),
             context.getSecretKey());
     }
 
@@ -127,7 +127,7 @@ public class CassandraData {
             context.getName(),
             context.getExternalLocation(),
             context.getLocalLocation(),
-            context.getAcccountId(),
+            context.getAccountId(),
             context.getSecretKey());
     }
 
@@ -145,7 +145,7 @@ public class CassandraData {
             context.getName(),
             context.getExternalLocation(),
             context.getLocalLocation(),
-            context.getAcccountId(),
+            context.getAccountId(),
             context.getSecretKey());
     }
 

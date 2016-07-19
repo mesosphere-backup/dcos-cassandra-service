@@ -31,7 +31,7 @@ import java.util.Objects;
  * BackupContext implements ClusterTaskContext to provide a context for
  * cluster wide backup operations.
  */
-public class BackupContext implements ClusterTaskContext {
+public class BackupContext implements ClusterTaskContext, BackupRestoreContext {
 
     /**
      * Serializer serializes and deserializes a BackupContext to and from a
@@ -152,7 +152,7 @@ public class BackupContext implements ClusterTaskContext {
    * be stored.
    */
   @JsonProperty("account_id")
-  public String getAcccountId() {
+  public String getAccountId() {
     return accountId;
   }
 
@@ -215,13 +215,13 @@ public class BackupContext implements ClusterTaskContext {
         that.getExternalLocation()) &&
       Objects.equals(getLocalLocation(),
         that.getLocalLocation()) &&
-      Objects.equals(getAcccountId(), that.getAcccountId()) &&
+      Objects.equals(getAccountId(), that.getAccountId()) &&
       Objects.equals(getSecretKey(), that.getSecretKey());
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(getNodeId(), getName(), getExternalLocation(),
-      getLocalLocation(), getAcccountId(), getSecretKey());
+      getLocalLocation(), getAccountId(), getSecretKey());
   }
 }

@@ -17,7 +17,8 @@ package com.mesosphere.dcos.cassandra.executor.backup;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3URI;
+import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.internal.Constants;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -31,6 +32,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
@@ -48,6 +50,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -71,29 +75,67 @@ public class S3StorageDriver implements BackupStorageDriver {
             S3StorageDriver.class);
 
     public static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
-
     public static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
     private StorageUtil storageUtil = new StorageUtil();
 
-    @Override
-    public void upload(BackupContext ctx) throws IOException {
-        final String accessKey = ctx.getAcccountId();
+    String getBucketName(BackupRestoreContext ctx) throws URISyntaxException {
+        URI uri = new URI(ctx.getExternalLocation());
+        if (uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME)) {
+            return uri.getHost();
+        } else {
+            return uri.getPath().split("/")[1];
+        }
+    }
+
+    String getPrefixKey(BackupRestoreContext ctx) throws URISyntaxException {
+        URI uri = new URI(ctx.getExternalLocation());
+        String[] segments = uri.getPath().split("/");
+
+        int startIndex = uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME) ? 1 : 2;
+        String prefixKey = "";
+        for (int i=startIndex; i<segments.length; i++) {
+            prefixKey += segments[i];
+        }
+
+        prefixKey = (prefixKey.length() > 0 && !prefixKey.endsWith("/")) ? prefixKey + "/" : prefixKey;
+        prefixKey += ctx.getName(); // append backup name
+
+        return prefixKey;
+    }
+
+    String getEndpoint(BackupRestoreContext ctx) throws URISyntaxException {
+        URI uri = new URI(ctx.getExternalLocation());
+        if (uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME)) {
+            return Constants.S3_HOSTNAME;
+        } else {
+            return new URI(ctx.getExternalLocation()).getHost();
+        }
+    }
+
+    private AmazonS3Client getAmazonS3Client(BackupRestoreContext ctx) throws URISyntaxException {
+        final String accessKey = ctx.getAccountId();
         final String secretKey = ctx.getSecretKey();
+        String endpoint = getEndpoint(ctx);
+        LOGGER.info("endpoint: {}", endpoint);
+
+        final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
+        final S3ClientOptions options = new S3ClientOptions();
+        options.setPathStyleAccess(true);
+        final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
+        amazonS3Client.setEndpoint(endpoint);
+        return amazonS3Client;
+    }
+
+    @Override
+    public void upload(BackupContext ctx) throws IOException, URISyntaxException {
         final String localLocation = ctx.getLocalLocation();
         final String backupName = ctx.getName();
         final String nodeId = ctx.getNodeId();
 
-        final AmazonS3URI backupLocationURI = new AmazonS3URI(ctx.getExternalLocation());
-        final String bucketName = backupLocationURI.getBucket();
-
-        String prefixKey = backupLocationURI.getKey() != null ? backupLocationURI.getKey() : "";
-        prefixKey = (prefixKey.length() > 0 && !prefixKey.endsWith("/")) ? prefixKey + "/" : prefixKey;
-        prefixKey += backupName;
-        final String key = prefixKey + "/" + nodeId;
-
-        final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
+        final String key = getPrefixKey(ctx) + "/" + nodeId;
+        LOGGER.info("Backup key: " + key);
+        final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
 
         final File dataDirectory = new File(localLocation);
 
@@ -126,9 +168,13 @@ public class S3StorageDriver implements BackupStorageDriver {
                     // Upload this directory
                     LOGGER.info("Going to upload directory: {}",
                             snapshotDirectory.get().getAbsolutePath());
-                    uploadDirectory(snapshotDirectory.get().getAbsolutePath(),
-                            amazonS3Client, bucketName, key,
-                            keyspaceDir.getName(), cfDir.getName());
+                    uploadDirectory(
+                            snapshotDirectory.get().getAbsolutePath(),
+                            amazonS3Client,
+                            getBucketName(ctx),
+                            key,
+                            keyspaceDir.getName(),
+                            cfDir.getName());
                 } else {
                     LOGGER.warn(
                             "Snapshots directory: {} doesn't contain the current backup directory: {}",
@@ -267,27 +313,18 @@ public class S3StorageDriver implements BackupStorageDriver {
     }
 
     @Override
-    public void download(RestoreContext ctx) throws IOException {
+    public void download(RestoreContext ctx) throws IOException, URISyntaxException {
         // Ex: data/<keyspace>/<cf>/snapshots/</snapshot-dir>/<files>
 
-        final String accessKey = ctx.getAcccountId();
-        final String secretKey = ctx.getSecretKey();
         // Location of data directory, where the data will be copied.
         final String localLocation = ctx.getLocalLocation();
         final String backupName = ctx.getName();
         final String nodeId = ctx.getNodeId();
 
-        final AmazonS3URI backupLocationURI = new AmazonS3URI(
-                ctx.getExternalLocation());
-        final String bucketName = backupLocationURI.getBucket();
+        final String bucketName = getBucketName(ctx);
+        final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
 
-        final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(
-                accessKey, secretKey);
-        final AmazonS3Client amazonS3Client = new AmazonS3Client(
-                basicAWSCredentials);
-
-        final Map<String, Long> snapshotFileKeys = listSnapshotFiles(
-                amazonS3Client, bucketName, backupName + "/" + nodeId);
+        final Map<String, Long> snapshotFileKeys = listSnapshotFiles(amazonS3Client, bucketName, backupName + "/" + nodeId);
 
         LOGGER.info("Snapshot files for this node: {}", snapshotFileKeys);
 

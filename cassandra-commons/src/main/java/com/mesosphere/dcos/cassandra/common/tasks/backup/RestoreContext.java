@@ -31,7 +31,7 @@ import java.util.Objects;
  * BackupContext implements ClusterTaskContext to provide a context for
  * cluster wide restore operations.
  */
-public class RestoreContext implements ClusterTaskContext {
+public class RestoreContext implements ClusterTaskContext, BackupRestoreContext {
 
     @JsonCreator
     public static final RestoreContext create(
@@ -121,7 +121,7 @@ public class RestoreContext implements ClusterTaskContext {
      * be stored.
      */
     @JsonProperty("account_id")
-    public String getAcccountId() {
+    public String getAccountId() {
         return accountId;
     }
 
@@ -162,14 +162,14 @@ public class RestoreContext implements ClusterTaskContext {
                         that.getExternalLocation()) &&
                 Objects.equals(getLocalLocation(),
                         that.getLocalLocation()) &&
-                Objects.equals(getAcccountId(), that.getAcccountId()) &&
+                Objects.equals(getAccountId(), that.getAccountId()) &&
                 Objects.equals(getSecretKey(), that.getSecretKey());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getNodeId(), getName(), getExternalLocation(),
-                getLocalLocation(), getAcccountId(), getSecretKey());
+                getLocalLocation(), getAccountId(), getSecretKey());
     }
 
     @JsonIgnore

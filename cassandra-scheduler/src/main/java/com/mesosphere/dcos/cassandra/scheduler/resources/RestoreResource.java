@@ -32,7 +32,7 @@ public class RestoreResource {
     @Path("/start")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response start(StartRestoreRequest request) {
+    public Response start(BackupRestoreRequest request) {
         LOGGER.info("Processing restore request: request = {}", request);
         try {
             if(!request.isValid()){
@@ -56,7 +56,7 @@ public class RestoreResource {
         }
     }
 
-    public static RestoreContext from(StartRestoreRequest request) {
+    public static RestoreContext from(BackupRestoreRequest request) {
         String accountId;
         String secretKey;
         if (isAzure(request.getExternalLocation())) {
