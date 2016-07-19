@@ -20,6 +20,11 @@
           "description": "The user that the service will run as.",
           "default": "root"
         },
+        "principal": {
+          "description": "The principal for the service instance.",
+          "type": "string",
+          "default": "dse-principal"
+        },
         "cpus": {
           "id": "http://cassandra/docs/mesosphere.com/service/cpus",
           "type": "number",
@@ -766,7 +771,7 @@
         "keytab_location": {
           "id": "http://cassandra/docs/mesosphere.com/executor/keytab_location",
           "type": "string",
-          "description": "Location."
+          "description": "URL pointing to the location of the keytab to use if the Kerberos is enabled."
         }
       },
       "additionalProperties": false,
