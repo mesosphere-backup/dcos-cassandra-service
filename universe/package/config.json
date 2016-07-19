@@ -490,6 +490,14 @@
 		"dse": {
 			"type": "object",
 			"properties": {
+              "use_dse_role_manager": {
+                "type": "boolean",
+                "default": false
+              },
+              "transitional_mode": {
+                "type": "string",
+                "default": "disabled"
+              },
 				"authentication_options": {
 					"type": "object",
 					"properties": {
@@ -500,13 +508,6 @@
 						"default_scheme": {
 							"type": "string",
 							"default": "false"
-						},
-						"other_schemes": {
-							"type": "array",
-							"items": {
-								"type": "string",
-								"default": "internal"
-							}
 						},
 						"scheme_permissions": {
 							"type": "boolean",
@@ -519,20 +520,14 @@
 						"plain_text_without_ssl": {
 							"type": "string",
 							"default": "warn"
-						},
-						"transitional_mode": {
-							"type": "string",
-							"default": "disabled"
 						}
 					},
 					"required": [
 						"enabled",
 						"default_scheme",
-						"other_schemes",
 						"scheme_permissions",
 						"allow_digest_with_kerberos",
-						"plain_text_without_ssl",
-						"transitional_mode"
+						"plain_text_without_ssl"
 					]
 				},
 				"role_management_options": {
@@ -553,15 +548,10 @@
 						"enabled": {
 							"type": "boolean",
 							"default": false
-						},
-						"transitional_mode": {
-							"type": "string",
-							"default": "disabled"
 						}
 					},
 					"required": [
-						"enabled",
-						"transitional_mode"
+						"enabled"
 					]
 				},
 				"kerberos_options": {
@@ -704,6 +694,8 @@
 				}
 			},
 			"required": [
+                "use_dse_role_manager",
+                "transitional_mode",
 				"authentication_options",
 				"role_management_options",
 				"authorization_options",
