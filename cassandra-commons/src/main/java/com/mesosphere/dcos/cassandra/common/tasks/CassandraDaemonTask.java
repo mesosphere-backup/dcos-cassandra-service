@@ -190,7 +190,7 @@ public class CassandraDaemonTask extends CassandraTask {
             .clearResources()
             .addAllResources(TaskUtils.updateResources(
                 config.getCpus(),
-                config.getDiskMb(),
+                config.getMemoryMb(),
                 getTaskInfo().getResourcesList()
             )).build());
     }
