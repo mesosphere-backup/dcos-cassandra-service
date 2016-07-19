@@ -77,7 +77,7 @@ public class CassandraStage implements Stage {
                 .addAll(defaultConfigurationManager
                         .getErrors()
                         .stream()
-                        .map(error -> error.toString())
+                        .map(error -> error.getMessage())
                         .collect(Collectors.toList()))
                 .addAll(deployment.getErrors())
                 .build();
