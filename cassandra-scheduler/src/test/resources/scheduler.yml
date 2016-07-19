@@ -99,7 +99,7 @@ use_dse_role_manager : ${USE_DSE_ROLE_MANAGER:- false}
 dse :
   authentication_options:
     enabled: ${DSE_AUTHENTICATION_ENABLED:-false}
-    default_scheme: ${DSE_AUTHENTICATION_DEFAULT_SCHEME:-false}
+    default_scheme: ${DSE_AUTHENTICATION_DEFAULT_SCHEME:-kerberos}
     other_schemes:
       - internal
     scheme_permissions: ${DSE_AUTHENTICATION_SCHEME_PERMISSIONS:-true}
@@ -107,12 +107,12 @@ dse :
     plain_text_without_ssl : warn
     transitional_mode : ${DSE_TRANSITIONAL_MODE:-disabled}
   role_management_options:
-    mode : ${DES_ROLE_MANAGEMENT_MODE:-"internal"}
+    mode : ${DSE_ROLE_MANAGEMENT_MODE:-"internal"}
   authorization_options:
     enabled: ${DSE_AUTHORIZATION_ENABLED:-false}
     transitional_mode : ${DSE_TRANSITIONAL_MODE:-disabled}
   kerberos_options:
-    keytab: "dse.keytab"
+    keytab: ${DSE_KEYTAB:-"dse.keytab"}
     service_principal: ${DSE_SERVICE_PRINCIPAL:-"dse/_HOST@REALM"}
     http_principal: ${DSE_HTTP_PRINCIPAL:-"HTTP/_HOST@REALM"}
     qop: ${DSE_QOP:-auth}
@@ -129,11 +129,11 @@ dse :
     retention_time: ${DSE_AUDIT_LOG_RETENTION_TIME:-0}
     cassandra_audit_writer_options:
       mode: ${DSE_AUDIT_LOG_MODE:-sync}
-      batch_size: ${DSE_AUID_LOG_BATCH:-50}
-      flush_time: ${DSE_AUID_LOG_FLUSH_TIME:-500}
-      num_writers: ${DSE_AUID_LOG_WRITERS:-10}
-      queue_size: ${DSE_AUID_LOG_QUEUE_SIZE:-10000}
-      write_consistency: ${DSE_AUID_LOG_CONSISTENCY:-QUORUM}
+      batch_size: ${DSE_AUDIT_LOG_BATCH:-50}
+      flush_time: ${DSE_AUDIT_LOG_FLUSH_TIME:-500}
+      num_writers: ${DSE_AUDIT_LOG_WRITERS:-10}
+      queue_size: ${DSE_AUDIT_LOG_QUEUE_SIZE:-10000}
+      write_consistency: ${DSE_AUDIT_LOG_CONSISTENCY:-QUORUM}
   internode_messaging_options:
     port: ${DSE_MESSAGING_PORT:-8609}
 nodes: ${NODES:-3}
