@@ -540,7 +540,7 @@
 						},
 						"default_scheme": {
 							"type": "string",
-							"default": "false"
+							"default": "kerberos"
 						},
 						"scheme_permissions": {
 							"type": "boolean",
