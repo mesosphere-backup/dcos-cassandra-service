@@ -106,10 +106,18 @@ public class S3StorageDriver implements BackupStorageDriver {
 
     String getEndpoint(BackupRestoreContext ctx) throws URISyntaxException {
         URI uri = new URI(ctx.getExternalLocation());
-        if (uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME)) {
+        String scheme = uri.getScheme();
+        if (scheme.equals(AmazonS3Client.S3_SERVICE_NAME)) {
             return Constants.S3_HOSTNAME;
         } else {
-            return new URI(ctx.getExternalLocation()).getHost();
+            String endpoint = scheme + "://" + uri.getHost();
+
+            int port = uri.getPort();
+            if (port != -1) {
+                endpoint += ":" + Integer.toString(port);
+            }
+
+            return endpoint;
         }
     }
 
