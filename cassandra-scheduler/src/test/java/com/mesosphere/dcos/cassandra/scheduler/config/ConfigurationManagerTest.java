@@ -145,8 +145,10 @@ public class ConfigurationManagerTest {
                 901,
                 17,
                 "/java/home",
-                URI.create("/jre/location"), URI.create("/executor/location"),
-                URI.create("/cassandra/location"),
+                "/jre/location",
+                "/executor/location",
+                "/cassandra/location",
+                "",
                 "unlimited",
                 "100000",
                 "32768");

@@ -64,8 +64,7 @@ public class ExecutorConfig {
     @JsonProperty("keytab_location") String keytabLocation,
     @JsonProperty("cassandra_ulimit_memlock") String cassandraUlimitMemlock,
     @JsonProperty("cassandra_ulimit_nofile") String cassandraUlimitNofile,
-    @JsonProperty("cassandra_ulimit_nproc") String cassandraUlimitNproc)
-    throws URISyntaxException, UnsupportedEncodingException {
+    @JsonProperty("cassandra_ulimit_nproc") String cassandraUlimitNproc) {
     return new ExecutorConfig(
       command,
       arguments,
