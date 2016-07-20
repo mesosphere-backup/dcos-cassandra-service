@@ -138,7 +138,6 @@ public class CassandraApplicationConfig {
     public static final int DEFAULT_ROLES_VALIDITY_IN_MS = 2000;
     public static final int DEFAULT_PERMISSIONS_VALIDITY_IN_MS = 2000;
     public static final String DEFAULT_PARTITIONER = "org.apache.cassandra.dht.Murmur3Partitioner";
-    public static final String DEFAULT_PERSISTENT_VOLUME = "volume";
     public static final String DEFAULT_DISK_FAILURE_POLICY = "stop";
     public static final String DEFAULT_COMMIT_FAILURE_POLICY = "stop";
     public static final Integer DEFAULT_KEY_CACHE_SIZE_IN_MB = null;
