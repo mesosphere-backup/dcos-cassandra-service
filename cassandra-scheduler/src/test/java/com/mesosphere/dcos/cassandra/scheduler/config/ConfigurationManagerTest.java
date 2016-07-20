@@ -37,7 +37,104 @@ public class ConfigurationManagerTest {
 
   private static CuratorFramework curator;
 
-  private static ZooKeeperPersistence persistence;
+    @Test
+    public void applyConfigUpdate() throws Exception {
+        MutableSchedulerConfiguration mutable = factory.build(
+                new SubstitutingSourceProvider(
+                        new FileConfigurationSourceProvider(),
+                        new EnvironmentVariableSubstitutor(false, true)),
+                Resources.getResource("scheduler.yml").getFile());
+        final CassandraSchedulerConfiguration original = mutable.createConfig();
+        final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        StateStore stateStore = new CuratorStateStore(
+                "/" + original.getServiceConfig().getName(),
+                server.getConnectString(),
+                retryPolicy);
+        DefaultConfigurationManager configurationManager
+                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                "/" + original.getServiceConfig().getName(),
+                connectString,
+                original,
+                new ConfigValidator(),
+                stateStore);
+        ConfigurationManager manager = new ConfigurationManager(configurationManager);
+        CassandraSchedulerConfiguration targetConfig =
+          (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
+
+        manager.start();
+
+        assertEquals(original.getCassandraConfig(), targetConfig.getCassandraConfig());
+        assertEquals(original.getExecutorConfig(), targetConfig.getExecutorConfig());
+        assertEquals(original.getServers(), targetConfig.getServers());
+        assertEquals(original.getSeeds(), targetConfig.getSeeds());
+
+        manager.stop();
+
+        ExecutorConfig updatedExecutorConfig = new ExecutorConfig(
+                "/command/line",
+                new ArrayList<>(),
+                1.2,
+                345,
+                901,
+                17,
+                "/java/home",
+                "/jre/location",
+                "/executor/location",
+                "/cassandra/location",
+                "",
+                "unlimited",
+                "100000",
+                "32768");
+        int updatedServers = original.getServers() + 10;
+        int updatedSeeds = original.getSeeds() + 5;
+
+        mutable = factory.build(
+                new SubstitutingSourceProvider(
+                        new FileConfigurationSourceProvider(),
+                        new EnvironmentVariableSubstitutor(false, true)),
+                Resources.getResource("scheduler.yml").getFile());
+
+
+        mutable.setSeeds(updatedSeeds);
+        mutable.setServers(updatedServers);
+        mutable.setExecutorConfig(updatedExecutorConfig);
+
+        mutable.setCassandraConfig(
+          mutable.getCassandraConfig()
+        .mutable().setJmxPort(8000).setCpus(0.6).setMemoryMb(10000).build());
+
+        CassandraSchedulerConfiguration updated = mutable.createConfig();
+
+        configurationManager
+                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                "/" + original.getServiceConfig().getName(),
+                connectString,
+                updated,
+                new ConfigValidator(),
+                stateStore);
+        configurationManager.store(updated);
+        manager = new ConfigurationManager(configurationManager);
+        targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
+
+        manager.start();
+
+        assertEquals(updated.getCassandraConfig(), targetConfig.getCassandraConfig());
+
+        assertEquals(updatedExecutorConfig, targetConfig.getExecutorConfig());
+
+        assertEquals(updatedServers, targetConfig.getServers());
+
+        assertEquals(updatedSeeds, targetConfig.getSeeds());
+    }
 
   private static String cassandraConfigPath;
 
