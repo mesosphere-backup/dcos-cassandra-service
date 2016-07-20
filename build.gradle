@@ -72,6 +72,7 @@ configure(subprojects - project('seedprovider')) {
         compile "com.google.guava:guava:${guavaVer}"
         compile "ch.qos.logback:logback-classic:${logbackVer}"
         compile "ch.qos.logback:logback-core:${logbackVer}"
+        compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.6.1"
         compile "junit:junit:${junitVer}"
         testCompile "org.apache.curator:curator-test:${curatorVer}"
         testCompile "io.dropwizard:dropwizard-testing:${dropwizardVer}"

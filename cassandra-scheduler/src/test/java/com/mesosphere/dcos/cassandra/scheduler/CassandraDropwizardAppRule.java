@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.scheduler.config.MutableSchedulerConfiguration;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.testing.ConfigOverride;
@@ -14,7 +14,7 @@ import org.apache.curator.utils.CloseableUtils;
 
 import javax.annotation.Nullable;
 
-public class CassandraDropwizardAppRule<C extends CassandraSchedulerConfiguration> extends DropwizardAppRule {
+public class CassandraDropwizardAppRule<C extends MutableSchedulerConfiguration> extends DropwizardAppRule {
     private TestingServer server = TestModule.createTestingServerQuietly();
     private CuratorFramework curator = TestModule.createClient(server);
 
@@ -54,8 +54,8 @@ public class CassandraDropwizardAppRule<C extends CassandraSchedulerConfiguratio
     }
 
     @Override
-    public CassandraSchedulerConfiguration getConfiguration() {
-        return (CassandraSchedulerConfiguration) super.getConfiguration();
+    public MutableSchedulerConfiguration getConfiguration() {
+        return (MutableSchedulerConfiguration) super.getConfiguration();
     }
 
     @Override

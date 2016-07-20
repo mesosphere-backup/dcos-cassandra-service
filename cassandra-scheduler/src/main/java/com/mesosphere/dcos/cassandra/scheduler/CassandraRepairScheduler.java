@@ -1,12 +1,12 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.OfferRecommendation;
@@ -65,7 +65,7 @@ public class CassandraRepairScheduler {
                         recommendations);
 
 
-            } catch (PersistenceException ex) {
+            } catch (PersistenceException | ConfigStoreException ex) {
                 LOGGER.error(
                         String.format("Persistence error recovering " +
                                 "terminated task %s", terminatedOption),
@@ -77,10 +77,11 @@ public class CassandraRepairScheduler {
 
     private Optional<CassandraDaemonTask> getTerminatedTask(
             final Set<String> ignore) {
-
+        LOGGER.info("Ignoring blocks: {}", ignore);
+        cassandraTasks.refreshTasks();
         List<CassandraDaemonTask> terminated =
                 cassandraTasks.getDaemons().values().stream()
-                        .filter(task -> task.isTerminated())
+                        .filter(task -> cassandraTasks.isTerminated(task))
                         .filter(task -> !ignore.contains(task.getName()))
                         .collect(Collectors.toList());
         LOGGER.info("Terminated tasks size: {}", terminated.size());

@@ -17,6 +17,7 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 
 import java.util.*;
@@ -36,9 +37,6 @@ import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
  * should be reused by Cluster tasks that operate on the Daemon.
  */
 public class CassandraTaskExecutor {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            CassandraTaskExecutor.class);
 
     /**
      * Creates a new CassandraTaskExecutor.
@@ -244,6 +242,12 @@ public class CassandraTaskExecutor {
                 .setExecutorId(ExecutorUtils.toExecutorId(getName())).build());
     }
 
+    public CassandraTaskExecutor clearId() {
+        return parse(
+                Protos.ExecutorInfo.newBuilder(getExecutorInfo())
+                        .setExecutorId(Protos.ExecutorID.newBuilder().setValue("")).build());
+    }
+
     public boolean matches(final ExecutorConfig config) {
         return Double.compare(getCpus(), config.getCpus()) == 0 &&
                 Objects.equals(getCommand(), config.getCommand()) &&
@@ -277,6 +281,6 @@ public class CassandraTaskExecutor {
 
     @Override
     public String toString() {
-        return this.info.toString();
+        return TextFormat.shortDebugString(this.info);
     }
 }

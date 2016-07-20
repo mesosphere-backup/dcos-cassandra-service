@@ -3,15 +3,9 @@ package com.mesosphere.dcos.cassandra.scheduler.offer;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
-import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
-import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
-import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -19,12 +13,16 @@ import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.validation.BaseValidator;
-import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
-import org.apache.mesos.protobuf.TaskInfoBuilder;
-import org.apache.mesos.protobuf.ResourceBuilder;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.protobuf.ResourceBuilder;
+import org.apache.mesos.protobuf.TaskInfoBuilder;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.junit.*;
 
 import java.util.Arrays;
@@ -32,16 +30,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class ClusterTaskOfferRequirementProviderTest {
-
     private static TestingServer server;
-    private static CuratorFramework curator;
-    private static ZooKeeperPersistence persistence;
     private static CassandraSchedulerConfiguration config;
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
     private static CuratorFrameworkConfig curatorConfig;
     private static ClusterTaskConfig clusterTaskConfig;
-    private static String path;
     private static CassandraTasks cassandraTasks;
     private static ClusterTaskOfferRequirementProvider provider;
     private static Protos.TaskInfo testTaskInfo;
@@ -54,16 +48,15 @@ public class ClusterTaskOfferRequirementProviderTest {
     private static final Double testDisk = 2000.0;
     private static final Integer testPortBegin = 7000;
     private static final Integer testPortEnd = 7001;
+    private static StateStore stateStore;
 
     @Before
     public void beforeEach() throws Exception {
         cassandraTasks = new CassandraTasks(
-                identity,
                 configuration,
                 curatorConfig,
                 clusterTaskConfig,
-                CassandraTask.PROTO_SERIALIZER,
-                persistence);
+                stateStore);
 
         CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
         Protos.TaskInfo initTaskInfo = task.getTaskInfo();
@@ -93,22 +86,23 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         server.start();
 
-        final ConfigurationFactory<CassandraSchedulerConfiguration> factory =
+        final ConfigurationFactory<MutableSchedulerConfiguration> factory =
                 new ConfigurationFactory<>(
-                        CassandraSchedulerConfiguration.class,
+                        MutableSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
                                 .registerModule(new Jdk8Module()),
                         "dw");
 
-        config = factory.build(
+        MutableSchedulerConfiguration mutable = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
-        Identity initial = config.getIdentity();
+        config = mutable.createConfig();
+        ServiceConfig initial = config.getServiceConfig();
 
         curatorConfig = CuratorFrameworkConfig.create(server.getConnectString(),
                 10000L,
@@ -118,63 +112,52 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         clusterTaskConfig = config.getClusterTaskConfig();
 
-        persistence = (ZooKeeperPersistence) ZooKeeperPersistence.create(
-                initial,
-                curatorConfig);
+        final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
 
-        curator = persistence.getCurator();
+        stateStore = new CuratorStateStore(
+                "/" + config.getServiceConfig().getName(),
+                server.getConnectString(),
+                retryPolicy);
+        stateStore.storeFrameworkId(Protos.FrameworkID.newBuilder().setValue("1234").build());
 
         identity = new IdentityManager(
-                initial,
-                persistence,
-                Identity.JSON_SERIALIZER);
+                initial,stateStore);
 
         identity.register("test_id");
 
-        configuration = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                "NODE",
-                config.getSeedsUrl(),
-                config.getDcUrl(),
-                config.getExternalDcsList(),
-                config.getExternalDcSyncMs(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
+        DefaultConfigurationManager configurationManager
+                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                "/" + config.getServiceConfig().getName(),
+                server.getConnectString(),
+                config,
+                new ConfigValidator(),
+                stateStore);
+        configuration = new ConfigurationManager(configurationManager);
 
-        path = "/cassandra/" + config.getIdentity().getName() +"/tasks";
-
-        provider = new ClusterTaskOfferRequirementProvider(identity, cassandraTasks);
+        provider = new ClusterTaskOfferRequirementProvider();
     }
 
     @After
     public void afterEach() {
-
-        try {
-            curator.delete().deletingChildrenIfNeeded().forPath(path);
-        } catch (Exception e) {
-
-        }
     }
 
     @AfterClass
     public static void afterAll() throws Exception {
-        persistence.stop();
         server.close();
         server.stop();
     }
 
     @Test
     public void testConstructor() throws Exception {
-        ClusterTaskOfferRequirementProvider provider = new ClusterTaskOfferRequirementProvider(
-            identity, cassandraTasks);
+        ClusterTaskOfferRequirementProvider provider = new ClusterTaskOfferRequirementProvider();
         CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
         Protos.TaskInfo taskInfo = task.getTaskInfo();
 

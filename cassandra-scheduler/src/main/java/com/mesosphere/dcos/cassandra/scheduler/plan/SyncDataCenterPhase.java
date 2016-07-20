@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.scheduler.plan.DefaultPhase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ public class SyncDataCenterPhase extends DefaultPhase {
     private static List<SyncDataCenterBlock> createBlocks(
             SeedsManager seeds,
             ExecutorService executor
-    ) {
+    ) throws ConfigStoreException {
         Map<String, DataCenterInfo> synched =
                 seeds.getDataCenters().stream()
                         .filter(dc -> dc.getSeeds().size() > 0)
@@ -37,7 +38,7 @@ public class SyncDataCenterPhase extends DefaultPhase {
 
 
     public static SyncDataCenterPhase create(SeedsManager seeds,
-                                             ExecutorService executor) {
+                                             ExecutorService executor) throws ConfigStoreException {
         return new SyncDataCenterPhase(createBlocks(seeds, executor));
     }
 

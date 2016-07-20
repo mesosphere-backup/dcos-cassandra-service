@@ -632,7 +632,305 @@ public class CassandraApplicationConfig {
   private final int concurrentMaterializedViewWrites;
   @JsonProperty(COMMIT_LOG_TOTAL_SPACE_KEY)
   private final int commitlogTotalSpaceInMb;
+    @JsonProperty(CLUSTER_NAME_KEY)
+    private final String clusterName;
+    @JsonProperty(NUM_TOKENS_KEY)
+    private final int numTokens;
+    @JsonProperty(HINTED_HANDOFF_ENABLED_KEY)
+    private final boolean hintedHandoffEnabled;
+    @JsonProperty(MAX_HINT_WINDOW_IN_MS_KEY)
+    private final int maxHintWindowInMs;
+    @JsonProperty(HINTED_HANDOFF_THROTTLE_IN_KB_KEY)
+    private final int hintedHandoffThrottleInKb;
+    @JsonProperty(MAX_HINTS_DELIVERY_THREADS_KEY)
+    private final int maxHintsDeliveryThreads;
+    @JsonProperty(BATCHLOG_REPLAY_THROTTLE_IN_KB_KEY)
+    private final int batchlogReplayThrottleInKb;
+    @JsonProperty(AUTHENTICATOR_KEY)
+    private final String authenticator;
+    @JsonProperty(AUTHORIZER_KEY)
+    private final String authorizer;
+    @JsonProperty(ROLE_MANAGER_KEY)
+    private final String roleManager;
+    @JsonProperty(ROLES_VALIDITY_IN_MS_KEY)
+    private final int rolesValidityInMs;
+    @JsonProperty(PERMISSIONS_VALIDITY_IN_MS_KEY)
+    private final int permissionsValidityInMs;
+    @JsonProperty(PARTITIONER_KEY)
+    private final String partitioner;
+    @JsonProperty(DISK_FAILURE_POLICY_KEY)
+    private final String diskFailurePolicy;
+    @JsonProperty(COMMIT_FAILURE_POLICY_KEY)
+    private final String commitFailurePolicy;
+    @JsonProperty(KEY_CACHE_SIZE_IN_MB_KEY)
+    private final Integer keyCacheSizeInMb;
+    @JsonProperty(KEY_CACHE_SAVE_PERIOD_KEY)
+    private final int keyCacheSavePeriod;
+    @JsonProperty(ROW_CACHE_SIZE_IN_MB_KEY)
+    private final int rowCacheSizeInMb;
+    @JsonProperty(ROW_CACHE_SAVE_PERIOD_KEY)
+    private final int rowCacheSavePeriod;
+    @JsonProperty(COUNTER_CACHE_SIZE_IN_MB_KEY)
+    private final Integer counterCacheSizeInMb;
+    @JsonProperty(COUNTER_CACHE_SAVE_PERIOD_KEY)
+    private final int counterCacheSavePeriod;
+    @JsonProperty(COMMITLOG_SYNC_KEY)
+    private final String commitlogSync;
+    @JsonProperty(COMMITLOG_SYNC_PERIOD_IN_MS_KEY)
+    private final int commitlogSyncPeriodInMs;
+    @JsonProperty(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY)
+    private final int commitlogSegmentSizeInMb;
+    @JsonProperty(SEEDS_URL_KEY)
+    private final String seedsUrl;
+    @JsonProperty(CONCURRENT_READS_KEY)
+    private final int concurrentReads;
+    @JsonProperty(CONCURRENT_WRITES_KEY)
+    private final int concurrentWrites;
+    @JsonProperty(CONCURRENT_COUNTER_WRITES_KEY)
+    private final int concurrentCounterWrites;
+    @JsonProperty(MEMTABLE_ALLOCATION_TYPE_KEY)
+    private final String memtableAllocationType;
+    @JsonProperty(INDEX_SUMMARY_CAPACITY_IN_MB_KEY)
+    private final Integer indexSummaryCapacityInMb;
+    @JsonProperty(INDEX_SUMMARY_RESIZE_INTERVAL_IN_MINUTES_KEY)
+    private final int indexSummaryResizeIntervalInMinutes;
+    @JsonProperty(TRICKLE_FSYNC_KEY)
+    private final boolean trickleFsync;
+    @JsonProperty(TRICKLE_FSYNC_INTERVAL_IN_KB_KEY)
+    private final int trickleFsyncIntervalInKb;
+    @JsonProperty(STORAGE_PORT_KEY)
+    private final int storagePort;
+    @JsonProperty(SSL_STORAGE_PORT_KEY)
+    private final int sslStoragePort;
+    @JsonProperty(LISTEN_ADDRESS_KEY)
+    private final String listenAddress;
+    @JsonProperty(START_NATIVE_TRANSPORT_KEY)
+    private final boolean startNativeTransport;
+    @JsonProperty(NATIVE_TRANSPORT_PORT_KEY)
+    private final int nativeTransportPort;
+    @JsonProperty(START_RPC_KEY)
+    private final boolean startRpc;
+    @JsonProperty("rpcAddress")
+    private final String rpcAddress;
+    @JsonProperty(RPC_PORT_KEY)
+    private final int rpcPort;
+    @JsonProperty(RPC_KEEPALIVE_KEY)
+    private final boolean rpcKeepalive;
+    @JsonProperty(RPC_SERVER_TYPE_KEY)
+    private final String rpcServerType;
+    @JsonProperty(THRIFT_FRAMED_TRANSPORT_SIZE_IN_MB_KEY)
+    private final int thriftFramedTransportSizeInMb;
+    @JsonProperty(INCREMENTAL_BACKUPS_KEY)
+    private final boolean incrementalBackups;
+    @JsonProperty(SNAPSHOT_BEFORE_COMPACTION_KEY)
+    private final boolean snapshotBeforeCompaction;
+    @JsonProperty(AUTO_SNAPSHOT_KEY)
+    private final boolean autoSnapshot;
+    @JsonProperty(TOMBSTONE_WARN_THRESHOLD_KEY)
+    private final int tombstoneWarnThreshold;
+    @JsonProperty(TOMBSTONE_FAILURE_THRESHOLD_KEY)
+    private final int tombstoneFailureThreshold;
+    @JsonProperty(COLUMN_INDEX_SIZE_IN_KB_KEY)
+    private final int columnIndexSizeInKb;
+    @JsonProperty(BATCH_SIZE_WARN_THRESHOLD_IN_KB_KEY)
+    private final int batchSizeWarnThresholdInKb;
+    @JsonProperty(BATCH_SIZE_FAIL_THRESHOLD_IN_KB_KEY)
+    private final int batchSizeFailThresholdInKb;
+    @JsonProperty(COMPACTION_THROUGHPUT_MB_PER_SEC_KEY)
+    private final int compactionThroughputMbPerSec;
+    @JsonProperty(COMPACTION_LARGE_PARTITION_WARNING_THRESHOLD_MB_KEY)
+    private final int compactionLargePartitionWarningThresholdMb;
+    @JsonProperty(SSTABLE_PREEMPTIVE_OPEN_INTERVAL_IN_MB_KEY)
+    private final int sstablePreemptiveOpenIntervalInMb;
+    @JsonProperty(READ_REQUEST_TIMEOUT_IN_MS_KEY)
+    private final int readRequestTimeoutInMs;
+    @JsonProperty(RANGE_REQUEST_TIMEOUT_IN_MS_KEY)
+    private final int rangeRequestTimeoutInMs;
+    @JsonProperty(WRITE_REQUEST_TIMEOUT_IN_MS_KEY)
+    private final int writeRequestTimeoutInMs;
+    @JsonProperty(COUNTER_WRITE_REQUEST_TIMEOUT_IN_MS_KEY)
+    private final int counterWriteRequestTimeoutInMs;
+    @JsonProperty(CAS_CONTENTION_TIMEOUT_IN_MS_KEY)
+    private final int casContentionTimeoutInMs;
+    @JsonProperty(TRUNCATE_REQUEST_TIMEOUT_IN_MS_KEY)
+    private final int truncateRequestTimeoutInMs;
+    @JsonProperty(REQUEST_TIMEOUT_IN_MS_KEY)
+    private final int requestTimeoutInMs;
+    @JsonProperty(CROSS_NODE_TIMEOUT_KEY)
+    private final boolean crossNodeTimeout;
+    @JsonProperty(ENDPOINT_SNITCH_KEY)
+    private final String endpointSnitch;
+    @JsonProperty(DYNAMIC_SNITCH_UPDATE_INTERVAL_IN_MS_KEY)
+    private final int dynamicSnitchUpdateIntervalInMs;
+    @JsonProperty(DYNAMIC_SNITCH_RESET_INTERVAL_IN_MS_KEY)
+    private final int dynamicSnitchResetIntervalInMs;
+    @JsonProperty(DYNAMIC_SNITCH_BADNESS_THRESHOLD_KEY)
+    private final double dynamicSnitchBadnessThreshold;
+    @JsonProperty(REQUEST_SCHEDULER_KEY)
+    private final String requestScheduler;
+    @JsonProperty(INTERNODE_COMPRESSION_KEY)
+    private final String internodeCompression;
+    @JsonProperty(INTER_DC_TCP_NODELAY_KEY)
+    private final boolean interDcTcpNodelay;
+    @JsonProperty(TRACETYPE_QUERY_TTL_KEY)
+    private final int tracetypeQueryTtl;
+    @JsonProperty(TRACETYPE_REPAIR_TTL_KEY)
+    private final int tracetypeRepairTtl;
+    @JsonProperty(ENABLE_USER_DEFINED_FUNCTIONS_KEY)
+    private final boolean enableUserDefinedFunctions;
+    @JsonProperty(WINDOWS_TIMER_INTERVAL_KEY)
+    private final int windowsTimerInterval;
 
+    public CassandraApplicationConfig(
+            String clusterName,
+            int numTokens,
+            boolean hintedHandoffEnabled,
+            int maxHintWindowInMs,
+            int hintedHandoffThrottleInKb,
+            int maxHintsDeliveryThreads,
+            int batchlogReplayThrottleInKb,
+            String authenticator,
+            String authorizer,
+            String roleManager,
+            int rolesValidityInMs,
+            int permissionsValidityInMs,
+            String partitioner,
+            String diskFailurePolicy,
+            String commitFailurePolicy,
+            Integer keyCacheSizeInMb,
+            int keyCacheSavePeriod,
+            int rowCacheSizeInMb,
+            int rowCacheSavePeriod,
+            Integer counterCacheSizeInMb,
+            int counterCacheSavePeriod,
+            String commitlogSync,
+            int commitlogSyncPeriodInMs,
+            int commitlogSegmentSizeInMb,
+            String seedsUrl,
+            int concurrentReads,
+            int concurrentWrites,
+            int concurrentCounterWrites,
+            String memtableAllocationType,
+            Integer indexSummaryCapacityInMb,
+            int indexSummaryResizeIntervalInMinutes,
+            boolean trickleFsync,
+            int trickleFsyncIntervalInKb,
+            int storagePort,
+            int sslStoragePort,
+            String listenAddress,
+            boolean startNativeTransport,
+            int nativeTransportPort,
+            boolean startRpc,
+            String rpcAddress,
+            int rpcPort,
+            boolean rpcKeepalive,
+            String rpcServerType,
+            int thriftFramedTransportSizeInMb,
+            boolean incrementalBackups,
+            boolean snapshotBeforeCompaction,
+            boolean autoSnapshot,
+            int tombstoneWarnThreshold,
+            int tombstoneFailureThreshold,
+            int columnIndexSizeInKb,
+            int batchSizeWarnThresholdInKb,
+            int batchSizeFailThresholdInKb,
+            int compactionThroughputMbPerSec,
+            int compactionLargePartitionWarningThresholdMb,
+            int sstablePreemptiveOpenIntervalInMb,
+            int readRequestTimeoutInMs,
+            int rangeRequestTimeoutInMs,
+            int writeRequestTimeoutInMs,
+            int counterWriteRequestTimeoutInMs,
+            int casContentionTimeoutInMs,
+            int truncateRequestTimeoutInMs,
+            int requestTimeoutInMs,
+            boolean crossNodeTimeout,
+            String endpointSnitch,
+            int dynamicSnitchUpdateIntervalInMs,
+            int dynamicSnitchResetIntervalInMs,
+            double dynamicSnitchBadnessThreshold,
+            String requestScheduler,
+            String internodeCompression,
+            boolean interDcTcpNodelay,
+            int tracetypeQueryTtl,
+            int tracetypeRepairTtl,
+            boolean enableUserDefinedFunctions,
+            int windowsTimerInterval) {
+        this.clusterName = clusterName;
+        this.numTokens = numTokens;
+        this.hintedHandoffEnabled = hintedHandoffEnabled;
+        this.maxHintWindowInMs = maxHintWindowInMs;
+        this.hintedHandoffThrottleInKb = hintedHandoffThrottleInKb;
+        this.maxHintsDeliveryThreads = maxHintsDeliveryThreads;
+        this.batchlogReplayThrottleInKb = batchlogReplayThrottleInKb;
+        this.authenticator = authenticator;
+        this.authorizer = authorizer;
+        this.roleManager = roleManager;
+        this.rolesValidityInMs = rolesValidityInMs;
+        this.permissionsValidityInMs = permissionsValidityInMs;
+        this.partitioner = partitioner;
+        this.diskFailurePolicy = diskFailurePolicy;
+        this.commitFailurePolicy = commitFailurePolicy;
+        this.keyCacheSizeInMb = keyCacheSizeInMb;
+        this.keyCacheSavePeriod = keyCacheSavePeriod;
+        this.rowCacheSizeInMb = rowCacheSizeInMb;
+        this.rowCacheSavePeriod = rowCacheSavePeriod;
+        this.counterCacheSizeInMb = counterCacheSizeInMb;
+        this.counterCacheSavePeriod = counterCacheSavePeriod;
+        this.commitlogSync = commitlogSync;
+        this.commitlogSyncPeriodInMs = commitlogSyncPeriodInMs;
+        this.commitlogSegmentSizeInMb = commitlogSegmentSizeInMb;
+        this.seedsUrl = seedsUrl;
+        this.concurrentReads = concurrentReads;
+        this.concurrentWrites = concurrentWrites;
+        this.concurrentCounterWrites = concurrentCounterWrites;
+        this.memtableAllocationType = memtableAllocationType;
+        this.indexSummaryCapacityInMb = indexSummaryCapacityInMb;
+        this.indexSummaryResizeIntervalInMinutes = indexSummaryResizeIntervalInMinutes;
+        this.trickleFsync = trickleFsync;
+        this.trickleFsyncIntervalInKb = trickleFsyncIntervalInKb;
+        this.storagePort = storagePort;
+        this.sslStoragePort = sslStoragePort;
+        this.listenAddress = listenAddress;
+        this.startNativeTransport = startNativeTransport;
+        this.nativeTransportPort = nativeTransportPort;
+        this.startRpc = startRpc;
+        this.rpcAddress = rpcAddress;
+        this.rpcPort = rpcPort;
+        this.rpcKeepalive = rpcKeepalive;
+        this.rpcServerType = rpcServerType;
+        this.thriftFramedTransportSizeInMb = thriftFramedTransportSizeInMb;
+        this.incrementalBackups = incrementalBackups;
+        this.snapshotBeforeCompaction = snapshotBeforeCompaction;
+        this.autoSnapshot = autoSnapshot;
+        this.tombstoneWarnThreshold = tombstoneWarnThreshold;
+        this.tombstoneFailureThreshold = tombstoneFailureThreshold;
+        this.columnIndexSizeInKb = columnIndexSizeInKb;
+        this.batchSizeWarnThresholdInKb = batchSizeWarnThresholdInKb;
+        this.batchSizeFailThresholdInKb = batchSizeFailThresholdInKb;
+        this.compactionThroughputMbPerSec = compactionThroughputMbPerSec;
+        this.compactionLargePartitionWarningThresholdMb = compactionLargePartitionWarningThresholdMb;
+        this.sstablePreemptiveOpenIntervalInMb = sstablePreemptiveOpenIntervalInMb;
+        this.readRequestTimeoutInMs = readRequestTimeoutInMs;
+        this.rangeRequestTimeoutInMs = rangeRequestTimeoutInMs;
+        this.writeRequestTimeoutInMs = writeRequestTimeoutInMs;
+        this.counterWriteRequestTimeoutInMs = counterWriteRequestTimeoutInMs;
+        this.casContentionTimeoutInMs = casContentionTimeoutInMs;
+        this.truncateRequestTimeoutInMs = truncateRequestTimeoutInMs;
+        this.requestTimeoutInMs = requestTimeoutInMs;
+        this.crossNodeTimeout = crossNodeTimeout;
+        this.endpointSnitch = endpointSnitch;
+        this.dynamicSnitchUpdateIntervalInMs = dynamicSnitchUpdateIntervalInMs;
+        this.dynamicSnitchResetIntervalInMs = dynamicSnitchResetIntervalInMs;
+        this.dynamicSnitchBadnessThreshold = dynamicSnitchBadnessThreshold;
+        this.requestScheduler = requestScheduler;
+        this.internodeCompression = internodeCompression;
+        this.interDcTcpNodelay = interDcTcpNodelay;
+        this.tracetypeQueryTtl = tracetypeQueryTtl;
+        this.tracetypeRepairTtl = tracetypeRepairTtl;
+        this.enableUserDefinedFunctions = enableUserDefinedFunctions;
+        this.windowsTimerInterval = windowsTimerInterval;
+    }
   public CassandraApplicationConfig(
     String clusterName,
     int numTokens,
@@ -888,13 +1186,9 @@ public class CassandraApplicationConfig {
     return partitioner;
   }
 
-  public String getPersistentVolume() {
-    return persistentVolume;
-  }
-
-  public String getDiskFailurePolicy() {
-    return diskFailurePolicy;
-  }
+    public String getDiskFailurePolicy() {
+        return diskFailurePolicy;
+    }
 
   public String getCommitFailurePolicy() {
     return commitFailurePolicy;
@@ -1696,13 +1990,9 @@ public class CassandraApplicationConfig {
       return partitioner;
     }
 
-    public String getPersistentVolume() {
-      return persistentVolume;
-    }
-
-    public String getDiskFailurePolicy() {
-      return diskFailurePolicy;
-    }
+        public String getDiskFailurePolicy() {
+            return diskFailurePolicy;
+        }
 
     public String getCommitFailurePolicy() {
       return commitFailurePolicy;
@@ -1744,9 +2034,9 @@ public class CassandraApplicationConfig {
       return commitlogSegmentSizeInMb;
     }
 
-    public List<Map<String, Object>> getSeedProvider() {
-      return seedProvider;
-    }
+        public String getSeedsUrl() {
+            return seedsUrl;
+        }
 
     public int getConcurrentReads() {
       return concurrentReads;
@@ -2029,15 +2319,10 @@ public class CassandraApplicationConfig {
       return this;
     }
 
-    public Builder setPersistentVolume(String persistentVolume) {
-      this.persistentVolume = persistentVolume;
-      return this;
-    }
-
-    public Builder setDiskFailurePolicy(String diskFailurePolicy) {
-      this.diskFailurePolicy = diskFailurePolicy;
-      return this;
-    }
+        public Builder setDiskFailurePolicy(String diskFailurePolicy) {
+            this.diskFailurePolicy = diskFailurePolicy;
+            return this;
+        }
 
     public Builder setCommitFailurePolicy(String commitFailurePolicy) {
       this.commitFailurePolicy = commitFailurePolicy;
@@ -2089,10 +2374,10 @@ public class CassandraApplicationConfig {
       return this;
     }
 
-    public Builder setSeedProvider(List<Map<String, Object>> seedProvider) {
-      this.seedProvider = seedProvider;
-      return this;
-    }
+        public Builder setSeedsUrl(String seedsUrl) {
+            this.seedsUrl = seedsUrl;
+            return this;
+        }
 
     public Builder setConcurrentReads(int concurrentReads) {
       this.concurrentReads = concurrentReads;
