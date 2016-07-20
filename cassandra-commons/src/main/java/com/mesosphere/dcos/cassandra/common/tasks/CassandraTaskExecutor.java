@@ -38,9 +38,6 @@ import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
  */
 public class CassandraTaskExecutor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            CassandraTaskExecutor.class);
-
     /**
      * Creates a new CassandraTaskExecutor.
      *
