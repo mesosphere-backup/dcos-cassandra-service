@@ -1579,6 +1579,7 @@ public class CassandraApplicationConfig {
       this.commitlogSegmentSizeInMb = config.commitlogSegmentSizeInMb;
       this.seedsUrl = config.seedsUrl;
       this.concurrentWrites = config.concurrentWrites;
+      this.concurrentReads = config.concurrentReads;
       this.concurrentCounterWrites = config.concurrentCounterWrites;
       this.memtableAllocationType = config.memtableAllocationType;
       this.indexSummaryCapacityInMb = config.indexSummaryCapacityInMb;
