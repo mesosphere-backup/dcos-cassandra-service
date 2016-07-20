@@ -4,8 +4,10 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.codahale.metrics.annotation.Counted;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
+import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
+import org.apache.mesos.config.ConfigStoreException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -16,38 +18,38 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class ConfigurationResource {
 
-    private final ConfigurationManager configuration;
+    private final DefaultConfigurationManager configurationManager;
 
     @Inject
     public ConfigurationResource(
-            final ConfigurationManager configuration) {
-        this.configuration = configuration;
+            final DefaultConfigurationManager configurationManager) {
+        this.configurationManager = configurationManager;
     }
 
     @GET
     @Path("/cassandra")
     @Counted
-    public CassandraConfig getCassandraConfig() {
-        return this.configuration.getCassandraConfig();
+    public CassandraConfig getCassandraConfig() throws ConfigStoreException {
+        return ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getCassandraConfig();
     }
 
     @GET
     @Path("/executor")
     @Counted
-    public ExecutorConfig getExecutorConfig() {
-        return this.configuration.getExecutorConfig();
+    public ExecutorConfig getExecutorConfig() throws ConfigStoreException {
+        return ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getExecutorConfig();
     }
 
     @GET
     @Path("/nodes")
-    public int getServers() {
-        return configuration.getServers();
+    public int getServers() throws ConfigStoreException {
+        return ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getServers();
     }
 
     @GET
     @Path("/seed-nodes")
-    public int getSeeds() {
-        return configuration.getSeeds();
+    public int getSeeds() throws ConfigStoreException {
+        return ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getSeeds();
     }
 
 

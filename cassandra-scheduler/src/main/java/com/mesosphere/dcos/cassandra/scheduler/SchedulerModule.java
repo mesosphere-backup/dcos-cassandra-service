@@ -17,26 +17,31 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import io.dropwizard.client.HttpClientBuilder;
+import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.setup.Environment;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.http.client.HttpClient;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.StageManager;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,12 +56,18 @@ public class SchedulerModule extends AbstractModule {
 
     private final CassandraSchedulerConfiguration configuration;
     private final Environment environment;
+    private final CuratorFrameworkConfig curatorConfig;
+    private final MesosConfig mesosConfig;
 
     public SchedulerModule(
             final CassandraSchedulerConfiguration configuration,
+            final CuratorFrameworkConfig curatorConfig,
+            final MesosConfig mesosConfig,
             final Environment environment) {
         this.configuration = configuration;
         this.environment = environment;
+        this.curatorConfig = curatorConfig;
+        this.mesosConfig = mesosConfig;
     }
 
     @Override
@@ -66,10 +77,35 @@ public class SchedulerModule extends AbstractModule {
         bind(CassandraSchedulerConfiguration.class).toInstance(
                 this.configuration);
 
-        bind(PersistenceFactory.class).toInstance(ZooKeeperPersistence
-                .create(
-                        configuration.getIdentity(),
-                        configuration.getCuratorConfig()));
+
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        CuratorStateStore curatorStateStore = new CuratorStateStore(
+                "/" + configuration.getServiceConfig().getName(),
+                curatorConfig.getServers(),
+                retryPolicy);
+        bind(StateStore.class).toInstance(curatorStateStore);
+
+        try {
+            final ConfigValidator configValidator = new ConfigValidator();
+            final DefaultConfigurationManager configurationManager
+                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                    "/" + configuration.getServiceConfig().getName(),
+                    curatorConfig.getServers(),
+                    configuration,
+                    configValidator,
+                    curatorStateStore);
+            bind(DefaultConfigurationManager.class).toInstance(configurationManager);
+        } catch (ConfigStoreException e) {
+            throw new RuntimeException(e);
+        }
 
         bind(new TypeLiteral<Serializer<Integer>>() {
         }).toInstance(IntegerStringSerializer.get());
@@ -77,8 +113,8 @@ public class SchedulerModule extends AbstractModule {
         bind(new TypeLiteral<Serializer<Boolean>>() {
         }).toInstance(BooleanStringSerializer.get());
 
-        bind(new TypeLiteral<Serializer<Identity>>() {
-        }).toInstance(Identity.JSON_SERIALIZER);
+        bind(new TypeLiteral<Serializer<ServiceConfig>>() {
+        }).toInstance(ServiceConfig.JSON_SERIALIZER);
 
         bind(new TypeLiteral<Serializer<CassandraConfig>>() {
         }).toInstance(CassandraConfig.JSON_SERIALIZER);
@@ -109,11 +145,8 @@ public class SchedulerModule extends AbstractModule {
                 DataCenterInfo.JSON_SERIALIZER
         );
 
-        bind(MesosConfig.class).toInstance(configuration.getMesosConfig());
+        bind(MesosConfig.class).toInstance(mesosConfig);
 
-        bindConstant().annotatedWith(Names.named("SeedsUrl")).to(
-                configuration.getSeedsUrl()
-        );
         bindConstant().annotatedWith(Names.named("ConfiguredSyncDelayMs")).to(
                 configuration.getExternalDcSyncMs()
         );
@@ -124,9 +157,9 @@ public class SchedulerModule extends AbstractModule {
         })
                 .annotatedWith(Names.named("ConfiguredExternalDcs"))
                 .toInstance(configuration.getExternalDcsList());
-        bind(Identity.class).annotatedWith(
+        bind(ServiceConfig.class).annotatedWith(
                 Names.named("ConfiguredIdentity")).toInstance(
-                configuration.getIdentity());
+                configuration.getServiceConfig());
         bind(CassandraConfig.class).annotatedWith(
                 Names.named("ConfiguredCassandraConfig")).toInstance(
                 configuration.getCassandraConfig());
@@ -150,11 +183,10 @@ public class SchedulerModule extends AbstractModule {
                 configuration.getPhaseStrategy()
         );
 
-        bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(
-                configuration.getHttpClientConfiguration())
-                .build("http-client"));
+        HttpClientConfiguration httpClient = new HttpClientConfiguration();
+        bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(httpClient).build("http-client"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
-        bind(CuratorFrameworkConfig.class).toInstance(configuration.getCuratorConfig());
+        bind(CuratorFrameworkConfig.class).toInstance(curatorConfig);
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
         bind(ScheduledExecutorService.class).toInstance(
                 Executors .newScheduledThreadPool(8));

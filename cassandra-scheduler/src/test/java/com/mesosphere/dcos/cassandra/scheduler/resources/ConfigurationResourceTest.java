@@ -4,11 +4,8 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
-import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.ZooKeeperPersistence;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -16,92 +13,75 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import io.dropwizard.validation.BaseValidator;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.retry.RetryForever;
+import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
+import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.state.StateStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 
 public class ConfigurationResourceTest {
     private static TestingServer server;
 
-    private static ZooKeeperPersistence persistence;
-
     private static CassandraSchedulerConfiguration config;
 
-    private static ConfigurationManager manager;
-
+    private static DefaultConfigurationManager configurationManager;
     @Rule
     public final ResourceTestRule resources = ResourceTestRule.builder()
-            .addResource(new ConfigurationResource(manager)).build();
+            .addResource(new ConfigurationResource(configurationManager)).build();
 
     @BeforeClass
     public static void beforeAll() throws Exception {
-
         server = new TestingServer();
-
         server.start();
-
-        final ConfigurationFactory<CassandraSchedulerConfiguration> factory =
+        final ConfigurationFactory<MutableSchedulerConfiguration> factory =
                 new ConfigurationFactory<>(
-                        CassandraSchedulerConfiguration.class,
+                        MutableSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
                                 .registerModule(new Jdk8Module()),
                         "dw");
-
-        config = factory.build(
+        MutableSchedulerConfiguration mutable = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
+        config = mutable.createConfig();
 
-        Identity initial = config.getIdentity();
+        final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
 
-        persistence = (ZooKeeperPersistence) ZooKeeperPersistence.create(
-                initial,
-                CuratorFrameworkConfig.create(server.getConnectString(),
-                        10000L,
-                        10000L,
-                        Optional.empty(),
-                        250L));
-
-        manager = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                "NODE",
-                config.getSeedsUrl(),
-                config.getDcUrl(),
-                config.getExternalDcsList(),
-                config.getExternalDcSyncMs(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
-
-        manager.start();
-
+        StateStore stateStore = new CuratorStateStore(
+                "/" + config.getServiceConfig().getName(),
+                server.getConnectString(),
+                retryPolicy);
+        configurationManager
+                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                "/" + config.getServiceConfig().getName(),
+                server.getConnectString(),
+                config,
+                new ConfigValidator(),
+                stateStore);
+        config = (CassandraSchedulerConfiguration) configurationManager.getTargetConfig();
     }
 
     @AfterClass
     public static void afterAll() throws Exception {
-
-        manager.stop();
-
-        persistence.stop();
-
         server.close();
-
         server.stop();
     }
 

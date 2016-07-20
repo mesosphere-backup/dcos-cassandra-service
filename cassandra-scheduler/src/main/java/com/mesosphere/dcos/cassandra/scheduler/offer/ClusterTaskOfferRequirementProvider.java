@@ -1,9 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.offer;
 
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.offer.InvalidRequirementException;
@@ -19,15 +16,9 @@ public class ClusterTaskOfferRequirementProvider
         implements CassandraOfferRequirementProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             ClusterTaskOfferRequirementProvider.class);
-    private IdentityManager identityManager;
-    private CassandraTasks cassandraTasks;
 
     @Inject
-    public ClusterTaskOfferRequirementProvider(
-            IdentityManager identityManager,
-            CassandraTasks cassandraTasks) {
-        this.identityManager = identityManager;
-        this.cassandraTasks = cassandraTasks;
+    public ClusterTaskOfferRequirementProvider() {
     }
 
     @Override
@@ -38,8 +29,7 @@ public class ClusterTaskOfferRequirementProvider
     }
 
     private OfferRequirement getCreateOfferRequirement(Protos.TaskInfo taskInfo) {
-        final PlacementStrategy placementStrategy = new ClusterTaskPlacementStrategy(
-                cassandraTasks);
+        final PlacementStrategy placementStrategy = new ClusterTaskPlacementStrategy();
         final List<Protos.SlaveID> agentsToAvoid =
                 placementStrategy.getAgentsToAvoid(taskInfo);
         final List<Protos.SlaveID> agentsToColocate =
@@ -69,7 +59,7 @@ public class ClusterTaskOfferRequirementProvider
         LOGGER.info("Getting replacement requirement for task: {}",
                 taskInfo.getTaskId().getValue());
         final PlacementStrategy placementStrategy =
-                new ClusterTaskPlacementStrategy(cassandraTasks);
+                new ClusterTaskPlacementStrategy();
 
         ExecutorInfo execInfo = taskInfo.getExecutor();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
@@ -95,7 +85,6 @@ public class ClusterTaskOfferRequirementProvider
     private OfferRequirement getExistingOfferRequirement(
             Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
-        final Identity identity = identityManager.get();
 
         ExecutorInfo execInfo = taskInfo.getExecutor();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();

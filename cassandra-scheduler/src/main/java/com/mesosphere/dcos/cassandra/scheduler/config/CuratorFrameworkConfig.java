@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 
 public class CuratorFrameworkConfig {
@@ -107,5 +108,22 @@ public class CuratorFrameworkConfig {
     @Override
     public String toString() {
         return JsonUtils.toJsonString(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CuratorFrameworkConfig that = (CuratorFrameworkConfig) o;
+        return Objects.equals(servers, that.servers) &&
+                Objects.equals(sessionTimeout, that.sessionTimeout) &&
+                Objects.equals(connectionTimeout, that.connectionTimeout) &&
+                Objects.equals(operationTimeout, that.operationTimeout) &&
+                Objects.equals(backoff, that.backoff);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(servers, sessionTimeout, connectionTimeout, operationTimeout, backoff);
     }
 }

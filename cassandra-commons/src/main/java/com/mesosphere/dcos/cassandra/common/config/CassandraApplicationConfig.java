@@ -56,7 +56,6 @@ public class CassandraApplicationConfig {
   public static final String ROLES_VALIDITY_IN_MS_KEY = "roles_validity_in_ms";
   public static final String PERMISSIONS_VALIDITY_IN_MS_KEY = "permissions_validity_in_ms";
   public static final String PARTITIONER_KEY = "partitioner";
-  public static final String PERSISTENT_VOLUME_KEY = "persistent_volume";
   public static final String DATA_FILE_DIRECTORIES_KEY = "data_file_directories";
   public static final String COMMITLOG_DIRECTORY_KEY = "commitlog_directory";
   public static final String DISK_FAILURE_POLICY_KEY = "disk_failure_policy";
@@ -129,6 +128,7 @@ public class CassandraApplicationConfig {
   public static final String CONCURRENT_MATERIALIZED_VIEWS = "concurrent_materialized_view_writes";
   public static final String INTERNODE_AUTHENTICATOR_KEY = "internode_authenticator";
   public static final String COMMIT_LOG_TOTAL_SPACE_KEY = "commitlog_total_space_in_mb";
+  public static final String SEEDS_URL_KEY = "seeds_url";
 
   public static final String DEFAULT_CLUSTER_NAME = "Test Cluster";
   public static final int DEFAULT_NUM_TOKENS = 256;
@@ -143,7 +143,6 @@ public class CassandraApplicationConfig {
   public static final int DEFAULT_ROLES_VALIDITY_IN_MS = 2000;
   public static final int DEFAULT_PERMISSIONS_VALIDITY_IN_MS = 2000;
   public static final String DEFAULT_PARTITIONER = "org.apache.cassandra.dht.Murmur3Partitioner";
-  public static final String DEFAULT_PERSISTENT_VOLUME = "volume";
   public static final String DEFAULT_DISK_FAILURE_POLICY = "stop";
   public static final String DEFAULT_COMMIT_FAILURE_POLICY = "stop";
   public static final Integer DEFAULT_KEY_CACHE_SIZE_IN_MB = null;
@@ -164,6 +163,7 @@ public class CassandraApplicationConfig {
           ("seeds", "127.0.0.1"))
       )
     );
+  public static final String DEFAULT_SEEDS_URL = "https://cassandara.marathon.mesos:9000";
   public static final int DEFAULT_CONCURRENT_READS = 32;
   public static final int DEFAULT_CONCURRENT_WRITES = 32;
   public static final int DEFAULT_CONCURRENT_COUNTER_WRITES = 32;
@@ -316,7 +316,6 @@ public class CassandraApplicationConfig {
     @JsonProperty(ROLES_VALIDITY_IN_MS_KEY) final int rolesValidityInMs,
     @JsonProperty(PERMISSIONS_VALIDITY_IN_MS_KEY) final int permissionsValidityInMs,
     @JsonProperty(PARTITIONER_KEY) final String partitioner,
-    @JsonProperty(PERSISTENT_VOLUME_KEY) final String persistentVolume,
     @JsonProperty(DISK_FAILURE_POLICY_KEY) final String diskFailurePolicy,
     @JsonProperty(COMMIT_FAILURE_POLICY_KEY) final String commitFailurePolicy,
     @JsonProperty(KEY_CACHE_SIZE_IN_MB_KEY) final Integer keyCacheSizeInMb,
@@ -328,7 +327,7 @@ public class CassandraApplicationConfig {
     @JsonProperty(COMMITLOG_SYNC_KEY) final String commitlogSync,
     @JsonProperty(COMMITLOG_SYNC_PERIOD_IN_MS_KEY) final int commitlogSyncPeriodInMs,
     @JsonProperty(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY) final int commitlogSegmentSizeInMb,
-    @JsonProperty(SEED_PROVIDER_KEY) final List<Map<String, Object>> seedProvider,
+    @JsonProperty(SEEDS_URL_KEY) final String seedsUrl,
     @JsonProperty(CONCURRENT_READS_KEY) final int concurrentReads,
     @JsonProperty(CONCURRENT_WRITES_KEY) final int concurrentWrites,
     @JsonProperty(CONCURRENT_COUNTER_WRITES_KEY) final int concurrentCounterWrites,
@@ -398,7 +397,6 @@ public class CassandraApplicationConfig {
       rolesValidityInMs,
       permissionsValidityInMs,
       partitioner,
-      persistentVolume,
       diskFailurePolicy,
       commitFailurePolicy,
       keyCacheSizeInMb,
@@ -410,7 +408,7 @@ public class CassandraApplicationConfig {
       commitlogSync,
       commitlogSyncPeriodInMs,
       commitlogSegmentSizeInMb,
-      seedProvider,
+      seedsUrl,
       concurrentReads,
       concurrentWrites,
       concurrentCounterWrites,
@@ -498,8 +496,6 @@ public class CassandraApplicationConfig {
   private final int permissionsValidityInMs;
   @JsonProperty(PARTITIONER_KEY)
   private final String partitioner;
-  @JsonProperty(PERSISTENT_VOLUME_KEY)
-  private final String persistentVolume;
   @JsonProperty(DISK_FAILURE_POLICY_KEY)
   private final String diskFailurePolicy;
   @JsonProperty(COMMIT_FAILURE_POLICY_KEY)
@@ -522,8 +518,8 @@ public class CassandraApplicationConfig {
   private final int commitlogSyncPeriodInMs;
   @JsonProperty(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY)
   private final int commitlogSegmentSizeInMb;
-  @JsonProperty(SEED_PROVIDER_KEY)
-  private final List<Map<String, Object>> seedProvider;
+  @JsonProperty(SEEDS_URL_KEY)
+  private final String seedsUrl;
   @JsonProperty(CONCURRENT_READS_KEY)
   private final int concurrentReads;
   @JsonProperty(CONCURRENT_WRITES_KEY)
@@ -633,6 +629,7 @@ public class CassandraApplicationConfig {
   @JsonProperty(COMMIT_LOG_TOTAL_SPACE_KEY)
   private final int commitlogTotalSpaceInMb;
 
+
   public CassandraApplicationConfig(
     String clusterName,
     int numTokens,
@@ -647,7 +644,6 @@ public class CassandraApplicationConfig {
     int rolesValidityInMs,
     int permissionsValidityInMs,
     String partitioner,
-    String persistentVolume,
     String diskFailurePolicy,
     String commitFailurePolicy,
     Integer keyCacheSizeInMb,
@@ -659,7 +655,7 @@ public class CassandraApplicationConfig {
     String commitlogSync,
     int commitlogSyncPeriodInMs,
     int commitlogSegmentSizeInMb,
-    List<Map<String, Object>> seedProvider,
+    String seedsUrl,
     int concurrentReads,
     int concurrentWrites,
     int concurrentCounterWrites,
@@ -709,11 +705,11 @@ public class CassandraApplicationConfig {
     int tracetypeRepairTtl,
     boolean enableUserDefinedFunctions,
     int windowsTimerInterval,
-    String internodeAuthenticator,
-    int maxHintsFileSizeInMb,
-    int hintsFlushPeriodInMs,
-    int concurrentMaterializedViewWrites,
-    int commitlogTotalSpaceInMb) {
+    final String internodeAuthenticator,
+    final int maxHintsFileSizeInMb,
+    final int hintsFlushPeriodInMs,
+    final int concurrentMaterializedViewWrites,
+    final int commitlogTotalSpaceInMb) {
     this.clusterName = clusterName;
     this.numTokens = numTokens;
     this.hintedHandoffEnabled = hintedHandoffEnabled;
@@ -727,7 +723,6 @@ public class CassandraApplicationConfig {
     this.rolesValidityInMs = rolesValidityInMs;
     this.permissionsValidityInMs = permissionsValidityInMs;
     this.partitioner = partitioner;
-    this.persistentVolume = persistentVolume;
     this.diskFailurePolicy = diskFailurePolicy;
     this.commitFailurePolicy = commitFailurePolicy;
     this.keyCacheSizeInMb = keyCacheSizeInMb;
@@ -739,7 +734,7 @@ public class CassandraApplicationConfig {
     this.commitlogSync = commitlogSync;
     this.commitlogSyncPeriodInMs = commitlogSyncPeriodInMs;
     this.commitlogSegmentSizeInMb = commitlogSegmentSizeInMb;
-    this.seedProvider = seedProvider;
+    this.seedsUrl = seedsUrl;
     this.concurrentReads = concurrentReads;
     this.concurrentWrites = concurrentWrites;
     this.concurrentCounterWrites = concurrentCounterWrites;
@@ -792,8 +787,8 @@ public class CassandraApplicationConfig {
     this.internodeAuthenticator = internodeAuthenticator;
     this.maxHintsFileSizeInMb = maxHintsFileSizeInMb;
     this.hintsFlushPeriodInMs = hintsFlushPeriodInMs;
-    this.concurrentMaterializedViewWrites = concurrentMaterializedViewWrites;
     this.commitlogTotalSpaceInMb = commitlogTotalSpaceInMb;
+    this.concurrentMaterializedViewWrites = concurrentMaterializedViewWrites;
   }
 
   public String getClusterName() {
@@ -886,10 +881,6 @@ public class CassandraApplicationConfig {
 
   public String getPartitioner() {
     return partitioner;
-  }
-
-  public String getPersistentVolume() {
-    return persistentVolume;
   }
 
   public String getDiskFailurePolicy() {
@@ -1135,13 +1126,15 @@ public class CassandraApplicationConfig {
     map.put(PERMISSIONS_VALIDITY_IN_MS_KEY, permissionsValidityInMs);
     map.put(PARTITIONER_KEY, partitioner);
     map.put(DATA_FILE_DIRECTORIES_KEY,
-      Arrays.asList(Paths.get(persistentVolume, "data").toString()));
+      Arrays.asList(Paths.get(CassandraConfig.VOLUME_PATH, "data")
+        .toAbsolutePath().toString()));
     map.put(COMMITLOG_DIRECTORY_KEY,
-      Paths.get(persistentVolume, "commitlog").toString());
-    map.put(SAVED_CACHES_DIRECTORY_KEY, Paths.get(persistentVolume,
-      "saved_caches").toString());
-    map.put(HINTS_DIRECTORY_KEY, Paths.get(persistentVolume,
-      "hints").toString());
+      Paths.get(CassandraConfig.VOLUME_PATH, "commitlog")
+        .toAbsolutePath().toString());
+    map.put(SAVED_CACHES_DIRECTORY_KEY, Paths.get(CassandraConfig.VOLUME_PATH,
+      "saved_caches").toAbsolutePath().toString());
+    map.put(HINTS_DIRECTORY_KEY, Paths.get(CassandraConfig.VOLUME_PATH,
+      "hints").toAbsolutePath().toString());
     map.put(DISK_FAILURE_POLICY_KEY, diskFailurePolicy);
     map.put(COMMIT_FAILURE_POLICY_KEY, commitFailurePolicy);
     map.put(KEY_CACHE_SIZE_IN_MB_KEY, keyCacheSizeInMb);
@@ -1153,7 +1146,7 @@ public class CassandraApplicationConfig {
     map.put(COMMITLOG_SYNC_KEY, commitlogSync);
     map.put(COMMITLOG_SYNC_PERIOD_IN_MS_KEY, commitlogSyncPeriodInMs);
     map.put(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY, commitlogSegmentSizeInMb);
-    map.put(SEED_PROVIDER_KEY, seedProvider);
+    map.put(SEED_PROVIDER_KEY, createDcosSeedProvider(seedsUrl));
     map.put(CONCURRENT_READS_KEY, concurrentReads);
     map.put(CONCURRENT_WRITES_KEY, concurrentWrites);
     map.put(CONCURRENT_COUNTER_WRITES_KEY, concurrentCounterWrites);
@@ -1408,7 +1401,6 @@ public class CassandraApplicationConfig {
     private int rolesValidityInMs;
     private int permissionsValidityInMs;
     private String partitioner;
-    private String persistentVolume;
     private String diskFailurePolicy;
     private String commitFailurePolicy;
     private Integer keyCacheSizeInMb;
@@ -1420,7 +1412,7 @@ public class CassandraApplicationConfig {
     private String commitlogSync;
     private int commitlogSyncPeriodInMs;
     private int commitlogSegmentSizeInMb;
-    private List<Map<String, Object>> seedProvider;
+    private String seedsUrl;
     private int concurrentReads;
     private int concurrentWrites;
     private int concurrentCounterWrites;
@@ -1491,7 +1483,6 @@ public class CassandraApplicationConfig {
       rolesValidityInMs = DEFAULT_ROLES_VALIDITY_IN_MS;
       permissionsValidityInMs = DEFAULT_PERMISSIONS_VALIDITY_IN_MS;
       partitioner = DEFAULT_PARTITIONER;
-      persistentVolume = DEFAULT_PERSISTENT_VOLUME;
       diskFailurePolicy = DEFAULT_DISK_FAILURE_POLICY;
       commitFailurePolicy = DEFAULT_COMMIT_FAILURE_POLICY;
       keyCacheSizeInMb = DEFAULT_KEY_CACHE_SIZE_IN_MB;
@@ -1503,7 +1494,6 @@ public class CassandraApplicationConfig {
       commitlogSync = DEFAULT_COMMITLOG_SYNC;
       commitlogSyncPeriodInMs = DEFAULT_COMMITLOG_SYNC_PERIOD_IN_MS;
       commitlogSegmentSizeInMb = DEFAULT_COMMITLOG_SEGMENT_SIZE_IN_MB;
-      seedProvider = DEFAULT_SEED_PROVIDER;
       concurrentReads = DEFAULT_CONCURRENT_READS;
       concurrentWrites = DEFAULT_CONCURRENT_WRITES;
       concurrentCounterWrites = DEFAULT_CONCURRENT_COUNTER_WRITES;
@@ -1558,6 +1548,7 @@ public class CassandraApplicationConfig {
       hintsFlushPeriodInMs = DEFAULT_HINTS_FLUSH_PERIOD_IN_MS;
       concurrentMaterializedViewWrites = DEFAULT_CONCURRENT_MATERIALIZED_VIEW_WRITES;
       commitlogTotalSpaceInMb = DEFAULT_COMMIT_LOG_TOTAL_SPACE_IN_MB;
+      seedsUrl = DEFAULT_SEEDS_URL;
     }
 
     private Builder(CassandraApplicationConfig config) {
@@ -1575,7 +1566,6 @@ public class CassandraApplicationConfig {
       this.rolesValidityInMs = config.rolesValidityInMs;
       this.permissionsValidityInMs = config.permissionsValidityInMs;
       this.partitioner = config.partitioner;
-      this.persistentVolume = config.persistentVolume;
       this.diskFailurePolicy = config.diskFailurePolicy;
       this.commitFailurePolicy = config.commitFailurePolicy;
       this.keyCacheSizeInMb = config.keyCacheSizeInMb;
@@ -1587,8 +1577,7 @@ public class CassandraApplicationConfig {
       this.commitlogSync = config.commitlogSync;
       this.commitlogSyncPeriodInMs = config.commitlogSyncPeriodInMs;
       this.commitlogSegmentSizeInMb = config.commitlogSegmentSizeInMb;
-      this.seedProvider = config.seedProvider;
-      this.concurrentReads = config.concurrentReads;
+      this.seedsUrl = config.seedsUrl;
       this.concurrentWrites = config.concurrentWrites;
       this.concurrentCounterWrites = config.concurrentCounterWrites;
       this.memtableAllocationType = config.memtableAllocationType;
@@ -1696,10 +1685,6 @@ public class CassandraApplicationConfig {
       return partitioner;
     }
 
-    public String getPersistentVolume() {
-      return persistentVolume;
-    }
-
     public String getDiskFailurePolicy() {
       return diskFailurePolicy;
     }
@@ -1743,9 +1728,8 @@ public class CassandraApplicationConfig {
     public int getCommitlogSegmentSizeInMb() {
       return commitlogSegmentSizeInMb;
     }
-
-    public List<Map<String, Object>> getSeedProvider() {
-      return seedProvider;
+    public String getSeedsUrl() {
+      return seedsUrl;
     }
 
     public int getConcurrentReads() {
@@ -2029,11 +2013,6 @@ public class CassandraApplicationConfig {
       return this;
     }
 
-    public Builder setPersistentVolume(String persistentVolume) {
-      this.persistentVolume = persistentVolume;
-      return this;
-    }
-
     public Builder setDiskFailurePolicy(String diskFailurePolicy) {
       this.diskFailurePolicy = diskFailurePolicy;
       return this;
@@ -2089,8 +2068,8 @@ public class CassandraApplicationConfig {
       return this;
     }
 
-    public Builder setSeedProvider(List<Map<String, Object>> seedProvider) {
-      this.seedProvider = seedProvider;
+    public Builder setSeedsUrl(String seedsUrl) {
+      this.seedsUrl = seedsUrl;
       return this;
     }
 
@@ -2379,7 +2358,6 @@ public class CassandraApplicationConfig {
         rolesValidityInMs,
         permissionsValidityInMs,
         partitioner,
-        persistentVolume,
         diskFailurePolicy,
         commitFailurePolicy,
         keyCacheSizeInMb,
@@ -2391,7 +2369,7 @@ public class CassandraApplicationConfig {
         commitlogSync,
         commitlogSyncPeriodInMs,
         commitlogSegmentSizeInMb,
-        seedProvider,
+        seedsUrl,
         concurrentReads,
         concurrentWrites,
         concurrentCounterWrites,

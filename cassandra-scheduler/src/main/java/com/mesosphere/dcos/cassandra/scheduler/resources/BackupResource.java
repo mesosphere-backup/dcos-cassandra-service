@@ -32,7 +32,7 @@ public class BackupResource {
     @PUT
     @Timed
     @Path("/start")
-    public Response start(StartBackupRequest request) {
+    public Response start(BackupRestoreRequest request) {
         LOGGER.info("Processing start backup request = {}", request);
         try {
             if (!request.isValid()) {
@@ -63,7 +63,7 @@ public class BackupResource {
         }
     }
 
-    public static BackupContext from(StartBackupRequest request) {
+    public static BackupContext from(BackupRestoreRequest request) {
         String accountId;
         String secretKey;
         if (isAzure(request.getExternalLocation())) {
