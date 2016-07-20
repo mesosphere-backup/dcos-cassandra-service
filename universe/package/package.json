@@ -1,6 +1,6 @@
 {
   "packagingVersion": "3.0",
-  "name": "DataStax",
+  "name": "datastax",
   "version": "stub-universe",
   "maintainer": "support@mesosphere.io",
   "description": "DSE running on DCOS",
