@@ -1,4 +1,4 @@
-framework_name : ${FRAMEWORK_NAME:-"cassandra"}
+framework_name : ${FRAMEWORK_NAME:-"datstax"}
 framework_version : ${FRAMEWORK_VERSION:-"version"}
 executor:
   command : ${EXECUTOR_COMMAND:-"ulimit -l $CASSANDRA_ULIMIT_MEMLOCK && ulimit -n $CASSANDRA_ULIMIT_NOFILE && ulimit -u $CASSANDRA_ULIMIT_NPROC && ulimit -a && ./executor/bin/cassandra-executor server executor/conf/executor.yml"}
@@ -143,7 +143,7 @@ seed_nodes: ${SEED_NODES:-2}
 placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
 api_port : ${API_PORT:-8080}
 dc_sync_ms : ${DC_SYNC_MS:-60000}
-dc_url : "${DC_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/datacenter}"
+dc_url : "${DC_URL:-http://${FRAMEWORK_NAME:-datastax}.marathon.mesos:${API_PORT:-8080}/v1/datacenter}"
 external_dcs : ${EXTERNAL_DCS:-""}
 server:
   type: simple
@@ -170,13 +170,13 @@ identity:
   name : ${FRAMEWORK_NAME:-"cassandra"}
   version : ${FRAMEWORK_VERSION:-"0.1.0"}
   user : ${FRAMEWORK_USER:-"root"}
-  cluster : "${FRAMEWORK_CLUSTER:-${FRAMEWORK_NAME:-cassandra}-cluster}"
-  role : "${FRAMEWORK_ROLE:-${FRAMEWORK_NAME:-cassandra}-role}"
-  principal : "${FRAMEWORK_PRINCIPAL:-${FRAMEWORK_NAME:-cassandra}-principal}"
+  cluster : "${FRAMEWORK_CLUSTER:-${FRAMEWORK_NAME:-dse}-cluster}"
+  role : "${FRAMEWORK_ROLE:-${FRAMEWORK_NAME:-dse}-role}"
+  principal : "${FRAMEWORK_PRINCIPAL:-${FRAMEWORK_NAME:-dse}-principal}"
   secret: ${FRAMEWORK_SECRET_FILE:-""}
   failover_timeout_s : ${FRAMEWORK_FAILOVER_TIMEOUT_S:-604800}
   checkpoint : ${FRAMEWORK_CHECKPOINT:-true}
-seeds_url: "${SEEDS_URL:-http://${FRAMEWORK_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
+seeds_url: "${SEEDS_URL:-http://${FRAMEWORK_NAME:-datastax}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
 phase_strategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
 mesos:
   servers: ${MESOS_SERVERS:-"master.mesos:2181"}
