@@ -23,7 +23,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
+import com.mesosphere.dcos.cassandra.scheduler.config.ServiceConfig;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
@@ -72,10 +72,10 @@ public class TasksResource {
     }
 
     private List<String> getRunningDns() throws ConfigStoreException {
-        final Identity identity = configurationManager.getTargetConfig().getIdentity();
+        final ServiceConfig serviceConfig = configurationManager.getTargetConfig().getServiceConfig();
         return getRunningDeamons().stream().map(daemonTask ->
             daemonTask.getName() +
-                "." + identity.getName() + ".mesos:" +
+                "." + serviceConfig.getName() + ".mesos:" +
                 daemonTask.getConfig()
                     .getApplication()
                     .getNativeTransportPort()

@@ -40,21 +40,22 @@ public class ConfigurationResourceTest {
     public static void beforeAll() throws Exception {
         server = new TestingServer();
         server.start();
-        final ConfigurationFactory<DropwizardConfiguration> factory =
+        final ConfigurationFactory<MutableSchedulerConfiguration> factory =
                 new ConfigurationFactory<>(
-                        DropwizardConfiguration.class,
+                        MutableSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
                                 .registerModule(new Jdk8Module()),
                         "dw");
-        config = factory.build(
+        MutableSchedulerConfiguration mutable = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
+                Resources.getResource("scheduler.yml").getFile());
+        config = mutable.createConfig();
 
-        final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
+        final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
                         new RetryUntilElapsed(
@@ -65,12 +66,12 @@ public class ConfigurationResourceTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         StateStore stateStore = new CuratorStateStore(
-                "/" + config.getName(),
+                "/" + config.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
         configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + config.getName(),
+                "/" + config.getServiceConfig().getName(),
                 server.getConnectString(),
                 config,
                 new ConfigValidator(),

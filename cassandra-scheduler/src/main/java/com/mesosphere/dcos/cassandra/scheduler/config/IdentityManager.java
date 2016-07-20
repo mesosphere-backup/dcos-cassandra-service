@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 public class IdentityManager implements Managed {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(IdentityManager.class);
-    public static final String IDENTITY = "identity";
+    public static final String IDENTITY = "serviceConfig";
 
-    private volatile Identity identity;
+    private volatile ServiceConfig serviceConfig;
     private StateStore stateStore;
 
     public static IdentityManager create(
-            final Identity configured,
+            final ServiceConfig configured,
             final StateStore stateStore) {
         return new IdentityManager(configured,
                 stateStore);
@@ -28,42 +28,42 @@ public class IdentityManager implements Managed {
 
     @Inject
     public IdentityManager(
-            final @Named("ConfiguredIdentity") Identity configured,
+            final @Named("ConfiguredIdentity") ServiceConfig configured,
             final StateStore stateStore) {
-        this.identity = configured;
+        this.serviceConfig = configured;
         this.stateStore = stateStore;
     }
 
-    public Identity get() {
-        return identity;
+    public ServiceConfig get() {
+        return serviceConfig;
     }
 
     public synchronized void register(String id) throws SerializationException {
-        final Identity registeredIdentity = identity.register(id);
-        this.stateStore.storeProperty(IDENTITY,  Identity.JSON_SERIALIZER.serialize(registeredIdentity));
-        this.identity = identity.register(id);
+        final ServiceConfig registeredServiceConfig = serviceConfig.register(id);
+        this.stateStore.storeProperty(IDENTITY,  ServiceConfig.JSON_SERIALIZER.serialize(registeredServiceConfig));
+        this.serviceConfig = serviceConfig.register(id);
     }
 
     @Override
     public void start() throws Exception {
-        LOGGER.info("IdentityManager starting configured identity = {}",
-                identity);
+        LOGGER.info("IdentityManager starting configured serviceConfig = {}",
+          serviceConfig);
 
         try {
             final byte[] bytesOfIdentity = stateStore.fetchProperty(IDENTITY);
-            final Identity persisted = Identity.JSON_SERIALIZER.deserialize(bytesOfIdentity);
+            final ServiceConfig persisted = ServiceConfig.JSON_SERIALIZER.deserialize(bytesOfIdentity);
 
-            LOGGER.info("Retrieved persisted identity = {}", persisted);
+            LOGGER.info("Retrieved persisted serviceConfig = {}", persisted);
 
             if (!persisted.getId().isEmpty()) {
-                this.identity = this.identity.register(persisted.getId());
+                this.serviceConfig = this.serviceConfig.register(persisted.getId());
             }
         } catch (StateStoreException e) {
-            LOGGER.error("Error occured while retrieving persisted identity: ", e);
+            LOGGER.error("Error occured while retrieving persisted serviceConfig: ", e);
         }
 
-        LOGGER.info("Persisting identity = {}", this.identity);
-        stateStore.storeProperty(IDENTITY, Identity.JSON_SERIALIZER.serialize(this.identity));
+        LOGGER.info("Persisting serviceConfig = {}", this.serviceConfig);
+        stateStore.storeProperty(IDENTITY, ServiceConfig.JSON_SERIALIZER.serialize(this.serviceConfig));
     }
 
     @Override

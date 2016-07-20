@@ -92,8 +92,8 @@ public class ConfigValidator {
         }
         CassandraSchedulerConfiguration oldConfiguration = (CassandraSchedulerConfiguration) oldConfig;
         CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
-        final String newName = newConfiguration.getIdentity().getName();
-        final String oldName = oldConfiguration.getIdentity().getName();
+        final String newName = newConfiguration.getServiceConfig().getName();
+        final String oldName = oldConfiguration.getServiceConfig().getName();
         if (!Objects.equals(newName, oldName)) {
             final String errorMessage = String.format("The configured name can not be changed. Old name is (%s). " +
                             "New name is (%s)", oldName, newName);
@@ -110,8 +110,8 @@ public class ConfigValidator {
         }
         CassandraSchedulerConfiguration oldConfiguration = (CassandraSchedulerConfiguration) oldConfig;
         CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
-        final String newPrincipal = newConfiguration.getIdentity().getPrincipal();
-        final String oldPrincipal = oldConfiguration.getIdentity().getPrincipal();
+        final String newPrincipal = newConfiguration.getServiceConfig().getPrincipal();
+        final String oldPrincipal = oldConfiguration.getServiceConfig().getPrincipal();
         if (!Objects.equals(newPrincipal, oldPrincipal)) {
             final String errorMessage = String.format("The configured principal can not be changed. Old principal is (%s). " +
                     "New principal is (%s)", oldPrincipal, newPrincipal);
@@ -128,8 +128,8 @@ public class ConfigValidator {
         }
         CassandraSchedulerConfiguration oldConfiguration = (CassandraSchedulerConfiguration) oldConfig;
         CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
-        final String newRole = newConfiguration.getIdentity().getRole();
-        final String oldRole = oldConfiguration.getIdentity().getRole();
+        final String newRole = newConfiguration.getServiceConfig().getRole();
+        final String oldRole = oldConfiguration.getServiceConfig().getRole();
         if (!Objects.equals(newRole, oldRole)) {
             final String errorMessage = String.format("The configured role can not be changed. Old role is (%s). " +
                     "New role is (%s)", oldRole, newRole);
@@ -146,8 +146,8 @@ public class ConfigValidator {
         }
         CassandraSchedulerConfiguration oldConfiguration = (CassandraSchedulerConfiguration) oldConfig;
         CassandraSchedulerConfiguration newConfiguration = (CassandraSchedulerConfiguration) newConfig;
-        final String newCluster = newConfiguration.getIdentity().getCluster();
-        final String oldCluster = oldConfiguration.getIdentity().getCluster();
+        final String newCluster = newConfiguration.getServiceConfig().getCluster();
+        final String oldCluster = oldConfiguration.getServiceConfig().getCluster();
         if (!Objects.equals(newCluster, oldCluster)) {
             final String errorMessage = String.format("The configured cluster can not be changed. Old cluster is (%s). " +
                     "New cluster is (%s)", oldCluster, newCluster);

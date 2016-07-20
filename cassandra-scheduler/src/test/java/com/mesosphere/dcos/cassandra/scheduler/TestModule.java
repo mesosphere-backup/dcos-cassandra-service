@@ -48,6 +48,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public class TestModule extends AbstractModule {
     private final CassandraSchedulerConfiguration configuration;
+    private final CuratorFrameworkConfig curatorConfig;
+    private final MesosConfig mesosConfig;
     private final Environment environment;
 
     public static TestingServer createTestingServerQuietly() {
@@ -65,8 +67,12 @@ public class TestModule extends AbstractModule {
 
     public TestModule(
             final CassandraSchedulerConfiguration configuration,
+            final CuratorFrameworkConfig curatorConfig,
+            final MesosConfig mesosConfig,
             final Environment environment) {
         this.configuration = configuration;
+        this.curatorConfig = curatorConfig;
+        this.mesosConfig = mesosConfig;
         this.environment = environment;
     }
 
@@ -81,8 +87,8 @@ public class TestModule extends AbstractModule {
         bind(new TypeLiteral<Serializer<Boolean>>() {
         }).toInstance(BooleanStringSerializer.get());
 
-        bind(new TypeLiteral<Serializer<Identity>>() {
-        }).toInstance(Identity.JSON_SERIALIZER);
+        bind(new TypeLiteral<Serializer<ServiceConfig>>() {
+        }).toInstance(ServiceConfig.JSON_SERIALIZER);
 
         bind(new TypeLiteral<Serializer<CassandraConfig>>() {
         }).toInstance(CassandraConfig.JSON_SERIALIZER);
@@ -113,11 +119,8 @@ public class TestModule extends AbstractModule {
                 DataCenterInfo.JSON_SERIALIZER
         );
 
-        bind(MesosConfig.class).toInstance(configuration.getMesosConfig());
+        bind(MesosConfig.class).toInstance(mesosConfig);
 
-        bindConstant().annotatedWith(Names.named("SeedsUrl")).to(
-                configuration.getSeedsUrl()
-        );
         bindConstant().annotatedWith(Names.named("ConfiguredSyncDelayMs")).to(
                 configuration.getExternalDcSyncMs()
         );
@@ -128,9 +131,9 @@ public class TestModule extends AbstractModule {
         })
                 .annotatedWith(Names.named("ConfiguredExternalDcs"))
                 .toInstance(configuration.getExternalDcsList());
-        bind(Identity.class).annotatedWith(
+        bind(ServiceConfig.class).annotatedWith(
                 Names.named("ConfiguredIdentity")).toInstance(
-                configuration.getIdentity());
+                configuration.getServiceConfig());
         bind(CassandraConfig.class).annotatedWith(
                 Names.named("ConfiguredCassandraConfig")).toInstance(
                 configuration.getCassandraConfig());
@@ -158,7 +161,7 @@ public class TestModule extends AbstractModule {
         bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(httpClient)
                 .build("http-client-test"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
-        bind(CuratorFrameworkConfig.class).toInstance(configuration.getCuratorConfig());
+        bind(CuratorFrameworkConfig.class).toInstance(curatorConfig);
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
         bind(ScheduledExecutorService.class).toInstance(
                 Executors.newScheduledThreadPool(8));

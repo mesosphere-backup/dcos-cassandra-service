@@ -36,7 +36,7 @@ import java.util.Optional;
  */
 public class CassandraTasksTest {
     private static TestingServer server;
-    private static DropwizardConfiguration config;
+    private static MutableSchedulerConfiguration config;
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
     private static CuratorFrameworkConfig curatorConfig;
@@ -53,9 +53,9 @@ public class CassandraTasksTest {
 
         server.start();
 
-        final ConfigurationFactory<DropwizardConfiguration> factory =
+        final ConfigurationFactory<MutableSchedulerConfiguration> factory =
                 new ConfigurationFactory<>(
-                        DropwizardConfiguration.class,
+                        MutableSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
@@ -68,7 +68,7 @@ public class CassandraTasksTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
-        Identity initial = config.getSchedulerConfiguration().getIdentity();
+        ServiceConfig initial = config.createConfig().getServiceConfig();
 
         curatorConfig = CuratorFrameworkConfig.create(server.getConnectString(),
                 10000L,
@@ -76,10 +76,10 @@ public class CassandraTasksTest {
                 Optional.empty(),
                 250L);
 
-        final CassandraSchedulerConfiguration targetConfig = config.getSchedulerConfiguration();
+        final CassandraSchedulerConfiguration targetConfig = config.createConfig();
         clusterTaskConfig = targetConfig.getClusterTaskConfig();
 
-        final CuratorFrameworkConfig curatorConfig = targetConfig.getCuratorConfig();
+        final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
                         new RetryUntilElapsed(
@@ -90,7 +90,7 @@ public class CassandraTasksTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         stateStore = new CuratorStateStore(
-                "/" + targetConfig.getName(),
+                "/" + targetConfig.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
         stateStore.storeFrameworkId(Protos.FrameworkID.newBuilder().setValue("1234").build());
@@ -101,9 +101,9 @@ public class CassandraTasksTest {
 
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + config.getSchedulerConfiguration().getName(),
+                "/" + config.createConfig().getServiceConfig().getName(),
                 server.getConnectString(),
-                config.getSchedulerConfiguration(),
+                config.createConfig(),
                 new ConfigValidator(),
                 stateStore);
 

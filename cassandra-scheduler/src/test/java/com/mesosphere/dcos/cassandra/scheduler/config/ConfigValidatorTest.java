@@ -13,121 +13,127 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 public class ConfigValidatorTest {
-    ConfigurationFactory<DropwizardConfiguration> factory;
-    CassandraSchedulerConfiguration configuration;
+  ConfigurationFactory<MutableSchedulerConfiguration> factory;
+  MutableSchedulerConfiguration configuration;
 
-    @Before
-    public void beforeEach() throws Exception {
-        factory = new ConfigurationFactory<>(
-                        DropwizardConfiguration.class,
-                        BaseValidator.newValidator(),
-                        Jackson.newObjectMapper().registerModule(new GuavaModule())
-                                .registerModule(new Jdk8Module()),
-                        "dw");
+  @Before
+  public void beforeEach() throws Exception {
+    factory = new ConfigurationFactory<>(
+      MutableSchedulerConfiguration.class,
+      BaseValidator.newValidator(),
+      Jackson.newObjectMapper().registerModule(new GuavaModule())
+        .registerModule(new Jdk8Module()),
+      "dw");
 
-        configuration = factory.build(
-                new SubstitutingSourceProvider(
-                        new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
-    }
+    configuration = factory.build(
+      new SubstitutingSourceProvider(
+        new FileConfigurationSourceProvider(),
+        new EnvironmentVariableSubstitutor(false, true)),
+      Resources.getResource("scheduler.yml").getFile());
+  }
 
-    @Test
-    public void testName() throws Exception {
-        CassandraSchedulerConfiguration newConfiguration = factory.build(
-                new SubstitutingSourceProvider(
-                        new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
-        final Identity identity = newConfiguration.getIdentity();
-        final Identity updated = Identity.create("yo",
-                identity.getId(),
-                identity.getVersion(),
-                identity.getUser(),
-                identity.getCluster(),
-                identity.getRole(),
-                identity.getPrincipal(),
-                identity.getFailoverTimeoutS(),
-                identity.getSecret(),
-                identity.isCheckpoint());
-        newConfiguration.setIdentity(updated);
-        final ConfigValidator configValidator = new ConfigValidator();
-        final List<ConfigValidationError> validate = configValidator.validate(configuration, newConfiguration);
-        Assert.assertTrue(validate.size() == 1);
-    }
+  @Test
+  public void testName() throws Exception {
+    MutableSchedulerConfiguration mutable = factory.build(
+      new SubstitutingSourceProvider(
+        new FileConfigurationSourceProvider(),
+        new EnvironmentVariableSubstitutor(false, true)),
+      Resources.getResource("scheduler.yml").getFile());
+    mutable.getCassandraConfig().getApplication().writeDaemonConfiguration(Paths.get(".").resolve("cassandra.yaml"));
+    final ServiceConfig serviceConfig = mutable.getServiceConfig();
+    final ServiceConfig updated = ServiceConfig.create("yo",
+      serviceConfig.getId(),
+      serviceConfig.getVersion(),
+      serviceConfig.getUser(),
+      serviceConfig.getCluster(),
+      serviceConfig.getRole(),
+      serviceConfig.getPrincipal(),
+      serviceConfig.getFailoverTimeoutS(),
+      serviceConfig.getSecret(),
+      serviceConfig.isCheckpoint());
+    mutable.setServiceConfig(updated);
+    final ConfigValidator configValidator = new ConfigValidator();
+    final List<ConfigValidationError> validate = configValidator.validate(
+      configuration.createConfig(),
+      mutable.createConfig());
+    Assert.assertTrue(validate.size() == 1);
+  }
 
-    @Test
-    public void testCluster() throws Exception {
-        CassandraSchedulerConfiguration newConfiguration = factory.build(
-                new SubstitutingSourceProvider(
-                        new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
-        final Identity identity = newConfiguration.getIdentity();
-        final Identity updated = Identity.create(identity.getName(),
-                identity.getId(),
-                identity.getVersion(),
-                identity.getUser(),
-                identity.getCluster() + "1234",
-                identity.getRole(),
-                identity.getPrincipal(),
-                identity.getFailoverTimeoutS(),
-                identity.getSecret(),
-                identity.isCheckpoint());
-        newConfiguration.setIdentity(updated);
-        final ConfigValidator configValidator = new ConfigValidator();
-        final List<ConfigValidationError> validate = configValidator.validate(configuration, newConfiguration);
-        Assert.assertTrue(validate.size() == 1);
-    }
+  @Test
+  public void testCluster() throws Exception {
+    MutableSchedulerConfiguration mutable = factory.build(
+      new SubstitutingSourceProvider(
+        new FileConfigurationSourceProvider(),
+        new EnvironmentVariableSubstitutor(false, true)),
+      Resources.getResource("scheduler.yml").getFile());
+    final ServiceConfig serviceConfig = mutable.getServiceConfig();
+    final ServiceConfig updated = ServiceConfig.create(serviceConfig.getName(),
+      serviceConfig.getId(),
+      serviceConfig.getVersion(),
+      serviceConfig.getUser(),
+      serviceConfig.getCluster() + "1234",
+      serviceConfig.getRole(),
+      serviceConfig.getPrincipal(),
+      serviceConfig.getFailoverTimeoutS(),
+      serviceConfig.getSecret(),
+      serviceConfig.isCheckpoint());
+    mutable.setServiceConfig(updated);
+    final ConfigValidator configValidator = new ConfigValidator();
+    final List<ConfigValidationError> validate = configValidator.validate(configuration.createConfig(), mutable.createConfig());
+    Assert.assertTrue(validate.size() == 1);
+  }
 
-    @Test
-    public void testPrincipal() throws Exception {
-        CassandraSchedulerConfiguration newConfiguration = factory.build(
-                new SubstitutingSourceProvider(
-                        new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
-        final Identity identity = newConfiguration.getIdentity();
-        final Identity updated = Identity.create(identity.getName(),
-                identity.getId(),
-                identity.getVersion(),
-                identity.getUser(),
-                identity.getCluster(),
-                identity.getRole(),
-                identity.getPrincipal() + "asdf",
-                identity.getFailoverTimeoutS(),
-                identity.getSecret(),
-                identity.isCheckpoint());
-        newConfiguration.setIdentity(updated);
-        final ConfigValidator configValidator = new ConfigValidator();
-        final List<ConfigValidationError> validate = configValidator.validate(configuration, newConfiguration);
-        Assert.assertTrue(validate.size() == 1);
-    }
+  @Test
+  public void testPrincipal() throws Exception {
+    MutableSchedulerConfiguration mutable = factory.build(
+      new SubstitutingSourceProvider(
+        new FileConfigurationSourceProvider(),
+        new EnvironmentVariableSubstitutor(false, true)),
+      Resources.getResource("scheduler.yml").getFile());
+    final ServiceConfig serviceConfig = mutable.getServiceConfig();
+    final ServiceConfig updated = ServiceConfig.create(serviceConfig.getName(),
+      serviceConfig.getId(),
+      serviceConfig.getVersion(),
+      serviceConfig.getUser(),
+      serviceConfig.getCluster(),
+      serviceConfig.getRole(),
+      serviceConfig.getPrincipal() + "asdf",
+      serviceConfig.getFailoverTimeoutS(),
+      serviceConfig.getSecret(),
+      serviceConfig.isCheckpoint());
+    mutable.setServiceConfig(updated);
+    final ConfigValidator configValidator = new ConfigValidator();
+    final List<ConfigValidationError> validate =
+      configValidator.validate(configuration.createConfig(), mutable.createConfig());
+    Assert.assertTrue(validate.size() == 1);
+  }
 
-    @Test
-    public void testRole() throws Exception {
-        CassandraSchedulerConfiguration newConfiguration = factory.build(
-                new SubstitutingSourceProvider(
-                        new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
-        final Identity identity = newConfiguration.getIdentity();
-        final Identity updated = Identity.create(identity.getName(),
-                identity.getId(),
-                identity.getVersion(),
-                identity.getUser(),
-                identity.getCluster(),
-                identity.getRole() + "qwerty",
-                identity.getPrincipal(),
-                identity.getFailoverTimeoutS(),
-                identity.getSecret(),
-                identity.isCheckpoint());
-        newConfiguration.setIdentity(updated);
-        final ConfigValidator configValidator = new ConfigValidator();
-        final List<ConfigValidationError> validate = configValidator.validate(configuration, newConfiguration);
-        Assert.assertTrue(validate.size() == 1);
-    }
+  @Test
+  public void testRole() throws Exception {
+
+      MutableSchedulerConfiguration mutable = factory.build(
+        new SubstitutingSourceProvider(
+          new FileConfigurationSourceProvider(),
+          new EnvironmentVariableSubstitutor(false, true)),
+        Resources.getResource("scheduler.yml").getFile());
+    final ServiceConfig serviceConfig = mutable.getServiceConfig();
+    final ServiceConfig updated = ServiceConfig.create(serviceConfig.getName(),
+      serviceConfig.getId(),
+      serviceConfig.getVersion(),
+      serviceConfig.getUser(),
+      serviceConfig.getCluster(),
+      serviceConfig.getRole() + "qwerty",
+      serviceConfig.getPrincipal(),
+      serviceConfig.getFailoverTimeoutS(),
+      serviceConfig.getSecret(),
+      serviceConfig.isCheckpoint());
+    mutable.setServiceConfig(updated);
+    final ConfigValidator configValidator = new ConfigValidator();
+    final List<ConfigValidationError> validate = configValidator.validate(configuration.createConfig(),mutable.createConfig());
+    Assert.assertTrue(validate.size() == 1);
+  }
 }

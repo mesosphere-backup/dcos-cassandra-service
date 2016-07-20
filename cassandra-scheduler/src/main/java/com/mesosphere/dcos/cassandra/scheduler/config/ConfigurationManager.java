@@ -54,14 +54,7 @@ public class ConfigurationManager implements Managed {
             name,
             configName,
             createExecutor(frameworkId, name + "_executor", role, principal),
-            cassandraConfig.mutable().setApplication(cassandraConfig
-                .getApplication()
-                .toBuilder().setSeedProvider(
-                    CassandraApplicationConfig
-                        .createDcosSeedProvider(
-                            targetConfig.getSeedsUrl()))
-                .build())
-                .build());
+            cassandraConfig);
     }
 
     public CassandraDaemonTask moveDaemon(

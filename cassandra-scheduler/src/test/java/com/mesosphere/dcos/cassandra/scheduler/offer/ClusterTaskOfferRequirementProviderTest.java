@@ -86,22 +86,23 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         server.start();
 
-        final ConfigurationFactory<DropwizardConfiguration> factory =
+        final ConfigurationFactory<MutableSchedulerConfiguration> factory =
                 new ConfigurationFactory<>(
-                        DropwizardConfiguration.class,
+                        MutableSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
                                 .registerModule(new Jdk8Module()),
                         "dw");
 
-        config = factory.build(
+        MutableSchedulerConfiguration mutable = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile()).getSchedulerConfiguration();
+                Resources.getResource("scheduler.yml").getFile());
 
-        Identity initial = config.getIdentity();
+        config = mutable.createConfig();
+        ServiceConfig initial = config.getServiceConfig();
 
         curatorConfig = CuratorFrameworkConfig.create(server.getConnectString(),
                 10000L,
@@ -111,7 +112,7 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         clusterTaskConfig = config.getClusterTaskConfig();
 
-        final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
+        final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
                         new RetryUntilElapsed(
@@ -122,7 +123,7 @@ public class ClusterTaskOfferRequirementProviderTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         stateStore = new CuratorStateStore(
-                "/" + config.getName(),
+                "/" + config.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
         stateStore.storeFrameworkId(Protos.FrameworkID.newBuilder().setValue("1234").build());
@@ -134,7 +135,7 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + config.getName(),
+                "/" + config.getServiceConfig().getName(),
                 server.getConnectString(),
                 config,
                 new ConfigValidator(),

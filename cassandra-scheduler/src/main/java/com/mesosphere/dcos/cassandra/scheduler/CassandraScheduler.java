@@ -306,15 +306,15 @@ public class CassandraScheduler implements Scheduler, Managed {
         final SchedulerDriverFactory factory = new SchedulerDriverFactory();
         final CassandraSchedulerConfiguration targetConfig =
                 (CassandraSchedulerConfiguration) defaultConfigurationManager.getTargetConfig();
-        final Identity identity = targetConfig.getIdentity();
-        final Optional<ByteString> secretBytes = identity.readSecretBytes();
+        final ServiceConfig serviceConfig = targetConfig.getServiceConfig();
+        final Optional<ByteString> secretBytes = serviceConfig.readSecretBytes();
         final Protos.FrameworkInfo.Builder builder = Protos.FrameworkInfo.newBuilder()
-                .setRole(identity.getRole())
-                .setUser(identity.getUser())
-                .setName(targetConfig.getName())
-                .setPrincipal(identity.getPrincipal())
-                .setCheckpoint(identity.isCheckpoint())
-                .setFailoverTimeout(identity.getFailoverTimeoutS());
+                .setRole(serviceConfig.getRole())
+                .setUser(serviceConfig.getUser())
+                .setName(targetConfig.getServiceConfig().getName())
+                .setPrincipal(serviceConfig.getPrincipal())
+                .setCheckpoint(serviceConfig.isCheckpoint())
+                .setFailoverTimeout(serviceConfig.getFailoverTimeoutS());
 
         if (frameworkID != null && frameworkID.hasValue()) {
             builder.setId(frameworkID);

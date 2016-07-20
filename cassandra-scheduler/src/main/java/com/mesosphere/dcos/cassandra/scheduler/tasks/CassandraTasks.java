@@ -15,7 +15,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.CuratorFrameworkConfig;
-import com.mesosphere.dcos.cassandra.scheduler.config.Identity;
+import com.mesosphere.dcos.cassandra.scheduler.config.ServiceConfig;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.commons.collections.CollectionUtils;
@@ -189,13 +189,13 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             PersistenceException, ConfigStoreException {
         final CassandraSchedulerConfiguration targetConfig = configuration.getTargetConfig();
         final UUID targetConfigName = configuration.getTargetConfigName();
-        final Identity identity = targetConfig.getIdentity();
+        final ServiceConfig serviceConfig = targetConfig.getServiceConfig();
         final String frameworkId = stateStore.fetchFrameworkId().getValue();
         return configuration.createDaemon(
             frameworkId,
             name,
-            identity.getRole(),
-            identity.getPrincipal(),
+            serviceConfig.getRole(),
+            serviceConfig.getPrincipal(),
             targetConfigName.toString()
         );
     }
@@ -203,12 +203,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     public CassandraDaemonTask moveDaemon(CassandraDaemonTask daemon)
             throws PersistenceException, ConfigStoreException {
         final CassandraSchedulerConfiguration targetConfig = configuration.getTargetConfig();
-        final Identity identity = targetConfig.getIdentity();
+        final ServiceConfig serviceConfig = targetConfig.getServiceConfig();
         CassandraDaemonTask updated = configuration.moveDaemon(
             daemon,
             stateStore.fetchFrameworkId().getValue(),
-            identity.getRole(),
-            identity.getPrincipal());
+            serviceConfig.getRole(),
+            serviceConfig.getPrincipal());
         update(updated);
         return updated;
     }

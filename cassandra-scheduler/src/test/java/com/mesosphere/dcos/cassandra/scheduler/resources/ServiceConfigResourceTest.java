@@ -25,15 +25,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class IdentityResourceTest {
+public class ServiceConfigResourceTest {
     private static TestingServer server;
-    private static DropwizardConfiguration config;
+    private static MutableSchedulerConfiguration config;
     private static ConfigurationManager configurationManager;
     private static StateStore stateStore;
 
     @Rule
     public final ResourceTestRule resources = ResourceTestRule.builder()
-            .addResource(new IdentityResource(configurationManager)).build();
+            .addResource(new ServiceConfigResource(configurationManager)).build();
 
     @BeforeClass
     public static void beforeAll() throws Exception {
@@ -42,9 +42,9 @@ public class IdentityResourceTest {
 
         server.start();
 
-        final ConfigurationFactory<DropwizardConfiguration> factory =
+        final ConfigurationFactory<MutableSchedulerConfiguration> factory =
                 new ConfigurationFactory<>(
-                        DropwizardConfiguration.class,
+                        MutableSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper().registerModule(
                                 new GuavaModule())
@@ -57,9 +57,9 @@ public class IdentityResourceTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
-        Identity initial = config.getSchedulerConfiguration().getIdentity();
+        ServiceConfig initial = config.getServiceConfig();
 
-        final CuratorFrameworkConfig curatorConfig = config.getSchedulerConfiguration().getCuratorConfig();
+        final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
                         new RetryUntilElapsed(
@@ -70,16 +70,16 @@ public class IdentityResourceTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         stateStore = new CuratorStateStore(
-                "/" + config.getSchedulerConfiguration().getName(),
+                "/" + config.createConfig().getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
 
-        final CassandraSchedulerConfiguration configuration = config.getSchedulerConfiguration();
+        final CassandraSchedulerConfiguration configuration = config.createConfig();
         try {
             final ConfigValidator configValidator = new ConfigValidator();
             final DefaultConfigurationManager defaultConfigurationManager
                     = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                    "/" + configuration.getName(),
+                    "/" + configuration.getServiceConfig().getName(),
                     server.getConnectString(),
                     configuration,
                     configValidator,
@@ -98,9 +98,9 @@ public class IdentityResourceTest {
 
     @Test
     public void testGetIdentity() throws Exception {
-        Identity identity = resources.client().target("/v1/framework").request()
-                .get(Identity.class);
-        System.out.println("identity = " + identity);
-        assertEquals(config.getSchedulerConfiguration().getIdentity(), identity);
+        ServiceConfig serviceConfig = resources.client().target("/v1/framework").request()
+                .get(ServiceConfig.class);
+        System.out.println("serviceConfig = " + serviceConfig);
+        assertEquals(config.getServiceConfig(), serviceConfig);
     }
 }
