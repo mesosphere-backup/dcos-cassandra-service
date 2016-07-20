@@ -9,8 +9,10 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementP
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.protobuf.TaskStatusBuilder;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,6 +110,12 @@ public class CassandraDaemonBlockTest {
         when(mockFuture.get()).thenReturn(true);
         when(client.shutdown("1234", 1234)).thenReturn(mockStage);
 
+        final StateStore stateStore = Mockito.mock(StateStore.class);
+        when(cassandraTasks.getStateStore()).thenReturn(stateStore);
+        when(stateStore.fetchStatus(any()))
+                .thenReturn(TaskStatusBuilder.createTaskStatus(Protos.TaskID.newBuilder().setValue("").build()
+                        , Protos.TaskState.TASK_FINISHED));
+
         final OfferRequirement offerRequirement = block.start();
         Assert.assertNull(offerRequirement);
     }
@@ -135,6 +143,12 @@ public class CassandraDaemonBlockTest {
         when(mockFuture.get()).thenReturn(false);
         when(client.shutdown("1234", 1234)).thenReturn(mockStage);
 
+        final StateStore stateStore = Mockito.mock(StateStore.class);
+        when(cassandraTasks.getStateStore()).thenReturn(stateStore);
+        when(stateStore.fetchStatus(any()))
+                .thenReturn(TaskStatusBuilder.createTaskStatus(Protos.TaskID.newBuilder().setValue("").build()
+                        , Protos.TaskState.TASK_FINISHED));
+
         final OfferRequirement offerRequirement = block.start();
         Assert.assertNull(offerRequirement);
     }
@@ -155,9 +169,15 @@ public class CassandraDaemonBlockTest {
         final Protos.TaskInfo mockTaskInfo = Protos.TaskInfo.getDefaultInstance();
         when(mockDaemonTask.getTaskInfo()).thenReturn(mockTaskInfo);
         final OfferRequirement mockOR = Mockito.mock(OfferRequirement.class);
-        when(persistentOfferRequirementProvider.getReplacementOfferRequirement(any())).thenReturn(mockOR);
+        when(persistentOfferRequirementProvider.getUpdateOfferRequirement(mockTaskInfo)).thenReturn(mockOR);
 
-        Assert.assertEquals(mockOR, block.start());
+        final StateStore stateStore = Mockito.mock(StateStore.class);
+        when(cassandraTasks.getStateStore()).thenReturn(stateStore);
+        when(stateStore.fetchStatus(any()))
+                .thenReturn(TaskStatusBuilder.createTaskStatus(Protos.TaskID.newBuilder().setValue("").build()
+                        , Protos.TaskState.TASK_FINISHED));
+
+        Assert.assertEquals(null, block.start());
     }
 
     @Test

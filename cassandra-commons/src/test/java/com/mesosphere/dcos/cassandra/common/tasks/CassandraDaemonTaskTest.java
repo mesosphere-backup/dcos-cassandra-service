@@ -11,12 +11,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This class tests the CassandraDaemonTask class.
  */
 public class CassandraDaemonTaskTest {
-    private static final String testDaemonTaskName = "test-daemon-task-name";
+    private static final String TEST_DAEMON_NAME = "test-daemon-task-name";
+    private static final UUID TEST_CONFIG_ID = UUID.randomUUID();
+    public static final String TEST_CONFIG_NAME = TEST_CONFIG_ID.toString();
 
     private ExecutorConfig testExecutorConfig;
     private CassandraTaskExecutor testTaskExecutor;
@@ -40,7 +43,7 @@ public class CassandraDaemonTaskTest {
 
         testTaskExecutor = CassandraTaskExecutor.create(
                 "test-framework-id",
-                testDaemonTaskName,
+          TEST_DAEMON_NAME,
                 "test-role",
                 "test-principal",
                 testExecutorConfig);
@@ -49,7 +52,8 @@ public class CassandraDaemonTaskTest {
     @Test
     public void testConstructCassandraDaemonTask() {
         Assert.assertNotNull(CassandraDaemonTask.create(
-                testDaemonTaskName,
+          TEST_DAEMON_NAME,
+          TEST_CONFIG_NAME,
                 testTaskExecutor,
                 CassandraConfig.DEFAULT));
     }
@@ -57,18 +61,20 @@ public class CassandraDaemonTaskTest {
     @Test
     public void testUpdateUnchangedConfig() {
         CassandraDaemonTask daemonTask = CassandraDaemonTask.create(
-                testDaemonTaskName,
+          TEST_DAEMON_NAME,
+          TEST_CONFIG_NAME,
                 testTaskExecutor,
                 CassandraConfig.DEFAULT);
 
-        CassandraDaemonTask updatedTask = daemonTask.updateConfig(CassandraConfig.DEFAULT);
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(CassandraConfig.DEFAULT,TEST_CONFIG_ID);
         Assert.assertEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
     }
 
     @Test
     public void testUpdateCpuConfig() {
         CassandraDaemonTask daemonTask = CassandraDaemonTask.create(
-                testDaemonTaskName,
+          TEST_DAEMON_NAME,
+          TEST_CONFIG_NAME,
                 testTaskExecutor,
                 CassandraConfig.DEFAULT);
 
@@ -85,7 +91,7 @@ public class CassandraDaemonTaskTest {
                 7199,
                 CassandraApplicationConfig.builder().build());
 
-        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig);
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig,TEST_CONFIG_ID);
         Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
         Assert.assertEquals(newCpu, updatedTask.getConfig().getCpus(), 0.0);
     }
@@ -93,7 +99,8 @@ public class CassandraDaemonTaskTest {
     @Test
     public void testUpdateMemConfig() {
         CassandraDaemonTask daemonTask = CassandraDaemonTask.create(
-                testDaemonTaskName,
+          TEST_DAEMON_NAME,
+          TEST_CONFIG_NAME,
                 testTaskExecutor,
                 CassandraConfig.DEFAULT);
 
@@ -110,7 +117,7 @@ public class CassandraDaemonTaskTest {
                 7199,
                 CassandraApplicationConfig.builder().build());
 
-        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig);
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig,TEST_CONFIG_ID);
         Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
         Assert.assertEquals(newMem, updatedTask.getConfig().getMemoryMb(), 0.0);
         double taskInfoDisk = getScalar(updatedTask.getTaskInfo().getResourcesList(), "mem");
@@ -120,7 +127,8 @@ public class CassandraDaemonTaskTest {
     @Test
     public void testUpdateDiskConfig() {
         CassandraDaemonTask daemonTask = CassandraDaemonTask.create(
-                testDaemonTaskName,
+          TEST_DAEMON_NAME,
+          TEST_CONFIG_NAME,
                 testTaskExecutor,
                 CassandraConfig.DEFAULT);
 
@@ -137,7 +145,7 @@ public class CassandraDaemonTaskTest {
                 7199,
                 CassandraApplicationConfig.builder().build());
 
-        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig);
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig,TEST_CONFIG_ID);
         Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
         Assert.assertEquals(newDisk, updatedTask.getConfig().getDiskMb(), 0.0);
         double originalTaskInfoDisk = getScalar(daemonTask.getTaskInfo().getResourcesList(), "disk");

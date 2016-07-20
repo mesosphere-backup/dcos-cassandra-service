@@ -3,138 +3,67 @@ package com.mesosphere.dcos.cassandra.scheduler.config;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
+import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-
 @Singleton
 public class IdentityManager implements Managed {
-
-
     private static final Logger LOGGER =
             LoggerFactory.getLogger(IdentityManager.class);
+    public static final String IDENTITY = "serviceConfig";
 
-    private final PersistentReference<Identity> reference;
-    private volatile Identity identity;
-
-    private String identityError(String property, String configured, String
-            persisted) {
-
-        return String.format(
-                "The framework property %s has been modified " +
-                        "from %s to %s. This changes is not allowed as it " +
-                        "changes the identity of the framework.",
-                property, persisted, configured);
-    }
-
-    private void validate(Identity configured, Identity persisted) {
-
-        if (!configured.getName().equals(persisted.getName())) {
-
-            String error = identityError(
-                    "name",
-                    configured.getName(),
-                    persisted.getName());
-            LOGGER.error(error);
-            throw new IllegalStateException(error);
-
-        } else if (!configured.getPrincipal().equals(
-                persisted.getPrincipal())) {
-
-            String error = identityError(
-                    "principal",
-                    configured.getPrincipal(),
-                    persisted.getPrincipal());
-            LOGGER.error(error);
-
-            throw new IllegalStateException(error);
-
-        } else if (!configured.getRole().equals(persisted.getRole())) {
-
-            String error = identityError(
-                    "role",
-                    configured.getRole(),
-                    persisted.getRole());
-            LOGGER.error(error);
-
-            throw new IllegalStateException(error);
-        } else if (!configured.getCluster().equals(persisted.getCluster())) {
-
-            String error = identityError(
-                    "cluster",
-                    configured.getRole(),
-                    persisted.getRole());
-            LOGGER.error(error);
-
-            throw new IllegalStateException(error);
-        }
-    }
+    private volatile ServiceConfig serviceConfig;
+    private StateStore stateStore;
 
     public static IdentityManager create(
-            final Identity configured,
-            final PersistenceFactory persistence,
-            final Serializer<Identity> serializer) {
-
+            final ServiceConfig configured,
+            final StateStore stateStore) {
         return new IdentityManager(configured,
-                persistence,
-                serializer);
-
+                stateStore);
     }
 
     @Inject
     public IdentityManager(
-            final @Named("ConfiguredIdentity") Identity configured,
-            final PersistenceFactory persistence,
-            final Serializer<Identity> serializer) {
-        this.identity = configured;
-        this.reference = persistence.createReference("identity", serializer);
-
-
+            final @Named("ConfiguredIdentity") ServiceConfig configured,
+            final StateStore stateStore) {
+        this.serviceConfig = configured;
+        this.stateStore = stateStore;
     }
 
-    public Identity get() {
-
-        return identity;
+    public ServiceConfig get() {
+        return serviceConfig;
     }
 
-    public boolean isRegistered() {
-        return !identity.getId().isEmpty();
-    }
-
-    public synchronized void register(String id) throws PersistenceException {
-        this.reference.store(identity.register(id));
-        this.identity = identity.register(id);
-
+    public synchronized void register(String id) throws SerializationException {
+        final ServiceConfig registeredServiceConfig = serviceConfig.register(id);
+        this.stateStore.storeProperty(IDENTITY,  ServiceConfig.JSON_SERIALIZER.serialize(registeredServiceConfig));
+        this.serviceConfig = serviceConfig.register(id);
     }
 
     @Override
     public void start() throws Exception {
+        LOGGER.info("IdentityManager starting configured serviceConfig = {}",
+          serviceConfig);
 
-        LOGGER.info("IdentityManager starting configured identity = {}",
-                identity);
+        try {
+            final byte[] bytesOfIdentity = stateStore.fetchProperty(IDENTITY);
+            final ServiceConfig persisted = ServiceConfig.JSON_SERIALIZER.deserialize(bytesOfIdentity);
 
-        Optional<Identity> persistedOption = reference.load();
-
-        if (persistedOption.isPresent()) {
-
-            Identity persisted = persistedOption.get();
-            LOGGER.info("Retrieved persisted identity = {}", persisted);
-            validate(identity, persisted);
+            LOGGER.info("Retrieved persisted serviceConfig = {}", persisted);
 
             if (!persisted.getId().isEmpty()) {
-                identity = identity.register(persisted.getId());
+                this.serviceConfig = this.serviceConfig.register(persisted.getId());
             }
+        } catch (StateStoreException e) {
+            LOGGER.error("Error occured while retrieving persisted serviceConfig: ", e);
         }
 
-        LOGGER.info("Persisting identity = {}", identity);
-        reference.store(identity);
-
+        LOGGER.info("Persisting serviceConfig = {}", this.serviceConfig);
+        stateStore.storeProperty(IDENTITY, ServiceConfig.JSON_SERIALIZER.serialize(this.serviceConfig));
     }
 
     @Override

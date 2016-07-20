@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.offer;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.PlacementStrategy;
 import org.slf4j.Logger;
@@ -25,11 +26,14 @@ public class NodePlacementStrategy implements PlacementStrategy {
     @Override
     public List<Protos.SlaveID> getAgentsToAvoid(Protos.TaskInfo taskInfo) {
         List<Protos.SlaveID> agentsToAvoid = new ArrayList<>();
-        final List<Protos.TaskInfo> otherTaskInfos = getOtherTaskInfos(
-                taskInfo);
-        otherTaskInfos.stream().forEach(otherTaskInfo ->
-                agentsToAvoid.add(otherTaskInfo.getSlaveId()));
-        LOGGER.debug("Avoiding agents: {}", agentsToAvoid);
+        final List<Protos.TaskInfo> otherTaskInfos = getOtherTaskInfos(taskInfo);
+        otherTaskInfos.stream().forEach(otherTaskInfo -> {
+            final Protos.SlaveID slaveId = otherTaskInfo.getSlaveId();
+            if (slaveId != null && slaveId.hasValue() && StringUtils.isNotBlank(slaveId.getValue())) {
+                agentsToAvoid.add(slaveId);
+            }
+        });
+        LOGGER.info("Avoiding agents: {}", agentsToAvoid);
         return agentsToAvoid;
     }
 
@@ -45,7 +49,8 @@ public class NodePlacementStrategy implements PlacementStrategy {
 
         final List<Protos.TaskInfo> others = daemons.values().stream()
                 .filter(task -> !task.getId().equals(taskIdValue))
-                .map(task -> task.getTaskInfo()).collect(Collectors.toList());
+                .map(task -> task.getTaskInfo())
+                .collect(Collectors.toList());
 
         return others;
     }

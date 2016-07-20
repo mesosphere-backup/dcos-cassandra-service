@@ -17,6 +17,7 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.google.inject.Inject;
 
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import org.apache.mesos.offer.VolumeRequirement;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
@@ -34,6 +35,7 @@ import java.util.*;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskUtils;
+import org.apache.mesos.protobuf.LabelBuilder;
 import org.apache.mesos.util.Algorithms;
 
 import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
@@ -189,6 +191,7 @@ public abstract class CassandraTask {
     @Inject
     protected CassandraTask(
         final String name,
+        final String configName,
         final CassandraTaskExecutor executor,
         final double cpus,
         final int memoryMb,
@@ -210,6 +213,8 @@ public abstract class CassandraTask {
                 ResourceUtils.getDesiredScalar(role, principal, "cpus", cpus),
                 ResourceUtils.getDesiredScalar(role, principal, "mem", memoryMb)))
             .setData(data.getBytes());
+        final Protos.Label label = LabelBuilder.createLabel("config_target", configName);
+        builder.setLabels(Protos.Labels.newBuilder().addLabels(label));
 
         if (!volumeMode.equals(VolumeRequirement.VolumeMode.NONE)) {
             if (volumeType.equals(VolumeRequirement.VolumeType.MOUNT)) {
@@ -400,6 +405,6 @@ public abstract class CassandraTask {
 
     @Override
     public String toString() {
-        return info.toString();
+        return TextFormat.shortDebugString(info);
     }
 }

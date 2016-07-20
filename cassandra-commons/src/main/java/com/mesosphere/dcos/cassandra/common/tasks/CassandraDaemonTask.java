@@ -17,11 +17,17 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.VolumeRequirement;
+import org.apache.mesos.protobuf.LabelBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * CassandraDaemonTask extends CassandraTask to implement the task for a
@@ -32,7 +38,8 @@ import java.util.Optional;
  * for the Cassandra node.
  */
 public class CassandraDaemonTask extends CassandraTask {
-
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(CassandraDaemonTask.class);
     /**
      * String prefix for the CassandraDaemon task.
      */
@@ -45,9 +52,10 @@ public class CassandraDaemonTask extends CassandraTask {
 
     public static CassandraDaemonTask create(
         final String name,
+        final String configName,
         final CassandraTaskExecutor executor,
         final CassandraConfig config) {
-        return new CassandraDaemonTask(name, executor, config);
+        return new CassandraDaemonTask(name, configName, executor, config);
     }
 
     private static CassandraConfig updateConfig(
@@ -69,12 +77,14 @@ public class CassandraDaemonTask extends CassandraTask {
      */
     protected CassandraDaemonTask(
         final String name,
+        final String configName,
         final CassandraTaskExecutor executor,
         final CassandraConfig config,
         final CassandraData data) {
 
         super(
             name,
+            configName,
             executor,
             config.getCpus(),
             config.getMemoryMb(),
@@ -91,10 +101,12 @@ public class CassandraDaemonTask extends CassandraTask {
 
     protected CassandraDaemonTask(
             final String name,
+            final String configName,
             final CassandraTaskExecutor executor,
             final CassandraConfig config) {
         this(
             name,
+            configName,
             executor,
             config,
             CassandraData.createDaemonData(
@@ -182,7 +194,9 @@ public class CassandraDaemonTask extends CassandraTask {
                 .build());
     }
 
-    public CassandraDaemonTask updateConfig(CassandraConfig config) {
+    public CassandraDaemonTask updateConfig(CassandraConfig config, UUID targetConfigName) {
+        LOGGER.info("Updating config for task: {} to config: {}", getTaskInfo().getName(), targetConfigName.toString());
+        final Protos.Label label = LabelBuilder.createLabel("config_target", targetConfigName.toString());
         return new CassandraDaemonTask(getBuilder()
             .setExecutor(getExecutor().withNewId().getExecutorInfo())
             .setTaskId(createId(getName()))
@@ -192,12 +206,25 @@ public class CassandraDaemonTask extends CassandraTask {
                 config.getCpus(),
                 config.getMemoryMb(),
                 getTaskInfo().getResourcesList()
-            )).build());
+            ))
+            .clearLabels()
+            .setLabels(Protos.Labels.newBuilder().addLabels(label).build()).build());
     }
 
     public CassandraDaemonTask move(CassandraTaskExecutor executor) {
+        final List<Protos.Label> labelsList = getTaskInfo().getLabels().getLabelsList();
+        String configName = "";
+        for (Protos.Label label : labelsList) {
+            if ("config_target".equals(label.getKey())) {
+                configName = label.getValue();
+            }
+        }
+        if (StringUtils.isBlank(configName)) {
+            throw new IllegalStateException("Task should have 'config_target'");
+        }
         CassandraDaemonTask replacementDaemon = new CassandraDaemonTask(
             getName(),
+            configName,
             executor,
             getConfig(),
             getData().replacing(getData().getHostname()));
@@ -213,7 +240,7 @@ public class CassandraDaemonTask extends CassandraTask {
     public CassandraDaemonTask updateId() {
         return new CassandraDaemonTask(getBuilder()
             .setTaskId(createId(getName()))
-            .setExecutor(getExecutor().withNewId().getExecutorInfo())
+            .setExecutor(getExecutor().clearId().getExecutorInfo())
             .setData(getData()
                 .withState(Protos.TaskState.TASK_STAGING).getBytes())
             .build());

@@ -3,8 +3,9 @@ package com.mesosphere.dcos.cassandra.scheduler;
 import com.google.common.eventbus.EventBus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
+import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.MesosConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
@@ -31,7 +32,6 @@ import java.util.concurrent.Executors;
 
 public class CassandraSchedulerTest {
     private CassandraScheduler scheduler;
-    private IdentityManager identityManager;
     private ConfigurationManager configurationManager;
     private StageManager stageManager;
     private PersistentOfferRequirementProvider offerRequirementProvider;
@@ -50,12 +50,12 @@ public class CassandraSchedulerTest {
     private Protos.FrameworkID frameworkId;
     private Protos.MasterInfo masterInfo;
     private StateStore stateStore;
+    private DefaultConfigurationManager defaultConfigurationManager;
     private static String testDaemonName = "test-daemon-name";
 
     @Before
     public void before() throws Exception {
         mesosConfig = Mockito.mock(MesosConfig.class);
-        identityManager = Mockito.mock(IdentityManager.class);
         configurationManager = Mockito.mock(ConfigurationManager.class);
         offerRequirementProvider = Mockito.mock(PersistentOfferRequirementProvider.class);
         cassandraTasks = Mockito.mock(CassandraTasks.class);
@@ -71,8 +71,11 @@ public class CassandraSchedulerTest {
         mockSchedulerDriver = Mockito.mock(SchedulerDriver.class);
         frameworkId = TestUtils.generateFrameworkId();
         stateStore = Mockito.mock(StateStore.class);
+        defaultConfigurationManager = Mockito.mock(DefaultConfigurationManager.class);
+        CassandraSchedulerConfiguration mockConfig = Mockito.mock(CassandraSchedulerConfiguration.class);
 
-        Mockito.when(configurationManager.getServers()).thenReturn(3);
+        Mockito.when(defaultConfigurationManager.getTargetConfig()).thenReturn(mockConfig);
+        Mockito.when(mockConfig.getServers()).thenReturn(3);
         Mockito.when(cassandraTasks.getStateStore()).thenReturn(stateStore);
 
         stageManager = new CassandraStageManager(
@@ -87,7 +90,6 @@ public class CassandraSchedulerTest {
 
         scheduler = new CassandraScheduler(
                 configurationManager,
-                identityManager,
                 mesosConfig,
                 offerRequirementProvider,
                 stageManager,
@@ -100,17 +102,17 @@ public class CassandraSchedulerTest {
                 cleanup,
                 repair,
                 seeds,
-                executorService);
+                executorService,
+                stateStore,
+                defaultConfigurationManager);
 
         masterInfo = TestUtils.generateMasterInfo();
         scheduler.registered(null, frameworkId, masterInfo);
-
-        Mockito.when(identityManager.isRegistered()).thenReturn(true);
     }
 
     @Test
     public void testRegistered() throws Exception {
-        Mockito.verify(identityManager).register(frameworkId.getValue());
+        Mockito.verify(stateStore).storeFrameworkId(frameworkId);
     }
 
     @Test
@@ -118,7 +120,6 @@ public class CassandraSchedulerTest {
         scheduler.resourceOffers(mockSchedulerDriver, Collections.emptyList());
 
         Mockito.verify(reconciler).reconcile(mockSchedulerDriver);
-        Mockito.verify(identityManager, Mockito.times(1)).isRegistered();
         Mockito.verify(mockSchedulerDriver, Mockito.never()).acceptOffers(Mockito.any(), Mockito.any(), Mockito.any());
     }
 

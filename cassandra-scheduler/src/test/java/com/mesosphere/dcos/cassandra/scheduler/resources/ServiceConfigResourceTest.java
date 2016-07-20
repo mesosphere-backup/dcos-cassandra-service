@@ -3,8 +3,6 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -17,6 +15,7 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.AfterClass;
@@ -26,20 +25,23 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class ConfigurationResourceTest {
+public class ServiceConfigResourceTest {
     private static TestingServer server;
+    private static MutableSchedulerConfiguration config;
+    private static ConfigurationManager configurationManager;
+    private static StateStore stateStore;
 
-    private static CassandraSchedulerConfiguration config;
-
-    private static DefaultConfigurationManager configurationManager;
     @Rule
     public final ResourceTestRule resources = ResourceTestRule.builder()
-            .addResource(new ConfigurationResource(configurationManager)).build();
+            .addResource(new ServiceConfigResource(configurationManager)).build();
 
     @BeforeClass
     public static void beforeAll() throws Exception {
+
         server = new TestingServer();
+
         server.start();
+
         final ConfigurationFactory<MutableSchedulerConfiguration> factory =
                 new ConfigurationFactory<>(
                         MutableSchedulerConfiguration.class,
@@ -48,14 +50,16 @@ public class ConfigurationResourceTest {
                                 new GuavaModule())
                                 .registerModule(new Jdk8Module()),
                         "dw");
-        MutableSchedulerConfiguration mutable = factory.build(
+
+        config = factory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
-        config = mutable.createConfig();
 
-        final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
+        ServiceConfig initial = config.getServiceConfig();
+
+        final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
                         new RetryUntilElapsed(
@@ -65,18 +69,25 @@ public class ConfigurationResourceTest {
                                 , (int) curatorConfig.getBackoffMs()) :
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
-        StateStore stateStore = new CuratorStateStore(
-                "/" + config.getServiceConfig().getName(),
+        stateStore = new CuratorStateStore(
+                "/" + config.createConfig().getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
-        configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + config.getServiceConfig().getName(),
-                server.getConnectString(),
-                config,
-                new ConfigValidator(),
-                stateStore);
-        config = (CassandraSchedulerConfiguration) configurationManager.getTargetConfig();
+
+        final CassandraSchedulerConfiguration configuration = config.createConfig();
+        try {
+            final ConfigValidator configValidator = new ConfigValidator();
+            final DefaultConfigurationManager defaultConfigurationManager
+                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                    "/" + configuration.getServiceConfig().getName(),
+                    server.getConnectString(),
+                    configuration,
+                    configValidator,
+                    stateStore);
+            configurationManager = new ConfigurationManager(defaultConfigurationManager);
+        } catch (ConfigStoreException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @AfterClass
@@ -86,34 +97,10 @@ public class ConfigurationResourceTest {
     }
 
     @Test
-    public void testGetServers() throws Exception {
-        Integer servers = resources.client().target("/v1/config/nodes").request()
-                .get(Integer.class);
-        System.out.println("servers = " + servers);
-        assertEquals(config.getServers(), servers.intValue());
-    }
-
-    @Test
-    public void testGetCassandraConfig() throws Exception {
-        CassandraConfig cassandraConfig = resources.client().target("/v1/config/cassandra").request()
-                .get(CassandraConfig.class);
-        System.out.println("cassandra config = " + cassandraConfig);
-        assertEquals(config.getCassandraConfig(), cassandraConfig);
-    }
-
-    @Test
-    public void testGetExecutorConfig() throws Exception {
-        ExecutorConfig executorConfig = resources.client().target("/v1/config/executor").request()
-                .get(ExecutorConfig.class);
-        System.out.println("executor config = " + executorConfig);
-        assertEquals(config.getExecutorConfig(), executorConfig);
-    }
-
-    @Test
-    public void testGetSeeds() throws Exception {
-        Integer seeds = resources.client().target("/v1/config/seed-nodes").request()
-                .get(Integer.class);
-        System.out.println("seeds = " + seeds);
-        assertEquals(config.getSeeds(), seeds.intValue());
+    public void testGetIdentity() throws Exception {
+        ServiceConfig serviceConfig = resources.client().target("/v1/framework").request()
+                .get(ServiceConfig.class);
+        System.out.println("serviceConfig = " + serviceConfig);
+        assertEquals(config.getServiceConfig(), serviceConfig);
     }
 }
