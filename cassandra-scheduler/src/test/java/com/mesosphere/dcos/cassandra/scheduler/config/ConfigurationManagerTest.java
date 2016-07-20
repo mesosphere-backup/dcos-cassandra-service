@@ -116,11 +116,11 @@ public class ConfigurationManagerTest {
 
     );
 
-    assertEquals("http://cassandra.marathon.mesos:8080/v1/seeds", config.getSeedsUrl());
+    assertEquals("http://datastax.marathon.mesos:8080/v1/seeds", config.getSeedsUrl());
     assertEquals("cassandra", config.getIdentity().getName());
-    assertEquals("cassandra-role", config.getIdentity().getRole());
-    assertEquals("cassandra-cluster", config.getIdentity().getCluster());
-    assertEquals("cassandra-principal",
+    assertEquals("dse-role", config.getIdentity().getRole());
+    assertEquals("dse-cluster", config.getIdentity().getCluster());
+    assertEquals("dse-principal",
       config.getIdentity().getPrincipal());
     assertEquals("", config.getIdentity().getSecret());
 
