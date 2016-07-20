@@ -113,11 +113,37 @@ public class S3StorageDriverTest {
 
     @Test
     public void testGetEndpointHTTPSProtocol() throws URISyntaxException {
-        String endpoint = "s3-us-west-2.amazonaws.com";
+        String endpoint = "https://s3-us-west-2.amazonaws.com";
         BackupContext backupContext = BackupContext.create(
                 "node-id",
                 "name",
-                "https://" + endpoint + "/cassandrabackup",
+                endpoint + "/cassandrabackup",
+                "local-location",
+                "account-id",
+                "secret-key");
+        Assert.assertEquals(endpoint, s3StorageDriver.getEndpoint(backupContext));
+    }
+
+    @Test
+    public void testGetEndpointHTTPProtocolHostPort() throws URISyntaxException {
+        String endpoint = "http://host:1000";
+        BackupContext backupContext = BackupContext.create(
+                "node-id",
+                "name",
+                endpoint + "/cassandrabackup",
+                "local-location",
+                "account-id",
+                "secret-key");
+        Assert.assertEquals(endpoint, s3StorageDriver.getEndpoint(backupContext));
+    }
+
+    @Test
+    public void testGetEndpointHTTPProtocolHost() throws URISyntaxException {
+        String endpoint = "http://host";
+        BackupContext backupContext = BackupContext.create(
+                "node-id",
+                "name",
+                endpoint + "/cassandrabackup",
                 "local-location",
                 "account-id",
                 "secret-key");
