@@ -321,7 +321,7 @@ Uninstalling a cluster is straightforward. Replace `cassandra` with the name of 
 $ dcos package uninstall --app-id=cassandra
 ```
 
-Then, use the [framework cleaner script](https://docs.mesosphere.com/framework_cleaner/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
+Then, use the [framework cleaner script](https://docs.mesosphere.com/1.7/usage/managing-services/uninstall/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
 
 - `framework_role` is `<service-name>_role`.
 - `framework_principal` is `<service-name>_principal`.
@@ -1445,7 +1445,6 @@ To view general information about a node, the following command my be run from t
 ```
 $ dcos cassandra --name=<service-name> node describe <nodeid>
 ```
-In contrast to the status command, this command requests information from the DC/OS Cassandra Service and not the Cassandra node.
 
 In contrast to the `status` command, `node describe` requests information from the DC/OS Cassandra Service and not the Cassandra node.
 
