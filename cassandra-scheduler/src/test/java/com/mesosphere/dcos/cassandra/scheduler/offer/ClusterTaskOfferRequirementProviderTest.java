@@ -18,10 +18,10 @@ import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
+import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.protobuf.ResourceBuilder;
 import org.apache.mesos.protobuf.TaskInfoBuilder;
-import org.apache.mesos.state.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.*;
 
@@ -123,7 +123,7 @@ public class ClusterTaskOfferRequirementProviderTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         stateStore = new CuratorStateStore(
-                "/" + config.getServiceConfig().getName(),
+                config.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
         stateStore.storeFrameworkId(Protos.FrameworkID.newBuilder().setValue("1234").build());
@@ -133,9 +133,9 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         identity.register("test_id");
 
-        DefaultConfigurationManager configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + config.getServiceConfig().getName(),
+        DefaultConfigurationManager configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                config.getServiceConfig().getName(),
                 server.getConnectString(),
                 config,
                 new ConfigValidator(),
