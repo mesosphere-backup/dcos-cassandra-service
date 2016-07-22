@@ -46,6 +46,19 @@ public class S3StorageDriverTest {
     }
 
     @Test
+    public void testGetBucketNameHTTPProtocolIPPort() throws URISyntaxException {
+        String bucketName = "cassandraBackup";
+        BackupContext backupContext = BackupContext.create(
+                "node-id",
+                "name",
+                "https://127.0.0.1:9092/" + bucketName,
+                "local-location",
+                "account-id",
+                "secret-key");
+        Assert.assertEquals(bucketName, s3StorageDriver.getBucketName(backupContext));
+    }
+
+    @Test
     public void testGetEmptyPrefixKeyS3Protocol() throws URISyntaxException {
         String backupName = "backup-name";
         BackupContext backupContext = BackupContext.create(
