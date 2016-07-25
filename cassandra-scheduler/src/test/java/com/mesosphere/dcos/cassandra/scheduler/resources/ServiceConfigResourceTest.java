@@ -16,7 +16,7 @@ import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.config.ConfigStoreException;
-import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -57,8 +57,6 @@ public class ServiceConfigResourceTest {
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
 
-        ServiceConfig initial = config.getServiceConfig();
-
         final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
@@ -70,16 +68,16 @@ public class ServiceConfigResourceTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         stateStore = new CuratorStateStore(
-                "/" + config.createConfig().getServiceConfig().getName(),
+                config.createConfig().getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
 
         final CassandraSchedulerConfiguration configuration = config.createConfig();
         try {
             final ConfigValidator configValidator = new ConfigValidator();
-            final DefaultConfigurationManager defaultConfigurationManager
-                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                    "/" + configuration.getServiceConfig().getName(),
+            final DefaultConfigurationManager defaultConfigurationManager =
+                    new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                    configuration.getServiceConfig().getName(),
                     server.getConnectString(),
                     configuration,
                     configValidator,

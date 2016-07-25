@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
@@ -114,8 +113,7 @@ public class SeedsManager implements Runnable {
         try {
             synchronized (stateStore) {
                 LOGGER.info("Loading data from persistent store");
-                final Collection<String> propertyKeys = stateStore.listPropertyKeys();
-                for (final String key : propertyKeys) {
+                for (final String key : stateStore.fetchPropertyKeys()) {
                     if (!key.startsWith(DATA_CENTERS_KEY)) {
                         continue;
                     }
