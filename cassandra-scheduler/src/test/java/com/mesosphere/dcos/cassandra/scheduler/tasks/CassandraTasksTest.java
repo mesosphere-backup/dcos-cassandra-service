@@ -17,10 +17,10 @@ import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
+import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
-import org.apache.mesos.state.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.After;
 import org.junit.Assert;
@@ -39,7 +39,6 @@ public class CassandraTasksTest {
     private static MutableSchedulerConfiguration config;
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
-    private static CuratorFrameworkConfig curatorConfig;
     private static ClusterTaskConfig clusterTaskConfig;
     private static String testDaemonName = "test-daemon-name";
     private static String testHostName = "test-host-name";
@@ -70,12 +69,6 @@ public class CassandraTasksTest {
 
         ServiceConfig initial = config.createConfig().getServiceConfig();
 
-        curatorConfig = CuratorFrameworkConfig.create(server.getConnectString(),
-                10000L,
-                10000L,
-                Optional.empty(),
-                250L);
-
         final CassandraSchedulerConfiguration targetConfig = config.createConfig();
         clusterTaskConfig = targetConfig.getClusterTaskConfig();
 
@@ -90,7 +83,7 @@ public class CassandraTasksTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         stateStore = new CuratorStateStore(
-                "/" + targetConfig.getServiceConfig().getName(),
+                targetConfig.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
         stateStore.storeFrameworkId(Protos.FrameworkID.newBuilder().setValue("1234").build());
@@ -99,9 +92,9 @@ public class CassandraTasksTest {
 
         identity.register("test_id");
 
-        DefaultConfigurationManager configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + config.createConfig().getServiceConfig().getName(),
+        DefaultConfigurationManager configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                config.createConfig().getServiceConfig().getName(),
                 server.getConnectString(),
                 config.createConfig(),
                 new ConfigValidator(),

@@ -36,14 +36,12 @@ import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.http.client.HttpClient;
 import org.apache.mesos.config.ConfigStoreException;
+import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.StageManager;
-import org.apache.mesos.state.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -51,8 +49,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class SchedulerModule extends AbstractModule {
-    private final static Logger LOGGER = LoggerFactory.getLogger(
-            SchedulerModule.class);
 
     private final CassandraSchedulerConfiguration configuration;
     private final Environment environment;
@@ -88,16 +84,16 @@ public class SchedulerModule extends AbstractModule {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         CuratorStateStore curatorStateStore = new CuratorStateStore(
-                "/" + configuration.getServiceConfig().getName(),
+                configuration.getServiceConfig().getName(),
                 curatorConfig.getServers(),
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
 
         try {
             final ConfigValidator configValidator = new ConfigValidator();
-            final DefaultConfigurationManager configurationManager
-                    = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                    "/" + configuration.getServiceConfig().getName(),
+            final DefaultConfigurationManager configurationManager =
+                    new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                    configuration.getServiceConfig().getName(),
                     curatorConfig.getServers(),
                     configuration,
                     configValidator,
