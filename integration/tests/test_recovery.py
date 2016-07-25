@@ -277,7 +277,7 @@ def test_config_update_then_zk_killed(install_framework):
 def test_config_update_then_partition(install_framework):
     host = get_node_host()
 
-    def partition(install_framework):
+    def partition():
         shakedown.partition_agent(host)
         shakedown.reconnect_agent(host)
 
@@ -289,7 +289,7 @@ def test_config_update_then_partition(install_framework):
 def test_config_update_then_all_partition(install_framework):
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
-    def partition(install_framework):
+    def partition():
         for host in hosts:
             shakedown.partition_agent(host)
         for host in hosts:
@@ -371,7 +371,7 @@ def test_cleanup_then_zk_killed(install_framework):
 def test_cleanup_then_partition(install_framework):
     host = get_node_host()
 
-    def partition(install_framework):
+    def partition():
         shakedown.partition_agent(host)
         shakedown.reconnect_agent(host)
 
@@ -467,7 +467,7 @@ def test_repair_then_zk_killed(install_framework):
 def test_repair_then_partition(install_framework):
     host = get_node_host()
 
-    def partition(install_framework):
+    def partition():
         shakedown.partition_agent(host)
         shakedown.reconnect_agent(host)
 
@@ -479,7 +479,7 @@ def test_repair_then_partition(install_framework):
 def test_repair_then_all_partition(install_framework):
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
-    def partition(install_framework):
+    def partition():
         for host in hosts:
             shakedown.partition_agent(host)
         for host in hosts:
