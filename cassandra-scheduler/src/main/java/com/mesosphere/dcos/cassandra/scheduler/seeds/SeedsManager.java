@@ -114,7 +114,7 @@ public class SeedsManager implements Runnable {
         try {
             synchronized (stateStore) {
                 LOGGER.info("Loading data from persistent store");
-                final Collection<String> propertyKeys = stateStore.listPropertyKeys();
+                final Collection<String> propertyKeys = stateStore.fetchPropertyKeys();
                 for (final String key : propertyKeys) {
                     if (!key.startsWith(DATA_CENTERS_KEY)) {
                         continue;
