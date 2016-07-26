@@ -31,9 +31,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -138,7 +136,7 @@ public class S3StorageDriver implements BackupStorageDriver {
     }
 
     @Override
-    public void upload(BackupContext ctx) throws IOException, URISyntaxException {
+    public void upload(BackupRestoreContext ctx) throws IOException, URISyntaxException {
         final String localLocation = ctx.getLocalLocation();
         final String backupName = ctx.getName();
         final String nodeId = ctx.getNodeId();
@@ -179,6 +177,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                     LOGGER.info("Going to upload directory: {}",
                             snapshotDirectory.get().getAbsolutePath());
                     uploadDirectory(
+                            ctx,
                             snapshotDirectory.get().getAbsolutePath(),
                             amazonS3Client,
                             getBucketName(ctx),
@@ -196,16 +195,26 @@ public class S3StorageDriver implements BackupStorageDriver {
         LOGGER.info("Done uploading snapshots for backup: {}", backupName);
     }
 
-    private boolean isValidFileForUpload(File file) {
-        return file.isFile() && !file.getName().endsWith(".json");
+    private boolean isValidFileForUpload(File file, BackupRestoreContext BackupRestoreContext) {
+        return file.isFile() && hasValidSuffix(file, BackupRestoreContext);
     }
 
-    private void uploadDirectory(String localLocation,
-                                 AmazonS3Client amazonS3Client,
-                                 String bucketName,
-                                 String key,
-                                 String keyspaceName,
-                                 String cfName) throws IOException {
+    private boolean hasValidSuffix(File file, BackupRestoreContext BackupRestoreContext) {
+        if (BackupRestoreContext.usesEmc()) {
+            return !file.getName().endsWith(".json");
+        } else {
+            return true;
+        }
+    }
+
+    private void uploadDirectory(
+            BackupRestoreContext BackupRestoreContext,
+            String localLocation,
+            AmazonS3Client amazonS3Client,
+            String bucketName,
+            String key,
+            String keyspaceName,
+            String cfName) throws IOException {
         LOGGER.info(
                 "uploadDirectory() localLocation: {}, AmazonS3Client: {}, bucketName: {}, key: {}, keyspaceName: {}, cfName: {}",
                 localLocation, amazonS3Client, bucketName, key, keyspaceName,
@@ -225,7 +234,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                             throws IOException {
                         final File file = path.toFile();
                         LOGGER.info("Visiting file: {}", file.getAbsolutePath());
-                        if (isValidFileForUpload(file)) {
+                        if (isValidFileForUpload(file, BackupRestoreContext)) {
                             String fileKey = key + "/" + keyspaceName + "/" + cfName + "/" + file.getName();
                             List<PartETag> partETags = new ArrayList<>();
                             final InitiateMultipartUploadRequest uploadRequest = new InitiateMultipartUploadRequest(bucketName, fileKey);
@@ -328,7 +337,7 @@ public class S3StorageDriver implements BackupStorageDriver {
     }
 
     @Override
-    public void download(RestoreContext ctx) throws IOException, URISyntaxException {
+    public void download(BackupRestoreContext ctx) throws IOException, URISyntaxException {
         // Ex: data/<keyspace>/<cf>/snapshots/</snapshot-dir>/<files>
 
         // Location of data directory, where the data will be copied.

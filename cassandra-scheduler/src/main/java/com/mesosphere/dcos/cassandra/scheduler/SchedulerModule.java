@@ -11,8 +11,8 @@ import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerialize
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
@@ -124,11 +124,11 @@ public class SchedulerModule extends AbstractModule {
         bind(new TypeLiteral<Serializer<ClusterTaskConfig>>() {
         }).toInstance(ClusterTaskConfig.JSON_SERIALIZER);
 
-        bind(new TypeLiteral<Serializer<BackupContext>>() {
-        }).toInstance(BackupContext.JSON_SERIALIZER);
+        bind(new TypeLiteral<Serializer<BackupRestoreContext>>() {
+        }).toInstance(BackupRestoreContext.JSON_SERIALIZER);
 
-        bind(new TypeLiteral<Serializer<RestoreContext>>() {
-        }).toInstance(RestoreContext.JSON_SERIALIZER);
+        bind(new TypeLiteral<Serializer<BackupRestoreContext>>() {
+        }).toInstance(BackupRestoreContext.JSON_SERIALIZER);
 
         bind(new TypeLiteral<Serializer<CleanupContext>>() {
         }).toInstance(CleanupContext.JSON_SERIALIZER);

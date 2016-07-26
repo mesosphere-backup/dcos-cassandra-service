@@ -70,7 +70,7 @@ public class BackupSnapshot implements Runnable {
                     "Started taking snapshot");
 
             final String snapshotName =
-                this.cassandraTask.getBackupContext() .getName();
+                this.cassandraTask.getBackupRestoreContext() .getName();
             final List<String> nonSystemKeyspaces = daemon
                     .getNonSystemKeySpaces();
             LOGGER.info("Started taking snapshot for non system keyspaces: {}",

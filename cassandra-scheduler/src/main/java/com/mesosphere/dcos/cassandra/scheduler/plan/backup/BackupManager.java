@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -30,8 +30,8 @@ public class BackupManager {
     private final ClusterTaskOfferRequirementProvider provider;
     private volatile BackupSnapshotPhase backup = null;
     private volatile UploadBackupPhase upload = null;
-    private volatile BackupContext backupContext = null;
     private StateStore stateStore;
+    private volatile BackupRestoreContext backupRestoreContext = null;
 
     @Inject
     public BackupManager(
@@ -45,7 +45,7 @@ public class BackupManager {
         // Load BackupManager from state store
         try {
             final byte[] bytes = stateStore.fetchProperty(BACKUP_KEY);
-            final BackupContext backupContext = BackupContext.JSON_SERIALIZER.deserialize(bytes);
+            final BackupRestoreContext backupContext = BackupRestoreContext.JSON_SERIALIZER.deserialize(bytes);
             // Recovering from failure
             if (backupContext != null) {
                 this.backup = new BackupSnapshotPhase(
@@ -56,7 +56,7 @@ public class BackupManager {
                         backupContext,
                         cassandraTasks,
                         provider);
-                this.backupContext = backupContext;
+                this.backupRestoreContext = backupContext;
             }
         } catch (SerializationException e) {
             LOGGER.error("Error loading backup context from persistence store. Reason: ", e);
@@ -66,7 +66,7 @@ public class BackupManager {
     }
 
 
-    public void startBackup(BackupContext context) {
+    public void startBackup(BackupRestoreContext context) {
         LOGGER.info("Starting backup");
 
         if (canStartBackup()) {
@@ -79,7 +79,7 @@ public class BackupManager {
                         cassandraTasks.remove(name);
                     }
                 }
-                stateStore.storeProperty(BACKUP_KEY, BackupContext.JSON_SERIALIZER.serialize(context));
+                stateStore.storeProperty(BACKUP_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
                 this.backup = new BackupSnapshotPhase(
                         context,
                         cassandraTasks,
@@ -88,7 +88,7 @@ public class BackupManager {
                         context,
                         cassandraTasks,
                         provider);
-                backupContext = context;
+                backupRestoreContext = context;
             } catch (SerializationException | PersistenceException e) {
                 LOGGER.error(
                         "Error storing backup context into persistence store. Reason: ",
@@ -108,26 +108,26 @@ public class BackupManager {
                     "Error deleting backup context from persistence store. Reason: {}",
                     e);
         }
-        this.backupContext = null;
+        this.backupRestoreContext = null;
     }
 
     public boolean canStartBackup() {
-        // If backupContext is null, then we can start backup; otherwise, not.
-        return backupContext == null || isComplete();
+        // If BackupRestoreContext is null, then we can start backup; otherwise, not.
+        return backupRestoreContext == null || isComplete();
     }
 
     public boolean inProgress() {
-        return (backupContext != null && !isComplete());
+        return (backupRestoreContext != null && !isComplete());
     }
 
     public boolean isComplete() {
-        return (backupContext != null &&
+        return (backupRestoreContext != null &&
                 backup != null && backup.isComplete() &&
                 upload != null && upload.isComplete());
     }
 
     public List<Phase> getPhases() {
-        if (backupContext == null) {
+        if (backupRestoreContext == null) {
             return Collections.emptyList();
         } else {
             return Arrays.asList(backup, upload);

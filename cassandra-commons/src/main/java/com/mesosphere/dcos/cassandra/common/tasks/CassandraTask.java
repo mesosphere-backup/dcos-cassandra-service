@@ -38,8 +38,6 @@ import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.protobuf.LabelBuilder;
 import org.apache.mesos.util.Algorithms;
 
-import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
-
 /**
  * CassandraTask is the base class from which all framework tasks derive.
  * When new tasks are added this serializers of this class must be updated to
