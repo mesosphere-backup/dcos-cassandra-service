@@ -246,7 +246,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public BackupSnapshotTask createBackupSnapshotTask(
             CassandraDaemonTask daemon,
-            BackupContext context) throws PersistenceException {
+            BackupRestoreContext context) throws PersistenceException {
 
         Optional<Protos.TaskInfo> template = getTemplate(daemon);
 
@@ -260,7 +260,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public BackupUploadTask createBackupUploadTask(
             CassandraDaemonTask daemon,
-            BackupContext context) throws PersistenceException {
+            BackupRestoreContext context) throws PersistenceException {
 
         Optional<Protos.TaskInfo> template = getTemplate(daemon);
 
@@ -273,7 +273,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public DownloadSnapshotTask createDownloadSnapshotTask(
             CassandraDaemonTask daemon,
-            RestoreContext context) throws PersistenceException {
+            BackupRestoreContext context) throws PersistenceException {
 
         Optional<Protos.TaskInfo> template = getTemplate(daemon);
 
@@ -286,7 +286,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public RestoreSnapshotTask createRestoreSnapshotTask(
             CassandraDaemonTask daemon,
-            RestoreContext context) throws PersistenceException {
+            BackupRestoreContext context) throws PersistenceException {
 
         Optional<Protos.TaskInfo> template = getTemplate(daemon);
 
@@ -334,7 +334,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public BackupSnapshotTask getOrCreateBackupSnapshot(
             CassandraDaemonTask daemon,
-            BackupContext context) throws PersistenceException {
+            BackupRestoreContext context) throws PersistenceException {
 
         String name = BackupSnapshotTask.nameForDaemon(daemon);
         Map<String, BackupSnapshotTask> snapshots = getBackupSnapshotTasks();
@@ -348,7 +348,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public BackupUploadTask getOrCreateBackupUpload(
             CassandraDaemonTask daemon,
-            BackupContext context) throws PersistenceException {
+            BackupRestoreContext context) throws PersistenceException {
 
         String name = BackupUploadTask.nameForDaemon(daemon);
         Map<String, BackupUploadTask> uploads = getBackupUploadTasks();
@@ -362,7 +362,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public DownloadSnapshotTask getOrCreateSnapshotDownload(
             CassandraDaemonTask daemon,
-            RestoreContext context) throws PersistenceException {
+            BackupRestoreContext context) throws PersistenceException {
 
         String name = DownloadSnapshotTask.nameForDaemon(daemon);
         Map<String, DownloadSnapshotTask> snapshots = getDownloadSnapshotTasks();
@@ -375,7 +375,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public RestoreSnapshotTask getOrCreateRestoreSnapshot(
             CassandraDaemonTask daemon,
-            RestoreContext context) throws PersistenceException {
+            BackupRestoreContext context) throws PersistenceException {
 
         String name = RestoreSnapshotTask.nameForDaemon(daemon);
         Map<String, RestoreSnapshotTask> snapshots = getRestoreSnapshotTasks();

@@ -15,7 +15,7 @@
  */
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraPaths;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +44,7 @@ public class RestoreSnapshot implements Runnable {
         RestoreSnapshot.class);
 
     private final ExecutorDriver driver;
-    private final RestoreContext context;
+    private final BackupRestoreContext context;
     private final RestoreSnapshotTask cassandraTask;
     private final String version;
 
@@ -64,7 +64,7 @@ public class RestoreSnapshot implements Runnable {
         this.driver = driver;
         this.version = version;
         this.cassandraTask = cassandraTask;
-        this.context = cassandraTask.getRestoreContext();
+        this.context = cassandraTask.getBackupRestoreContext();
     }
 
     @Override

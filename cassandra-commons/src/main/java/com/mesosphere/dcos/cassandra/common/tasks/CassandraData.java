@@ -4,8 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import org.apache.mesos.Protos;
@@ -81,7 +80,7 @@ public class CassandraData {
 
     public static final CassandraData createBackupSnapshotData(
         final String hostname,
-        final BackupContext context) {
+        final BackupRestoreContext context) {
 
         return new CassandraData(
             CassandraTask.TYPE.BACKUP_SNAPSHOT,
@@ -100,7 +99,7 @@ public class CassandraData {
 
     public static final CassandraData createBackupUploadData(
         final String hostname,
-        final BackupContext context) {
+        final BackupRestoreContext context) {
         return new CassandraData(
             CassandraTask.TYPE.BACKUP_UPLOAD,
             hostname,
@@ -119,7 +118,7 @@ public class CassandraData {
 
     public static final CassandraData createSnapshotDownloadData(
         final String hostname,
-        final RestoreContext context) {
+        final BackupRestoreContext context) {
         return new CassandraData(
             CassandraTask.TYPE.SNAPSHOT_DOWNLOAD,
             hostname,
@@ -137,7 +136,7 @@ public class CassandraData {
 
     public static final CassandraData createRestoreSnapshotData(
         final String hostname,
-        final RestoreContext context) {
+        final BackupRestoreContext context) {
         return new CassandraData(
             CassandraTask.TYPE.SNAPSHOT_RESTORE,
             hostname,
@@ -337,26 +336,15 @@ public class CassandraData {
             data.getColumnFamiliesList());
     }
 
-    public BackupContext getBackupContext() {
-        return BackupContext.create(
+    public BackupRestoreContext getBackupRestoreContext() {
+        return BackupRestoreContext.create(
             data.getNode(),
             data.getBackupName(),
             data.getExternalLocation(),
             data.getLocalLocation(),
             data.getAccoundId(),
-            data.getSecretKey()
-        );
-    }
-
-    public RestoreContext getRestoreContext() {
-        return RestoreContext.create(
-            data.getNode(),
-            data.getBackupName(),
-            data.getExternalLocation(),
-            data.getLocalLocation(),
-            data.getAccoundId(),
-            data.getSecretKey()
-        );
+            data.getSecretKey(),
+            data.getUsesEmc());
     }
 
     public ByteString getBytes() {

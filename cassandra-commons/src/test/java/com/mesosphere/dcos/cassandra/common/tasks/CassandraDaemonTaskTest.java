@@ -36,10 +36,7 @@ public class CassandraDaemonTaskTest {
                 "java-home",
                 new URI("http://jre-location"),
                 new URI("http://executor-location"),
-                new URI("http://cassandra-location"),
-                "ulimit-mem-lock",
-                "ulimit-no-file",
-                "ulimit-nproc");
+                new URI("http://cassandra-location"));
 
         testTaskExecutor = CassandraTaskExecutor.create(
                 "test-framework-id",

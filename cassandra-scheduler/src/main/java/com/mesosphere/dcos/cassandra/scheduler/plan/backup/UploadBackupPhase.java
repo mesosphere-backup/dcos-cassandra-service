@@ -1,6 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 /**
  * During UploadBackupPhase, snapshotted data will be uploaded to external location.
  */
-public class UploadBackupPhase extends AbstractClusterTaskPhase<UploadBackupBlock, BackupContext> {
+public class UploadBackupPhase extends AbstractClusterTaskPhase<UploadBackupBlock, BackupRestoreContext> {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(UploadBackupPhase.class);
 
     public UploadBackupPhase(
-            BackupContext context,
+            BackupRestoreContext context,
             CassandraTasks cassandraTasks,
             ClusterTaskOfferRequirementProvider provider) {
         super(context, cassandraTasks, provider);

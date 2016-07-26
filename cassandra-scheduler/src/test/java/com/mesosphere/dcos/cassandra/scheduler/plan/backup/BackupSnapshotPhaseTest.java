@@ -1,7 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.commons.collections.CollectionUtils;
@@ -36,7 +36,7 @@ public class BackupSnapshotPhaseTest {
 
     @Test
     public void testCreateBlocksEmpty() {
-        final BackupContext context =  BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
 
         when(cassandraTasks.getDaemons()).thenReturn(MapUtils.EMPTY_MAP);
         final BackupSnapshotPhase phase = new BackupSnapshotPhase(context, cassandraTasks, provider);
@@ -49,7 +49,7 @@ public class BackupSnapshotPhaseTest {
 
     @Test
     public void testCreateBlocksSingle() {
-        final BackupContext context =  BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
 
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();

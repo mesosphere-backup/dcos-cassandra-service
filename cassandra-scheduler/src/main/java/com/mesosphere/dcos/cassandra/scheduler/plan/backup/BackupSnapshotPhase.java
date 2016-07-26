@@ -1,6 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 /**
  * During snapshot phase, data will be snapshotted across all cassandra nodes.
  */
-public class BackupSnapshotPhase extends AbstractClusterTaskPhase<BackupSnapshotBlock, BackupContext> {
+public class BackupSnapshotPhase extends AbstractClusterTaskPhase<BackupSnapshotBlock, BackupRestoreContext> {
     public BackupSnapshotPhase(
-            BackupContext backupContext,
+            BackupRestoreContext BackupRestoreContext,
             CassandraTasks cassandraTasks,
             ClusterTaskOfferRequirementProvider provider) {
-        super(backupContext, cassandraTasks, provider);
+        super(BackupRestoreContext, cassandraTasks, provider);
     }
 
     protected List<BackupSnapshotBlock> createBlocks() {

@@ -25,6 +25,9 @@ public class BackupRestoreRequest {
   @JsonProperty("azure_key")
   private String azureKey;
 
+  @JsonProperty("uses_emc")
+  private Boolean usesEmc;
+
   public String getName() {
     return name;
   }
@@ -71,6 +74,14 @@ public class BackupRestoreRequest {
 
   public void setAzureKey(String azureKey) {
     this.azureKey = azureKey;
+  }
+
+  public boolean usesEmc() {
+    if (usesEmc != null) {
+      return usesEmc;
+    } else {
+      return false;
+    }
   }
 
   public boolean isValid() {

@@ -1,6 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -16,12 +16,12 @@ import java.util.stream.Collectors;
  * During download snapshot phase, snapshotted data will be downloaded to all the cassandra node from
  * external location.
  */
-public class RestoreSnapshotPhase extends AbstractClusterTaskPhase<RestoreSnapshotBlock, RestoreContext> {
+public class RestoreSnapshotPhase extends AbstractClusterTaskPhase<RestoreSnapshotBlock, BackupRestoreContext> {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(RestoreSnapshotPhase.class);
 
     public RestoreSnapshotPhase(
-            RestoreContext context,
+            BackupRestoreContext context,
             CassandraTasks cassandraTasks,
             ClusterTaskOfferRequirementProvider provider) {
         super(context, cassandraTasks, provider);
