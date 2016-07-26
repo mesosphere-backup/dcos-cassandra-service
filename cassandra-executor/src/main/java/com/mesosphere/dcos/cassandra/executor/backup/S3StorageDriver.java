@@ -196,6 +196,10 @@ public class S3StorageDriver implements BackupStorageDriver {
         LOGGER.info("Done uploading snapshots for backup: {}", backupName);
     }
 
+    private boolean isValidFileForUpload(File file) {
+        return file.isFile() && !file.getName().endsWith(".json");
+    }
+
     private void uploadDirectory(String localLocation,
                                  AmazonS3Client amazonS3Client,
                                  String bucketName,
@@ -206,6 +210,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                 "uploadDirectory() localLocation: {}, AmazonS3Client: {}, bucketName: {}, key: {}, keyspaceName: {}, cfName: {}",
                 localLocation, amazonS3Client, bucketName, key, keyspaceName,
                 cfName);
+
         Files.walkFileTree(FileSystems.getDefault().getPath(localLocation),
                 new FileVisitor<Path>() {
                     @Override
@@ -217,14 +222,14 @@ public class S3StorageDriver implements BackupStorageDriver {
 
                     @Override
                     public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
-                      throws IOException {
+                            throws IOException {
                         final File file = path.toFile();
-                      LOGGER.info("Visiting file: {}", file.getAbsolutePath());
-                        if (file.isFile()) {
+                        LOGGER.info("Visiting file: {}", file.getAbsolutePath());
+                        if (isValidFileForUpload(file)) {
                             String fileKey = key + "/" + keyspaceName + "/" + cfName + "/" + file.getName();
                             List<PartETag> partETags = new ArrayList<>();
-                          final InitiateMultipartUploadRequest uploadRequest = new InitiateMultipartUploadRequest(bucketName, fileKey);
-                          final InitiateMultipartUploadResult uploadResult = amazonS3Client.initiateMultipartUpload(uploadRequest);
+                            final InitiateMultipartUploadRequest uploadRequest = new InitiateMultipartUploadRequest(bucketName, fileKey);
+                            final InitiateMultipartUploadResult uploadResult = amazonS3Client.initiateMultipartUpload(uploadRequest);
 
                             LOGGER.info(
                                     "Initiating upload for file: {} | bucket: {} | key: {} | uploadId: {}",
@@ -236,21 +241,21 @@ public class S3StorageDriver implements BackupStorageDriver {
                             ByteArrayOutputStream baos = null;
                             SnappyOutputStream compress = null;
                             try {
-                              inputStream = new BufferedInputStream(new FileInputStream(file));
-                              baos = new ByteArrayOutputStream();
-                              compress = new SnappyOutputStream(baos);
+                                inputStream = new BufferedInputStream(new FileInputStream(file));
+                                baos = new ByteArrayOutputStream();
+                                compress = new SnappyOutputStream(baos);
 
                                 int chunkLength;
                                 int partNum = 1;
-                              while ((chunkLength = inputStream.read(buffer)) != -1) {
-                                LOGGER.debug("Compressing part: {}", partNum);
-                                compress.write(buffer, 0, chunkLength);
-                                compress.flush();
-                                final byte[] bytes = baos.toByteArray();
-                                final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-                                final MessageDigest md5Digester = MessageDigest.getInstance("MD5");
-                                final byte[] digest = md5Digester.digest(bytes);
-                                final String md5String = Base64.getEncoder().encodeToString(digest);
+                                while ((chunkLength = inputStream.read(buffer)) != -1) {
+                                    LOGGER.debug("Compressing part: {}", partNum);
+                                    compress.write(buffer, 0, chunkLength);
+                                    compress.flush();
+                                    final byte[] bytes = baos.toByteArray();
+                                    final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                                    final MessageDigest md5Digester = MessageDigest.getInstance("MD5");
+                                    final byte[] digest = md5Digester.digest(bytes);
+                                    final String md5String = Base64.getEncoder().encodeToString(digest);
 
                                     final UploadPartRequest uploadPartRequest = new UploadPartRequest()
                                             .withBucketName(bucketName)
