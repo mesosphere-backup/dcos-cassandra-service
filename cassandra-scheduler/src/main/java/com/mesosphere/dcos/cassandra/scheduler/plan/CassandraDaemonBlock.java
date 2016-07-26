@@ -85,8 +85,10 @@ public class CassandraDaemonBlock implements Block {
 
     private OfferRequirement reconfigureTask(final CassandraDaemonTask task) throws ConfigStoreException {
         try {
-            return provider.getReplacementOfferRequirement(
-                    cassandraTasks.createCassandraContainer(cassandraTasks.reconfigureDaemon(task)));
+            final CassandraTemplateTask templateTask = cassandraTasks.getOrCreateTemplateTask(CassandraTemplateTask
+                    .toTemplateTaskName(task.getName()), task);
+            return provider.getReplacementOfferRequirement(cassandraTasks
+                    .createCassandraContainer(cassandraTasks.reconfigureDaemon(task), templateTask));
         } catch (PersistenceException ex) {
             LOGGER.error(
                     String.format("Block %s failed to reconfigure task %s,"),

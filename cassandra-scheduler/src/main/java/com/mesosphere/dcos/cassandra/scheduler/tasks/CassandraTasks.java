@@ -176,13 +176,29 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         return CassandraContainer.create(daemonTask, templateTask);
     }
 
+    public CassandraContainer createCassandraContainer(CassandraDaemonTask daemonTask,
+                                                       CassandraTemplateTask templateTask) throws PersistenceException {
+        return CassandraContainer.create(daemonTask, templateTask);
+    }
+
     public CassandraContainer moveCassandraContainer(CassandraDaemonTask name)
             throws PersistenceException, ConfigStoreException {
         return createCassandraContainer(moveDaemon(name));
     }
 
     public CassandraContainer getOrCreateContainer(String name) throws PersistenceException, ConfigStoreException {
-        return createCassandraContainer(getOrCreateDaemon(name));
+        final CassandraDaemonTask daemonTask = getOrCreateDaemon(name);
+        return createCassandraContainer(daemonTask,
+                getOrCreateTemplateTask(CassandraTemplateTask.toTemplateTaskName(name), daemonTask));
+    }
+
+    public CassandraTemplateTask getOrCreateTemplateTask(String name, CassandraDaemonTask daemonTask) {
+        final Optional<CassandraTask> cassandraTask = get(name);
+        if (cassandraTask.isPresent()) {
+            return (CassandraTemplateTask) cassandraTask.get();
+        } else {
+            return CassandraTemplateTask.create(daemonTask, clusterTaskConfig);
+        }
     }
 
     public CassandraDaemonTask createDaemon(String name) throws
@@ -455,7 +471,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     @Subscribe
     public void update(Protos.TaskStatus status) throws IOException {
-        LOGGER.info("Received status update: {}", status);
+        LOGGER.info("Received status update: {}", TextFormat.shortDebugString(status));
         synchronized (stateStore) {
             try {
                 stateStore.storeStatus(status);
@@ -528,6 +544,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public Optional<CassandraTask> get(String name) {
+        refreshTasks();
         return Optional.ofNullable(tasks.get(name));
     }
 
