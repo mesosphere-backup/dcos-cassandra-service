@@ -3,6 +3,8 @@ ext {
   basePath = "cassandra/assets/"
   packageVer = "stub-universe" // is replaced
   cliBase = "dcos-cassandra-"
+  cliLinuxSha = "cli-linux-sha256"
+  cliDarwinSha = "cli-darwin-sha256"
 }
 
 task packageVersion (
@@ -12,23 +14,49 @@ task packageVersion (
   println packageVer
 }
 
+task cliShas() {
+  def darwinShaFile = file("$rootProject.projectDir/cli/dist/darwin/dcos-cassandra.sha")
+  def linuxShaFile = file("$rootProject.projectDir/cli/dist/linux/dcos-cassandra.sha")
+  if(darwinShaFile.exists()) {
+    cliDarwinSha  = darwinShaFile.text
+    print "darwin sha: $cliDarwinSha"
+  } else {
+    println "CLI darwin sha file missing."
+  }
+  if(linuxShaFile.exists()) {
+    cliLinuxSha  = linuxShaFile.text
+    print "linux sha: $cliLinuxSha"
+  } else {
+    println "CLI linux sha file missing."
+  }
+}
+
 task universe(
-  dependsOn: packageVersion,
+  dependsOn: [packageVersion, cliShas],
   group: "universe",
   description: "Copies universe files to build and modifies there artifact dir") {
   inputs.file file("universe/package")
   // incremental builds might be nice but need to research multiple inputs
   // outputs.dir "$buildDir/universe"
+
   doLast {
     if( !((packageVer ==~ /^\d+\.\d+\.\d+\-\d+\.\d+\.\d+/) ||
     (packageVer ==~ /^\d+\.\d+\.\d+\-\d+\.\d+\.\d+\.\d+/)))
       throw new GradleException("Invalid Release Version: $packageVer")
+
+
 
     copy {
       from "universe/package"
       into "$buildDir/universe"
       filter{
         String line -> line.replaceAll("\\{\\{artifact-dir\\}\\}", aws + basePath + packageVer)
+      }
+      filter{
+        String line -> line.replaceAll("\\{\\{cli-darwin-sha256\\}\\}", cliDarwinSha)
+      }
+      filter{
+        String line -> line.replaceAll("\\{\\{cli-linux-sha256\\}\\}", cliLinuxSha)
       }
       filter{
         String line -> line.replaceAll("stub-universe", packageVer)

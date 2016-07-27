@@ -19,7 +19,7 @@
           "contentHash":[
             {
               "algo":"sha256",
-              "value":"{{cli-darwin-sha256q}}"
+              "value":"{{cli-darwin-sha256}}"
             }
           ],
           "kind":"executable",

@@ -1,4 +1,4 @@
-all: env test packages
+all: env test binary
 
 clean:
 	bin/clean.sh
@@ -13,4 +13,4 @@ packages:
 	bin/packages.sh
 
 binary:  clean env packages
-	pyinstaller binary/binary.spec
+	bin/binary.sh
