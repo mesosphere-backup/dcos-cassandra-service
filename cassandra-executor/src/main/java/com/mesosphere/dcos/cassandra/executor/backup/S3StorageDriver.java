@@ -127,11 +127,15 @@ public class S3StorageDriver implements BackupStorageDriver {
         LOGGER.info("endpoint: {}", endpoint);
 
         final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        final S3ClientOptions options = new S3ClientOptions();
-        options.setPathStyleAccess(true);
         final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
         amazonS3Client.setEndpoint(endpoint);
-        amazonS3Client.setS3ClientOptions(options);
+
+        if (ctx.usesEmc()) {
+            final S3ClientOptions options = new S3ClientOptions();
+            options.setPathStyleAccess(true);
+            amazonS3Client.setS3ClientOptions(options);
+        }
+
         return amazonS3Client;
     }
 
@@ -195,12 +199,13 @@ public class S3StorageDriver implements BackupStorageDriver {
         LOGGER.info("Done uploading snapshots for backup: {}", backupName);
     }
 
-    private boolean isValidFileForUpload(File file, BackupRestoreContext BackupRestoreContext) {
-        return file.isFile() && hasValidSuffix(file, BackupRestoreContext);
+    private boolean isValidFileForUpload(File file, BackupRestoreContext backupRestoreContext) {
+        return file.isFile() && hasValidSuffix(file, backupRestoreContext);
     }
 
-    private boolean hasValidSuffix(File file, BackupRestoreContext BackupRestoreContext) {
-        if (BackupRestoreContext.usesEmc()) {
+    private boolean hasValidSuffix(File file, BackupRestoreContext backupRestoreContext) {
+        LOGGER.info("hasValidSuffix() BackupRestoreContext: " + backupRestoreContext);
+        if (backupRestoreContext.usesEmc()) {
             return !file.getName().endsWith(".json");
         } else {
             return true;
@@ -362,7 +367,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                               String bucketName,
                               AmazonS3Client amazonS3Client,
                               String fileKey,
-                              Long sizeInBytes) {
+                              Long sizeInBytes) throws IOException {
         LOGGER.info(
                 "DownloadFile | Local location: {} | Bucket Name: {} | fileKey: {} | Size in bytes: {}",
                 localLocation, bucketName, fileKey, sizeInBytes);
@@ -421,10 +426,6 @@ public class S3StorageDriver implements BackupStorageDriver {
                         fileKey, position + bytesWritten, sizeInBytes);
                 position += DEFAULT_PART_SIZE_DOWNLOAD + 1;
             }
-        } catch (Exception e) {
-            LOGGER.error(
-                    "Error occuring while downloading fileKey: {} from bucket: {}. Reason: ",
-                    fileKey, bucketName, e);
         } finally {
             IOUtils.closeQuietly(inputStream);
             IOUtils.closeQuietly(fileOutputStream);

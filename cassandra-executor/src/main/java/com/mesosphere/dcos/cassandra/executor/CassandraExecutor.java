@@ -129,7 +129,6 @@ public class CassandraExecutor implements Executor {
               clusterJobExecutorService.submit(new DownloadSnapshot(
                 driver,
                 (DownloadSnapshotTask) cassandraTask,
-                nodeId,
                 StorageDriverFactory.createStorageDriver(
                         (DownloadSnapshotTask) cassandraTask)));
               break;
@@ -139,7 +138,6 @@ public class CassandraExecutor implements Executor {
                 clusterJobExecutorService.submit(new RestoreSnapshot(
                     driver,
                     (RestoreSnapshotTask) cassandraTask,
-                    nodeId,
                     cassandra.getTask().getConfig().getVersion()));
 
                 break;

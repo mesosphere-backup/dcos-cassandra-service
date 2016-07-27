@@ -51,13 +51,11 @@ public class DownloadSnapshot implements Runnable {
      *
      * @param driver              The ExecutorDriver used to send task status.
      * @param task                The DownloadSnapshotTask that will be executed.
-     * @param nodeId              The id of the node on which the task runs.
      * @param backupStorageDriver The BackupStorageDriver that implements
      *                            downloading the snapshot.
      */
     public DownloadSnapshot(ExecutorDriver driver,
                             DownloadSnapshotTask task,
-                            String nodeId,
                             BackupStorageDriver backupStorageDriver) {
         this.driver = driver;
         this.backupStorageDriver = backupStorageDriver;
