@@ -90,7 +90,8 @@ public class CassandraData {
             context.getExternalLocation(),
             context.getLocalLocation(),
             context.getAccountId(),
-            context.getSecretKey());
+            context.getSecretKey(),
+            context.getUsesEmc());
     }
 
     public static final CassandraData createBackupSnapshotStatusData() {
@@ -108,7 +109,8 @@ public class CassandraData {
             context.getExternalLocation(),
             context.getLocalLocation(),
             context.getAccountId(),
-            context.getSecretKey());
+            context.getSecretKey(),
+            context.getUsesEmc());
     }
 
     public static final CassandraData createBackupUploadStatusData() {
@@ -127,7 +129,8 @@ public class CassandraData {
             context.getExternalLocation(),
             context.getLocalLocation(),
             context.getAccountId(),
-            context.getSecretKey());
+            context.getSecretKey(),
+            context.getUsesEmc());
     }
 
     public static final CassandraData createSnapshotDownloadStatusData() {
@@ -145,7 +148,8 @@ public class CassandraData {
             context.getExternalLocation(),
             context.getLocalLocation(),
             context.getAccountId(),
-            context.getSecretKey());
+            context.getSecretKey(),
+            context.getUsesEmc());
     }
 
     public static final CassandraData createRestoreSnapshotStatusData() {
@@ -219,7 +223,8 @@ public class CassandraData {
                           final String externalLocation,
                           final String localLocation,
                           final String accountId,
-                          final String secretKey) {
+                          final String secretKey,
+                          final boolean usesEmc) {
 
         data = CassandraProtos.CassandraData.newBuilder()
             .setType(type.ordinal())
@@ -231,6 +236,7 @@ public class CassandraData {
             .setAccoundId(accountId)
             .setSecretKey(secretKey)
             .setState(Protos.TaskState.TASK_STAGING.ordinal())
+            .setUsesEmc(usesEmc)
             .build();
 
     }

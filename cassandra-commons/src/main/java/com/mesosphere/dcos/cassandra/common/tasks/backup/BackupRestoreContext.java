@@ -108,8 +108,12 @@ public class BackupRestoreContext implements ClusterTaskContext {
     }
 
     @JsonProperty("uses_emc")
-    public boolean usesEmc() {
+    public boolean getUsesEmc() {
         return usesEmc;
+    }
+
+    public boolean usesEmc() {
+        return getUsesEmc();
     }
 
     /**

@@ -53,13 +53,11 @@ public class RestoreSnapshot implements Runnable {
      *
      * @param driver        The ExecutorDriver used to send task status.
      * @param cassandraTask The RestoreSnapshotTask that will be executed.
-     * @param nodeId        The id of the node that will be restored.
      * @param version       The version of Cassandra that will be restored.
      */
     public RestoreSnapshot(
         ExecutorDriver driver,
         RestoreSnapshotTask cassandraTask,
-        String nodeId,
         String version) {
         this.driver = driver;
         this.version = version;

@@ -114,6 +114,7 @@ public class BackupRestoreRequest {
             ", s3SecretKey='" + s3SecretKey + '\'' +
             ", azureAccount='" + azureAccount + '\'' +
             ", azureKey='" + azureKey + '\'' +
+            ", usesEmc='" + usesEmc + '\'' +
             '}';
   }
 }
