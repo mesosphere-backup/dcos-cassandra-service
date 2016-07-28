@@ -320,7 +320,7 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
 1. From the DC/OS CLI, install the latest version of Cassandra [with any customizations you require](1.7/usage/service-guides/cassandra/install-and-customize/) in a JSON options file:
     $ dcos package install cassandra --options=/path/to/options.json
 
-   The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress just like the [configuration upgrade progress](/1.7/usage/service-guides/cassandra/configuration/).
+   The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress by making a REST request identical to the one used to follow the progress of a [configuration upgrade](/1.7/usage/service-guides/cassandra/configuration/).
 
 **Note:** The upgrade process will cause all of your Cassandra node processes to restart.
 
