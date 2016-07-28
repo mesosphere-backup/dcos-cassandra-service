@@ -38,6 +38,7 @@ import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
 import org.apache.mesos.scheduler.plan.StageManager;
 import org.apache.mesos.state.StateStore;
+import org.apache.mesos.testing.QueuedSchedulerDriver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
