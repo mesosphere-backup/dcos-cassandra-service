@@ -114,7 +114,7 @@ public class SchedulerClient {
 
     private CompletionStage<Boolean> delete(String url) {
         LOGGER.debug("Executing delete: url = {}", url);
-        CompletableFuture promise = new CompletableFuture<Boolean>();
+        CompletableFuture<Boolean> promise = new CompletableFuture<Boolean>();
         executor.submit(() -> {
            HttpDelete delete = new HttpDelete(url);
             try {
@@ -159,7 +159,7 @@ public class SchedulerClient {
 
     private CompletionStage<Boolean> put(String url, Object json) {
         LOGGER.debug("Executing put: url = {}, data = {}", url, json);
-        CompletableFuture promise = new CompletableFuture<Boolean>();
+        CompletableFuture<Boolean> promise = new CompletableFuture<Boolean>();
         executor.submit(() -> {
             HttpPut put = new HttpPut(url);
             try {
@@ -186,27 +186,6 @@ public class SchedulerClient {
         });
         return promise;
     }
-
-    private CompletionStage<Boolean> put(String host,
-                                         String path,
-                                         Object json) {
-        try {
-            return put(new URIBuilder()
-                            .setScheme(SCHEME)
-                            .setHost(host)
-                            .setPath(path)
-                            .build().toString(),
-                    json);
-        } catch (Throwable t) {
-            LOGGER.error(String.format(
-                    "Put request failed: host = %s, path = %s",
-                    host,
-                    path),
-                    t);
-            return failure(t);
-        }
-    }
-
 
     public CompletionStage<CassandraStatus> status(String hostname, int port) {
         return get(host(hostname, port), "/v1/cassandra/status", CassandraStatus
