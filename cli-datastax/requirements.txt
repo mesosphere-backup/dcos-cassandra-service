@@ -1,0 +1,6 @@
+requests
+toml
+sphinx>=1.3.1, <2.0
+tox>=1.9.2, <2.0
+wheel>=0.24.0, <1.0
+click
