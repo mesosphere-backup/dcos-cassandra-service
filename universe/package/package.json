@@ -3,7 +3,7 @@
   "name": "cassandra",
   "version": "stub-universe",
   "maintainer": "support@mesosphere.io",
-  "description": "Apache Cassandra running on DCOS",
+  "description": "Apache Cassandra running on DC/OS",
   "selected": true,
   "framework": true,
   "tags": ["data", "database", "nosql"],

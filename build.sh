@@ -44,6 +44,19 @@ _notify_github success build "Build succeeded"
 # No more github updates from here onwards:
 # ci-test.sh and ci-upload.sh helpers both handle this internally
 
+# DataStax Cassandra
+./dcos-tests/build/ci-upload.sh \
+  datastax \
+  universe-datastax/index.json \
+  universe-datastax/package/ \
+  cassandra-scheduler/build/distributions/scheduler.zip \
+  cassandra-executor/build/distributions/executor.zip \
+  cli/pkg-datastax/dist/dcos-datastax-0.1.0.tar.gz
+if [ $? -ne 0 ]; then
+  exit 1
+fi
+
+# Apache Cassandra (used for any tests that follow)
 ./dcos-tests/build/ci-upload.sh \
   cassandra \
   universe/index.json \

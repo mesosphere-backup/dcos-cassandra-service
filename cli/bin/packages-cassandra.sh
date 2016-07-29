@@ -31,13 +31,9 @@ else
     echo "Skipping virtualenv activation."
 fi
 
-echo "Installing requirements..."
-if [ ! -f "$BASEDIR/env/updated" \
-       -o $BASEDIR/setup.py -nt $BASEDIR/env/updated \
-       -o $BASEDIR/pkg-datastax/setup.py -nt $BASEDIR/env/updated ]; then
-    pip install -e $BASEDIR
-    touch $BASEDIR/env/updated
-    echo "Requirements installed."
-fi
+echo "Building cassandra wheel..."
+python setup.py bdist_wheel
 
-pip install -r $BASEDIR/requirements.txt
+echo "Building cassandra egg..."
+python setup.py sdist
+

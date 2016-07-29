@@ -27,14 +27,14 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='dcos-cassandra',
+    name='dcos-datastax',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
     version=constants.version,
 
-    description='DC/OS Cassandra Command Line Interface',
+    description='DC/OS Datastax Command Line Interface',
     long_description=long_description,
 
     # The project's main homepage.
@@ -72,7 +72,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='dcos command cassandra mesosphere',
+    keywords='dcos command cassandra datastax dse mesosphere',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
@@ -120,7 +120,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'dcos-cassandra=dcos_cassandra.cli_cassandra:main',
+            'dcos-datastax=dcos_cassandra.cli_datastax:main',
         ],
     },
 )
