@@ -18,6 +18,7 @@ import org.apache.curator.test.TestingServer;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,6 +44,12 @@ public class ConfigurationManagerTest {
                                 .registerModule(new Jdk8Module()),
                         "dw");
         connectString = server.getConnectString();
+    }
+
+    @AfterClass
+    public static void afterAll() throws Exception {
+        server.close();
+        server.stop();
     }
 
     @Test
@@ -299,154 +306,5 @@ public class ConfigurationManagerTest {
         manager = new ConfigurationManager(configurationManager);
         manager.start();
         assertEquals(1, configurationManager.getErrors().size());
-    }
-
-    @After
-    public void afterAll() throws Exception {
-    @Test
-    public void testSetServers() throws Exception {
-
-        ConfigurationManager manager = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                "NODE",
-                config.getSeedsUrl(),
-                config.getDcUrl(),
-                config.getExternalDcsList(),
-                config.getExternalDcSyncMs(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
-
-        manager.start();
-
-        assertNotSame(17, manager.getServers());
-        manager.setServers(17);
-        assertEquals(17, manager.getServers());
-        assertEquals(17, IntegerStringSerializer.get().deserialize(
-                curator.getData().forPath(serversPath)).intValue());
-
-    }
-
-    @Test
-    public void testSetSeeds() throws Exception {
-
-        ConfigurationManager manager = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                "NODE",
-                config.getSeedsUrl(),
-                config.getDcUrl(),
-                config.getExternalDcsList(),
-                config.getExternalDcSyncMs(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
-
-        manager.start();
-
-        assertNotSame(29, manager.getSeeds());
-        manager.setSeeds(29);
-        assertEquals(29, manager.getSeeds());
-        assertEquals(29, IntegerStringSerializer.get().deserialize(
-                curator.getData().forPath(seedsPath)).intValue());
-
-    }
-
-    @Test
-    public void testSetCassandraConfig() throws Exception {
-
-        ConfigurationManager manager = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                "NODE",
-                config.getSeedsUrl(),
-                config.getDcUrl(),
-                config.getExternalDcsList(),
-                config.getExternalDcSyncMs(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
-
-        manager.start();
-
-        CassandraConfig new_config = config.getCassandraConfig().mutable().setJmxPort(13000)
-                .setCpus(2.3).setMemoryMb(1234).build();
-
-        assertNotSame(new_config, manager.getCassandraConfig());
-        manager.setCassandraConfig(new_config);
-        assertEquals(new_config, manager.getCassandraConfig());
-        assertEquals(new_config, CassandraConfig.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(cassandraConfigPath)));
-
-    }
-
-    @Test
-    public void testSetExecutorConfig() throws Exception {
-
-        ConfigurationManager manager = new ConfigurationManager(
-                config.getCassandraConfig(),
-                config.getClusterTaskConfig(),
-                config.getExecutorConfig(),
-                config.getServers(),
-                config.getSeeds(),
-                "NODE",
-                config.getSeedsUrl(),
-                config.getDcUrl(),
-                config.getExternalDcsList(),
-                config.getExternalDcSyncMs(),
-                persistence,
-                CassandraConfig.JSON_SERIALIZER,
-                ExecutorConfig.JSON_SERIALIZER,
-                ClusterTaskConfig.JSON_SERIALIZER,
-                IntegerStringSerializer.get()
-        );
-
-        manager.start();
-
-        ExecutorConfig new_config = new ExecutorConfig(
-                "/command/line",
-                new ArrayList<>(),
-                1.2,
-                345,
-                901,
-                17,
-                "/java/home",
-                URI.create("/jre/location"),
-                URI.create("/executor/location"),
-                URI.create("/cassandra/location"));
-
-        assertNotSame(new_config, manager.getExecutorConfig());
-        manager.setExecutorConfig(new_config);
-        assertEquals(new_config, manager.getExecutorConfig());
-        assertEquals(new_config, ExecutorConfig.JSON_SERIALIZER.deserialize(
-                curator.getData().forPath(executorConfigPath)));
-    }
-
-    @AfterClass
-    public static void afterAll() throws Exception {
-
-        persistence.stop();
-
-        server.close();
-        server.stop();
     }
 }
