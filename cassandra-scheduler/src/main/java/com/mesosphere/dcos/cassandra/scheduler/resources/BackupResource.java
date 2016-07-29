@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -39,9 +39,9 @@ public class BackupResource {
                 LOGGER.error("Invalid request: {}", request);
                 return Response.status(Response.Status.BAD_REQUEST).build();
             } else if (manager.canStartBackup()) {
-                final BackupContext backupContext = from(request);
-                manager.startBackup(backupContext);
-                LOGGER.info("Backup started : context = {}", backupContext);
+                final BackupRestoreContext BackupRestoreContext = from(request);
+                manager.startBackup(BackupRestoreContext);
+                LOGGER.info("Backup started : context = {}", BackupRestoreContext);
                 return Response.accepted().build();
             } else {
                 // Send error back
@@ -63,7 +63,7 @@ public class BackupResource {
         }
     }
 
-    public static BackupContext from(BackupRestoreRequest request) {
+    public static BackupRestoreContext from(BackupRestoreRequest request) {
         String accountId;
         String secretKey;
         if (isAzure(request.getExternalLocation())) {
@@ -74,13 +74,14 @@ public class BackupResource {
             secretKey = request.getS3SecretKey();
         }
 
-        return BackupContext.create(
+        return BackupRestoreContext.create(
                 "",
                 request.getName(),
                 request.getExternalLocation(),
                 "",
                 accountId,
-                secretKey);
+                secretKey,
+                request.usesEmc());
   }
 
   private static boolean isAzure(String externalLocation) {
