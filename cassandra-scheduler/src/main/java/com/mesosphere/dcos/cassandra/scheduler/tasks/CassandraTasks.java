@@ -563,7 +563,18 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     @Override
-    public Set<Protos.TaskStatus> getTaskStatuses()  {
+    public Set<Protos.TaskStatus> getTaskStatuses() {
         return new HashSet<>(stateStore.fetchStatuses());
+    }
+
+    public Set<Protos.TaskStatus> getNonTemplateTaskStatuses() {
+        Set<Protos.TaskID> taskIds = stateStore.fetchTasks().stream()
+                .filter(t -> t.getName().contains("template"))
+                .map(t -> t.getTaskId())
+                .collect(Collectors.toCollection(HashSet::new));
+
+        return stateStore.fetchStatuses().stream()
+                .filter(t -> taskIds.contains(t.getTaskId()))
+                .collect(Collectors.toCollection(HashSet::new));
     }
 }
