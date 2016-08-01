@@ -316,6 +316,7 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
 # Upgrade
 
 If you are upgrading from version `1.0.13-X.Y.Z`+ of scheduler to a newer version, here are the in-place upgrade instructions: 
+
 1. In the DC/OS web interface, destroy the Cassandra instance to be updated. (This will not kill Cassandra node tasks).
 1. Verify that you no longer see the Cassandra instance in the DC/OS web interface.
 1. From the DC/OS CLI, install the latest version of Cassandra [with any customizations you require](1.7/usage/service-guides/cassandra/install-and-customize/) in a JSON options file:
