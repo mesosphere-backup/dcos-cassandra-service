@@ -340,7 +340,7 @@ If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Cassandra from an older 
 
 1. [Install a new Cassandra Service in Multi-DataCenter configuration](https://github.com/mesosphere/dcos-cassandra-service#multi-datacenter-deployments), so that it becomes a peer DataCenter of your original Cassandra Service
 2. Cassandra Service created in step #1 will start replicating data from your original cluster, once it's online. 
-3. Once data replication finishes, perform data validation. Because, of Cassandra's eventual consistency nature, there's no correct way to determine if Cassandra has finished replicating data. Please excercise caution before proceeding to step #4.
+3. Once data replication finishes, perform data validation. Because, of Cassandra's eventual consistency nature, there's no correct way to determine if Cassandra has finished replicating data. Please exercise caution before proceeding to step #4.
 4. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
 
 # Uninstall
