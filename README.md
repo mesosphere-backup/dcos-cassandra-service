@@ -1,6 +1,6 @@
 # Overview
 
-[![Build Status](https://velocity.mesosphere.com/service/velocity/buildStatus/icon?job=cassandra/infinity-cassandra-parent)](https://velocity.mesosphere.com/service/velocity/job/cassandra/infinity-cassandra-parent)
+[![Build Status](https://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=cassandra/0-cassandra-trigger-master)](https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/cassandra/job/0-cassandra-trigger-master/)
 
 DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation](http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
@@ -315,6 +315,7 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
 
 # Upgrade
 
+If you are upgrading from version `1.0.13-X.Y.Z`+ of scheduler to a newer version, here are the in-place upgrade instructions: 
 1. In the DC/OS web interface, destroy the Cassandra instance to be updated. (This will not kill Cassandra node tasks).
 1. Verify that you no longer see the Cassandra instance in the DC/OS web interface.
 1. From the DC/OS CLI, install the latest version of Cassandra [with any customizations you require](1.7/usage/service-guides/cassandra/install-and-customize/) in a JSON options file:
@@ -323,6 +324,23 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
    The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress by making a REST request identical to the one used to follow the progress of a [configuration upgrade](/1.7/usage/service-guides/cassandra/configuration/).
 
 **Note:** The upgrade process will cause all of your Cassandra node processes to restart.
+
+If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Cassandra from an older version (pre `1.0.13-X.Y.Z`), here are three possible upgrade paths:
+
+## 1. Backup/Restore assisted
+
+1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Please make a note of the backup name and backup location.
+2. [Install a new Cassandra Service](https://github.com/mesosphere/dcos-cassandra-service#multiple-cassandra-cluster-installation) instance.
+3. Perform [Restore operation](https://github.com/mesosphere/dcos-cassandra-service#restore) on the new cluster created in Step #2
+4. Once the restore operation is finished, please check if the data is restored correctly.
+5. Optionally, [uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
+
+## 2. Multi-DC Replication assisted
+
+1. [Install a new Cassandra Service in Multi-DataCenter configuration](https://github.com/mesosphere/dcos-cassandra-service#multi-datacenter-deployments), so that if becomes a peer DataCenter of your original Cassandra Service
+2. Cassandra Service created is step #1 will start replicating data from your original cluster, once it's online. 
+3. Once data replication finishes, perform data validation.
+4. Optionally, [uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
 
 # Uninstall
 
