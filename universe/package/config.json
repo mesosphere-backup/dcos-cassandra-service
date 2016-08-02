@@ -59,6 +59,16 @@
 					"type": "string",
 					"description": "The placement strategy for Cassandra nodes. This should always be NODE.",
 					"default": "NODE"
+				},
+				"data_center_url": {
+					"id": "http://cassandra/docs/mesosphere.com/service/data_center_url",
+					"type": "string",
+					"description": "The URL of from which the the data center for the cluster managed by this service instance will server its data center information.",
+				},
+				"external_data_center_urls": {
+					"id": "http://cassandra/docs/mesosphere.com/service/data_center_url",
+					"type": "string",
+					"description": "A comma separated list of the URLs from which this service instance retrive data center info to form a cluster spanning multiple data centers.",
 				}
 			},
 			"additionalProperties": false,
@@ -154,6 +164,12 @@
 			"description": "Cassandra service configuration properties",
 			"type": "object",
 			"properties": {
+				"cluster_name" : {
+					"id" : 	 "http://cassandra/docs/mesosphere.com/cassandra/cluster_name",
+					"type" : "string",
+					"description" : "The name of the cluster managed by the Service",
+					"default" : "cassandra"
+				},
 				"jmx_port": {
 					"id": "http://cassandra/docs/mesosphere.com/cassandra/jmxPort",
 					"type": "integer",
@@ -416,6 +432,7 @@
 			},
 			"additionalProperties": false,
 			"required": [
+				"cluster_name",
 				"jmx_port",
 				"num_tokens",
 				"max_hint_window_in_ms",
