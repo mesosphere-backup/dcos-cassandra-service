@@ -60,6 +60,12 @@
 					"description": "The placement strategy for Cassandra nodes. This should always be NODE.",
 					"default": "NODE"
 				},
+				"data_center": {
+					"id": "http://cassandra/docs/mesosphere.com/service/data_center",
+					"type": "string",
+					"description": "The data center that the Cassandra cluster managed by the service is deployed in.",
+					"default" : "dc1"
+				},
 				"data_center_url": {
 					"id": "http://cassandra/docs/mesosphere.com/service/data_center_url",
 					"type": "string",
@@ -68,7 +74,7 @@
 				"external_data_center_urls": {
 					"id": "http://cassandra/docs/mesosphere.com/service/data_center_url",
 					"type": "string",
-					"description": "A comma separated list of the URLs from which this service instance retrive data center info to form a cluster spanning multiple data centers."
+					"description": "A comma separated list of the URLs from which this service instance retrieve data center info to form a cluster spanning multiple data centers."
 				}
 			},
 			"additionalProperties": false,
