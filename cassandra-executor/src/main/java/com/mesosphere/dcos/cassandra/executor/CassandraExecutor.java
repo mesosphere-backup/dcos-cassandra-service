@@ -45,8 +45,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * will not be able to execute.
  */
 public class CassandraExecutor implements Executor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-        CassandraExecutor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraExecutor.class);
 
     private volatile CassandraDaemonProcess cassandra;
     private String nodeId = null;
@@ -121,7 +120,8 @@ public class CassandraExecutor implements Executor {
                 driver,
                 cassandra,
                 (BackupUploadTask) cassandraTask,
-                StorageDriverFactory.createStorageDriver((BackupUploadTask) cassandraTask)));
+                StorageDriverFactory.createStorageDriver(
+                        (BackupUploadTask) cassandraTask)));
 
                 break;
 
@@ -129,8 +129,8 @@ public class CassandraExecutor implements Executor {
               clusterJobExecutorService.submit(new DownloadSnapshot(
                 driver,
                 (DownloadSnapshotTask) cassandraTask,
-                nodeId,
-                StorageDriverFactory.createStorageDriver((DownloadSnapshotTask) cassandraTask)));
+                StorageDriverFactory.createStorageDriver(
+                        (DownloadSnapshotTask) cassandraTask)));
               break;
 
             case SNAPSHOT_RESTORE:
@@ -138,7 +138,6 @@ public class CassandraExecutor implements Executor {
                 clusterJobExecutorService.submit(new RestoreSnapshot(
                     driver,
                     (RestoreSnapshotTask) cassandraTask,
-                    nodeId,
                     cassandra.getTask().getConfig().getVersion()));
 
                 break;

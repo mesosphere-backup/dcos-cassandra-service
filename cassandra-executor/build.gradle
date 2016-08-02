@@ -10,7 +10,8 @@ dependencies {
     compile project(':cassandra-commons')
     compile 'org.apache.cassandra:cassandra-all:2.2.5'
     compile 'org.apache.commons:commons-compress:1.5'
-    compile "com.amazonaws:aws-java-sdk-s3:${awsVer}"
+    compile "com.amazonaws:aws-java-sdk-core:1.9.21"
+    compile "com.amazonaws:aws-java-sdk:1.8.9.1"
     compile "com.microsoft.azure:azure-storage:4.2.0"
     compile "commons-io:commons-io:2.5"
 
