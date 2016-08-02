@@ -315,7 +315,7 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
 
 # Upgrade
 
-If you are upgrading from version `1.0.13-X.Y.Z`+ of scheduler to a newer version, here are the in-place upgrade instructions: 
+**If you are upgrading from version `1.0.13-X.Y.Z`+ of scheduler to a newer version, here are the in-place upgrade instructions:**
 
 1. In the DC/OS web interface, destroy the Cassandra instance to be updated. (This will not kill Cassandra node tasks).
 1. Verify that you no longer see the Cassandra instance in the DC/OS web interface.
@@ -326,22 +326,13 @@ If you are upgrading from version `1.0.13-X.Y.Z`+ of scheduler to a newer versio
 
 **Note:** The upgrade process will cause all of your Cassandra node processes to restart.
 
-If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Cassandra from an older version (pre `1.0.13-X.Y.Z`), here are three possible upgrade paths:
-
-## 1. Backup/Restore assisted
+**If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Cassandra from an older version (pre `1.0.13-X.Y.Z`), here is the upgrade path:**
 
 1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Please make a note of the backup name and backup location.
 2. [Install a new Cassandra Service](https://github.com/mesosphere/dcos-cassandra-service#multiple-cassandra-cluster-installation) instance.
 3. Perform [Restore operation](https://github.com/mesosphere/dcos-cassandra-service#restore) on the new cluster created in Step #2
 4. Once the restore operation is finished, please check if the data is restored correctly.
 5. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
-
-## 2. Multi-DC Replication assisted
-
-1. [Install a new Cassandra Service in Multi-DataCenter configuration](https://github.com/mesosphere/dcos-cassandra-service#multi-datacenter-deployments), so that it becomes a peer DataCenter of your original Cassandra Service
-2. Cassandra Service created in step #1 will start replicating data from your original cluster, once it's online. 
-3. Once data replication finishes, perform data validation. Because, of Cassandra's eventual consistency nature, there's no correct way to determine if Cassandra has finished replicating data. Please exercise caution before proceeding to step #4.
-4. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
 
 # Uninstall
 
