@@ -107,7 +107,7 @@ public class S3StorageDriverTest {
     @Test
     public void testGetNestedPrefixKeyHTTPSProtocol() throws URISyntaxException {
         String backupName = "backup-name";
-        String nestedPath = "nested-path";
+        String nestedPath = "nested-path/hi/yah";
         BackupRestoreContext backupRestoreContext = BackupRestoreContext.create(
                 "node-id",
                 backupName,
