@@ -25,6 +25,9 @@ public class BackupRestoreRequest {
   @JsonProperty("azure_key")
   private String azureKey;
 
+  @JsonProperty("uses_emc")
+  private Boolean usesEmc;
+
   public String getName() {
     return name;
   }
@@ -73,6 +76,14 @@ public class BackupRestoreRequest {
     this.azureKey = azureKey;
   }
 
+  public boolean usesEmc() {
+    if (usesEmc != null) {
+      return usesEmc;
+    } else {
+      return false;
+    }
+  }
+
   public boolean isValid() {
     return (StringUtils.isNotBlank(name) && externalLocation != null)
             && (isValidS3Request() || isValidAzureRequest());
@@ -103,6 +114,7 @@ public class BackupRestoreRequest {
             ", s3SecretKey='" + s3SecretKey + '\'' +
             ", azureAccount='" + azureAccount + '\'' +
             ", azureKey='" + azureKey + '\'' +
+            ", usesEmc='" + usesEmc + '\'' +
             '}';
   }
 }

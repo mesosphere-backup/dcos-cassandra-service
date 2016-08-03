@@ -70,7 +70,7 @@ public class BackupSnapshotTask extends CassandraTask {
     public static BackupSnapshotTask create(
             final Protos.TaskInfo template,
             final CassandraDaemonTask daemon,
-            final BackupContext context) {
+            final BackupRestoreContext context) {
 
         String name = nameForDaemon(daemon);
         CassandraData data = CassandraData.createBackupSnapshotData(
@@ -143,7 +143,7 @@ public class BackupSnapshotTask extends CassandraTask {
     }
 
 
-    public BackupContext getBackupContext() {
-        return getData().getBackupContext();
+    public BackupRestoreContext getBackupRestoreContext() {
+        return getData().getBackupRestoreContext();
     }
 }
