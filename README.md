@@ -1569,6 +1569,8 @@ Cassandra takes a snapshot your tables and ships them to a remote location. Once
 
 You can take a complete snapshot of your DC/OS Cassandra ring and upload the artifacts to S3 or to Azure.
 
+Note: Please take backup of your schema as well. The current backup feature doesn't support backup of schema. 
+
 ##### S3 Backup
 
 To perform a backup to S3, enter the following command on the DC/OS CLI:
@@ -1610,6 +1612,8 @@ $ dcos cassandra --name=<service-name> backup status
 #### Restore
 
 You can restore your DC/OS Cassandra snapshots on a new Cassandra ring from S3 or from Azure storage.
+
+Note: Please make sure all the required Keyspaces exist, before restore operation is performed.
 
 ##### S3 Restore
 
