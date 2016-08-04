@@ -13,12 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dcos import http
+from dcos import errors, http
 from dcos_cassandra import cassandra_utils as cu
 
 
 def status():
-    return cu.to_json(http.get(cu.api_url("/plan"), headers={}))
+    res = None
+    try:
+        res = http.get(cu.api_url("/plan"), headers={})
+    except errors.DCOSHTTPException as e:
+        res = e.response
+
+    return cu.to_json(res)
 
 
 def start_restore(name, external_location, s3_access_key, s3_secret_key,

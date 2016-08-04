@@ -50,7 +50,8 @@ def api_url(slash_command):
 
 def to_json(responseObj):
     # throw any underlying request error
-    responseObj.raise_for_status()
+    if responseObj.status_code != 503:
+        responseObj.raise_for_status()
     # return json
     return responseObj.json()
 
