@@ -6,6 +6,7 @@ import (
 	"github.com/mesosphere/dcos-commons/cli"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -89,11 +90,15 @@ func (cmd *NodeHandler) runList(c *kingpin.ParseContext) error {
 	return nil
 }
 func (cmd *NodeHandler) runReplace(c *kingpin.ParseContext) error {
-	cli.PrintJSON(cli.HTTPGet(fmt.Sprintf("v1/nodes/replace?node=node-%d", cmd.nodeId)))
+	query := url.Values{}
+	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId))
+	cli.PrintJSON(cli.HTTPGetQuery("v1/nodes/replace", query.Encode()))
 	return nil
 }
 func (cmd *NodeHandler) runRestart(c *kingpin.ParseContext) error {
-	cli.PrintJSON(cli.HTTPGet(fmt.Sprintf("v1/nodes/restart?node=node-%d", cmd.nodeId)))
+	query := url.Values{}
+	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId))
+	cli.PrintJSON(cli.HTTPGetQuery("v1/nodes/restart", query.Encode()))
 	return nil
 }
 func (cmd *NodeHandler) runStatus(c *kingpin.ParseContext) error {
