@@ -96,6 +96,9 @@ public class S3StorageDriver implements BackupStorageDriver {
         String prefixKey = "";
         for (int i=startIndex; i<segments.length; i++) {
             prefixKey += segments[i];
+            if (i < segments.length - 1) {
+                prefixKey += "/";
+            }
         }
 
         prefixKey = (prefixKey.length() > 0 && !prefixKey.endsWith("/")) ? prefixKey + "/" : prefixKey;
