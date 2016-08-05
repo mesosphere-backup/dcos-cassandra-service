@@ -24,12 +24,15 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	// Omit standard "connection" section. Cassandra isn't on the standard paths yet:
+	// Omit standard "connection" section. Cassandra isn't on the standard paths yet, and omit
+	// standard "config" and "state" sections since Cassandra isn't installing
+	// ConfigResource/StateResource yet.
+	// Once these are fixed, this block can all be replaced with a call to "HandleCommonArgs"
 	cli.HandleCommonFlags(app, modName, fmt.Sprintf("%s DC/OS CLI Module", strings.Title(modName)))
-	cli.HandleConfigSection(app)
+	//cli.HandleConfigSection(app)
 	//cli.HandleConnectionSection(app)
 	cli.HandlePlanSection(app)
-	cli.HandleStateSection(app)
+	//cli.HandleStateSection(app)
 
 	handleSeedsCommand(app)
 	handleCustomConnectionCommand(app, modName)
