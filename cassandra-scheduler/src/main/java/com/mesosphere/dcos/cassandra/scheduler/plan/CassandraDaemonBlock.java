@@ -11,6 +11,8 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.state.StateStoreException;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,11 +74,27 @@ public class CassandraDaemonBlock implements Block {
     }
 
     private boolean isComplete(final CassandraContainer container) throws ConfigStoreException {
-        return (Protos.TaskState.TASK_RUNNING.equals(
-                container.getState())
-                && CassandraMode.NORMAL.equals(
-                container.getMode()) &&
-                !cassandraTasks.needsConfigUpdate(container.getDaemonTask()));
+        final String name = container.getDaemonTask().getName();
+        try {
+            final Protos.TaskStatus storedStatus = cassandraTasks.getStateStore().fetchStatus(name);
+
+            if (storedStatus.hasData()) {
+                final CassandraData data = CassandraData.parse(storedStatus.getData());
+                final CassandraMode mode = data.getMode();
+                return (Protos.TaskState.TASK_RUNNING.equals(storedStatus.getState())
+                        && CassandraMode.NORMAL.equals(mode) &&
+                        !cassandraTasks.needsConfigUpdate(container.getDaemonTask()));
+            } else {
+                return false;
+            }
+        } catch (StateStoreException e) {
+            final Throwable cause = e.getCause();
+            if (cause instanceof KeeperException.NoNodeException) {
+                // No stored status, must be incomplete
+                return false;
+            }
+            throw e;
+        }
     }
 
     private boolean needsConfigUpdate(final CassandraDaemonTask task) throws ConfigStoreException {
