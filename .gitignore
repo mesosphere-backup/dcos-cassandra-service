@@ -45,3 +45,5 @@ cassandra-bin-tmp/
 
 # Ignore dcos-tests
 dcos-tests/
+
+cassandra-scheduler/cassandra.yaml

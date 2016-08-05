@@ -27,7 +27,7 @@ cassandra:
     data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
   jmx_port: ${CASSANDRA_JMX_PORT:-7199}
   application:
-     cluster_name : ${SERVICE_NAME:-"cassandra"}
+     cluster_name : ${CASSANDRA_CLUSTER_NAME:-"cassandra"}
      authenticator: "AllowAllAuthenticator"
      authorizer: "AllowAllAuthorizer"
      role_manager: "CassandraRoleManager"
