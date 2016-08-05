@@ -65,7 +65,7 @@ public class CassandraDaemonBlock implements Block {
         return cassandraTasks.getOrCreateContainer(name);
     }
 
-    private boolean isComplete(Protos.TaskStatus status) throws IOException {
+    public static boolean isComplete(Protos.TaskStatus status) throws IOException {
         final CassandraData cassandraData = CassandraData.parse(status.getData());
         final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(status.getState());
         final boolean isModeNormal = CassandraMode.NORMAL.equals(cassandraData.getMode());
