@@ -14,7 +14,7 @@ cluster_task:
   memory_mb: ${CLUSTER_TASK_MEMORY_MB:-256}
   disk_mb: ${CLUSTER_TASK_DISK_MB:-0}
 cassandra:
-  cpus: ${CASSANDRA_CPUS:-0.5}
+  cpus: ${CASSANDRA_CPUS:-0.6}
   memory_mb: ${CASSANDRA_MEMORY_MB:-4096}
   disk_mb: ${CASSANDRA_DISK_MB:-10240}
   disk_type: ${CASSANDRA_DISK_TYPE:-ROOT}

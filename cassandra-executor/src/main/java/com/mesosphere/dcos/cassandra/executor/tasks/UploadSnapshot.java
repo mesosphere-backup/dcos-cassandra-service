@@ -15,7 +15,7 @@
  */
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
@@ -36,7 +36,7 @@ public class UploadSnapshot implements Runnable {
         UploadSnapshot.class);
     private final CassandraDaemonProcess daemon;
     private final ExecutorDriver driver;
-    private final BackupContext context;
+    private final BackupRestoreContext context;
     private final BackupUploadTask cassandraTask;
     private final BackupStorageDriver backupStorageDriver;
 
@@ -58,7 +58,7 @@ public class UploadSnapshot implements Runnable {
         this.driver = driver;
         this.cassandraTask = cassandraTask;
         this.backupStorageDriver = backupStorageDriver;
-        context = cassandraTask.getBackupContext();
+        context = cassandraTask.getBackupRestoreContext();
     }
 
     private void sendStatus(ExecutorDriver driver,

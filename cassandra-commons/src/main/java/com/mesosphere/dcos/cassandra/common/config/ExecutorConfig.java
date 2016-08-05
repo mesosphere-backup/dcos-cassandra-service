@@ -13,14 +13,12 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Objects;
 
 public class ExecutorConfig {
-
     public static Serializer<ExecutorConfig> JSON_SERIALIZER =
             new Serializer<ExecutorConfig>() {
                 @Override
@@ -59,10 +57,7 @@ public class ExecutorConfig {
             String javaHome,
             URI jreLocation,
             URI executorLocation,
-            URI cassandraLocation,
-            String cassandraUlimitMemlock,
-            String cassandraUlimitNofile,
-            String cassandraUlimitNproc) {
+            URI cassandraLocation) {
 
         return new ExecutorConfig(
                 command,
@@ -74,10 +69,7 @@ public class ExecutorConfig {
                 javaHome,
                 jreLocation,
                 executorLocation,
-                cassandraLocation,
-                cassandraUlimitMemlock,
-                cassandraUlimitNofile,
-                cassandraUlimitNproc);
+                cassandraLocation);
     }
 
     @JsonCreator
@@ -92,9 +84,7 @@ public class ExecutorConfig {
             @JsonProperty("jre_location") String jreLocation,
             @JsonProperty("executor_location") String executorLocation,
             @JsonProperty("cassandra_location") String cassandraLocation,
-            @JsonProperty("cassandra_ulimit_memlock") String cassandraUlimitMemlock,
-            @JsonProperty("cassandra_ulimit_nofile") String cassandraUlimitNofile,
-            @JsonProperty("cassandra_ulimit_nproc") String cassandraUlimitNproc)
+            @JsonProperty("emc_ecs_workaround") boolean emcEcsWorkaround)
             throws URISyntaxException, UnsupportedEncodingException {
 
         ExecutorConfig config = create(
@@ -107,36 +97,32 @@ public class ExecutorConfig {
                 javaHome,
                 URI.create(jreLocation),
                 URI.create(executorLocation),
-                URI.create(cassandraLocation),
-                cassandraUlimitMemlock,
-                cassandraUlimitNofile,
-                cassandraUlimitNproc);
+                URI.create(cassandraLocation));
 
         return config;
     }
 
     @JsonProperty("command")
     private final String command;
+
     @JsonProperty("arguments")
     private final List<String> arguments;
+
     @JsonProperty("cpus")
     private final double cpus;
+
     @JsonProperty("memory_mb")
     private final int memoryMb;
+
     @JsonProperty("heap_mb")
     private final int heapMb;
+
     @JsonProperty("api_port")
     private final int apiPort;
+
     private final URI jreLocation;
     private final URI executorLocation;
     private final URI cassandraLocation;
-
-    @JsonProperty("cassandra_ulimit_memlock")
-    private final String cassandraUlimitMemlock;
-    @JsonProperty("cassandra_ulimit_nofile")
-    private final String cassandraUlimitNofile;
-    @JsonProperty("cassandra_ulimit_nproc")
-    private final String cassandraUlimitNproc;
 
     @JsonProperty("java_home")
     private final String javaHome;
@@ -151,10 +137,7 @@ public class ExecutorConfig {
             String javaHome,
             URI jreLocation,
             URI executorLocation,
-            URI cassandraLocation,
-            String cassandraUlimitMemlock,
-            String cassandraUlimitNofile,
-            String cassandraUlimitNproc) {
+            URI cassandraLocation) {
 
         this.command = command;
         this.arguments = arguments;
@@ -166,9 +149,6 @@ public class ExecutorConfig {
         this.executorLocation = executorLocation;
         this.cassandraLocation = cassandraLocation;
         this.javaHome = javaHome;
-        this.cassandraUlimitMemlock = cassandraUlimitMemlock;
-        this.cassandraUlimitNofile = cassandraUlimitNofile;
-        this.cassandraUlimitNproc = cassandraUlimitNproc;
     }
 
 
@@ -210,21 +190,6 @@ public class ExecutorConfig {
 
     public int getMemoryMb() {
         return memoryMb;
-    }
-
-    @JsonProperty("cassandra_ulimit_memlock")
-    public String getCassandraUlimitMemlock() {
-        return cassandraUlimitMemlock;
-    }
-
-    @JsonProperty("cassandra_ulimit_nofile")
-    public String getCassandraUlimitNofile() {
-        return cassandraUlimitNofile;
-    }
-
-    @JsonProperty("cassandra_ulimit_nproc")
-    public String getCassandraUlimitNproc() {
-        return cassandraUlimitNproc;
     }
 
     @JsonProperty("jre_location")

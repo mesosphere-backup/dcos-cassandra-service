@@ -81,4 +81,6 @@ message CassandraData{
     repeated string nodes = 15;
 
     optional string node = 16;
+
+    optional bool usesEmc = 17;
 }

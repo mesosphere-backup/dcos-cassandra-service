@@ -1,7 +1,7 @@
 package com.mesosphere.dcos.cassandra.executor.backup;
 
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobInputStream;
 import com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream;
 import com.microsoft.azure.storage.CloudStorageAccount;
@@ -50,7 +50,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
   private StorageUtil storageUtil = new StorageUtil();
 
   @Override
-  public void upload(BackupContext ctx) throws IOException {
+  public void upload(BackupRestoreContext ctx) throws IOException {
 
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
@@ -158,7 +158,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
   }
 
   @Override
-  public void download(RestoreContext ctx) throws IOException {
+  public void download(BackupRestoreContext ctx) throws IOException {
 
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
