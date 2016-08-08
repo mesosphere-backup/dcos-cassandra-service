@@ -15,7 +15,7 @@ task packageVersion (
 task universe(
   dependsOn: packageVersion,
   group: "universe",
-  description: "Copies universe files to build and modifies there artifact dir") {
+  description: "Copies universe files to build and modifies their artifact dir") {
   inputs.file file("universe/package")
   // incremental builds might be nice but need to research multiple inputs
   // outputs.dir "$buildDir/universe"
