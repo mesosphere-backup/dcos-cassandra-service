@@ -36,10 +36,16 @@ public class DefaultConfigurationManager {
         configStore = new CuratorConfigStore<>(frameworkName, connectionHost);
         Configuration oldConfig = null;
         try {
-            oldConfig = getTargetConfig();
-            LOGGER.info("Current target config: {}", getTargetName());
+            UUID targetName = getTargetName();
+            LOGGER.info("Current target config: {}", targetName.toString());
+            oldConfig = fetch(targetName);
         } catch (ConfigStoreException e) {
-            LOGGER.error("Failed to read existing target config from config store.", e);
+            // just print the message, not the full stacktrace. then continue with newConfiguration.
+            // avoid making anyone think this is an error, while still providing enough info just in
+            // case it is
+            LOGGER.info("Unable to retrieve target config ID from config store. " +
+                "This is expected if the framework is starting for the first time: {}",
+                e.getMessage());
         }
         validationErrors = configValidator.validate(oldConfig, newConfiguration);
         LOGGER.error("Validation errors: {}", validationErrors);
@@ -78,7 +84,7 @@ public class DefaultConfigurationManager {
         }
     }
 
-    public Set<UUID> getTaskConfigs() {
+    private Set<UUID> getTaskConfigs() {
         final Collection<Protos.TaskInfo> taskInfos = stateStore.fetchTasks();
         final Set<UUID> activeConfigs = new HashSet<>();
         try {
@@ -144,7 +150,7 @@ public class DefaultConfigurationManager {
         }
     }
 
-    public static String getConfigName(Protos.TaskInfo taskInfo) {
+    private static String getConfigName(Protos.TaskInfo taskInfo) {
         for (Protos.Label label : taskInfo.getLabels().getLabelsList()) {
             if (label.getKey().equals("config_target")) {
                 return label.getValue();
@@ -180,7 +186,7 @@ public class DefaultConfigurationManager {
         return duplicateConfigs;
     }
 
-    public Configuration fetch(UUID version) throws ConfigStoreException {
+    private Configuration fetch(UUID version) throws ConfigStoreException {
         try {
             final ConfigurationFactory<Configuration> yamlConfigurationFactory =
                     new YAMLConfigurationFactory(configClass);
@@ -192,27 +198,10 @@ public class DefaultConfigurationManager {
     }
 
     /**
-     * Returns whether a current target configuration exists.
-     */
-    public boolean hasTarget() {
-        try {
-            return configStore.getTargetConfig() != null;
-        } catch (Exception e) {
-            LOGGER.error("Failed to determine target config", e);
-            return false;
-        }
-    }
-
-    /**
      * Returns the name of the current target configuration.
      */
     public UUID getTargetName() throws ConfigStoreException {
-        try {
-            return configStore.getTargetConfig();
-        } catch (Exception e) {
-            LOGGER.error("Failed to retrieve target config name", e);
-            throw e;
-        }
+        return configStore.getTargetConfig();
     }
 
     /**
@@ -229,7 +218,7 @@ public class DefaultConfigurationManager {
      *
      * @throws ConfigStoreException if the underlying storage failed to read
      */
-    public Collection<UUID> getConfigNames() throws ConfigStoreException {
+    private Collection<UUID> getConfigNames() throws ConfigStoreException {
         return configStore.list();
     }
 
@@ -238,7 +227,7 @@ public class DefaultConfigurationManager {
      *
      * @throws ConfigStoreException if the underlying storage failed to write
      */
-    public UUID store(Configuration configuration) throws ConfigStoreException {
+    UUID store(Configuration configuration) throws ConfigStoreException {
         try {
             return configStore.store(configuration);
         } catch (Exception e) {
@@ -251,7 +240,7 @@ public class DefaultConfigurationManager {
     /**
      * Sets the name of the target configuration to be used in the future.
      */
-    public void setTargetName(UUID targetConfigName) throws ConfigStoreException {
+    private void setTargetName(UUID targetConfigName) throws ConfigStoreException {
         try {
             configStore.setTargetConfig(targetConfigName);
         } catch (Exception ex) {
