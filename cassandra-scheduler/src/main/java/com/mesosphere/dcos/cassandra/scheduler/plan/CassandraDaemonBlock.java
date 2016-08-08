@@ -77,15 +77,16 @@ public class CassandraDaemonBlock implements Block {
         final String name = container.getDaemonTask().getName();
         try {
             final Protos.TaskStatus storedStatus = cassandraTasks.getStateStore().fetchStatus(name);
+            final boolean needsConfigUpdate = cassandraTasks.needsConfigUpdate(container.getDaemonTask());
+            final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(storedStatus.getState());
 
             if (storedStatus.hasData()) {
                 final CassandraData data = CassandraData.parse(storedStatus.getData());
                 final CassandraMode mode = data.getMode();
-                return (Protos.TaskState.TASK_RUNNING.equals(storedStatus.getState())
-                        && CassandraMode.NORMAL.equals(mode) &&
-                        !cassandraTasks.needsConfigUpdate(container.getDaemonTask()));
+                return (isRunning) && CassandraMode.NORMAL.equals(mode) && !needsConfigUpdate;
             } else {
-                return false;
+                // Handle reconcile messages
+                return isRunning && !needsConfigUpdate;
             }
         } catch (StateStoreException e) {
             final Throwable cause = e.getCause();
