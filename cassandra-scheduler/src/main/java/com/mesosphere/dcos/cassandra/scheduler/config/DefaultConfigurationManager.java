@@ -6,6 +6,7 @@ import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.*;
+import org.apache.mesos.curator.CuratorConfigStore;
 import org.apache.mesos.protobuf.LabelBuilder;
 import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
@@ -18,23 +19,21 @@ public class DefaultConfigurationManager {
             LoggerFactory.getLogger(DefaultConfigurationManager.class);
 
     private final ConfigStore<Configuration> configStore;
-
-    private final Class configClass;
+    private final Class<?> configClass;
 
     private List<ConfigValidationError> validationErrors;
-
     private StateStore stateStore;
 
     public DefaultConfigurationManager(
-            Class configClass,
-            String storageRoot,
+            Class<?> configClass,
+            String frameworkName,
             String connectionHost,
             Configuration newConfiguration,
             ConfigValidator configValidator,
             StateStore stateStore) throws ConfigStoreException {
         this.configClass = configClass;
         this.stateStore = stateStore;
-        configStore = new CuratorConfigStore<>(storageRoot, connectionHost);
+        configStore = new CuratorConfigStore<>(frameworkName, connectionHost);
         Configuration oldConfig = null;
         try {
             oldConfig = getTargetConfig();
@@ -183,7 +182,7 @@ public class DefaultConfigurationManager {
 
     public Configuration fetch(UUID version) throws ConfigStoreException {
         try {
-            final ConfigurationFactory yamlConfigurationFactory =
+            final ConfigurationFactory<Configuration> yamlConfigurationFactory =
                     new YAMLConfigurationFactory(configClass);
             return configStore.fetch(version, yamlConfigurationFactory);
         } catch (ConfigStoreException e) {

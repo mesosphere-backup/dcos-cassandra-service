@@ -17,7 +17,7 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
-import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -66,12 +66,12 @@ public class ConfigurationResourceTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         StateStore stateStore = new CuratorStateStore(
-                "/" + config.getServiceConfig().getName(),
+                config.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
-        configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + config.getServiceConfig().getName(),
+        configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                config.getServiceConfig().getName(),
                 server.getConnectString(),
                 config,
                 new ConfigValidator(),

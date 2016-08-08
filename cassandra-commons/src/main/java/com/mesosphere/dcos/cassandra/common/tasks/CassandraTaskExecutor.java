@@ -24,8 +24,6 @@ import java.util.*;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.executor.ExecutorUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
 
@@ -63,10 +61,7 @@ public class CassandraTaskExecutor {
             config.getHeapMb(),
             config.getApiPort(),
             config.getURIs(),
-            config.getJavaHome(),
-            config.getCassandraUlimitMemlock(),
-            config.getCassandraUlimitNofile(),
-            config.getCassandraUlimitNproc());
+            config.getJavaHome());
     }
 
     /**
@@ -110,10 +105,7 @@ public class CassandraTaskExecutor {
         int heapMb,
         int apiPort,
         Set<String> uris,
-        String javaHome,
-        String cassandraUlimitMemlock,
-        String cassandraUlimitNofile,
-        String cassandraUlimitNProc) {
+        String javaHome) {
 
         this.info = Protos.ExecutorInfo.newBuilder()
             .setFrameworkId(Protos.FrameworkID.newBuilder()
@@ -127,9 +119,6 @@ public class CassandraTaskExecutor {
                     .put("JAVA_HOME", javaHome)
                     .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
                     .put("EXECUTOR_API_PORT", Integer.toString(apiPort))
-                    .put("CASSANDRA_ULIMIT_MEMLOCK", cassandraUlimitMemlock)
-                    .put("CASSANDRA_ULIMIT_NOFILE", cassandraUlimitNofile)
-                    .put("CASSANDRA_ULIMIT_NPROC", cassandraUlimitNProc)
                     .build()))
             .addAllResources(
                 Arrays.asList(

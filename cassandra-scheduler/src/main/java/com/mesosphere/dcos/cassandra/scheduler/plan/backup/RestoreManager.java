@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -24,7 +24,7 @@ public class RestoreManager {
 
     private CassandraTasks cassandraTasks;
     private final ClusterTaskOfferRequirementProvider provider;
-    private volatile RestoreContext context = null;
+    private volatile BackupRestoreContext context = null;
     private volatile DownloadSnapshotPhase download = null;
     private volatile RestoreSnapshotPhase restore = null;
     private StateStore stateStore;
@@ -39,7 +39,7 @@ public class RestoreManager {
         this.stateStore = stateStore;
         // Load RestoreManager from state store
         try {
-            RestoreContext context = RestoreContext.JSON_SERIALIZER.deserialize(stateStore.fetchProperty(RESTORE_KEY));
+            BackupRestoreContext context = BackupRestoreContext.JSON_SERIALIZER.deserialize(stateStore.fetchProperty(RESTORE_KEY));
             // Recovering from failure
             if (context != null) {
                 this.download = new DownloadSnapshotPhase(
@@ -59,7 +59,7 @@ public class RestoreManager {
         }
     }
 
-    public void startRestore(RestoreContext context) {
+    public void startRestore(BackupRestoreContext context) {
 
         if (canStartRestore()) {
             LOGGER.info("Starting restore");
@@ -74,7 +74,7 @@ public class RestoreManager {
                         cassandraTasks.remove(name);
                     }
                 }
-                stateStore.storeProperty(RESTORE_KEY, RestoreContext.JSON_SERIALIZER.serialize(context));
+                stateStore.storeProperty(RESTORE_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
                 this.download = new DownloadSnapshotPhase(
                         context,
                         cassandraTasks,

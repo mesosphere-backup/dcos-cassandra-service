@@ -9,18 +9,11 @@ echo Running with dcos-tests rev: $(git --git-dir=dcos-tests/.git rev-parse HEAD
 
 # GitHub notifier config
 
-if [ -n "$JENKINS_HOME" ]; then
-    # we're in a CI build. send outcomes to github.
-    # note: we expect upstream to specify GITHUB_COMMIT_STATUS_URL and GIT_REPOSITORY_ROOT in this case
-    _notify_github() {
-        ./dcos-tests/build/update-github-status.sh $1 $2 $3
-    }
-else
-    # we're being run manually. print outcomes.
-    _notify_github() {
-        echo "[STATUS:build.sh] $2 $1: $3"
-    }
-fi
+_notify_github() {
+    # IF THIS FAILS FOR YOU, your dcos-tests is out of date!
+    # do this: rm -rf kafka-private/dcos-tests/ then run build.sh again
+    ./dcos-tests/build/update-github-status.py $1 $2 $3
+}
 
 # Build steps for Cassandra
 

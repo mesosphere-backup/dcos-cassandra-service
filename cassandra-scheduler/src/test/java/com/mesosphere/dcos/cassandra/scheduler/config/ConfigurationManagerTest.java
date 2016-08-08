@@ -4,7 +4,6 @@ package com.mesosphere.dcos.cassandra.scheduler.config;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -16,9 +15,10 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
-import org.apache.mesos.state.CuratorStateStore;
+import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,7 +26,6 @@ import java.net.URI;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 
 public class ConfigurationManagerTest {
     private static TestingServer server;
@@ -45,6 +44,12 @@ public class ConfigurationManagerTest {
                                 .registerModule(new Jdk8Module()),
                         "dw");
         connectString = server.getConnectString();
+    }
+
+    @AfterClass
+    public static void afterAll() throws Exception {
+        server.close();
+        server.stop();
     }
 
     @Test
@@ -67,12 +72,12 @@ public class ConfigurationManagerTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         StateStore stateStore = new CuratorStateStore(
-                "/" + original.getServiceConfig().getName(),
+                original.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
-        DefaultConfigurationManager configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + original.getServiceConfig().getName(),
+        DefaultConfigurationManager configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                original.getServiceConfig().getName(),
                 connectString,
                 original,
                 new ConfigValidator(),
@@ -114,12 +119,12 @@ public class ConfigurationManagerTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         StateStore stateStore = new CuratorStateStore(
-                "/" + original.getServiceConfig().getName(),
+                original.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + original.getServiceConfig().getName(),
+                original.getServiceConfig().getName(),
                 connectString,
                 original,
                 new ConfigValidator(),
@@ -146,10 +151,7 @@ public class ConfigurationManagerTest {
                 17,
                 "/java/home",
                 URI.create("/jre/location"), URI.create("/executor/location"),
-                URI.create("/cassandra/location"),
-                "unlimited",
-                "100000",
-                "32768");
+                URI.create("/cassandra/location"));
         int updatedServers = original.getServers() + 10;
         int updatedSeeds = original.getSeeds() + 5;
 
@@ -170,9 +172,9 @@ public class ConfigurationManagerTest {
 
         CassandraSchedulerConfiguration updated = mutable.createConfig();
 
-        configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + original.getServiceConfig().getName(),
+        configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                original.getServiceConfig().getName(),
                 connectString,
                 updated,
                 new ConfigValidator(),
@@ -211,12 +213,12 @@ public class ConfigurationManagerTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         StateStore stateStore = new CuratorStateStore(
-                "/" + originalConfig.getServiceConfig().getName(),
+                originalConfig.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
-        DefaultConfigurationManager configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + originalConfig.getServiceConfig().getName(),
+        DefaultConfigurationManager configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                originalConfig.getServiceConfig().getName(),
                 connectString,
                 originalConfig,
                 new ConfigValidator(),
@@ -236,9 +238,9 @@ public class ConfigurationManagerTest {
         int updatedServers = originalConfig.getServers() - 1;
         mutable.setServers(updatedServers);
 
-        configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + originalConfig.getServiceConfig().getName(),
+        configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                originalConfig.getServiceConfig().getName(),
                 connectString,
                 mutable.createConfig(),
                 new ConfigValidator(),
@@ -269,12 +271,12 @@ public class ConfigurationManagerTest {
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         StateStore stateStore = new CuratorStateStore(
-                "/" + originalConfig.getServiceConfig().getName(),
+                originalConfig.getServiceConfig().getName(),
                 server.getConnectString(),
                 retryPolicy);
         DefaultConfigurationManager configurationManager
                 = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + originalConfig.getServiceConfig().getName(),
+                originalConfig.getServiceConfig().getName(),
                 connectString,
                 originalConfig,
                 new ConfigValidator(),
@@ -294,9 +296,9 @@ public class ConfigurationManagerTest {
         int updatedSeeds = originalConfig.getServers() + 1;
         mutableSchedulerConfiguration.setSeeds(updatedSeeds);
 
-        configurationManager
-                = new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                "/" + originalConfig.getServiceConfig().getName(),
+        configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                originalConfig.getServiceConfig().getName(),
                 connectString,
                 mutableSchedulerConfiguration.createConfig(),
                 new ConfigValidator(),
@@ -304,11 +306,5 @@ public class ConfigurationManagerTest {
         manager = new ConfigurationManager(configurationManager);
         manager.start();
         assertEquals(1, configurationManager.getErrors().size());
-    }
-
-    @After
-    public void afterAll() throws Exception {
-        server.close();
-        server.stop();
     }
 }
