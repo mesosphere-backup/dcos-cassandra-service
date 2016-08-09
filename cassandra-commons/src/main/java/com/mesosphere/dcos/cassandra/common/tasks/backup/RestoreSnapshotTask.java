@@ -15,11 +15,10 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import org.apache.mesos.Protos;
+import org.apache.mesos.offer.TaskUtils;
 
-import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -64,7 +63,7 @@ public class RestoreSnapshotTask extends CassandraTask {
     public static RestoreSnapshotTask create(
             final Protos.TaskInfo template,
             final CassandraDaemonTask daemon,
-            final RestoreContext context) {
+            final BackupRestoreContext context) {
 
         CassandraData data = CassandraData.createRestoreSnapshotData(
                 "",
@@ -72,8 +71,10 @@ public class RestoreSnapshotTask extends CassandraTask {
                     .forNode(daemon.getName())
                     .withLocalLocation(daemon.getVolumePath() + "/data"));
 
+        String name = nameForDaemon(daemon);
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
-                .setName(nameForDaemon(daemon))
+                .setName(name)
+                .setTaskId(TaskUtils.toTaskId(name))
                 .setData(data.getBytes())
                 .build();
 
@@ -134,7 +135,7 @@ public class RestoreSnapshotTask extends CassandraTask {
                 .build());
     }
 
-    public RestoreContext getRestoreContext() {
-        return getData().getRestoreContext();
+    public BackupRestoreContext getBackupRestoreContext() {
+        return getData().getBackupRestoreContext();
     }
 }

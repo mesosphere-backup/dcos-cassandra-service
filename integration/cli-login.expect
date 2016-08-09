@@ -1,0 +1,36 @@
+#!/usr/bin/env expect -f
+
+#
+# SUCCESS:
+# $ dcos auth login
+# dcos-host.com's username: good
+# good@dcos-host.com's password:
+# [core.dcos_acs_token]: set
+# Login successful!
+#
+# FAILURE:
+# $ dcos auth login
+# Removed [core.dcos_acs_token]
+# dcos-host.com's username: bad
+# bad@dcos-host.com's password:
+# dcos-host.com's username: bad
+# bad@dcos-host.com's password:
+# dcos-host.com's username: bad
+# bad@dcos-host.com's password:
+# Authentication failed
+#
+
+set username [lindex $argv 0]
+set password [lindex $argv 1]
+
+if { $username == "" || $password == "" } {
+  puts "Usage: expect this-script.expect <username> <password>"
+  exit 1
+}
+
+spawn dcos auth login
+expect "username:"
+send "$username\n"
+expect "password:"
+send "$password\n"
+expect eof

@@ -20,9 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by kowens on 2/9/16.
- */
 public class DcosSeedProvider implements SeedProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger

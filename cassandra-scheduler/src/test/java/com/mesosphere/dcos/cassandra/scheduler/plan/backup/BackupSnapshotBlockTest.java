@@ -2,13 +2,15 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,15 +38,15 @@ public class BackupSnapshotBlockTest {
     @Test
     public void testInitial() {
         Mockito.when(cassandraTasks.get("snapshot-node-0")).thenReturn(Optional.empty());
-        final BackupContext backupContext = BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
         final BackupSnapshotBlock backupSnapshotBlock = BackupSnapshotBlock.create(
                 "node-0",
                 cassandraTasks,
                 provider,
-                backupContext);
+                backupRestoreContext);
         Assert.assertEquals("snapshot-node-0", backupSnapshotBlock.getName());
         Assert.assertEquals("node-0", backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.Pending, backupSnapshotBlock.getStatus());
+        Assert.assertEquals(Status.Pending, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -53,15 +55,15 @@ public class BackupSnapshotBlockTest {
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
         Mockito.when(cassandraTasks.get("snapshot-node-0"))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
-        final BackupContext backupContext = BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
         final BackupSnapshotBlock backupSnapshotBlock = BackupSnapshotBlock.create(
                 "node-0",
                 cassandraTasks,
                 provider,
-                backupContext);
+                backupRestoreContext);
         Assert.assertEquals("snapshot-node-0", backupSnapshotBlock.getName());
         Assert.assertEquals("node-0", backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.Complete, backupSnapshotBlock.getStatus());
+        Assert.assertEquals(Status.Complete, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -71,24 +73,24 @@ public class BackupSnapshotBlockTest {
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put("node-0", null);
         Mockito.when(cassandraTasks.getDaemons()).thenReturn(map);
-        final BackupContext backupContext = BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
 
         final BackupSnapshotTask snapshotTask = Mockito.mock(BackupSnapshotTask.class);
         Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
         Mockito
-                .when(cassandraTasks.getOrCreateBackupSnapshot(daemonTask, backupContext))
+                .when(cassandraTasks.getOrCreateBackupSnapshot(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
 
         final BackupSnapshotBlock backupSnapshotBlock = BackupSnapshotBlock.create(
                 "node-0",
                 cassandraTasks,
                 provider,
-                backupContext);
+                backupRestoreContext);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNull(backupSnapshotBlock.start());
-        Assert.assertEquals(Status.Complete, backupSnapshotBlock.getStatus());
+        Assert.assertEquals(Status.Complete, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -98,23 +100,45 @@ public class BackupSnapshotBlockTest {
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put("node-0", daemonTask);
         Mockito.when(cassandraTasks.getDaemons()).thenReturn(map);
-        final BackupContext backupContext = BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
 
         final BackupSnapshotTask snapshotTask = Mockito.mock(BackupSnapshotTask.class);
         Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
         Mockito
-                .when(cassandraTasks.getOrCreateBackupSnapshot(daemonTask, backupContext))
+                .when(cassandraTasks.getOrCreateBackupSnapshot(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
 
         final BackupSnapshotBlock backupSnapshotBlock = BackupSnapshotBlock.create(
                 "node-0",
                 cassandraTasks,
                 provider,
-                backupContext);
+                backupRestoreContext);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNotNull(backupSnapshotBlock.start());
-        Assert.assertEquals(Status.InProgress, backupSnapshotBlock.getStatus());
+        Assert.assertEquals(Status.InProgress, Block.getStatus(backupSnapshotBlock));
+    }
+
+    @Test
+    public void testTaskFailed() throws Exception {
+        final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
+        Mockito.when(cassandraTasks.get("snapshot-node-0")).thenReturn(Optional.empty());
+        final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
+        map.put("node-0", daemonTask);
+        Mockito.when(cassandraTasks.getDaemons()).thenReturn(map);
+        final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
+
+        final BackupSnapshotTask snapshotTask = Mockito.mock(BackupSnapshotTask.class);
+        Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
+        Mockito.when(cassandraTasks.getOrCreateBackupSnapshot(daemonTask, backupRestoreContext))
+                .thenThrow(PersistenceException.class);
+
+        final BackupSnapshotBlock backupSnapshotBlock = BackupSnapshotBlock.create(
+                "node-0",
+                cassandraTasks,
+                provider,
+                backupRestoreContext);
+        Assert.assertNull(backupSnapshotBlock.start());
     }
 }

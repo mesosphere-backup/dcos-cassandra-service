@@ -1,22 +1,20 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class RestoreManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -26,49 +24,42 @@ public class RestoreManager {
 
     private CassandraTasks cassandraTasks;
     private final ClusterTaskOfferRequirementProvider provider;
-    private final PersistentReference<RestoreContext> persistentContext;
-    private volatile RestoreContext context = null;
+    private volatile BackupRestoreContext context = null;
     private volatile DownloadSnapshotPhase download = null;
     private volatile RestoreSnapshotPhase restore = null;
+    private StateStore stateStore;
 
     @Inject
     public RestoreManager(
             final CassandraTasks cassandraTasks,
             final ClusterTaskOfferRequirementProvider provider,
-            final PersistenceFactory persistenceFactory,
-            final Serializer<RestoreContext> serializer) {
+            StateStore stateStore) {
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
-
+        this.stateStore = stateStore;
         // Load RestoreManager from state store
-        this.persistentContext = persistenceFactory.createReference(RESTORE_KEY,
-                serializer);
         try {
-            final Optional<RestoreContext> loadedContext = persistentContext.load();
-            if (loadedContext.isPresent()) {
-                RestoreContext context = loadedContext.get();
-                // Recovering from failure
-                if (context != null) {
-                    this.download = new DownloadSnapshotPhase(
-                            context,
-                            cassandraTasks,
-                            provider);
-                    this.restore = new RestoreSnapshotPhase(
-                            context,
-                            cassandraTasks,
-                            provider);
-                    this.context = context;
-                }
+            BackupRestoreContext context = BackupRestoreContext.JSON_SERIALIZER.deserialize(stateStore.fetchProperty(RESTORE_KEY));
+            // Recovering from failure
+            if (context != null) {
+                this.download = new DownloadSnapshotPhase(
+                        context,
+                        cassandraTasks,
+                        provider);
+                this.restore = new RestoreSnapshotPhase(
+                        context,
+                        cassandraTasks,
+                        provider);
+                this.context = context;
             }
-        } catch (PersistenceException e) {
-            LOGGER.error(
-                    "Error loading restore context from persistence store. Reason: ",
-                    e);
-            throw new RuntimeException(e);
+        } catch (SerializationException e) {
+            LOGGER.error("Error loading restore context from persistence store. Reason: ", e);
+        } catch (StateStoreException e) {
+            LOGGER.warn("No backup context found.");
         }
     }
 
-    public void startRestore(RestoreContext context) {
+    public void startRestore(BackupRestoreContext context) {
 
         if (canStartRestore()) {
             LOGGER.info("Starting restore");
@@ -83,7 +74,7 @@ public class RestoreManager {
                         cassandraTasks.remove(name);
                     }
                 }
-                persistentContext.store(context);
+                stateStore.storeProperty(RESTORE_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
                 this.download = new DownloadSnapshotPhase(
                         context,
                         cassandraTasks,
@@ -94,8 +85,7 @@ public class RestoreManager {
                         provider);
                 //this volatile singles that restore is started
                 this.context = context;
-
-            } catch (PersistenceException e) {
+            } catch (SerializationException | PersistenceException e) {
                 LOGGER.error(
                         "Error storing restore context into persistence store. Reason: ",
                         e);
@@ -110,7 +100,9 @@ public class RestoreManager {
     public void stopRestore() {
         LOGGER.info("Stopping restore");
         try {
-            this.persistentContext.delete();
+            // TODO: Delete restore context from Property store
+            stateStore.clearProperty(RESTORE_KEY);
+            cassandraTasks.remove(cassandraTasks.getRestoreSnapshotTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error deleting restore context from persistence store. Reason: {}",

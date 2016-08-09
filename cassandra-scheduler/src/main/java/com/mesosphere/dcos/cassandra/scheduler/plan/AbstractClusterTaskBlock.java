@@ -19,12 +19,12 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     private static final Logger LOGGER = LoggerFactory.getLogger(
             AbstractClusterTaskBlock.class);
 
-    protected final UUID id = UUID.randomUUID();
-    protected final String daemon;
-    protected volatile Status status;
-    protected final C context;
+    private final UUID id = UUID.randomUUID();
+    private final String daemon;
+    private volatile Status status;
+    private final C context;
+    private final CassandraOfferRequirementProvider provider;
     protected final CassandraTasks cassandraTasks;
-    protected final CassandraOfferRequirementProvider provider;
 
     protected abstract Optional<CassandraTask> getOrCreateTask(C context)
             throws PersistenceException;
@@ -60,6 +60,14 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
         try {
             Optional<CassandraTask> task = getOrCreateTask(context);
+            if (task.isPresent()) {
+                update(task.get().getCurrentStatus());
+                if (isComplete() || isInProgress()) {
+                    return null;
+                } else {
+                    setStatus(Status.Pending);
+                }
+            }
 
             if (!task.isPresent()) {
                 LOGGER.info("Block has no task: name = {}, id = {}",
@@ -106,20 +114,24 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     public abstract String getName();
 
     public void update(Protos.TaskStatus status) {
-
-        LOGGER.debug("Updating status : id = {}, task = {}, status = {}",
+        LOGGER.info("Updating status : id = {}, task = {}, status = {}",
                 getId(), getName(), status);
+
+        if (isComplete()) {
+            LOGGER.warn("Task is already complete, ignoring status update.");
+            return;
+        }
+
         try {
             cassandraTasks.update(status);
             Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
 
             if (taskOption.isPresent()) {
                 CassandraTask task = taskOption.get();
-                if (Protos.TaskState.TASK_FINISHED.equals(
-                        task.getState()
-                )) {
+                if (Protos.TaskState.TASK_FINISHED.equals(task.getState())) {
                     setStatus(Status.Complete);
-                    LOGGER.info("Block {} task finished", getName());
+                } else if (Protos.TaskState.TASK_RUNNING.equals(task.getState())) {
+                    setStatus(Status.InProgress);
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
                     cassandraTasks.remove(getName());
@@ -142,19 +154,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     @Override
     public String getMessage() {
-        return "Block " + getName() + " status = " + getStatus();
-    }
-
-    @Override
-    public Status getStatus() {
-        return status;
-    }
-
-    @Override
-    public void setStatus(Status newStatus) {
-        LOGGER.info("{}: changing status from: {} to: {}", getName(), status,
-                newStatus);
-        status = newStatus;
+        return "Block " + getName() + " status = " + status;
     }
 
     @Override
@@ -165,6 +165,29 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     @Override
     public boolean isInProgress() {
         return Status.InProgress == this.status;
+    }
+
+    @Override
+    public void updateOfferStatus(boolean accepted) {
+        //TODO(nick): Any additional actions to perform when OfferRequirement returned by start()
+        //            was accepted or not accepted?
+        if (accepted) {
+            setStatus(Status.InProgress);
+        } else {
+            setStatus(Status.Pending);
+        }
+    }
+
+    @Override
+    public void restart() {
+        //TODO(nick): Any additional actions to perform when restarting work?
+        setStatus(Status.Pending);
+    }
+
+    @Override
+    public void forceComplete() {
+        //TODO(nick): Any additional actions to perform when forcing complete?
+        setStatus(Status.Complete);
     }
 
     @Override
@@ -179,5 +202,10 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     public String getDaemon() {
         return daemon;
+    }
+
+    protected void setStatus(Status newStatus) {
+        LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        status = newStatus;
     }
 }

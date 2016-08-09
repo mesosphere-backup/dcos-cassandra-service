@@ -22,9 +22,16 @@ if [ ! -d "$BASEDIR/env" ]; then
 fi
 
 cd $BASEDIR
-source $BASEDIR/env/bin/activate
-echo "Virtualenv activated."
+uname -a
+if [ "$(uname)" = "Darwin" -o "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
+    source $BASEDIR/env/bin/activate
+    echo "Virtualenv activated."
+else
+    # apparently not needed on Windows
+    echo "Skipping virtualenv activation."
+fi
 
+echo "Installing requirements..."
 if [ ! -f "$BASEDIR/env/updated" -o $BASEDIR/setup.py -nt $BASEDIR/env/updated ]; then
     pip install -e $BASEDIR
     touch $BASEDIR/env/updated

@@ -13,15 +13,12 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Objects;
 
 public class ExecutorConfig {
-
-
     public static Serializer<ExecutorConfig> JSON_SERIALIZER =
             new Serializer<ExecutorConfig>() {
                 @Override
@@ -55,7 +52,6 @@ public class ExecutorConfig {
             List<String> arguments,
             double cpus,
             int memoryMb,
-            int diskMb,
             int heapMb,
             int apiPort,
             String javaHome,
@@ -68,14 +64,12 @@ public class ExecutorConfig {
                 arguments,
                 cpus,
                 memoryMb,
-                diskMb,
                 heapMb,
                 apiPort,
                 javaHome,
                 jreLocation,
                 executorLocation,
-                cassandraLocation
-        );
+                cassandraLocation);
     }
 
     @JsonCreator
@@ -84,13 +78,13 @@ public class ExecutorConfig {
             @JsonProperty("arguments") List<String> arguments,
             @JsonProperty("cpus") double cpus,
             @JsonProperty("memory_mb") int memoryMb,
-            @JsonProperty("disk_mb") int diskMb,
             @JsonProperty("heap_mb") int heapMb,
             @JsonProperty("api_port") int apiPort,
             @JsonProperty("java_home") String javaHome,
             @JsonProperty("jre_location") String jreLocation,
             @JsonProperty("executor_location") String executorLocation,
-            @JsonProperty("cassandra_location") String cassandraLocation)
+            @JsonProperty("cassandra_location") String cassandraLocation,
+            @JsonProperty("emc_ecs_workaround") boolean emcEcsWorkaround)
             throws URISyntaxException, UnsupportedEncodingException {
 
         ExecutorConfig config = create(
@@ -98,7 +92,6 @@ public class ExecutorConfig {
                 arguments,
                 cpus,
                 memoryMb,
-                diskMb,
                 heapMb,
                 apiPort,
                 javaHome,
@@ -111,18 +104,22 @@ public class ExecutorConfig {
 
     @JsonProperty("command")
     private final String command;
+
     @JsonProperty("arguments")
     private final List<String> arguments;
+
     @JsonProperty("cpus")
     private final double cpus;
+
     @JsonProperty("memory_mb")
     private final int memoryMb;
-    @JsonProperty("disk_mb")
-    private final int diskMb;
+
     @JsonProperty("heap_mb")
     private final int heapMb;
+
     @JsonProperty("api_port")
     private final int apiPort;
+
     private final URI jreLocation;
     private final URI executorLocation;
     private final URI cassandraLocation;
@@ -135,7 +132,6 @@ public class ExecutorConfig {
             List<String> arguments,
             double cpus,
             int memoryMb,
-            int diskMb,
             int heapMb,
             int apiPort,
             String javaHome,
@@ -147,7 +143,6 @@ public class ExecutorConfig {
         this.arguments = arguments;
         this.cpus = cpus;
         this.memoryMb = memoryMb;
-        this.diskMb = diskMb;
         this.heapMb = heapMb;
         this.apiPort = apiPort;
         this.jreLocation = jreLocation;
@@ -175,10 +170,6 @@ public class ExecutorConfig {
 
     public double getCpus() {
         return cpus;
-    }
-
-    public int getDiskMb() {
-        return diskMb;
     }
 
     public URI getExecutorLocation() {
@@ -233,7 +224,6 @@ public class ExecutorConfig {
         ExecutorConfig that = (ExecutorConfig) o;
         return Double.compare(that.getCpus(), getCpus()) == 0 &&
                 getMemoryMb() == that.getMemoryMb() &&
-                getDiskMb() == that.getDiskMb() &&
                 getHeapMb() == that.getHeapMb() &&
                 getApiPort() == that.getApiPort() &&
                 Objects.equals(getCommand(), that.getCommand()) &&
@@ -250,7 +240,7 @@ public class ExecutorConfig {
     public int hashCode() {
         return Objects.hash(getCommand(), getArguments(), getCpus(),
                 getMemoryMb(),
-                getDiskMb(), getHeapMb(), getApiPort(),
+                getHeapMb(), getApiPort(),
                 getJreLocation(), getExecutorLocation(), getCassandraLocation(),
                 getJavaHome());
     }

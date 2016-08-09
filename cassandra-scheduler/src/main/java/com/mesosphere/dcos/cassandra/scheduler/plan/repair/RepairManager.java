@@ -2,21 +2,20 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.repair;
 
 
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceFactory;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistentReference;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class RepairManager {
     private static final Logger LOGGER =
@@ -26,38 +25,32 @@ public class RepairManager {
 
     private final CassandraTasks cassandraTasks;
     private final ClusterTaskOfferRequirementProvider provider;
-    private final PersistentReference<RepairContext> persistent;
     private volatile RepairPhase phase = null;
     private volatile RepairContext context = null;
+    private StateStore stateStore;
 
     @Inject
     public RepairManager(
             CassandraTasks cassandraTasks,
             ClusterTaskOfferRequirementProvider provider,
-            PersistenceFactory persistenceFactory,
-            final Serializer<RepairContext> serializer) {
+            StateStore stateStore) {
         this.provider = provider;
         this.cassandraTasks = cassandraTasks;
+        this.stateStore = stateStore;
 
         // Load RepairManager from state store
-        this.persistent = persistenceFactory.createReference(
-                REPAIR_KEY, serializer);
         try {
-            final Optional<RepairContext> loaded = persistent.load();
-            if (loaded.isPresent()) {
-                RepairContext repair = loaded.get();
-                // Recovering from failure
-                if (repair != null) {
-                    this.phase = new RepairPhase(repair, cassandraTasks,
-                            provider);
-                    this.context = repair;
-                }
+            RepairContext repair = RepairContext.JSON_SERIALIZER.deserialize(stateStore.fetchProperty(REPAIR_KEY));
+            // Recovering from failure
+            if (repair != null) {
+                this.phase = new RepairPhase(repair, cassandraTasks,
+                        provider);
+                this.context = repair;
             }
-
-        } catch (PersistenceException e) {
-            LOGGER.error("Error loading repair context from peristence store. " +
-                    "Reason: ", e);
-            throw new RuntimeException(e);
+        } catch (SerializationException e) {
+            LOGGER.error("Error loading repair context from persistence store. Reason: ", e);
+        } catch (StateStoreException e) {
+            LOGGER.warn("No backup context found.");
         }
     }
 
@@ -72,11 +65,11 @@ public class RepairManager {
                         cassandraTasks.remove(name);
                     }
                 }
-                persistent.store(context);
+                stateStore.storeProperty(REPAIR_KEY, RepairContext.JSON_SERIALIZER.serialize(context));
                 this.phase = new RepairPhase(context, cassandraTasks,
                         provider);
                 this.context = context;
-            } catch (PersistenceException e) {
+            } catch (SerializationException | PersistenceException e) {
                 LOGGER.error("Error storing repair context into persistence store. " +
                         "Reason: ", e);
 
@@ -87,7 +80,8 @@ public class RepairManager {
     public void stopRepair() {
         LOGGER.info("Stopping repair");
         try {
-            this.persistent.delete();
+            stateStore.clearProperty(REPAIR_KEY);
+            cassandraTasks.remove(cassandraTasks.getRepairTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error deleting repair context from persistence store. " +

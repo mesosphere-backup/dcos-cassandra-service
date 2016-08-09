@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<RestoreContext> {
+public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<BackupRestoreContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             RestoreSnapshotBlock.class);
 
@@ -22,17 +22,17 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<RestoreContex
             String daemon,
             CassandraTasks cassandraTasks,
             CassandraOfferRequirementProvider provider,
-            RestoreContext context) {
+            BackupRestoreContext context) {
         return new RestoreSnapshotBlock(daemon, cassandraTasks, provider,
                 context);
     }
 
     @Override
-    protected Optional<CassandraTask> getOrCreateTask(RestoreContext context)
+    protected Optional<CassandraTask> getOrCreateTask(BackupRestoreContext context)
             throws PersistenceException {
 
         CassandraDaemonTask daemonTask =
-                cassandraTasks.getDaemons().get(daemon);
+                cassandraTasks.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon does not exist");
             setStatus(Status.Complete);
@@ -48,13 +48,13 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<RestoreContex
             String daemon,
             CassandraTasks cassandraTasks,
             CassandraOfferRequirementProvider provider,
-            RestoreContext context) {
+            BackupRestoreContext context) {
         super(daemon, cassandraTasks, provider, context);
     }
 
 
     @Override
     public String getName() {
-        return RestoreSnapshotTask.nameForDaemon(daemon);
+        return RestoreSnapshotTask.nameForDaemon(getDaemon());
     }
 }

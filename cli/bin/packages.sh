@@ -14,8 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+BASEDIR=`dirname $0`/..
+
+if [ ! -d "$BASEDIR/env" ]; then
+    virtualenv -q $BASEDIR/env --prompt='(dcos-cassandra-cli) '
+    echo "Virtualenv created."
+fi
+
+cd $BASEDIR
+uname -a
+if [ "$(uname)" = "Darwin" -o "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
+    source $BASEDIR/env/bin/activate
+    echo "Virtualenv activated."
+else
+    # apparently not needed on Windows
+    echo "Skipping virtualenv activation."
+fi
+
 echo "Building wheel..."
-source env/bin/activate
 python setup.py bdist_wheel
 
 echo "Building egg..."
