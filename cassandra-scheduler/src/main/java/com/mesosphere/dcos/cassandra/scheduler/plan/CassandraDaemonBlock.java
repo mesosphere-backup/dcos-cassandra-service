@@ -11,6 +11,8 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.state.StateStoreException;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,24 +65,37 @@ public class CassandraDaemonBlock implements Block {
         return cassandraTasks.getOrCreateContainer(name);
     }
 
-    private boolean isComplete(Protos.TaskStatus status) throws IOException {
-        if (CassandraTaskStatus.isTerminated(status.getState())) {
-            return false;
-        }
-
-        final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(status.getState());
+    public static boolean isComplete(Protos.TaskStatus status) throws IOException {
         final CassandraData cassandraData = CassandraData.parse(status.getData());
+        final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(status.getState());
         final boolean isModeNormal = CassandraMode.NORMAL.equals(cassandraData.getMode());
         LOGGER.info("isRunning: {} isModeNormal: {}", isRunning, isModeNormal);
         return (isRunning && isModeNormal);
     }
 
     private boolean isComplete(final CassandraContainer container) throws ConfigStoreException {
-        return (Protos.TaskState.TASK_RUNNING.equals(
-                container.getState())
-                && CassandraMode.NORMAL.equals(
-                container.getMode()) &&
-                !cassandraTasks.needsConfigUpdate(container.getDaemonTask()));
+        final String name = container.getDaemonTask().getName();
+        try {
+            final Protos.TaskStatus storedStatus = cassandraTasks.getStateStore().fetchStatus(name);
+            final boolean needsConfigUpdate = cassandraTasks.needsConfigUpdate(container.getDaemonTask());
+            final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(storedStatus.getState());
+
+            if (storedStatus.hasData()) {
+                final CassandraData data = CassandraData.parse(storedStatus.getData());
+                final CassandraMode mode = data.getMode();
+                return (isRunning) && CassandraMode.NORMAL.equals(mode) && !needsConfigUpdate;
+            } else {
+                // Handle reconcile messages
+                return isRunning && !needsConfigUpdate;
+            }
+        } catch (StateStoreException e) {
+            final Throwable cause = e.getCause();
+            if (cause instanceof KeeperException.NoNodeException) {
+                // No stored status, must be incomplete
+                return false;
+            }
+            throw e;
+        }
     }
 
     private boolean needsConfigUpdate(final CassandraDaemonTask task) throws ConfigStoreException {
@@ -229,13 +244,9 @@ public class CassandraDaemonBlock implements Block {
                 LOGGER.info("Ignoring TaskStatus (Reason is RECONCILIATION): {}", status);
                 return;
             }
-            LOGGER.info("{} Block: {} received status: {}",
-                    Block.getStatus(this), getName(), status);
-            if (status.hasData()) {
-                final CassandraData cassandraData = CassandraData.parse(status.getData());
-                LOGGER.info("{} Block: {} mode: {}",
-                        Block.getStatus(this), getName(), cassandraData.getMode());
-            }
+            final CassandraData cassandraData = CassandraData.parse(status.getData());
+            LOGGER.info("{} Block: {} received status: {} with mode: {}",
+                    Block.getStatus(this), getName(), status, cassandraData.getMode());
             if (isComplete(status)) {
                 setStatus(Status.Complete);
                 LOGGER.info("Updating block: {} with: {}", getName(), Status.Complete);

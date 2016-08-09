@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
@@ -12,6 +13,7 @@ import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -59,6 +61,11 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                 getId());
 
         try {
+            // Is Daemon task running ?
+            final Protos.TaskStatus lastKnownDaemonStatus = cassandraTasks.getStateStore().fetchStatus(getDaemon());
+            if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus)) {
+                return null;
+            }
             Optional<CassandraTask> task = getOrCreateTask(context);
             if (task.isPresent()) {
                 update(task.get().getCurrentStatus());
@@ -79,8 +86,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                 return getOfferRequirement(task.get());
             }
 
-        } catch (PersistenceException ex) {
-
+        } catch (IOException ex) {
             LOGGER.error(String.format("Block failed to create offer " +
                             "requirement: name = %s, id = %s",
                     getName(),
