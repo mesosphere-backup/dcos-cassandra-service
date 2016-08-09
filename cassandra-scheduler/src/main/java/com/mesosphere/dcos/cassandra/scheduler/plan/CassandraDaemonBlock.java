@@ -64,8 +64,12 @@ public class CassandraDaemonBlock implements Block {
     }
 
     private boolean isComplete(Protos.TaskStatus status) throws IOException {
-        final CassandraData cassandraData = CassandraData.parse(status.getData());
+        if (CassandraTaskStatus.isTerminated(status.getState())) {
+            return false;
+        }
+
         final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(status.getState());
+        final CassandraData cassandraData = CassandraData.parse(status.getData());
         final boolean isModeNormal = CassandraMode.NORMAL.equals(cassandraData.getMode());
         LOGGER.info("isRunning: {} isModeNormal: {}", isRunning, isModeNormal);
         return (isRunning && isModeNormal);
@@ -225,9 +229,13 @@ public class CassandraDaemonBlock implements Block {
                 LOGGER.info("Ignoring TaskStatus (Reason is RECONCILIATION): {}", status);
                 return;
             }
-            final CassandraData cassandraData = CassandraData.parse(status.getData());
-            LOGGER.info("{} Block: {} received status: {} with mode: {}",
-                    Block.getStatus(this), getName(), status, cassandraData.getMode());
+            LOGGER.info("{} Block: {} received status: {}",
+                    Block.getStatus(this), getName(), status);
+            if (status.hasData()) {
+                final CassandraData cassandraData = CassandraData.parse(status.getData());
+                LOGGER.info("{} Block: {} mode: {}",
+                        Block.getStatus(this), getName(), cassandraData.getMode());
+            }
             if (isComplete(status)) {
                 setStatus(Status.Complete);
                 LOGGER.info("Updating block: {} with: {}", getName(), Status.Complete);
