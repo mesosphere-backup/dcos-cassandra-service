@@ -2,7 +2,6 @@ package com.mesosphere.dcos.cassandra.executor.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,17 +13,16 @@ public class StorageDriverFactory {
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageDriverFactory.class);
 
   public static BackupStorageDriver createStorageDriver(BackupUploadTask backupUploadTask) {
-    final String externalLocation = backupUploadTask.getBackupContext().getExternalLocation();
+    final String externalLocation = backupUploadTask.getBackupRestoreContext().getExternalLocation();
     return getBackupStorageDriver(externalLocation);
   }
 
   public static BackupStorageDriver createStorageDriver(DownloadSnapshotTask downloadSnapshotTask) {
-    final String externalLocation = downloadSnapshotTask.getRestoreContext().getExternalLocation();
+    final String externalLocation = downloadSnapshotTask.getBackupRestoreContext().getExternalLocation();
     return getBackupStorageDriver(externalLocation);
   }
 
   private static BackupStorageDriver getBackupStorageDriver(String externalLocation) {
-    // there is only 2 storage backends.  more and we should create a map of types.
     if (StorageUtil.isAzure(externalLocation)) {
       LOGGER.info("Using the Azure Driver.");
       return new AzureStorageDriver();

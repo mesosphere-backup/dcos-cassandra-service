@@ -15,8 +15,8 @@
  */
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -34,7 +34,7 @@ public class DownloadSnapshot implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             DownloadSnapshot.class);
     private ExecutorDriver driver;
-    private RestoreContext context;
+    private BackupRestoreContext context;
     private DownloadSnapshotTask cassandraTask;
     private BackupStorageDriver backupStorageDriver;
 
@@ -51,18 +51,16 @@ public class DownloadSnapshot implements Runnable {
      *
      * @param driver              The ExecutorDriver used to send task status.
      * @param task                The DownloadSnapshotTask that will be executed.
-     * @param nodeId              The id of the node on which the task runs.
      * @param backupStorageDriver The BackupStorageDriver that implements
      *                            downloading the snapshot.
      */
     public DownloadSnapshot(ExecutorDriver driver,
                             DownloadSnapshotTask task,
-                            String nodeId,
                             BackupStorageDriver backupStorageDriver) {
         this.driver = driver;
         this.backupStorageDriver = backupStorageDriver;
         this.cassandraTask = task;
-        this.context = task.getRestoreContext();
+        this.context = task.getBackupRestoreContext();
     }
 
     @Override

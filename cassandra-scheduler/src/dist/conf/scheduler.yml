@@ -9,9 +9,6 @@ executor:
   jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
   cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
-  cassandra_ulimit_memlock : ${CASSANDRA_ULIMIT_MEMLOCK:-'unlimited'}
-  cassandra_ulimit_nofile : ${CASSANDRA_ULIMIT_NOFILE:-'100000'}
-  cassandra_ulimit_nproc : ${CASSANDRA_ULIMIT_NPROC:-'32768'}
 cluster_task:
   cpus: ${CLUSTER_TASK_CPUS:-1}
   memory_mb: ${CLUSTER_TASK_MEMORY_MB:-256}
@@ -30,7 +27,7 @@ cassandra:
     data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
   jmx_port: ${CASSANDRA_JMX_PORT:-7199}
   application:
-     cluster_name : ${SERVICE_NAME:-"cassandra"}
+     cluster_name : ${CASSANDRA_CLUSTER_NAME:-"cassandra"}
      authenticator: "AllowAllAuthenticator"
      authorizer: "AllowAllAuthorizer"
      role_manager: "CassandraRoleManager"

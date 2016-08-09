@@ -1,6 +1,6 @@
 # Overview
 
-[![Build Status](https://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=cassandra/0-cassandra-trigger-master)](https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/cassandra/job/0-cassandra-trigger-master/)
+[![Build Status](http://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=cassandra/0-cassandra-trigger-master)](http://jenkins.mesosphere.com/service/jenkins/job/cassandra/job/0-cassandra-trigger-master/)
 
 DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation](http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
@@ -315,8 +315,6 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
 
 # Upgrade
 
-**If you are upgrading from version `1.0.13-X.Y.Z`+ of scheduler to a newer version, here are the in-place upgrade instructions:**
-
 1. In the DC/OS web interface, destroy the Cassandra instance to be updated. (This will not kill Cassandra node tasks).
 1. Verify that you no longer see the Cassandra instance in the DC/OS web interface.
 1. From the DC/OS CLI, install the latest version of Cassandra [with any customizations you require](1.7/usage/service-guides/cassandra/install-and-customize/) in a JSON options file:
@@ -342,11 +340,13 @@ Uninstalling a cluster is straightforward. Replace `cassandra` with the name of 
 $ dcos package uninstall --app-id=cassandra
 ```
 
-Then, use the [framework cleaner script](https://docs.mesosphere.com/1.7/usage/managing-services/uninstall/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
+Then, use the [framework cleaner script](https://docs.mesosphere.com/1.7/usage/managing-services/uninstall/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The script requires several arguments, the default values to be used are:
 
-- `framework_role` is `<service-name>_role`.
-- `framework_principal` is `<service-name>_principal`.
-- `zk_path` is `<service-name>`.
+- `framework_role` is `cassandra-role`.
+- `framework_principal` is `cassandra-principal`.
+- `zk_path` is `dcos-service-<service-name>`.
+
+These values may vary if you had customized them during installation.
 
 # Multi-Datacenter Deployments
 
@@ -1569,8 +1569,6 @@ Cassandra takes a snapshot your tables and ships them to a remote location. Once
 
 You can take a complete snapshot of your DC/OS Cassandra ring and upload the artifacts to S3 or to Azure.
 
-Note: Please take backup of your schema as well. The current backup feature doesn't support backup of schema. 
-
 ##### S3 Backup
 
 To perform a backup to S3, enter the following command on the DC/OS CLI:
@@ -1612,8 +1610,6 @@ $ dcos cassandra --name=<service-name> backup status
 #### Restore
 
 You can restore your DC/OS Cassandra snapshots on a new Cassandra ring from S3 or from Azure storage.
-
-Note: Please make sure all the required Keyspaces exist, before restore operation is performed.
 
 ##### S3 Restore
 
