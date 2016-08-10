@@ -1,6 +1,6 @@
 # Overview
 
-[![Build Status](http://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=cassandra/0-cassandra-trigger-master)](http://jenkins.mesosphere.com/service/jenkins/job/cassandra/job/0-cassandra-trigger-master/)
+[![Build Status](http://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=cassandra/0-trigger-master)](http://jenkins.mesosphere.com/service/jenkins/job/cassandra/job/0-trigger-master/)
 
 DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation](http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
