@@ -324,6 +324,14 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
 
 **Note:** The upgrade process will cause all of your Cassandra node processes to restart.
 
+**If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Cassandra from an older version (pre `1.0.13-X.Y.Z`), here is the upgrade path:**
+
+1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Please make a note of the backup name and backup location.
+2. [Install a new Cassandra Service](https://github.com/mesosphere/dcos-cassandra-service#multiple-cassandra-cluster-installation) instance.
+3. Perform [Restore operation](https://github.com/mesosphere/dcos-cassandra-service#restore) on the new cluster created in Step #2
+4. Once the restore operation is finished, please check if the data is restored correctly.
+5. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
+
 # Uninstall
 
 Uninstalling a cluster is straightforward. Replace `cassandra` with the name of the Cassandra instance to be uninstalled.
