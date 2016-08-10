@@ -140,7 +140,7 @@ func (cmd *BackupRestoreHandler) getArgs() map[string]interface{} {
 		"s3_access_key": cmd.s3AccessKey,
 		"s3_secret_key": cmd.s3SecretKey,
 		"azure_account": cmd.azureAccount,
-		"key": cmd.azureKey,
+		"azure_key": cmd.azureKey,
 	}
 }
 func (cmd *BackupRestoreHandler) runBackup(c *kingpin.ParseContext) error {
