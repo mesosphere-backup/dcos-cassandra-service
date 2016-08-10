@@ -8,7 +8,6 @@ import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import io.dropwizard.Configuration;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MutableSchedulerConfiguration extends Configuration {
 

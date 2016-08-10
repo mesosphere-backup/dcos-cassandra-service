@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -247,7 +246,6 @@ public class CassandraDaemonProcess {
 
 
     private final CassandraDaemonTask task;
-    private final ScheduledExecutorService executor;
     private final CassandraPaths paths;
     private final Process process;
     private final AtomicBoolean open = new AtomicBoolean(true);
@@ -334,7 +332,6 @@ public class CassandraDaemonProcess {
         throws IOException {
 
         this.task = task;
-        this.executor = executor;
         this.paths = CassandraPaths.create(
             task.getConfig().getVersion());
         task.getConfig().getLocation().writeProperties(

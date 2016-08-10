@@ -48,14 +48,8 @@ public class CassandraExecutor implements Executor {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraExecutor.class);
 
     private volatile CassandraDaemonProcess cassandra;
-    private String nodeId = null;
     private final ScheduledExecutorService executor;
     private final ExecutorService clusterJobExecutorService;
-
-    private String getNodeId(String executorName) {
-        int end = executorName.indexOf("_");
-        return executorName.substring(0, end);
-    }
 
     private void launchDeamon(
         final CassandraTask task,
@@ -198,7 +192,6 @@ public class CassandraExecutor implements Executor {
                            Protos.ExecutorInfo executorInfo,
                            Protos.FrameworkInfo frameworkInfo,
                            Protos.SlaveInfo slaveInfo) {
-        this.nodeId = getNodeId(executorInfo.getName());
     }
 
     @Override
