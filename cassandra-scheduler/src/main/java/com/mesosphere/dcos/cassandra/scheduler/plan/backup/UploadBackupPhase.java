@@ -4,8 +4,6 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,8 +14,6 @@ import java.util.stream.Collectors;
  * During UploadBackupPhase, snapshotted data will be uploaded to external location.
  */
 public class UploadBackupPhase extends AbstractClusterTaskPhase<UploadBackupBlock, BackupRestoreContext> {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(UploadBackupPhase.class);
 
     public UploadBackupPhase(
             BackupRestoreContext context,

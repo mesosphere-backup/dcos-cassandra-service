@@ -1,14 +1,10 @@
 package com.mesosphere.dcos.cassandra.scheduler.config;
 
 import org.apache.mesos.config.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class ConfigValidator {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(ConfigValidator.class);
 
     public ConfigValidation serversValidation = (oldConfig, newConfig) -> {
         List<ConfigValidationError> errors = new LinkedList<>();

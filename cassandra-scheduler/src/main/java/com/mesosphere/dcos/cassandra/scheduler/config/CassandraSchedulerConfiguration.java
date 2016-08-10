@@ -10,8 +10,6 @@ import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.config.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
