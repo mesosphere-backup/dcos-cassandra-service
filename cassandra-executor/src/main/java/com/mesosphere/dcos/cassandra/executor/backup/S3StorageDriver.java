@@ -72,7 +72,8 @@ public class S3StorageDriver implements BackupStorageDriver {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             S3StorageDriver.class);
 
-    public static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
+    // Chunk size set to 5MB, AWS S3 multi-part uploads default
+    public static final int DEFAULT_PART_SIZE_UPLOAD = 5 * 1024 * 1024;
     public static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
     private StorageUtil storageUtil = new StorageUtil();

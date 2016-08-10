@@ -16,26 +16,23 @@
     "binaries":{
       "darwin":{
         "x86-64":{
-          "contentHash":[
-            {
-              "algo":"sha256",
-              "value":"{{cli-darwin-sha256q}}"
-            }
-          ],
+          "contentHash":[ { "algo":"sha256", "value":"{{sha256:dcos-cassandra-darwin}}" } ],
           "kind":"executable",
-          "url":"{{artifact-dir}}/cli/darwin/dcos-cassandra"
+          "url":"{{artifact-dir}}/dcos-cassandra-darwin"
         }
       },
       "linux":{
         "x86-64":{
-          "contentHash":[
-            {
-              "algo":"sha256",
-              "value":"{{cli-linux-sha256}}"
-            }
-          ],
+          "contentHash":[ { "algo":"sha256", "value":"{{sha256:dcos-cassandra-linux}}" } ],
           "kind":"executable",
-          "url":"{{artifact-dir}}/cli/linux/dcos-cassandra"
+          "url":"{{artifact-dir}}/dcos-cassandra-linux"
+        }
+      },
+      "windows":{
+        "x86-64":{
+          "contentHash":[ { "algo":"sha256", "value":"{{sha256:dcos-cassandra.exe}}" } ],
+          "kind":"executable",
+          "url":"{{artifact-dir}}/dcos-cassandra.exe"
         }
       }
     }
