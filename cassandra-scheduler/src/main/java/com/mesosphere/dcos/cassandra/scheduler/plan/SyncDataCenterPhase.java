@@ -5,8 +5,6 @@ import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.scheduler.plan.DefaultPhase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -16,8 +14,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SyncDataCenterPhase extends DefaultPhase {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(SyncDataCenterPhase.class);
 
     private static List<SyncDataCenterBlock> createBlocks(
             SeedsManager seeds,

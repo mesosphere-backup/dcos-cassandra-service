@@ -9,7 +9,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.List;
 
 @Path("/v1/seeds")
 @Produces(MediaType.APPLICATION_JSON)

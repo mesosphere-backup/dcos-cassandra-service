@@ -15,8 +15,6 @@
  */
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import org.apache.mesos.ExecutorDriver;
