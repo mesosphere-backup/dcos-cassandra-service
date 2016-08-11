@@ -151,6 +151,10 @@ func (cmd *BackupRestoreHandler) runBackup(c *kingpin.ParseContext) error {
 	cli.PrintJSON(cli.HTTPPutJSON("v1/backup/start", string(payload)))
 	return nil
 }
+func (cmd *BackupRestoreHandler) runBackupStop(c *kingpin.ParseContext) error {
+	cli.PrintJSON(cli.HTTPPut("v1/backup/stop"))
+	return nil
+}
 func (cmd *BackupRestoreHandler) runRestore(c *kingpin.ParseContext) error {
 	payload, err := json.Marshal(cmd.getArgs())
 	if err != nil {
@@ -173,6 +177,9 @@ func handleBackupRestoreSections(app *kingpin.Application, modName string) {
 	backupStart.Flag("s3_secret_key", "S3 secret key").StringVar(&cmd.s3SecretKey)
 	backupStart.Flag("azure_account", "Azure storage account").StringVar(&cmd.azureAccount)
 	backupStart.Flag("azure_key", "Azure secret key").StringVar(&cmd.azureKey)
+	backup.Command(
+		"stop",
+		"Stops a currently running backup").Action(cmd.runBackupStop)
 	// same as 'plan show':
 	backup.Command(
 		"status",
