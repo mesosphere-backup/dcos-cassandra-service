@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
@@ -16,11 +17,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class RestoreManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            RestoreManager.class);
-
-    public static final String RESTORE_KEY = "restore";
+public class RestoreManager implements ClusterTaskManager<BackupRestoreContext> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestoreManager.class);
+    static final String RESTORE_KEY = "restore";
 
     private CassandraTasks cassandraTasks;
     private final ClusterTaskOfferRequirementProvider provider;
@@ -59,45 +58,44 @@ public class RestoreManager {
         }
     }
 
-    public void startRestore(BackupRestoreContext context) {
+    public void start(BackupRestoreContext context) {
+        if (!ClusterTaskManager.canStart(this)) {
+            LOGGER.warn("Restore already in progress: context = {}", this.context);
+            return;
+        }
 
-        if (canStartRestore()) {
-            LOGGER.info("Starting restore");
-            try {
-                if(isComplete()){
-                    for(String name:
-                            cassandraTasks.getDownloadSnapshotTasks().keySet()){
-                        cassandraTasks.remove(name);
-                    }
-                    for(String name:
-                            cassandraTasks.getRestoreSnapshotTasks().keySet()){
-                        cassandraTasks.remove(name);
-                    }
+        LOGGER.info("Starting restore");
+        try {
+            if (isComplete()) {
+                for(String name:
+                        cassandraTasks.getDownloadSnapshotTasks().keySet()){
+                    cassandraTasks.remove(name);
                 }
-                stateStore.storeProperty(RESTORE_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
-                this.download = new DownloadSnapshotPhase(
-                        context,
-                        cassandraTasks,
-                        provider);
-                this.restore = new RestoreSnapshotPhase(
-                        context,
-                        cassandraTasks,
-                        provider);
-                //this volatile singles that restore is started
-                this.context = context;
-            } catch (SerializationException | PersistenceException e) {
-                LOGGER.error(
-                        "Error storing restore context into persistence store. Reason: ",
-                        e);
-                this.context = null;
+                for(String name:
+                        cassandraTasks.getRestoreSnapshotTasks().keySet()){
+                    cassandraTasks.remove(name);
+                }
             }
-        } else {
-
-            LOGGER.warn("Restore already in progress: context = ", this.context);
+            stateStore.storeProperty(RESTORE_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
+            this.download = new DownloadSnapshotPhase(
+                    context,
+                    cassandraTasks,
+                    provider);
+            this.restore = new RestoreSnapshotPhase(
+                    context,
+                    cassandraTasks,
+                    provider);
+            //this volatile signals that restore is started
+            this.context = context;
+        } catch (SerializationException | PersistenceException e) {
+            LOGGER.error(
+                    "Error storing restore context into persistence store. Reason: ",
+                    e);
+            this.context = null;
         }
     }
 
-    public void stopRestore() {
+    public void stop() {
         LOGGER.info("Stopping restore");
         try {
             // TODO: Delete restore context from Property store
@@ -113,18 +111,11 @@ public class RestoreManager {
         this.restore = null;
     }
 
-    public boolean canStartRestore() {
-        // If restoreContext is null, then we can start restore; otherwise, not.
-        return context == null || isComplete();
-    }
-
-    public boolean inProgress() {
-
+    public boolean isInProgress() {
         return (context != null && !isComplete());
     }
 
     public boolean isComplete() {
-
         return (context != null &&
                 download != null && download.isComplete() &&
                 restore != null && restore.isComplete());

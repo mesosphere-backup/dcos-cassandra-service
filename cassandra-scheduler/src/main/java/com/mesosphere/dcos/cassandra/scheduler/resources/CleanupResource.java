@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -43,9 +44,9 @@ public class CleanupResource {
         try {
             if(!request.isValid()){
                 return Response.status(Response.Status.BAD_REQUEST).build();
-            }  else if (manager.canStartCleanup()) {
-                manager.startCleanup(CleanupContext.create(
-                       new ArrayList<>(getNodes(request)),
+            }  else if (ClusterTaskManager.canStart(manager)) {
+                manager.start(CleanupContext.create(
+                        new ArrayList<>(getNodes(request)),
                         request.getKeySpaces(),
                         request.getColumnFamiles()
                 ));

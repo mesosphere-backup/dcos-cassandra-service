@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import org.apache.commons.lang3.StringUtils;
@@ -22,12 +23,12 @@ public class BackupResource {
     private static final Logger LOGGER = LoggerFactory.getLogger
         (BackupResource.class);
 
-  private final BackupManager manager;
+    private final BackupManager manager;
 
-  @Inject
-  public BackupResource(final BackupManager manager) {
-    this.manager = manager;
-  }
+    @Inject
+    public BackupResource(final BackupManager manager) {
+        this.manager = manager;
+    }
 
     @PUT
     @Timed
@@ -38,28 +39,50 @@ public class BackupResource {
             if (!request.isValid()) {
                 LOGGER.error("Invalid request: {}", request);
                 return Response.status(Response.Status.BAD_REQUEST).build();
-            } else if (manager.canStartBackup()) {
-                final BackupRestoreContext BackupRestoreContext = from(request);
-                manager.startBackup(BackupRestoreContext);
-                LOGGER.info("Backup started : context = {}", BackupRestoreContext);
+            } else if (ClusterTaskManager.canStart(manager)) {
+                final BackupRestoreContext backupRestoreContext = from(request);
+                manager.start(backupRestoreContext);
+                LOGGER.info("Backup started : context = {}", backupRestoreContext);
                 return Response.accepted().build();
             } else {
                 // Send error back
                 LOGGER.warn("Backup already in progress: request = {}",
                     request);
                 return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(
-                        ErrorResponse.fromString(
-                            "Backup already in progress."))
+                    .entity(ErrorResponse.fromString("Backup already in progress."))
                     .build();
             }
         } catch (Throwable t) {
-            LOGGER.error(
-                String.format("Error creating backup: request = %s",
-                    request), t);
-            return Response.status(500).entity(
-                ErrorResponse.fromThrowable(t))
-                .build();
+            LOGGER.error(String.format(
+                    "Error creating backup: request = %s", request), t);
+            return Response.status(500)
+                    .entity(ErrorResponse.fromThrowable(t))
+                    .build();
+        }
+    }
+
+    @PUT
+    @Timed
+    @Path("/stop")
+    public Response stop() {
+        LOGGER.info("Processing stop backup request");
+        try {
+            if (ClusterTaskManager.canStop(manager)) {
+                manager.stop();
+                LOGGER.info("Backup stopped");
+                return Response.accepted().build();
+            } else {
+                // Send error back
+                LOGGER.warn("Backup already not running");
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponse.fromString("Backup already not running."))
+                    .build();
+            }
+        } catch (Throwable t) {
+            LOGGER.error("Error stopping backup", t);
+            return Response.status(500)
+                    .entity(ErrorResponse.fromThrowable(t))
+                    .build();
         }
     }
 

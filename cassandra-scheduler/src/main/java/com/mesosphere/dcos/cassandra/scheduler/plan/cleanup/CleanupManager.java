@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.cleanup;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
@@ -17,11 +18,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class CleanupManager {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(
-                    CleanupManager.class);
-    public static final String CLEANUP_KEY = "cleanup";
+public class CleanupManager implements ClusterTaskManager<CleanupContext> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupManager.class);
+    static final String CLEANUP_KEY = "cleanup";
 
     private final CassandraTasks cassandraTasks;
     private final ClusterTaskOfferRequirementProvider provider;
@@ -55,30 +54,32 @@ public class CleanupManager {
     }
 
 
-    public void startCleanup(CleanupContext context) {
-        LOGGER.info("Starting cleanup");
+    public void start(CleanupContext context) {
+        if (!ClusterTaskManager.canStart(this)) {
+            LOGGER.warn("Cleanup already in progress: context = {}", this.context);
+            return;
+        }
 
-        if (canStartCleanup()) {
-            try {
-                if(isComplete()) {
-                    for(String name: cassandraTasks.getCleanupTasks().keySet()) {
-                        cassandraTasks.remove(name);
-                    }
+        LOGGER.info("Starting cleanup");
+        try {
+            if (isComplete()) {
+                for(String name: cassandraTasks.getCleanupTasks().keySet()) {
+                    cassandraTasks.remove(name);
                 }
-                stateStore.storeProperty(CLEANUP_KEY, CleanupContext.JSON_SERIALIZER.serialize(context));
-                this.phase = new CleanupPhase(context, cassandraTasks,
-                        provider);
-                this.context = context;
-            } catch (SerializationException | PersistenceException e) {
-                LOGGER.error(
-                        "Error storing cleanup context into persistence store" +
-                                ". Reason: ",
-                        e);
             }
+            stateStore.storeProperty(CLEANUP_KEY, CleanupContext.JSON_SERIALIZER.serialize(context));
+            this.phase = new CleanupPhase(context, cassandraTasks,
+                    provider);
+            this.context = context;
+        } catch (SerializationException | PersistenceException e) {
+            LOGGER.error(
+                    "Error storing cleanup context into persistence store" +
+                            ". Reason: ",
+                    e);
         }
     }
 
-    public void stopCleanup() {
+    public void stop() {
         LOGGER.info("Stopping cleanup");
         try {
             stateStore.clearProperty(CLEANUP_KEY);
@@ -91,19 +92,11 @@ public class CleanupManager {
         this.context = null;
     }
 
-    public boolean canStartCleanup() {
-        // If CleanupContext is null, then we can start cleanup; otherwise, not.
-        return context == null || isComplete();
-    }
-
-
-    public boolean inProgress() {
-
+    public boolean isInProgress() {
         return (context != null && !isComplete());
     }
 
     public boolean isComplete() {
-
         return (context != null &&
                 phase != null && phase.isComplete());
     }

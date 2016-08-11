@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import org.apache.commons.lang3.StringUtils;
@@ -37,9 +38,9 @@ public class RestoreResource {
         try {
             if(!request.isValid()){
                 return Response.status(Response.Status.BAD_REQUEST).build();
-            } else if (manager.canStartRestore()) {
+            } else if (ClusterTaskManager.canStart(manager)) {
                 final BackupRestoreContext context = from(request);
-                manager.startRestore(context);
+                manager.start(context);
                 LOGGER.info("Started restore: context = {}", context);
                 return Response.accepted().build();
             } else {

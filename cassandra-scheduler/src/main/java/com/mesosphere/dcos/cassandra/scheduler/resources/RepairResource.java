@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
@@ -43,11 +44,10 @@ public class RepairResource {
         try {
             if (!request.isValid()) {
                 return Response.status(Response.Status.BAD_REQUEST).build();
-            } else if (manager.canStartRepair()) {
+            } else if (ClusterTaskManager.canStart(manager)) {
 
-                manager.startRepair(RepairContext.create(
-                        new ArrayList<>(
-                                getNodes(request)),
+                manager.start(RepairContext.create(
+                        new ArrayList<>(getNodes(request)),
                         request.getKeySpaces(),
                         request.getColumnFamiles()
                 ));
