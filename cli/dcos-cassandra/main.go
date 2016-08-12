@@ -163,6 +163,10 @@ func (cmd *BackupRestoreHandler) runRestore(c *kingpin.ParseContext) error {
 	cli.PrintJSON(cli.HTTPPutJSON("v1/restore/start", string(payload)))
 	return nil
 }
+func (cmd *BackupRestoreHandler) runRestoreStop(c *kingpin.ParseContext) error {
+	cli.PrintJSON(cli.HTTPPut("v1/restore/stop"))
+	return nil
+}
 func handleBackupRestoreSections(app *kingpin.Application, modName string) {
 	cmd := &BackupRestoreHandler{}
 	planCmd := &cli.PlanHandler{}
@@ -195,6 +199,9 @@ func handleBackupRestoreSections(app *kingpin.Application, modName string) {
 	restoreStart.Flag("s3_secret_key", "S3 secret key").StringVar(&cmd.s3SecretKey)
 	restoreStart.Flag("azure_account", "Azure storage account").StringVar(&cmd.azureAccount)
 	restoreStart.Flag("azure_key", "Azure secret key").StringVar(&cmd.azureKey)
+	restore.Command(
+		"stop",
+		"Stops a currently running restore").Action(cmd.runRestoreStop)
 	// same as 'plan show':
 	restore.Command(
 		"status",
@@ -231,12 +238,20 @@ func (cmd *CleanupRepairHandler) runCleanup(c *kingpin.ParseContext) error {
 	cli.PrintJSON(cli.HTTPPutJSON("v1/cleanup/start", string(payload)))
 	return nil
 }
+func (cmd *CleanupRepairHandler) runCleanupStop(c *kingpin.ParseContext) error {
+	cli.PrintJSON(cli.HTTPPut("v1/cleanup/stop"))
+	return nil
+}
 func (cmd *CleanupRepairHandler) runRepair(c *kingpin.ParseContext) error {
 	payload, err := json.Marshal(cmd.getArgs())
 	if err != nil {
 		return err
 	}
 	cli.PrintJSON(cli.HTTPPutJSON("v1/repair/start", string(payload)))
+	return nil
+}
+func (cmd *CleanupRepairHandler) runRepairStop(c *kingpin.ParseContext) error {
+	cli.PrintJSON(cli.HTTPPut("v1/repair/stop"))
 	return nil
 }
 func handleCleanupRepairSections(app *kingpin.Application) {
@@ -249,6 +264,9 @@ func handleCleanupRepairSections(app *kingpin.Application) {
 	cleanupStart.Flag("nodes", "A list of the nodes to cleanup or * for all.").Default("*").StringVar(&cmd.nodes)
 	cleanupStart.Flag("key_spaces", "The key spaces to cleanup or empty for all.").StringVar(&cmd.keySpaces)
 	cleanupStart.Flag("column_families", "The column families to cleanup.").StringVar(&cmd.columnFamilies)
+	cleanup.Command(
+		"stop",
+		"Stops a currently running cleanup").Action(cmd.runCleanupStop)
 
 	repair := app.Command("repair", "Perform primary range repair")
 	repairStart := repair.Command(
@@ -257,4 +275,7 @@ func handleCleanupRepairSections(app *kingpin.Application) {
 	repairStart.Flag("nodes", "A list of the nodes to repair or * for all.").Default("*").StringVar(&cmd.nodes)
 	repairStart.Flag("key_spaces", "The key spaces to repair or empty for all.").StringVar(&cmd.keySpaces)
 	repairStart.Flag("column_families", "The column families to repair.").StringVar(&cmd.columnFamilies)
+	repair.Command(
+		"stop",
+		"Stops a currently running repair").Action(cmd.runRepairStop)
 }
