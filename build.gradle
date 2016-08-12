@@ -62,7 +62,6 @@ configure(subprojects - project('seedprovider')) {
     }
 
     dependencies {
-        compile "org.apache.mesos:mesos:${mesosVer}"
         compile "org.slf4j:slf4j-api:${slf4jVer}"
         compile "org.apache.curator:curator-framework:${curatorVer}"
         compile "io.dropwizard:dropwizard-core:${dropwizardVer}"
