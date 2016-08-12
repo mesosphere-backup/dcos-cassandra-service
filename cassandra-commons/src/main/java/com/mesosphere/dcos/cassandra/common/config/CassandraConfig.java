@@ -536,7 +536,7 @@ public class CassandraConfig {
     this.heap = heap;
     this.location = location;
     this.jmxPort = jmxPort;
-    this.application = application;
+    this.application = dseConfig.update(application);
     this.dseConfig = dseConfig;
   }
 
