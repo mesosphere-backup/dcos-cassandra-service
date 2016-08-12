@@ -3,8 +3,8 @@
     "uris": {
       "scheduler-zip":"{{artifact-dir}}/scheduler.zip",
       "executor-zip":"{{artifact-dir}}/executor.zip",
-      "jre-tar-gz":"https://downloads.mesosphere.com/cassandra/assets/server-jre-8u74-linux-x64.tar.gz",
-      "apache-cassandra-bin-tar-gz":"https://downloads.mesosphere.com/cassandra/assets/apache-cassandra-3.0.8-bin-dcos.tar.gz"
+      "jre-tar-gz":"https://s3-us-west-2.amazonaws.com/dse-development/server-jre-8u74-linux-x64.tar.gz",
+      "apache-cassandra-bin-tar-gz":"https://s3-us-west-2.amazonaws.com/dse-development/dse-5.0.0-bin.tar.gz"
     }
   },
   "images": {

@@ -60,10 +60,7 @@ public class ExecutorConfig {
     @JsonProperty("jre_location") String jreLocation,
     @JsonProperty("executor_location") String executorLocation,
     @JsonProperty("cassandra_location") String cassandraLocation,
-    @JsonProperty("keytab_location") String keytabLocation,
-    @JsonProperty("cassandra_ulimit_memlock") String cassandraUlimitMemlock,
-    @JsonProperty("cassandra_ulimit_nofile") String cassandraUlimitNofile,
-    @JsonProperty("cassandra_ulimit_nproc") String cassandraUlimitNproc) {
+    @JsonProperty("keytab_location") String keytabLocation) {
     return new ExecutorConfig(
       command,
       arguments,
@@ -75,10 +72,7 @@ public class ExecutorConfig {
       jreLocation,
       executorLocation,
       cassandraLocation,
-      keytabLocation,
-      cassandraUlimitMemlock,
-      cassandraUlimitNofile,
-      cassandraUlimitNproc);
+      keytabLocation);
   }
 
   @JsonProperty("command")
@@ -101,12 +95,6 @@ public class ExecutorConfig {
   private final String cassandraLocation;
   @JsonProperty("keytab_location")
   private final String keytabLocation;
-  @JsonProperty("cassandra_ulimit_memlock")
-  private final String cassandraUlimitMemlock;
-  @JsonProperty("cassandra_ulimit_nofile")
-  private final String cassandraUlimitNofile;
-  @JsonProperty("cassandra_ulimit_nproc")
-  private final String cassandraUlimitNproc;
 
   @JsonProperty("java_home")
   private final String javaHome;
@@ -122,10 +110,7 @@ public class ExecutorConfig {
     String jreLocation,
     String executorLocation,
     String cassandraLocation,
-    String keytabLocation,
-    String cassandraUlimitMemlock,
-    String cassandraUlimitNofile,
-    String cassandraUlimitNproc) {
+    String keytabLocation) {
 
     this.command = command;
     this.arguments = arguments;
@@ -137,9 +122,6 @@ public class ExecutorConfig {
     this.executorLocation = executorLocation;
     this.cassandraLocation = cassandraLocation;
     this.javaHome = javaHome;
-    this.cassandraUlimitMemlock = cassandraUlimitMemlock;
-    this.cassandraUlimitNofile = cassandraUlimitNofile;
-    this.cassandraUlimitNproc = cassandraUlimitNproc;
     this.keytabLocation = keytabLocation;
   }
 
@@ -186,21 +168,6 @@ public class ExecutorConfig {
 
   public String getKeytabLocation() {
     return keytabLocation;
-  }
-
-  @JsonProperty("cassandra_ulimit_memlock")
-  public String getCassandraUlimitMemlock() {
-    return cassandraUlimitMemlock;
-  }
-
-  @JsonProperty("cassandra_ulimit_nofile")
-  public String getCassandraUlimitNofile() {
-    return cassandraUlimitNofile;
-  }
-
-  @JsonProperty("cassandra_ulimit_nproc")
-  public String getCassandraUlimitNproc() {
-    return cassandraUlimitNproc;
   }
 
 
