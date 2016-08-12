@@ -144,7 +144,7 @@ See [Configuration Options](#configuration-options) for a list of fields that ca
 
 ### Minimal Installation
 You may wish to install Cassandra on a local DC/OS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
-As with the default installation, you must ensure that ports 7000, 7001,7 199, 9042, and 9160 are available.
+As with the default installation, you must ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
 
 **Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
 
