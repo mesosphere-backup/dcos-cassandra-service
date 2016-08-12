@@ -153,19 +153,71 @@ public class DseConfig {
 
     @JsonIgnore
     public static RoleManagementOptions DEFAULT =
-      RoleManagementOptions.create("internal");
+      RoleManagementOptions.create("internal",false);
 
     @JsonCreator
     public static RoleManagementOptions create(
       @JsonProperty("mode")
-      final String mode) {
-      return new RoleManagementOptions(mode);
+      final String mode,
+      @JsonProperty("enabled")
+      final boolean enabled) {
+      return new RoleManagementOptions(mode,enabled);
     }
 
     @JsonIgnore
     private final String mode;
 
-    private RoleManagementOptions(final String mode) {
+    @JsonIgnore
+    private final boolean enabled;
+
+    private RoleManagementOptions(final String mode, boolean enabled) {
+      this.mode = mode;
+      this.enabled = enabled;
+    }
+
+    @JsonProperty("mode")
+    public String getMode() {
+      return mode;
+    }
+
+    @JsonProperty("enabled")
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      RoleManagementOptions that = (RoleManagementOptions) o;
+      return Objects.equals(mode, that.mode) &&
+        Objects.equals(enabled, that.enabled);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(mode, enabled);
+    }
+
+    @Override
+    public String toString() {
+      return JsonUtils.toJsonString(this);
+    }
+  }
+
+  private static final class RoleManagementFileOptions {
+
+    @JsonCreator
+    public static RoleManagementFileOptions create(
+      @JsonProperty("mode")
+      final String mode) {
+      return new RoleManagementFileOptions(mode);
+    }
+
+    @JsonIgnore
+    private final String mode;
+
+    private RoleManagementFileOptions(final String mode) {
       this.mode = mode;
     }
 
@@ -178,7 +230,7 @@ public class DseConfig {
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      RoleManagementOptions that = (RoleManagementOptions) o;
+      RoleManagementFileOptions that = (RoleManagementFileOptions) o;
       return Objects.equals(mode, that.mode);
     }
 
@@ -191,6 +243,7 @@ public class DseConfig {
     public String toString() {
       return JsonUtils.toJsonString(this);
     }
+
   }
 
   public static final class AuthorizationOptions {
@@ -715,6 +768,154 @@ public class DseConfig {
 
   }
 
+  private static class DseConfigFile {
+    @JsonIgnore
+    private final AuthenticationOptions authenticationOptions;
+    @JsonIgnore
+    private final RoleManagementFileOptions roleManagementOptions;
+    @JsonIgnore
+    private final AuthorizationOptions authorizationOptions;
+    @JsonIgnore
+    private final KerberosOptions kerberosOptions;
+    @JsonIgnore
+    private final NodeHealthOptions nodeHealthOptions;
+    @JsonIgnore
+    private final LeaseMetricOptions leaseMetricOptions;
+    @JsonIgnore
+    private final AuditLoggingOptions loggingOptions;
+    @JsonIgnore
+    private final MessagingOptions messagingOptions;
+
+    @JsonCreator
+    public static DseConfigFile create(
+      @JsonProperty("authentication_options")
+      final AuthenticationOptions authenticationOptions,
+      @JsonProperty("role_management_options")
+      final RoleManagementFileOptions roleManagementOptions,
+      @JsonProperty("authorization_options")
+      final AuthorizationOptions authorizationOptions,
+      @JsonProperty("kerberos_options")
+      final KerberosOptions kerberosOptions,
+      @JsonProperty("node_health_options")
+      final NodeHealthOptions nodeHealthOptions,
+      @JsonProperty("lease_metrics_options")
+      final LeaseMetricOptions leaseMetricOptions,
+      @JsonProperty("audit_logging_options")
+      final AuditLoggingOptions loggingOptions,
+      @JsonProperty("internode_messaging_options")
+      final MessagingOptions messagingOptions
+    ) {
+      return new DseConfigFile(
+        authenticationOptions,
+        roleManagementOptions,
+        authorizationOptions,
+        kerberosOptions,
+        nodeHealthOptions,
+        leaseMetricOptions,
+        loggingOptions,
+        messagingOptions);
+    }
+
+    @JsonIgnore
+    public static DseConfigFile create (final DseConfig config) {
+      return create(config.getAuthenticationOptions(),
+        RoleManagementFileOptions.create(
+          config.getRoleManagementOptions().getMode()),
+        config.getAuthorizationOptions(),
+        config.getKerberosOptions(),
+        config.getNodeHealthOptions(),
+        config.getLeaseMetricOptions(),
+        config.getLoggingOptions(),
+        config.getMessagingOptions()
+        );
+    }
+
+    private DseConfigFile(
+      final AuthenticationOptions authenticationOptions,
+      final RoleManagementFileOptions roleManagementOptions,
+      final AuthorizationOptions authorizationOptions,
+      final KerberosOptions kerberosOptions,
+      final NodeHealthOptions nodeHealthOptions,
+      final LeaseMetricOptions leaseMetricOptions,
+      final AuditLoggingOptions loggingOptions,
+      final MessagingOptions messagingOptions) {
+      this.authenticationOptions = authenticationOptions;
+      this.roleManagementOptions = roleManagementOptions;
+      this.authorizationOptions = authorizationOptions;
+      this.kerberosOptions = kerberosOptions;
+      this.nodeHealthOptions = nodeHealthOptions;
+      this.leaseMetricOptions = leaseMetricOptions;
+      this.loggingOptions = loggingOptions;
+      this.messagingOptions = messagingOptions;
+    }
+
+    @JsonProperty("role_management_options")
+    public RoleManagementFileOptions getRoleManagementOptions() {
+      return roleManagementOptions;
+    }
+
+    @JsonProperty("authentication_options")
+    public AuthenticationOptions getAuthenticationOptions() {
+      return authenticationOptions;
+    }
+
+    @JsonProperty("authorization_options")
+    public AuthorizationOptions getAuthorizationOptions() {
+      return authorizationOptions;
+    }
+
+    @JsonProperty("kerberos_options")
+    public KerberosOptions getKerberosOptions() {
+      return kerberosOptions;
+    }
+
+    @JsonProperty("node_health_options")
+    final NodeHealthOptions getNodeHealthOptions() {
+      return nodeHealthOptions;
+    }
+
+    @JsonProperty("lease_metrics_options")
+    final LeaseMetricOptions getLeaseMetricOptions() {
+      return leaseMetricOptions;
+    }
+
+    @JsonProperty("audit_logging_options")
+    final AuditLoggingOptions loggingOptions() {
+      return loggingOptions;
+    }
+
+    @JsonProperty("internode_messaging_options")
+    final MessagingOptions getMessagingOptions(){
+      return messagingOptions;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      DseConfigFile dseConfig = (DseConfigFile) o;
+      return Objects.equals(authenticationOptions, dseConfig.authenticationOptions) &&
+        Objects.equals(roleManagementOptions, dseConfig.roleManagementOptions) &&
+        Objects.equals(authorizationOptions, dseConfig.authorizationOptions) &&
+        Objects.equals(kerberosOptions, dseConfig.kerberosOptions) &&
+        Objects.equals(nodeHealthOptions, dseConfig.nodeHealthOptions) &&
+        Objects.equals(loggingOptions, dseConfig.loggingOptions) &&
+        Objects.equals(messagingOptions,dseConfig.messagingOptions);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(
+        authenticationOptions,
+        roleManagementOptions,
+        authorizationOptions,
+        kerberosOptions,
+        nodeHealthOptions,
+        loggingOptions,
+        messagingOptions);
+    }
+  }
+
   @JsonIgnore
   public static final DseConfig DEFAULT =
     DseConfig.create(AuthenticationOptions.DEFAULT,
@@ -771,7 +972,7 @@ public class DseConfig {
 
   @JsonIgnore
   public void writeYaml(final Path path) throws IOException {
-    YAML_MAPPER.writeValue(path.toFile(), this);
+    YAML_MAPPER.writeValue(path.toFile(), DseConfigFile.create(this));
   }
 
   @JsonIgnore
@@ -857,7 +1058,7 @@ public class DseConfig {
   }
 
   @JsonProperty("audit_logging_options")
-  final AuditLoggingOptions loggingOptions() {
+  final AuditLoggingOptions getLoggingOptions() {
     return loggingOptions;
   }
 
@@ -894,8 +1095,7 @@ public class DseConfig {
 
   @JsonIgnore
   public CassandraApplicationConfig update(
-    final CassandraApplicationConfig config,
-    boolean useDseRoleManager) {
+    final CassandraApplicationConfig config) {
     CassandraApplicationConfig.Builder builder = config.toBuilder();
     if (authenticationOptions.isEnabled()) {
       builder = builder.setAuthenticator(AUTHENTICATOR_CLASS);
@@ -903,7 +1103,7 @@ public class DseConfig {
     if (authorizationOptions.isEnabled()) {
       builder = builder.setAuthorizer(AUTHORIZOR_CLASS);
     }
-    if (useDseRoleManager) {
+    if (roleManagementOptions.isEnabled()) {
       builder = builder.setRoleManager(ROLE_MANAGER_CLASS);
     }
     return builder.build();

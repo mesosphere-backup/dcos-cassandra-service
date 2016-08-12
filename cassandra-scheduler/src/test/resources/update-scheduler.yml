@@ -113,6 +113,7 @@ cassandra:
         plain_text_without_ssl : warn
         transitional_mode : ${DSE_TRANSITIONAL_MODE:-disabled}
       role_management_options:
+        enabled : ${DSE_ROLE_MANAGEMENT_ENABLED:-"false"}
         mode : ${DSE_ROLE_MANAGEMENT_MODE:-"internal"}
       authorization_options:
         enabled: ${DSE_AUTHORIZATION_ENABLED:-false}
