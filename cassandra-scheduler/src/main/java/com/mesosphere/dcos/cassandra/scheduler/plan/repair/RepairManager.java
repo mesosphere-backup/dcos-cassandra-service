@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
+import com.mesosphere.dcos.cassandra.scheduler.resources.RepairRequest;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
@@ -18,14 +19,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class RepairManager implements ClusterTaskManager<RepairContext> {
+public class RepairManager implements ClusterTaskManager<RepairRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RepairManager.class);
     static final String REPAIR_KEY = "repair";
 
     private final CassandraTasks cassandraTasks;
     private final ClusterTaskOfferRequirementProvider provider;
     private volatile RepairPhase phase = null;
-    private volatile RepairContext context = null;
+    private volatile RepairContext activeContext = null;
     private StateStore stateStore;
 
     @Inject
@@ -42,9 +43,8 @@ public class RepairManager implements ClusterTaskManager<RepairContext> {
             RepairContext repair = RepairContext.JSON_SERIALIZER.deserialize(stateStore.fetchProperty(REPAIR_KEY));
             // Recovering from failure
             if (repair != null) {
-                this.phase = new RepairPhase(repair, cassandraTasks,
-                        provider);
-                this.context = repair;
+                this.phase = new RepairPhase(repair, cassandraTasks, provider);
+                this.activeContext = repair;
             }
         } catch (SerializationException e) {
             LOGGER.error("Error loading repair context from persistence store. Reason: ", e);
@@ -54,12 +54,13 @@ public class RepairManager implements ClusterTaskManager<RepairContext> {
     }
 
 
-    public void start(RepairContext context) {
+    public void start(RepairRequest request) {
         if (!ClusterTaskManager.canStart(this)) {
-            LOGGER.warn("Repair already in progress: context = {}", this.context);
+            LOGGER.warn("Repair already in progress: context = {}", this.activeContext);
             return;
         }
 
+        RepairContext context = request.toContext(cassandraTasks);
         LOGGER.info("Starting repair");
         try {
             if (isComplete()){
@@ -70,7 +71,7 @@ public class RepairManager implements ClusterTaskManager<RepairContext> {
             stateStore.storeProperty(REPAIR_KEY, RepairContext.JSON_SERIALIZER.serialize(context));
             this.phase = new RepairPhase(context, cassandraTasks,
                     provider);
-            this.context = context;
+            this.activeContext = context;
         } catch (SerializationException | PersistenceException e) {
             LOGGER.error("Error storing repair context into persistence store. " +
                     "Reason: ", e);
@@ -89,15 +90,15 @@ public class RepairManager implements ClusterTaskManager<RepairContext> {
                             "Reason: {}",
                     e);
         }
-        this.context = null;
+        this.activeContext = null;
     }
 
     public boolean isInProgress() {
-        return (context != null && !isComplete());
+        return (activeContext != null && !isComplete());
     }
 
     public boolean isComplete() {
-        return (context != null &&
+        return (activeContext != null &&
                 phase != null && phase.isComplete());
     }
 

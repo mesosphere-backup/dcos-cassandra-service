@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
+import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 
 import org.apache.mesos.Protos;
@@ -71,7 +72,6 @@ public class RestoreManagerTest {
                 new StateStoreException("no state found"));
         RestoreManager manager = new RestoreManager(mockCassandraTasks, mockProvider, mockState);
 
-        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_RUNNING);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
@@ -80,7 +80,7 @@ public class RestoreManagerTest {
         when(mockCassandraTasks.get(RESTORE_NODE_0)).thenReturn(Optional.of(daemonTask));
         when(mockCassandraTasks.get(DOWNLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
 
-        manager.start(context);
+        manager.start(emptyRequest());
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());
@@ -111,7 +111,6 @@ public class RestoreManagerTest {
                 new StateStoreException("no state found"));
         RestoreManager manager = new RestoreManager(mockCassandraTasks, mockProvider, mockState);
 
-        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_RUNNING);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
@@ -120,7 +119,7 @@ public class RestoreManagerTest {
         when(mockCassandraTasks.get(RESTORE_NODE_0)).thenReturn(Optional.of(daemonTask));
         when(mockCassandraTasks.get(DOWNLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
 
-        manager.start(context);
+        manager.start(emptyRequest());
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());
@@ -148,7 +147,7 @@ public class RestoreManagerTest {
         when(mockCassandraTasks.getDownloadSnapshotTasks()).thenReturn(previousDownloadTasks);
         when(mockCassandraTasks.getRestoreSnapshotTasks()).thenReturn(previousRestoreTasks);
 
-        manager.start(context);
+        manager.start(emptyRequest());
 
         verify(mockCassandraTasks).remove("hi");
         verify(mockCassandraTasks).remove("hey");
@@ -164,7 +163,6 @@ public class RestoreManagerTest {
                 new StateStoreException("no state found"));
         RestoreManager manager = new RestoreManager(mockCassandraTasks, mockProvider, mockState);
 
-        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_RUNNING);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
@@ -173,7 +171,7 @@ public class RestoreManagerTest {
         when(mockCassandraTasks.get(RESTORE_NODE_0)).thenReturn(Optional.of(daemonTask));
         when(mockCassandraTasks.get(DOWNLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
 
-        manager.start(context);
+        manager.start(emptyRequest());
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());
@@ -184,5 +182,16 @@ public class RestoreManagerTest {
         assertFalse(manager.isComplete());
         assertFalse(manager.isInProgress());
         assertTrue(manager.getPhases().isEmpty());
+    }
+
+    private BackupRestoreRequest emptyRequest() {
+        BackupRestoreRequest request = new BackupRestoreRequest();
+        request.setAzureAccount("");
+        request.setAzureKey("");
+        request.setExternalLocation("");
+        request.setName("");
+        request.setS3AccessKey("");
+        request.setS3SecretKey("");
+        return request;
     }
 }

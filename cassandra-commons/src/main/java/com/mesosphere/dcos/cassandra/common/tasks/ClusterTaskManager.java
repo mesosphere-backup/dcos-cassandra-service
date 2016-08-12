@@ -9,7 +9,7 @@ import org.apache.mesos.scheduler.plan.Phase;
  *
  * @param <Context> the {@link ClusterTaskContext} used by the implementing manager
  */
-public interface ClusterTaskManager<Context extends ClusterTaskContext> {
+public interface ClusterTaskManager<R extends ClusterTaskRequest> {
 
     public static boolean canStart(ClusterTaskManager<?> manager) {
         return !manager.isInProgress();
@@ -18,7 +18,7 @@ public interface ClusterTaskManager<Context extends ClusterTaskContext> {
         return manager.isInProgress();
     }
 
-    public void start(Context context);
+    public void start(R request);
     public void stop();
     public boolean isInProgress();
     public boolean isComplete();

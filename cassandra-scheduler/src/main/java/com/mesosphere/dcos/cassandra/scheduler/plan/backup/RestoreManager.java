@@ -6,7 +6,9 @@ import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
+import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
@@ -17,13 +19,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class RestoreManager implements ClusterTaskManager<BackupRestoreContext> {
+public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RestoreManager.class);
     static final String RESTORE_KEY = "restore";
 
     private CassandraTasks cassandraTasks;
     private final ClusterTaskOfferRequirementProvider provider;
-    private volatile BackupRestoreContext context = null;
+    private volatile BackupRestoreContext activeContext = null;
     private volatile DownloadSnapshotPhase download = null;
     private volatile RestoreSnapshotPhase restore = null;
     private StateStore stateStore;
@@ -49,7 +51,7 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreContext> 
                         context,
                         cassandraTasks,
                         provider);
-                this.context = context;
+                this.activeContext = context;
             }
         } catch (SerializationException e) {
             LOGGER.error("Error loading restore context from persistence store. Reason: ", e);
@@ -58,12 +60,13 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreContext> 
         }
     }
 
-    public void start(BackupRestoreContext context) {
+    public void start(BackupRestoreRequest request) {
         if (!ClusterTaskManager.canStart(this)) {
-            LOGGER.warn("Restore already in progress: context = {}", this.context);
+            LOGGER.warn("Restore already in progress: context = {}", this.activeContext);
             return;
         }
 
+        BackupRestoreContext context = request.toContext();
         LOGGER.info("Starting restore");
         try {
             if (isComplete()) {
@@ -86,12 +89,12 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreContext> 
                     cassandraTasks,
                     provider);
             //this volatile signals that restore is started
-            this.context = context;
+            this.activeContext = context;
         } catch (SerializationException | PersistenceException e) {
             LOGGER.error(
                     "Error storing restore context into persistence store. Reason: ",
                     e);
-            this.context = null;
+            this.activeContext = null;
         }
     }
 
@@ -106,23 +109,23 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreContext> 
                     "Error deleting restore context from persistence store. Reason: {}",
                     e);
         }
-        this.context = null;
+        this.activeContext = null;
         this.download = null;
         this.restore = null;
     }
 
     public boolean isInProgress() {
-        return (context != null && !isComplete());
+        return (activeContext != null && !isComplete());
     }
 
     public boolean isComplete() {
-        return (context != null &&
+        return (activeContext != null &&
                 download != null && download.isComplete() &&
                 restore != null && restore.isComplete());
     }
 
     public List<Phase> getPhases() {
-        if (context == null) {
+        if (activeContext == null) {
             return Collections.emptyList();
         } else {
             return Arrays.asList(download, restore);

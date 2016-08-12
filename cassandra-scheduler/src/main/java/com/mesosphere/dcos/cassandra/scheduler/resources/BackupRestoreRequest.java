@@ -1,10 +1,13 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskRequest;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
-public class BackupRestoreRequest {
+public class BackupRestoreRequest implements ClusterTaskRequest {
   @JsonProperty("backup_name")
   @NotEmpty
   private String name;
@@ -116,5 +119,31 @@ public class BackupRestoreRequest {
             ", azureKey='" + azureKey + '\'' +
             ", usesEmc='" + usesEmc + '\'' +
             '}';
+  }
+
+
+  public BackupRestoreContext toContext() {
+    String accountId;
+    String secretKey;
+    if (isAzure(getExternalLocation())) {
+      accountId = getAzureAccount();
+      secretKey = getAzureKey();
+    } else {
+      accountId = getS3AccessKey();
+      secretKey = getS3SecretKey();
+    }
+
+    return BackupRestoreContext.create(
+        "", // node_id
+        getName(),
+        getExternalLocation(),
+        "", // local_location
+        accountId,
+        secretKey,
+        usesEmc());
+  }
+
+  private static boolean isAzure(String externalLocation) {
+    return StringUtils.isNotEmpty(externalLocation) && externalLocation.startsWith("azure:");
   }
 }
