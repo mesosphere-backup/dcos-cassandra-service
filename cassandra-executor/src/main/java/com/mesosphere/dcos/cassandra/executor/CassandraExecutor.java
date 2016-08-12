@@ -45,18 +45,11 @@ import java.util.concurrent.ScheduledExecutorService;
  * will not be able to execute.
  */
 public class CassandraExecutor implements Executor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-        CassandraExecutor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraExecutor.class);
 
     private volatile CassandraDaemonProcess cassandra;
-    private String nodeId = null;
     private final ScheduledExecutorService executor;
     private final ExecutorService clusterJobExecutorService;
-
-    private String getNodeId(String executorName) {
-        int end = executorName.indexOf("_");
-        return executorName.substring(0, end);
-    }
 
     private void launchDeamon(
         final CassandraTask task,
@@ -121,7 +114,8 @@ public class CassandraExecutor implements Executor {
                 driver,
                 cassandra,
                 (BackupUploadTask) cassandraTask,
-                StorageDriverFactory.createStorageDriver((BackupUploadTask) cassandraTask)));
+                StorageDriverFactory.createStorageDriver(
+                        (BackupUploadTask) cassandraTask)));
 
                 break;
 
@@ -129,8 +123,8 @@ public class CassandraExecutor implements Executor {
               clusterJobExecutorService.submit(new DownloadSnapshot(
                 driver,
                 (DownloadSnapshotTask) cassandraTask,
-                nodeId,
-                StorageDriverFactory.createStorageDriver((DownloadSnapshotTask) cassandraTask)));
+                StorageDriverFactory.createStorageDriver(
+                        (DownloadSnapshotTask) cassandraTask)));
               break;
 
             case SNAPSHOT_RESTORE:
@@ -138,7 +132,6 @@ public class CassandraExecutor implements Executor {
                 clusterJobExecutorService.submit(new RestoreSnapshot(
                     driver,
                     (RestoreSnapshotTask) cassandraTask,
-                    nodeId,
                     cassandra.getTask().getConfig().getVersion()));
 
                 break;
@@ -199,7 +192,6 @@ public class CassandraExecutor implements Executor {
                            Protos.ExecutorInfo executorInfo,
                            Protos.FrameworkInfo frameworkInfo,
                            Protos.SlaveInfo slaveInfo) {
-        this.nodeId = getNodeId(executorInfo.getName());
     }
 
     @Override

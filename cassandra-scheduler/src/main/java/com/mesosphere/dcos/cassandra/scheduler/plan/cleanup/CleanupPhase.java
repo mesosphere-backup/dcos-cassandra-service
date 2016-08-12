@@ -5,16 +5,11 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CleanupPhase extends AbstractClusterTaskPhase<CleanupBlock,
-        CleanupContext> {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(CleanupPhase.class);
+public class CleanupPhase extends AbstractClusterTaskPhase<CleanupBlock, CleanupContext> {
 
     public CleanupPhase(
             CleanupContext context,

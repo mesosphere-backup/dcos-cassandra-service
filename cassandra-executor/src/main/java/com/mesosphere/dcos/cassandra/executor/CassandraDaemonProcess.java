@@ -148,8 +148,7 @@ public class CassandraDaemonProcess {
                 final NodeProbe probe,
                 final ExecutorDriver driver,
                 final AtomicBoolean open,
-                final
-                AtomicReference<CassandraMode> mode) {
+                final AtomicReference<CassandraMode> mode) {
             return new ModeReporter(task, probe, driver, open, mode);
         }
 
@@ -181,9 +180,9 @@ public class CassandraDaemonProcess {
                     mode.set(current);
                     LOGGER.info("Cassandra Daemon mode = {}", current);
                     CassandraDaemonStatus daemonStatus =
-                            task.createStatus(Protos.TaskState.TASK_RUNNING,
-                                    mode.get(),
-                                    Optional.of("Cassandra Daemon running."));
+                        task.createStatus(Protos.TaskState.TASK_RUNNING,
+                            mode.get(),
+                            Optional.of("Cassandra Daemon running."));
                     driver.sendStatusUpdate(daemonStatus.getTaskStatus());
                     LOGGER.debug("Sent status update = {} ", daemonStatus);
                 }
@@ -247,7 +246,6 @@ public class CassandraDaemonProcess {
 
 
     private final CassandraDaemonTask task;
-    private final ScheduledExecutorService executor;
     private final DsePaths paths;
     private final Process process;
     private final AtomicBoolean open = new AtomicBoolean(true);
@@ -334,7 +332,6 @@ public class CassandraDaemonProcess {
             throws IOException {
 
         this.task = task;
-        this.executor = executor;
         this.paths = DsePaths.create(task.getConfig().getVersion());
         task.getConfig().getLocation().writeProperties(
                 paths.cassandra().cassandraLocation());

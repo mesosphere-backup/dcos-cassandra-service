@@ -2,7 +2,6 @@ package com.mesosphere.dcos.cassandra.scheduler.health;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.scheduler.config.IdentityManager;
 import org.apache.mesos.Protos;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;

@@ -1,15 +1,19 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
+import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,12 +37,17 @@ public class UploadBackupBlockTest {
     @Before
     public void beforeEach() {
         MockitoAnnotations.initMocks(this);
+        final StateStore mockStateStore = Mockito.mock(StateStore.class);
+        final Protos.TaskStatus status = TestUtils
+                .generateStatus(TaskUtils.toTaskId("node-0"), Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
+        Mockito.when(mockStateStore.fetchStatus("node-0")).thenReturn(status);
+        Mockito.when(cassandraTasks.getStateStore()).thenReturn(mockStateStore);
     }
 
     @Test
     public void testInitial() {
         Mockito.when(cassandraTasks.get(UPLOAD_NODE_0)).thenReturn(Optional.empty());
-        final BackupContext context = BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
         final UploadBackupBlock block = UploadBackupBlock.create(
                 NODE_0,
                 cassandraTasks,
@@ -55,7 +64,7 @@ public class UploadBackupBlockTest {
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
         Mockito.when(cassandraTasks.get(UPLOAD_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
-        final BackupContext context = BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
         final UploadBackupBlock block = UploadBackupBlock.create(
                 NODE_0,
                 cassandraTasks,
@@ -73,7 +82,7 @@ public class UploadBackupBlockTest {
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
         Mockito.when(cassandraTasks.getDaemons()).thenReturn(map);
-        final BackupContext context = BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
 
         final BackupUploadTask task = Mockito.mock(BackupUploadTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
@@ -100,7 +109,7 @@ public class UploadBackupBlockTest {
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
         Mockito.when(cassandraTasks.getDaemons()).thenReturn(map);
-        final BackupContext context = BackupContext.create("", "", "", "", "", "");
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
 
         final BackupUploadTask task = Mockito.mock(BackupUploadTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");

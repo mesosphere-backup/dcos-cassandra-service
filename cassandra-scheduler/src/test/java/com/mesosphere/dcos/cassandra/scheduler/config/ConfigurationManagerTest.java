@@ -18,6 +18,7 @@ import org.apache.curator.test.TestingServer;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,6 +44,12 @@ public class ConfigurationManagerTest {
                                 .registerModule(new Jdk8Module()),
                         "dw");
         connectString = server.getConnectString();
+    }
+
+    @AfterClass
+    public static void afterAll() throws Exception {
+        server.close();
+        server.stop();
     }
 
     @Test
@@ -304,11 +311,5 @@ public class ConfigurationManagerTest {
         manager = new ConfigurationManager(configurationManager);
         manager.start();
         assertEquals(1, configurationManager.getErrors().size());
-    }
-
-    @After
-    public void afterAll() throws Exception {
-        server.close();
-        server.stop();
     }
 }

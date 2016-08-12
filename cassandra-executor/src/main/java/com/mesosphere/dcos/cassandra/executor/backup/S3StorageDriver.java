@@ -31,9 +31,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -74,13 +72,15 @@ public class S3StorageDriver implements BackupStorageDriver {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             S3StorageDriver.class);
 
-    public static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
+    // Chunk size set to 5MB, AWS S3 multi-part uploads default
+    public static final int DEFAULT_PART_SIZE_UPLOAD = 5 * 1024 * 1024;
     public static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
     private StorageUtil storageUtil = new StorageUtil();
 
     String getBucketName(BackupRestoreContext ctx) throws URISyntaxException {
         URI uri = new URI(ctx.getExternalLocation());
+        LOGGER.info("URI: " + uri);
         if (uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME)) {
             return uri.getHost();
         } else {
@@ -96,6 +96,9 @@ public class S3StorageDriver implements BackupStorageDriver {
         String prefixKey = "";
         for (int i=startIndex; i<segments.length; i++) {
             prefixKey += segments[i];
+            if (i < segments.length - 1) {
+                prefixKey += "/";
+            }
         }
 
         prefixKey = (prefixKey.length() > 0 && !prefixKey.endsWith("/")) ? prefixKey + "/" : prefixKey;
@@ -106,10 +109,18 @@ public class S3StorageDriver implements BackupStorageDriver {
 
     String getEndpoint(BackupRestoreContext ctx) throws URISyntaxException {
         URI uri = new URI(ctx.getExternalLocation());
-        if (uri.getScheme().equals(AmazonS3Client.S3_SERVICE_NAME)) {
+        String scheme = uri.getScheme();
+        if (scheme.equals(AmazonS3Client.S3_SERVICE_NAME)) {
             return Constants.S3_HOSTNAME;
         } else {
-            return new URI(ctx.getExternalLocation()).getHost();
+            String endpoint = scheme + "://" + uri.getHost();
+
+            int port = uri.getPort();
+            if (port != -1) {
+                endpoint += ":" + Integer.toString(port);
+            }
+
+            return endpoint;
         }
     }
 
@@ -120,15 +131,20 @@ public class S3StorageDriver implements BackupStorageDriver {
         LOGGER.info("endpoint: {}", endpoint);
 
         final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        final S3ClientOptions options = new S3ClientOptions();
-        options.setPathStyleAccess(true);
         final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
         amazonS3Client.setEndpoint(endpoint);
+
+        if (ctx.usesEmc()) {
+            final S3ClientOptions options = new S3ClientOptions();
+            options.setPathStyleAccess(true);
+            amazonS3Client.setS3ClientOptions(options);
+        }
+
         return amazonS3Client;
     }
 
     @Override
-    public void upload(BackupContext ctx) throws IOException, URISyntaxException {
+    public void upload(BackupRestoreContext ctx) throws IOException, URISyntaxException {
         final String localLocation = ctx.getLocalLocation();
         final String backupName = ctx.getName();
         final String nodeId = ctx.getNodeId();
@@ -169,6 +185,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                     LOGGER.info("Going to upload directory: {}",
                             snapshotDirectory.get().getAbsolutePath());
                     uploadDirectory(
+                            ctx,
                             snapshotDirectory.get().getAbsolutePath(),
                             amazonS3Client,
                             getBucketName(ctx),
@@ -186,16 +203,32 @@ public class S3StorageDriver implements BackupStorageDriver {
         LOGGER.info("Done uploading snapshots for backup: {}", backupName);
     }
 
-    private void uploadDirectory(String localLocation,
-                                 AmazonS3Client amazonS3Client,
-                                 String bucketName,
-                                 String key,
-                                 String keyspaceName,
-                                 String cfName) throws IOException {
+    private boolean isValidFileForUpload(File file, BackupRestoreContext backupRestoreContext) {
+        return file.isFile() && hasValidSuffix(file, backupRestoreContext);
+    }
+
+    private boolean hasValidSuffix(File file, BackupRestoreContext backupRestoreContext) {
+        LOGGER.info("hasValidSuffix() BackupRestoreContext: " + backupRestoreContext);
+        if (backupRestoreContext.usesEmc()) {
+            return !file.getName().endsWith(".json");
+        } else {
+            return true;
+        }
+    }
+
+    private void uploadDirectory(
+            BackupRestoreContext BackupRestoreContext,
+            String localLocation,
+            AmazonS3Client amazonS3Client,
+            String bucketName,
+            String key,
+            String keyspaceName,
+            String cfName) throws IOException {
         LOGGER.info(
                 "uploadDirectory() localLocation: {}, AmazonS3Client: {}, bucketName: {}, key: {}, keyspaceName: {}, cfName: {}",
                 localLocation, amazonS3Client, bucketName, key, keyspaceName,
                 cfName);
+
         Files.walkFileTree(FileSystems.getDefault().getPath(localLocation),
                 new FileVisitor<Path>() {
                     @Override
@@ -207,14 +240,14 @@ public class S3StorageDriver implements BackupStorageDriver {
 
                     @Override
                     public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
-                      throws IOException {
+                            throws IOException {
                         final File file = path.toFile();
-                      LOGGER.info("Visiting file: {}", file.getAbsolutePath());
-                        if (file.isFile()) {
+                        LOGGER.info("Visiting file: {}", file.getAbsolutePath());
+                        if (isValidFileForUpload(file, BackupRestoreContext)) {
                             String fileKey = key + "/" + keyspaceName + "/" + cfName + "/" + file.getName();
                             List<PartETag> partETags = new ArrayList<>();
-                          final InitiateMultipartUploadRequest uploadRequest = new InitiateMultipartUploadRequest(bucketName, fileKey);
-                          final InitiateMultipartUploadResult uploadResult = amazonS3Client.initiateMultipartUpload(uploadRequest);
+                            final InitiateMultipartUploadRequest uploadRequest = new InitiateMultipartUploadRequest(bucketName, fileKey);
+                            final InitiateMultipartUploadResult uploadResult = amazonS3Client.initiateMultipartUpload(uploadRequest);
 
                             LOGGER.info(
                                     "Initiating upload for file: {} | bucket: {} | key: {} | uploadId: {}",
@@ -226,21 +259,21 @@ public class S3StorageDriver implements BackupStorageDriver {
                             ByteArrayOutputStream baos = null;
                             SnappyOutputStream compress = null;
                             try {
-                              inputStream = new BufferedInputStream(new FileInputStream(file));
-                              baos = new ByteArrayOutputStream();
-                              compress = new SnappyOutputStream(baos);
+                                inputStream = new BufferedInputStream(new FileInputStream(file));
+                                baos = new ByteArrayOutputStream();
+                                compress = new SnappyOutputStream(baos);
 
                                 int chunkLength;
                                 int partNum = 1;
-                              while ((chunkLength = inputStream.read(buffer)) != -1) {
-                                LOGGER.debug("Compressing part: {}", partNum);
-                                compress.write(buffer, 0, chunkLength);
-                                compress.flush();
-                                final byte[] bytes = baos.toByteArray();
-                                final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-                                final MessageDigest md5Digester = MessageDigest.getInstance("MD5");
-                                final byte[] digest = md5Digester.digest(bytes);
-                                final String md5String = Base64.getEncoder().encodeToString(digest);
+                                while ((chunkLength = inputStream.read(buffer)) != -1) {
+                                    LOGGER.debug("Compressing part: {}", partNum);
+                                    compress.write(buffer, 0, chunkLength);
+                                    compress.flush();
+                                    final byte[] bytes = baos.toByteArray();
+                                    final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                                    final MessageDigest md5Digester = MessageDigest.getInstance("MD5");
+                                    final byte[] digest = md5Digester.digest(bytes);
+                                    final String md5String = Base64.getEncoder().encodeToString(digest);
 
                                     final UploadPartRequest uploadPartRequest = new UploadPartRequest()
                                             .withBucketName(bucketName)
@@ -313,7 +346,7 @@ public class S3StorageDriver implements BackupStorageDriver {
     }
 
     @Override
-    public void download(RestoreContext ctx) throws IOException, URISyntaxException {
+    public void download(BackupRestoreContext ctx) throws IOException, URISyntaxException {
         // Ex: data/<keyspace>/<cf>/snapshots/</snapshot-dir>/<files>
 
         // Location of data directory, where the data will be copied.
@@ -338,7 +371,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                               String bucketName,
                               AmazonS3Client amazonS3Client,
                               String fileKey,
-                              Long sizeInBytes) {
+                              Long sizeInBytes) throws IOException {
         LOGGER.info(
                 "DownloadFile | Local location: {} | Bucket Name: {} | fileKey: {} | Size in bytes: {}",
                 localLocation, bucketName, fileKey, sizeInBytes);
@@ -397,10 +430,6 @@ public class S3StorageDriver implements BackupStorageDriver {
                         fileKey, position + bytesWritten, sizeInBytes);
                 position += DEFAULT_PART_SIZE_DOWNLOAD + 1;
             }
-        } catch (Exception e) {
-            LOGGER.error(
-                    "Error occuring while downloading fileKey: {} from bucket: {}. Reason: ",
-                    fileKey, bucketName, e);
         } finally {
             IOUtils.closeQuietly(inputStream);
             IOUtils.closeQuietly(fileOutputStream);

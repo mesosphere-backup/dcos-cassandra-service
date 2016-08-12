@@ -71,7 +71,7 @@ public class BackupUploadTask extends CassandraTask {
     public static BackupUploadTask create(
             final Protos.TaskInfo template,
             final CassandraDaemonTask daemon,
-            final BackupContext context) {
+            final BackupRestoreContext context) {
 
         CassandraData data = CassandraData.createBackupUploadData(
                 "",
@@ -144,7 +144,7 @@ public class BackupUploadTask extends CassandraTask {
     }
 
 
-    public BackupContext getBackupContext() {
-        return getData().getBackupContext();
+    public BackupRestoreContext getBackupRestoreContext() {
+        return getData().getBackupRestoreContext();
     }
 }

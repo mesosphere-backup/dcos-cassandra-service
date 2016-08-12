@@ -1,6 +1,6 @@
 # Overview
 
-[![Build Status](https://velocity.mesosphere.com/service/velocity/buildStatus/icon?job=cassandra/infinity-cassandra-parent)](https://velocity.mesosphere.com/service/velocity/job/cassandra/infinity-cassandra-parent)
+[![Build Status](http://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=cassandra/0-trigger-master)](http://jenkins.mesosphere.com/service/jenkins/job/cassandra/job/0-trigger-master/)
 
 DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation](http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
@@ -320,9 +320,17 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
 1. From the DC/OS CLI, install the latest version of Cassandra [with any customizations you require](1.7/usage/service-guides/cassandra/install-and-customize/) in a JSON options file:
     $ dcos package install cassandra --options=/path/to/options.json
 
-   The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress just like the [configuration upgrade progress](/1.7/usage/service-guides/cassandra/configuration/).
+   The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress by making a REST request identical to the one used to follow the progress of a [configuration upgrade](/1.7/usage/service-guides/cassandra/configuration/).
 
 **Note:** The upgrade process will cause all of your Cassandra node processes to restart.
+
+**If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Cassandra from an older version (pre `1.0.13-X.Y.Z`), here is the upgrade path:**
+
+1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Please make a note of the backup name and backup location.
+2. [Install a new Cassandra Service](https://github.com/mesosphere/dcos-cassandra-service#multiple-cassandra-cluster-installation) instance.
+3. Perform [Restore operation](https://github.com/mesosphere/dcos-cassandra-service#restore) on the new cluster created in Step #2
+4. Once the restore operation is finished, please check if the data is restored correctly.
+5. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
 
 # Uninstall
 
@@ -332,11 +340,13 @@ Uninstalling a cluster is straightforward. Replace `cassandra` with the name of 
 $ dcos package uninstall --app-id=cassandra
 ```
 
-Then, use the [framework cleaner script](https://docs.mesosphere.com/1.7/usage/managing-services/uninstall/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The arguments the script requires are derived from your service name:
+Then, use the [framework cleaner script](https://docs.mesosphere.com/1.7/usage/managing-services/uninstall/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The script requires several arguments, the default values to be used are:
 
-- `framework_role` is `<service-name>_role`.
-- `framework_principal` is `<service-name>_principal`.
-- `zk_path` is `<service-name>`.
+- `framework_role` is `cassandra-role`.
+- `framework_principal` is `cassandra-principal`.
+- `zk_path` is `dcos-service-<service-name>`.
+
+These values may vary if you had customized them during installation.
 
 # Multi-Datacenter Deployments
 
