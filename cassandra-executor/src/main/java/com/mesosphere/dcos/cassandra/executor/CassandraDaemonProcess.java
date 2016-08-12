@@ -247,7 +247,6 @@ public class CassandraDaemonProcess {
 
 
     private final CassandraDaemonTask task;
-    private final ScheduledExecutorService executor;
     private final CassandraPaths paths;
     private final Process process;
     private final AtomicBoolean open = new AtomicBoolean(true);
@@ -332,7 +331,6 @@ public class CassandraDaemonProcess {
             throws IOException {
 
         this.task = task;
-        this.executor = executor;
         this.paths = CassandraPaths.create(
                 task.getConfig().getVersion());
         task.getConfig().getLocation().writeProperties(

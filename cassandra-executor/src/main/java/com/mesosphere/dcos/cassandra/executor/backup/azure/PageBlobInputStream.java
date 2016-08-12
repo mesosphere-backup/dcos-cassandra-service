@@ -2,7 +2,6 @@ package com.mesosphere.dcos.cassandra.executor.backup.azure;
 
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlob;
-import com.microsoft.azure.storage.blob.CloudPageBlob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
