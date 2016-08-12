@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -247,7 +246,6 @@ public class CassandraDaemonProcess {
 
 
     private final CassandraDaemonTask task;
-    private final ScheduledExecutorService executor;
     private final CassandraPaths paths;
     private final Process process;
     private final AtomicBoolean open = new AtomicBoolean(true);
@@ -271,14 +269,11 @@ public class CassandraDaemonProcess {
     private Process createDaemon() throws IOException {
 
         final ProcessBuilder builder = new ProcessBuilder(
-            paths.cassandraRun()
-                .toString(),
+            paths.cassandraRun().toString(),
             getReplaceIp(),
-            "-f"
-        )
-            .directory(new File(System.getProperty("user.dir")))
-            .redirectOutput(new File("cassandra-stdout.log"))
-            .redirectError(new File("cassandra-stderr.log"));
+            "-f")
+            .inheritIO()
+            .directory(new File(System.getProperty("user.dir")));
 
         builder.environment().putAll(task.getConfig().getHeap().toEnv());
         builder.environment().put(
@@ -337,15 +332,12 @@ public class CassandraDaemonProcess {
         throws IOException {
 
         this.task = task;
-        this.executor = executor;
         this.paths = CassandraPaths.create(
             task.getConfig().getVersion());
         task.getConfig().getLocation().writeProperties(
             paths.cassandraLocation());
 
         task.getConfig().getApplication().toBuilder()
-            .setPersistentVolume(Paths.get("").resolve(task.getVolumePath())
-                .toAbsolutePath().toString())
             .setListenAddress(getListenAddress())
             .setRpcAddress(getListenAddress())
             .build().writeDaemonConfiguration(paths.cassandraConfig());

@@ -1,7 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.collect.ImmutableList;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
@@ -10,12 +10,12 @@ import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Stage;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CassandraStage implements Stage {
 
-
     public static final CassandraStage create(
-            final ConfigurationManager configuration,
+            final DefaultConfigurationManager defaultConfigurationManager,
             final DeploymentManager deployment,
             final BackupManager backup,
             final RestoreManager restore,
@@ -23,7 +23,7 @@ public class CassandraStage implements Stage {
             final RepairManager repair) {
 
         return new CassandraStage(
-                configuration,
+                defaultConfigurationManager,
                 deployment,
                 backup,
                 restore,
@@ -35,19 +35,18 @@ public class CassandraStage implements Stage {
     private final DeploymentManager deployment;
     private final BackupManager backup;
     private final RestoreManager restore;
-    private final ConfigurationManager configuration;
+    private final DefaultConfigurationManager defaultConfigurationManager;
     private final CleanupManager cleanup;
     private final RepairManager repair;
 
     public CassandraStage(
-            final ConfigurationManager configuration,
+            final DefaultConfigurationManager defaultConfigurationManager,
             final DeploymentManager deployment,
             final BackupManager backup,
             final RestoreManager restore,
             final CleanupManager cleanup,
             final RepairManager repair) {
-
-        this.configuration = configuration;
+        this.defaultConfigurationManager = defaultConfigurationManager;
         this.deployment = deployment;
         this.backup = backup;
         this.restore = restore;
@@ -69,7 +68,11 @@ public class CassandraStage implements Stage {
     @Override
     public List<String> getErrors() {
         return ImmutableList.<String>builder()
-                .addAll(configuration.getErrors())
+                .addAll(defaultConfigurationManager
+                        .getErrors()
+                        .stream()
+                        .map(error -> error.getMessage())
+                        .collect(Collectors.toList()))
                 .addAll(deployment.getErrors())
                 .build();
     }
@@ -83,5 +86,23 @@ public class CassandraStage implements Stage {
                 (cleanup.inProgress() ? cleanup.isComplete() : true) &&
                 (repair.inProgress() ? repair.isComplete() : true);
 
+    }
+
+    public void update() {
+        if (backup.isComplete()) {
+            backup.stopBackup();
+        }
+
+        if (restore.isComplete()) {
+            restore.stopRestore();
+        }
+
+        if (cleanup.isComplete()) {
+            cleanup.stopCleanup();
+        }
+
+        if (repair.isComplete()) {
+            repair.stopRepair();
+        }
     }
 }

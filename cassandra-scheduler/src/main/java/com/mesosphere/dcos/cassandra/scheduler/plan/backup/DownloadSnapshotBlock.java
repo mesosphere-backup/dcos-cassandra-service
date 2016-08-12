@@ -2,8 +2,8 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreContext> {
+public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<BackupRestoreContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             DownloadSnapshotBlock.class);
 
@@ -22,16 +22,16 @@ public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreConte
             final String daemon,
             final CassandraTasks cassandraTasks,
             final CassandraOfferRequirementProvider provider,
-            final RestoreContext context) {
+            final BackupRestoreContext context) {
         return new DownloadSnapshotBlock(daemon, cassandraTasks, provider,
                 context);
     }
 
     @Override
-    protected Optional<CassandraTask> getOrCreateTask(RestoreContext context)
+    protected Optional<CassandraTask> getOrCreateTask(BackupRestoreContext context)
             throws PersistenceException {
         CassandraDaemonTask daemonTask =
-                cassandraTasks.getDaemons().get(daemon);
+                cassandraTasks.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
             setStatus(Status.Complete);
@@ -46,12 +46,12 @@ public class DownloadSnapshotBlock extends AbstractClusterTaskBlock<RestoreConte
             final String daemon,
             final CassandraTasks cassandraTasks,
             final CassandraOfferRequirementProvider provider,
-            final RestoreContext context) {
+            final BackupRestoreContext context) {
         super(daemon, cassandraTasks, provider, context);
     }
 
     @Override
     public String getName() {
-        return DownloadSnapshotTask.nameForDaemon(daemon);
+        return DownloadSnapshotTask.nameForDaemon(getDaemon());
     }
 }

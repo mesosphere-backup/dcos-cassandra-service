@@ -25,12 +25,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.executor.backup.StorageDriverFactory;
-import com.mesosphere.dcos.cassandra.executor.tasks.BackupSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.Cleanup;
-import com.mesosphere.dcos.cassandra.executor.tasks.DownloadSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.Repair;
-import com.mesosphere.dcos.cassandra.executor.tasks.RestoreSnapshot;
-import com.mesosphere.dcos.cassandra.executor.tasks.UploadSnapshot;
+import com.mesosphere.dcos.cassandra.executor.tasks.*;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -50,18 +45,11 @@ import java.util.concurrent.ScheduledExecutorService;
  * will not be able to execute.
  */
 public class CassandraExecutor implements Executor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-        CassandraExecutor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraExecutor.class);
 
     private volatile CassandraDaemonProcess cassandra;
-    private String nodeId = null;
     private final ScheduledExecutorService executor;
     private final ExecutorService clusterJobExecutorService;
-
-    private String getNodeId(String executorName) {
-        int end = executorName.indexOf("_");
-        return executorName.substring(0, end);
-    }
 
     private void launchDeamon(
         final CassandraTask task,
@@ -126,7 +114,8 @@ public class CassandraExecutor implements Executor {
                 driver,
                 cassandra,
                 (BackupUploadTask) cassandraTask,
-                StorageDriverFactory.createStorageDriver((BackupUploadTask) cassandraTask)));
+                StorageDriverFactory.createStorageDriver(
+                        (BackupUploadTask) cassandraTask)));
 
                 break;
 
@@ -134,8 +123,8 @@ public class CassandraExecutor implements Executor {
               clusterJobExecutorService.submit(new DownloadSnapshot(
                 driver,
                 (DownloadSnapshotTask) cassandraTask,
-                nodeId,
-                StorageDriverFactory.createStorageDriver((DownloadSnapshotTask) cassandraTask)));
+                StorageDriverFactory.createStorageDriver(
+                        (DownloadSnapshotTask) cassandraTask)));
               break;
 
             case SNAPSHOT_RESTORE:
@@ -143,7 +132,6 @@ public class CassandraExecutor implements Executor {
                 clusterJobExecutorService.submit(new RestoreSnapshot(
                     driver,
                     (RestoreSnapshotTask) cassandraTask,
-                    nodeId,
                     cassandra.getTask().getConfig().getVersion()));
 
                 break;
@@ -204,7 +192,6 @@ public class CassandraExecutor implements Executor {
                            Protos.ExecutorInfo executorInfo,
                            Protos.FrameworkInfo frameworkInfo,
                            Protos.SlaveInfo slaveInfo) {
-        this.nodeId = getNodeId(executorInfo.getName());
     }
 
     @Override

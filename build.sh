@@ -1,30 +1,33 @@
 #!/usr/bin/env bash
 
+REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $REPO_ROOT_DIR
+
 # In theory, we could use Jenkins' "Multi SCM" script, but good luck with getting auto-build to work with that
 # Instead, clone the secondary 'dcos-tests' repo manually.
-if [ ! -d dcos-tests ]; then
-    git clone --depth 1 git@github.com:mesosphere/dcos-tests.git
+if [ -d dcos-tests ]; then
+  cd dcos-tests/
+  git fetch --depth 1 origin bincli
+  git checkout bincli
+  cd ..
+else
+  git clone --depth 1 --branch bincli git@github.com:mesosphere/dcos-tests.git
 fi
 echo Running with dcos-tests rev: $(git --git-dir=dcos-tests/.git rev-parse HEAD)
 
 # GitHub notifier config
 
-if [ -n "$JENKINS_HOME" ]; then
-    # we're in a CI build. send outcomes to github.
-    # note: we expect upstream to specify GITHUB_COMMIT_STATUS_URL and GIT_REPOSITORY_ROOT in this case
-    _notify_github() {
-        ./dcos-tests/build/update-github-status.sh $1 $2 $3
-    }
-else
-    # we're being run manually. print outcomes.
-    _notify_github() {
-        echo "[STATUS:build.sh] $2 $1: $3"
-    }
-fi
+_notify_github() {
+    # IF THIS FAILS FOR YOU, your dcos-tests is out of date!
+    # do this: rm -rf kafka-private/dcos-tests/ then run build.sh again
+    $REPO_ROOT_DIR/dcos-tests/build/github_update.py $1 $2 $3
+}
 
 # Build steps for Cassandra
 
 _notify_github pending build "Build running"
+
+# Scheduler/Executor (Java):
 
 ./gradlew clean distZip
 if [ $? -ne 0 ]; then
@@ -40,11 +43,14 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-make --directory=cli/ all
+# CLI (Go):
+
+cd cli && ./build-cli.sh
 if [ $? -ne 0 ]; then
-  _notify_github error build "CLI build/tests failed"
+  _notify_github failure build "CLI build failed"
   exit 1
 fi
+cd $REPO_ROOT_DIR
 
 _notify_github success build "Build succeeded"
 
@@ -53,11 +59,13 @@ _notify_github success build "Build succeeded"
 
 ./dcos-tests/build/ci-upload.sh \
   cassandra \
-  universe/index.json \
-  universe/package/ \
+  universe/ \
   cassandra-scheduler/build/distributions/scheduler.zip \
   cassandra-executor/build/distributions/executor.zip \
-  cli/dist/dcos-cassandra-0.1.0.tar.gz
+  cli/dcos-cassandra/dcos-cassandra-darwin \
+  cli/dcos-cassandra/dcos-cassandra-linux \
+  cli/dcos-cassandra/dcos-cassandra.exe \
+  cli/python/dist/*.whl
 if [ $? -ne 0 ]; then
   exit 1
 fi

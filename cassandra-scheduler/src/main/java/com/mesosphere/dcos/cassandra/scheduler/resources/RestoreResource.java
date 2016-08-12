@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,13 +32,13 @@ public class RestoreResource {
     @Path("/start")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response start(StartRestoreRequest request) {
+    public Response start(BackupRestoreRequest request) {
         LOGGER.info("Processing restore request: request = {}", request);
         try {
             if(!request.isValid()){
                 return Response.status(Response.Status.BAD_REQUEST).build();
             } else if (manager.canStartRestore()) {
-                final RestoreContext context = from(request);
+                final BackupRestoreContext context = from(request);
                 manager.startRestore(context);
                 LOGGER.info("Started restore: context = {}", context);
                 return Response.accepted().build();
@@ -56,7 +56,7 @@ public class RestoreResource {
         }
     }
 
-    public static RestoreContext from(StartRestoreRequest request) {
+    public static BackupRestoreContext from(BackupRestoreRequest request) {
         String accountId;
         String secretKey;
         if (isAzure(request.getExternalLocation())) {
@@ -67,13 +67,14 @@ public class RestoreResource {
             secretKey = request.getS3SecretKey();
         }
 
-        return RestoreContext.create(
+        return BackupRestoreContext.create(
                 "",
                 request.getName(),
                 request.getExternalLocation(),
                 "",
                 accountId,
-                secretKey);
+                secretKey,
+                request.usesEmc());
     }
 
     private static boolean isAzure(String externalLocation) {

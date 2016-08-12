@@ -3,10 +3,11 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.scheduler.plan.DefaultPhase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,14 +22,15 @@ public class CassandraDaemonPhase extends DefaultPhase {
             LoggerFactory.getLogger(CassandraDaemonPhase.class);
 
     private static void createBlocks(
-            final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final PersistentOfferRequirementProvider provider,
             final SchedulerClient client,
             final List<CassandraDaemonBlock> blocks,
-            final List<String> errors) {
-
-        final int servers = configurationManager.getServers();
+            final List<String> errors,
+            final DefaultConfigurationManager configurationManager)
+                throws ConfigStoreException {
+        final int servers = ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig())
+                .getServers();
 
         final List<String> names = new ArrayList<>(servers);
 
@@ -62,22 +64,21 @@ public class CassandraDaemonPhase extends DefaultPhase {
     private final List<String> errors;
 
     public static final CassandraDaemonPhase create(
-            final ConfigurationManager configurationManager,
             final CassandraTasks cassandraTasks,
             final PersistentOfferRequirementProvider provider,
-            final SchedulerClient client) {
-
+            final SchedulerClient client,
+            final DefaultConfigurationManager configurationManager)
+                throws ConfigStoreException {
         final List<CassandraDaemonBlock> blocks =
                 new ArrayList<>();
-
         final List<String> errors = new ArrayList<>();
         createBlocks(
-                configurationManager,
                 cassandraTasks,
                 provider,
                 client,
                 blocks,
-                errors
+                errors,
+                configurationManager
         );
         return new CassandraDaemonPhase(blocks, errors);
     }

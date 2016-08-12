@@ -15,8 +15,6 @@
  */
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import org.apache.mesos.ExecutorDriver;
@@ -70,7 +68,7 @@ public class BackupSnapshot implements Runnable {
                     "Started taking snapshot");
 
             final String snapshotName =
-                this.cassandraTask.getBackupContext() .getName();
+                this.cassandraTask.getBackupRestoreContext() .getName();
             final List<String> nonSystemKeyspaces = daemon
                     .getNonSystemKeySpaces();
             LOGGER.info("Started taking snapshot for non system keyspaces: {}",

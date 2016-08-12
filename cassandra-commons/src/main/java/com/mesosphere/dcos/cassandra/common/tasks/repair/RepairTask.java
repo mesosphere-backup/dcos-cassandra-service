@@ -16,12 +16,13 @@
 package com.mesosphere.dcos.cassandra.common.tasks.repair;
 
 
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
-import com.mesosphere.dcos.cassandra.common.tasks.*;
-import org.apache.mesos.offer.VolumeRequirement;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraData;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import org.apache.mesos.Protos;
+import org.apache.mesos.offer.TaskUtils;
 
-import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -71,8 +72,10 @@ public class RepairTask extends CassandraTask {
 
         CassandraData data = CassandraData.createRepairData("", context);
 
+        String name = nameForDaemon(daemon);
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
-                .setName(nameForDaemon(daemon))
+                .setName(name)
+                .setTaskId(TaskUtils.toTaskId(name))
                 .setData(data.getBytes())
                 .build();
 
@@ -83,25 +86,6 @@ public class RepairTask extends CassandraTask {
 
     protected RepairTask(final Protos.TaskInfo info) {
         super(info);
-    }
-
-    /**
-     * Constructs a new RepairTask.
-     */
-    protected RepairTask(
-        final String name,
-        final CassandraTaskExecutor executor,
-        final ClusterTaskConfig config,
-        final RepairContext context) {
-        super(name,
-            executor,
-            config.getCpus(),
-            config.getMemoryMb(),
-            config.getDiskMb(),
-            VolumeRequirement.VolumeMode.NONE,
-            null,
-            Collections.emptyList(),
-            CassandraData.createRepairData("", context));
     }
 
     @Override
