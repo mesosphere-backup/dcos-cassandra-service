@@ -153,10 +153,7 @@ public class ConfigurationManagerTest {
                 "/jre/location",
                 "/executor/location",
                 "/cassandra/location",
-                "",
-                "unlimited",
-                "100000",
-                "32768");
+                "");
         int updatedServers = original.getServers() + 10;
         int updatedSeeds = original.getSeeds() + 5;
 
