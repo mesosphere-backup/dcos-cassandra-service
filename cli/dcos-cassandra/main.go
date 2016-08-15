@@ -16,11 +16,16 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+	// Prettify the user-visible service name:
+	serviceName := strings.Title(modName) // eg 'Cassandra'
+	if modName == "dse" {
+		serviceName = "DSE"
+	}
 
 	app, err := cli.NewApp(
 		"0.1.0",
 		"Mesosphere",
-		fmt.Sprintf("Deploy and manage %s clusters", strings.Title(modName)))
+		fmt.Sprintf("Deploy and manage %s clusters", serviceName))
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -29,17 +34,17 @@ func main() {
 	// standard "config" and "state" sections since Cassandra isn't installing
 	// ConfigResource/StateResource yet.
 	// Once these are fixed, this block can all be replaced with a call to "HandleCommonArgs"
-	cli.HandleCommonFlags(app, modName, fmt.Sprintf("%s DC/OS CLI Module", strings.Title(modName)))
+	cli.HandleCommonFlags(app, modName, fmt.Sprintf("%s DC/OS CLI Module", serviceName))
 	//cli.HandleConfigSection(app)
 	//cli.HandleConnectionSection(app)
 	cli.HandlePlanSection(app)
 	//cli.HandleStateSection(app)
 
 	handleSeedsCommand(app)
-	handleCustomConnectionCommand(app, modName)
+	handleCustomConnectionCommand(app, serviceName)
 
-	handleNodeSection(app, modName)
-	handleBackupRestoreSections(app, modName)
+	handleNodeSection(app, serviceName)
+	handleBackupRestoreSections(app, serviceName)
 	handleCleanupRepairSections(app)
 
 	// Omit modname:
@@ -68,13 +73,13 @@ func (cmd *ConnectionHandler) runBase(c *kingpin.ParseContext) error {
 	}
 	return nil
 }
-func handleCustomConnectionCommand(app *kingpin.Application, modName string) {
+func handleCustomConnectionCommand(app *kingpin.Application, serviceName string) {
 	cmd := &ConnectionHandler{}
 
 	// Have three explicit commands, to ensure that each possibility shows up in --help:
-	connection := app.Command("connection", fmt.Sprintf("Provides %s connection information", modName)).Action(cmd.runBase)
-	connection.Flag("address", fmt.Sprintf("Provide addresses of the %s nodes", modName)).BoolVar(&cmd.showAddress)
-	connection.Flag("dns", fmt.Sprintf("Provide dns names of the %s nodes", modName)).BoolVar(&cmd.showDns)
+	connection := app.Command("connection", fmt.Sprintf("Provides %s connection information", serviceName)).Action(cmd.runBase)
+	connection.Flag("address", fmt.Sprintf("Provide addresses of the %s nodes", serviceName)).BoolVar(&cmd.showAddress)
+	connection.Flag("dns", fmt.Sprintf("Provide dns names of the %s nodes", serviceName)).BoolVar(&cmd.showDns)
 }
 
 
@@ -105,9 +110,9 @@ func (cmd *NodeHandler) runStatus(c *kingpin.ParseContext) error {
 	cli.PrintJSON(cli.HTTPGet(fmt.Sprintf("v1/nodes/node-%d/status", cmd.nodeId)))
 	return nil
 }
-func handleNodeSection(app *kingpin.Application, modName string) {
+func handleNodeSection(app *kingpin.Application, serviceName string) {
 	cmd := &NodeHandler{}
-	connection := app.Command("node", fmt.Sprintf("Manage %s nodes", modName))
+	connection := app.Command("node", fmt.Sprintf("Manage %s nodes", serviceName))
 
 	describe := connection.Command("describe", "Describes a single node").Action(cmd.runDescribe)
 	describe.Arg("node_id", "The node id to describe").IntVar(&cmd.nodeId)
@@ -148,11 +153,11 @@ func (cmd *BackupRestoreHandler) runBackup(c *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	cli.PrintJSON(cli.HTTPPutJSON("v1/backup/start", string(payload)))
+	cli.HTTPPutJSON("v1/backup/start", string(payload))
 	return nil
 }
 func (cmd *BackupRestoreHandler) runBackupStop(c *kingpin.ParseContext) error {
-	cli.PrintJSON(cli.HTTPPut("v1/backup/stop"))
+	cli.HTTPPut("v1/backup/stop")
 	return nil
 }
 func (cmd *BackupRestoreHandler) runRestore(c *kingpin.ParseContext) error {
@@ -160,18 +165,18 @@ func (cmd *BackupRestoreHandler) runRestore(c *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	cli.PrintJSON(cli.HTTPPutJSON("v1/restore/start", string(payload)))
+	cli.HTTPPutJSON("v1/restore/start", string(payload))
 	return nil
 }
 func (cmd *BackupRestoreHandler) runRestoreStop(c *kingpin.ParseContext) error {
-	cli.PrintJSON(cli.HTTPPut("v1/restore/stop"))
+	cli.HTTPPut("v1/restore/stop")
 	return nil
 }
-func handleBackupRestoreSections(app *kingpin.Application, modName string) {
+func handleBackupRestoreSections(app *kingpin.Application, serviceName string) {
 	cmd := &BackupRestoreHandler{}
 	planCmd := &cli.PlanHandler{}
 
-	backup := app.Command("backup", fmt.Sprintf("Backup %s cluster data", modName))
+	backup := app.Command("backup", fmt.Sprintf("Backup %s cluster data", serviceName))
 	backupStart := backup.Command(
 		"start",
 		"Perform cluster backup via snapshot mechanism").Action(cmd.runBackup)
@@ -189,7 +194,7 @@ func handleBackupRestoreSections(app *kingpin.Application, modName string) {
 		"status",
 		"Displays the status of the backup").Action(planCmd.RunShow)
 
-	restore := app.Command("restore", fmt.Sprintf("Restore %s cluster from backup", modName))
+	restore := app.Command("restore", fmt.Sprintf("Restore %s cluster from backup", serviceName))
 	restoreStart := restore.Command(
 		"start",
 		"Restores cluster to a previous snapshot").Action(cmd.runRestore)
@@ -235,11 +240,11 @@ func (cmd *CleanupRepairHandler) runCleanup(c *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	cli.PrintJSON(cli.HTTPPutJSON("v1/cleanup/start", string(payload)))
+	cli.HTTPPutJSON("v1/cleanup/start", string(payload))
 	return nil
 }
 func (cmd *CleanupRepairHandler) runCleanupStop(c *kingpin.ParseContext) error {
-	cli.PrintJSON(cli.HTTPPut("v1/cleanup/stop"))
+	cli.HTTPPut("v1/cleanup/stop")
 	return nil
 }
 func (cmd *CleanupRepairHandler) runRepair(c *kingpin.ParseContext) error {
@@ -247,11 +252,11 @@ func (cmd *CleanupRepairHandler) runRepair(c *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	cli.PrintJSON(cli.HTTPPutJSON("v1/repair/start", string(payload)))
+	cli.HTTPPutJSON("v1/repair/start", string(payload))
 	return nil
 }
 func (cmd *CleanupRepairHandler) runRepairStop(c *kingpin.ParseContext) error {
-	cli.PrintJSON(cli.HTTPPut("v1/repair/stop"))
+	cli.HTTPPut("v1/repair/stop")
 	return nil
 }
 func handleCleanupRepairSections(app *kingpin.Application) {

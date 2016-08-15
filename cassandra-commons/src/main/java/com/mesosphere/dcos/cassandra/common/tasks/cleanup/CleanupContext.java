@@ -16,6 +16,7 @@
 package com.mesosphere.dcos.cassandra.common.tasks.cleanup;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
@@ -119,6 +120,7 @@ public class CleanupContext implements ClusterTaskContext {
      * Gets the nodes for the cleanup.
      * @return The names of the nodes that will be cleaned.
      */
+    @JsonIgnore
     public List<String> getNodes() {
         return nodes;
     }
@@ -128,6 +130,7 @@ public class CleanupContext implements ClusterTaskContext {
      * @return The column families that will be cleaned. If empty, all column
      * families will be cleaned.
      */
+    @JsonIgnore
     public List<String> getColumnFamilies() {
         return columnFamilies;
     }
@@ -137,6 +140,7 @@ public class CleanupContext implements ClusterTaskContext {
      * @return The key spaces that will be cleaned. If empty, all non-system
      * key spaces will be cleaned.
      */
+    @JsonIgnore
     public List<String> getKeySpaces() {
         return keySpaces;
     }
