@@ -18,6 +18,7 @@ package com.mesosphere.dcos.cassandra.executor.tasks;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraPaths;
+import com.mesosphere.dcos.cassandra.executor.backup.S3StorageDriver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -73,14 +74,11 @@ public class RestoreSnapshot implements Runnable {
                 "Started restoring snapshot");
             final String keyspaceDirectory =
                     context.getLocalLocation() + File.separator +
-                    context.getName() + File.separator +
+                    S3StorageDriver.getPrefixKey(context) + File.separator +
                     context.getNodeId();
 
-            final String ssTableLoaderBinary =
-                CassandraPaths.create(version).bin()
-                    .resolve("sstableloader").toString();
-            final String cassandraYaml =
-                CassandraPaths.create(version).cassandraConfig().toString();
+            final String ssTableLoaderBinary = CassandraPaths.create(version).bin().resolve("sstableloader").toString();
+            final String cassandraYaml = CassandraPaths.create(version).cassandraConfig().toString();
 
             final File keyspacesDirectory = new File(keyspaceDirectory);
             LOGGER.info("Keyspace Directory {} exists: {}", keyspaceDirectory, keyspacesDirectory.exists());

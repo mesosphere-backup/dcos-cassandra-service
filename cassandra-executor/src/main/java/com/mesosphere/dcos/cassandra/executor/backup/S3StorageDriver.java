@@ -19,50 +19,22 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.Constants;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.PartETag;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.UploadPartRequest;
-import com.amazonaws.services.s3.model.UploadPartResult;
+import com.amazonaws.services.s3.model.*;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
+import com.mesosphere.dcos.cassandra.executor.compress.SnappyCompressedChunker;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xerial.snappy.SnappyInputStream;
-import org.xerial.snappy.SnappyOutputStream;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Implements a BackupStorageDriver that provides upload and download
@@ -74,7 +46,6 @@ public class S3StorageDriver implements BackupStorageDriver {
 
     // Chunk size set to 5MB, AWS S3 multi-part uploads default
     public static final int DEFAULT_PART_SIZE_UPLOAD = 5 * 1024 * 1024;
-    public static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
     private StorageUtil storageUtil = new StorageUtil();
 
@@ -88,7 +59,7 @@ public class S3StorageDriver implements BackupStorageDriver {
         }
     }
 
-    String getPrefixKey(BackupRestoreContext ctx) throws URISyntaxException {
+    public static String getPrefixKey(BackupRestoreContext ctx) throws URISyntaxException {
         URI uri = new URI(ctx.getExternalLocation());
         String[] segments = uri.getPath().split("/");
 
@@ -224,55 +195,47 @@ public class S3StorageDriver implements BackupStorageDriver {
             String key,
             String keyspaceName,
             String cfName) throws IOException {
-        LOGGER.info(
-                "uploadDirectory() localLocation: {}, AmazonS3Client: {}, bucketName: {}, key: {}, keyspaceName: {}, cfName: {}",
-                localLocation, amazonS3Client, bucketName, key, keyspaceName,
-                cfName);
+        LOGGER.info("uploadDirectory() localLocation: {}, AmazonS3Client: {}, bucketName: {}, key: {}, "
+                + "keyspaceName: {}, cfName: {}", localLocation, amazonS3Client, bucketName, key, keyspaceName, cfName);
 
         Files.walkFileTree(FileSystems.getDefault().getPath(localLocation),
                 new FileVisitor<Path>() {
                     @Override
                     public FileVisitResult preVisitDirectory(Path dir,
-                                                             BasicFileAttributes attrs)
-                            throws IOException {
+                                                             BasicFileAttributes attrs) throws IOException {
                         return FileVisitResult.CONTINUE;
                     }
 
                     @Override
-                    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
-                            throws IOException {
+                    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
                         final File file = path.toFile();
                         LOGGER.info("Visiting file: {}", file.getAbsolutePath());
                         if (isValidFileForUpload(file, BackupRestoreContext)) {
                             String fileKey = key + "/" + keyspaceName + "/" + cfName + "/" + file.getName();
                             List<PartETag> partETags = new ArrayList<>();
-                            final InitiateMultipartUploadRequest uploadRequest = new InitiateMultipartUploadRequest(bucketName, fileKey);
-                            final InitiateMultipartUploadResult uploadResult = amazonS3Client.initiateMultipartUpload(uploadRequest);
+                            final InitiateMultipartUploadRequest uploadRequest =
+                                    new InitiateMultipartUploadRequest(bucketName, fileKey);
+                            final InitiateMultipartUploadResult uploadResult =
+                                    amazonS3Client.initiateMultipartUpload(uploadRequest);
 
-                            LOGGER.info(
-                                    "Initiating upload for file: {} | bucket: {} | key: {} | uploadId: {}",
-                                    file.getAbsolutePath(), bucketName, fileKey,
-                                    uploadResult.getUploadId());
+                            LOGGER.info("Initiating upload for file: {} | bucket: {} | key: {} | uploadId: {}",
+                                    file.getAbsolutePath(), bucketName, fileKey, uploadResult.getUploadId());
 
-                            final byte[] buffer = new byte[DEFAULT_PART_SIZE_UPLOAD];
                             BufferedInputStream inputStream = null;
-                            ByteArrayOutputStream baos = null;
-                            SnappyOutputStream compress = null;
+                            SnappyCompressedChunker snappyCompressedChunker = null;
                             try {
                                 inputStream = new BufferedInputStream(new FileInputStream(file));
-                                baos = new ByteArrayOutputStream();
-                                compress = new SnappyOutputStream(baos);
+                                snappyCompressedChunker = new SnappyCompressedChunker(inputStream,
+                                        DEFAULT_PART_SIZE_UPLOAD);
 
-                                int chunkLength;
                                 int partNum = 1;
-                                while ((chunkLength = inputStream.read(buffer)) != -1) {
+                                while (snappyCompressedChunker.hasNext()) {
                                     LOGGER.debug("Compressing part: {}", partNum);
-                                    compress.write(buffer, 0, chunkLength);
-                                    compress.flush();
-                                    final byte[] bytes = baos.toByteArray();
-                                    final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                                    final byte[] bytesToUpload = snappyCompressedChunker.next();
+
+                                    final ByteArrayInputStream bais = new ByteArrayInputStream(bytesToUpload);
                                     final MessageDigest md5Digester = MessageDigest.getInstance("MD5");
-                                    final byte[] digest = md5Digester.digest(bytes);
+                                    final byte[] digest = md5Digester.digest(bytesToUpload);
                                     final String md5String = Base64.getEncoder().encodeToString(digest);
 
                                     final UploadPartRequest uploadPartRequest = new UploadPartRequest()
@@ -281,37 +244,30 @@ public class S3StorageDriver implements BackupStorageDriver {
                                             .withUploadId(uploadResult.getUploadId())
                                             .withPartNumber(partNum++)
                                             .withInputStream(bais)
-                                            .withPartSize(bytes.length)
+                                            .withPartSize(bytesToUpload.length)
                                             .withMD5Digest(md5String);
 
-                                    LOGGER.debug(
-                                            "Uploading part: {} | bucket: {} | key: {} | uploadId: {}",
-                                            partNum, bucketName, fileKey,
-                                            uploadResult.getUploadId());
+                                    LOGGER.info("Uploading part: {} | bucket: {} | key: {} | uploadId: {}",
+                                            partNum, bucketName, fileKey, uploadResult.getUploadId());
                                     final UploadPartResult uploadPartResult = amazonS3Client.uploadPart(
                                             uploadPartRequest);
                                     final PartETag partETag = uploadPartResult.getPartETag();
-                                    if (!partETag.getETag().equals(new String(
-                                            Hex.encodeHex(digest)))) {
-                                        LOGGER.error("Error matching hex");
+                                    if (!partETag.getETag().equals(new String(Hex.encodeHex(digest)))) {
+                                        LOGGER.error("Error matching hex. Consider adding retry logic");
                                         // TODO: Add retry logic
                                     }
                                     partETags.add(partETag);
                                 }
-                                LOGGER.debug(
-                                        "Done uploading, now completing bucket: {} | key: {} | uploadId: {}",
-                                        bucketName, fileKey,
-                                        uploadResult.getUploadId());
-                                final CompleteMultipartUploadRequest completeMultipartUploadRequest = new CompleteMultipartUploadRequest(
-                                        bucketName, fileKey,
-                                        uploadResult.getUploadId(), partETags);
+                                LOGGER.info("Done uploading, now completing bucket: {} | key: {} | uploadId: {}",
+                                        bucketName, fileKey, uploadResult.getUploadId());
+                                final CompleteMultipartUploadRequest completeMultipartUploadRequest =
+                                        new CompleteMultipartUploadRequest(bucketName, fileKey,
+                                                uploadResult.getUploadId(), partETags);
                                 amazonS3Client.completeMultipartUpload(completeMultipartUploadRequest);
-                                LOGGER.debug(
-                                        "Successfully uploaded the file to S3. Deleting the file now: {}",
+                                LOGGER.info("Successfully uploaded the file to S3. Deleting the file now: {}",
                                         file.getAbsolutePath());
                                 final boolean delete = file.delete();
-                                LOGGER.debug("Deletion status: {} for file {}",
-                                        delete, file.getAbsolutePath());
+                                LOGGER.debug("Deletion status: {} for file {}", delete, file.getAbsolutePath());
                             } catch (Exception e) {
                                 LOGGER.error("Error uploading file: {}", e);
                                 amazonS3Client.abortMultipartUpload(
@@ -321,8 +277,6 @@ public class S3StorageDriver implements BackupStorageDriver {
                                 // TODO: Add retry logic
                             } finally {
                                 IOUtils.closeQuietly(inputStream);
-                                IOUtils.closeQuietly(compress);
-                                IOUtils.closeQuietly(baos);
                             }
                         }
 
@@ -351,7 +305,7 @@ public class S3StorageDriver implements BackupStorageDriver {
 
         // Location of data directory, where the data will be copied.
         final String localLocation = ctx.getLocalLocation();
-        final String backupName = ctx.getName();
+        final String backupName = getPrefixKey(ctx);
         final String nodeId = ctx.getNodeId();
 
         final String bucketName = getBucketName(ctx);
@@ -362,8 +316,7 @@ public class S3StorageDriver implements BackupStorageDriver {
         LOGGER.info("Snapshot files for this node: {}", snapshotFileKeys);
 
         for (String fileKey : snapshotFileKeys.keySet()) {
-            downloadFile(localLocation, bucketName, amazonS3Client, fileKey,
-                    snapshotFileKeys.get(fileKey));
+            downloadFile(localLocation, bucketName, amazonS3Client, fileKey, snapshotFileKeys.get(fileKey));
         }
     }
 
@@ -372,17 +325,14 @@ public class S3StorageDriver implements BackupStorageDriver {
                               AmazonS3Client amazonS3Client,
                               String fileKey,
                               Long sizeInBytes) throws IOException {
-        LOGGER.info(
-                "DownloadFile | Local location: {} | Bucket Name: {} | fileKey: {} | Size in bytes: {}",
+        LOGGER.info("DownloadFile | Local location: {} | Bucket Name: {} | fileKey: {} | Size in bytes: {}",
                 localLocation, bucketName, fileKey, sizeInBytes);
         InputStream inputStream = null;
-        BufferedOutputStream bos = null;
-        SnappyInputStream is = null;
+        SnappyInputStream decompressedInputStream = null;
         FileOutputStream fileOutputStream = null;
         try {
-            long position = 0;
             final String fileLocation = localLocation + File.separator + fileKey;
-            File f = new File(fileLocation);
+            final File f = new File(fileLocation);
 
             // Only create parent directory once, if it doesn't exist.
             final File parentDir = new File(f.getParent());
@@ -397,41 +347,15 @@ public class S3StorageDriver implements BackupStorageDriver {
             }
 
             fileOutputStream = new FileOutputStream(f, true);
-            while (position <= sizeInBytes) {
-                final byte[] buffer = new byte[DEFAULT_PART_SIZE_DOWNLOAD];
-                final GetObjectRequest rangeObjectRequest = new GetObjectRequest(
-                        bucketName, fileKey);
+            final GetObjectRequest rangeObjectRequest = new GetObjectRequest(bucketName, fileKey);
+            final S3Object object = amazonS3Client.getObject(rangeObjectRequest);
 
-                rangeObjectRequest.setRange(position,
-                        DEFAULT_PART_SIZE_DOWNLOAD);
-                final S3Object object = amazonS3Client.getObject(
-                        rangeObjectRequest);
-
-                inputStream = object.getObjectContent();
-                is = new SnappyInputStream(
-                        new BufferedInputStream(inputStream));
-                bos = new BufferedOutputStream(fileOutputStream,
-                        DEFAULT_PART_SIZE_DOWNLOAD);
-                int bytesWritten = 0;
-                try {
-                    int c;
-                    while ((c = is.read(buffer, 0,
-                            DEFAULT_PART_SIZE_DOWNLOAD)) != -1) {
-                        bytesWritten += c;
-                        bos.write(buffer, 0, c);
-                    }
-                } finally {
-                    IOUtils.closeQuietly(is);
-                    IOUtils.closeQuietly(bos);
-                }
-
-                // TODO: Think about resumable downloads in future.
-                LOGGER.info("For file: {} wrote: {} bytes out of {} bytes",
-                        fileKey, position + bytesWritten, sizeInBytes);
-                position += DEFAULT_PART_SIZE_DOWNLOAD + 1;
-            }
+            inputStream = object.getObjectContent();
+            decompressedInputStream = new SnappyInputStream(inputStream);
+            IOUtils.copy(decompressedInputStream, fileOutputStream);
         } finally {
             IOUtils.closeQuietly(inputStream);
+            IOUtils.closeQuietly(decompressedInputStream);
             IOUtils.closeQuietly(fileOutputStream);
         }
     }
@@ -439,18 +363,13 @@ public class S3StorageDriver implements BackupStorageDriver {
     public Map<String, Long> listSnapshotFiles(AmazonS3Client amazonS3Client,
                                                String bucketName,
                                                String backupName) {
+        LOGGER.info("Listing snapshot files for bucketName: {} backupName: {}", bucketName, backupName);
         Map<String, Long> snapshotFiles = new HashMap<>();
-        ObjectListing objectListing;
-        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                .withBucketName(bucketName)
-                .withPrefix(backupName);
-        do {
-            objectListing = amazonS3Client.listObjects(listObjectsRequest);
-            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-                snapshotFiles.put(objectSummary.getKey(),
-                        objectSummary.getSize());
-            }
-        } while (objectListing.isTruncated());
+
+        ObjectListing objectListing = amazonS3Client.listObjects(bucketName, backupName);
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+            snapshotFiles.put(objectSummary.getKey(), objectSummary.getSize());
+        }
 
         return snapshotFiles;
     }
