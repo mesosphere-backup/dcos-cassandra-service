@@ -43,7 +43,7 @@ public class RepairBlock extends AbstractClusterTaskBlock<RepairContext> {
                 cassandraTasks.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
-            setStatus(Status.Complete);
+            setStatus(Status.COMPLETE);
             return Optional.empty();
         }
         return Optional.of(cassandraTasks.getOrCreateRepair(

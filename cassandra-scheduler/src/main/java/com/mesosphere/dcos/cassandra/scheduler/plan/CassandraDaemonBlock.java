@@ -29,7 +29,7 @@ public class CassandraDaemonBlock implements Block {
     private final SchedulerClient client;
     private final String name;
     private boolean terminated = false;
-    private volatile Status status = Status.Pending;
+    private volatile Status status = Status.PENDING;
 
     private void terminate(final CassandraDaemonTask task) {
         LOGGER.info("Block '{}' terminating task '{}' on host '{}'", getName(), task.getId(), task.getHostname());
@@ -157,23 +157,23 @@ public class CassandraDaemonBlock implements Block {
 
         CassandraContainer container = cassandraTasks.getOrCreateContainer(name);
         if (isComplete(container)) {
-            setStatus(Status.Complete);
+            setStatus(Status.COMPLETE);
         }
     }
 
     @Override
     public boolean isPending() {
-        return Status.Pending.equals(status);
+        return Status.PENDING.equals(status);
     }
 
     @Override
     public boolean isInProgress() {
-        return Status.InProgress.equals(status);
+        return Status.IN_PROGRESS.equals(status);
     }
 
     @Override
     public boolean isComplete() {
-        return Status.Complete.equals(status);
+        return Status.COMPLETE.equals(status);
     }
 
     @Override
@@ -193,7 +193,7 @@ public class CassandraDaemonBlock implements Block {
                 LOGGER.info("Block {} - Task complete: id = {}",
                         getName(),
                         container.getId());
-                setStatus(Status.Complete);
+                setStatus(Status.COMPLETE);
                 return null;
             } else if (StringUtils.isBlank(container.getAgentId())) {
                 LOGGER.info("Block {} - Launching new container : id = {}",
@@ -248,11 +248,11 @@ public class CassandraDaemonBlock implements Block {
             LOGGER.info("{} Block: {} received status: {} with mode: {}",
                     Block.getStatus(this), getName(), status, cassandraData.getMode());
             if (isComplete(status)) {
-                setStatus(Status.Complete);
-                LOGGER.info("Updating block: {} with: {}", getName(), Status.Complete);
+                setStatus(Status.COMPLETE);
+                LOGGER.info("Updating block: {} with: {}", getName(), Status.COMPLETE);
             } else if (CassandraTaskStatus.isTerminated(status.getState())) {
-                setStatus(Status.Pending);
-                LOGGER.info("Updating block: {} with: {}", getName(), Status.Pending);
+                setStatus(Status.PENDING);
+                LOGGER.info("Updating block: {} with: {}", getName(), Status.PENDING);
             } else {
                 LOGGER.info("TaskStatus doesn't affect block: {}", status);
             }
@@ -268,10 +268,10 @@ public class CassandraDaemonBlock implements Block {
         //TODO(nick): Any additional actions to perform when OfferRequirement returned by start()
         //            was accepted or not accepted?
         if (accepted) {
-            setStatus(Status.InProgress);
+            setStatus(Status.IN_PROGRESS);
         } else {
             if (!isComplete()) {
-                setStatus(Status.Pending);
+                setStatus(Status.PENDING);
             }
         }
     }
@@ -279,13 +279,13 @@ public class CassandraDaemonBlock implements Block {
     @Override
     public void restart() {
         //TODO(nick): Any additional actions to perform when restarting work? eg terminated=false?
-        setStatus(Status.Pending);
+        setStatus(Status.PENDING);
     }
 
     @Override
     public void forceComplete() {
         //TODO(nick): Any additional actions to perform when forcing complete?
-        setStatus(Status.Complete);
+        setStatus(Status.COMPLETE);
     }
 
     @Override
