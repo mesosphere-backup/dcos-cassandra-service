@@ -39,15 +39,15 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                     task.getId(),
                     id,
                     task.getState());
-            setStatus(Status.Complete);
+            setStatus(Status.COMPLETE);
             return null;
         } else if (task.getSlaveId().isEmpty()) {
             //we have not yet been assigned a slave id - This means that the
             //the task has never been launched
-            setStatus(Status.InProgress);
+            setStatus(Status.IN_PROGRESS);
             return provider.getNewOfferRequirement(task.getTaskInfo());
         } else {
-            setStatus(Status.InProgress);
+            setStatus(Status.IN_PROGRESS);
             return provider.getUpdateOfferRequirement(task.getTaskInfo());
 
         }
@@ -71,7 +71,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                 if (isComplete() || isInProgress()) {
                     return null;
                 } else {
-                    setStatus(Status.Pending);
+                    setStatus(Status.PENDING);
                 }
             }
 
@@ -102,7 +102,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
             final C context) {
         this.daemon = daemon;
         this.provider = provider;
-        this.status = Status.Pending;
+        this.status = Status.PENDING;
         this.context = context;
         this.cassandraTasks = cassandraTasks;
         Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
@@ -111,7 +111,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
             if (Protos.TaskState.TASK_FINISHED.equals(
                     task.getState()
             )) {
-                setStatus(Status.Complete);
+                setStatus(Status.COMPLETE);
             }
         }
     }
@@ -134,16 +134,16 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
             if (taskOption.isPresent()) {
                 CassandraTask task = taskOption.get();
                 if (Protos.TaskState.TASK_FINISHED.equals(task.getState())) {
-                    setStatus(Status.Complete);
+                    setStatus(Status.COMPLETE);
                 } else if (Protos.TaskState.TASK_RUNNING.equals(task.getState())) {
-                    setStatus(Status.InProgress);
+                    setStatus(Status.IN_PROGRESS);
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
                     cassandraTasks.remove(getName());
                     LOGGER.info("Reallocating task {} for block {}",
                             getName(),
                             id);
-                    setStatus(Status.Pending);
+                    setStatus(Status.PENDING);
                 }
             }
 
@@ -164,12 +164,12 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     @Override
     public boolean isPending() {
-        return Status.Pending == this.status;
+        return Status.PENDING == this.status;
     }
 
     @Override
     public boolean isInProgress() {
-        return Status.InProgress == this.status;
+        return Status.IN_PROGRESS == this.status;
     }
 
     @Override
@@ -177,22 +177,22 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
         //TODO(nick): Any additional actions to perform when OfferRequirement returned by start()
         //            was accepted or not accepted?
         if (accepted) {
-            setStatus(Status.InProgress);
+            setStatus(Status.IN_PROGRESS);
         } else {
-            setStatus(Status.Pending);
+            setStatus(Status.PENDING);
         }
     }
 
     @Override
     public void restart() {
         //TODO(nick): Any additional actions to perform when restarting work?
-        setStatus(Status.Pending);
+        setStatus(Status.PENDING);
     }
 
     @Override
     public void forceComplete() {
         //TODO(nick): Any additional actions to perform when forcing complete?
-        setStatus(Status.Complete);
+        setStatus(Status.COMPLETE);
     }
 
     @Override
@@ -202,7 +202,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     @Override
     public boolean isComplete() {
-        return Status.Complete == this.status;
+        return Status.COMPLETE == this.status;
     }
 
     public String getDaemon() {
