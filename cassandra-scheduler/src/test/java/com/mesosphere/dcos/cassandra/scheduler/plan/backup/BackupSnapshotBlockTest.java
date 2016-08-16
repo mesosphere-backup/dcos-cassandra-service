@@ -55,7 +55,7 @@ public class BackupSnapshotBlockTest {
                 backupRestoreContext);
         Assert.assertEquals("snapshot-node-0", backupSnapshotBlock.getName());
         Assert.assertEquals("node-0", backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.Pending, Block.getStatus(backupSnapshotBlock));
+        Assert.assertEquals(Status.PENDING, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -72,7 +72,7 @@ public class BackupSnapshotBlockTest {
                 backupRestoreContext);
         Assert.assertEquals("snapshot-node-0", backupSnapshotBlock.getName());
         Assert.assertEquals("node-0", backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.Complete, Block.getStatus(backupSnapshotBlock));
+        Assert.assertEquals(Status.COMPLETE, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -99,7 +99,7 @@ public class BackupSnapshotBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNull(backupSnapshotBlock.start());
-        Assert.assertEquals(Status.Complete, Block.getStatus(backupSnapshotBlock));
+        Assert.assertEquals(Status.COMPLETE, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
@@ -126,7 +126,7 @@ public class BackupSnapshotBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
         Assert.assertNotNull(backupSnapshotBlock.start());
-        Assert.assertEquals(Status.InProgress, Block.getStatus(backupSnapshotBlock));
+        Assert.assertEquals(Status.IN_PROGRESS, Block.getStatus(backupSnapshotBlock));
     }
 
     @Test
