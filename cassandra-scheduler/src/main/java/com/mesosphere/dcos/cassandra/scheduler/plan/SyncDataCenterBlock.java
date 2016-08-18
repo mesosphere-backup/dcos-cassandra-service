@@ -18,7 +18,7 @@ public class SyncDataCenterBlock implements Block, Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             SyncDataCenterBlock.class
     );
-    private volatile Status status = Status.Pending;
+    private volatile Status status = Status.PENDING;
     private final String url;
     private final SeedsManager seeds;
     private final UUID id = UUID.randomUUID();
@@ -46,17 +46,17 @@ public class SyncDataCenterBlock implements Block, Runnable {
 
     @Override
     public boolean isPending() {
-        return status == Status.Pending;
+        return status == Status.PENDING;
     }
 
     @Override
     public boolean isInProgress() {
-        return status == Status.InProgress;
+        return status == Status.IN_PROGRESS;
     }
 
     @Override
     public boolean isComplete() {
-        return status == Status.Complete;
+        return status == Status.COMPLETE;
     }
 
     @Override
@@ -66,9 +66,9 @@ public class SyncDataCenterBlock implements Block, Runnable {
         if (dc.isPresent() && dc.get().getSeeds().size() > 0) {
             LOGGER.info("Block {} : Data center synced {}", getName(),
                     url);
-            setStatus(Status.Complete);
+            setStatus(Status.COMPLETE);
         }
-        setStatus(Status.InProgress);
+        setStatus(Status.IN_PROGRESS);
         executor.execute(this);
         return null;
     }
@@ -86,13 +86,13 @@ public class SyncDataCenterBlock implements Block, Runnable {
     @Override
     public void restart() {
         //TODO(nick): Any additional actions to perform when restarting work?
-        setStatus(Status.Pending);
+        setStatus(Status.PENDING);
     }
 
     @Override
     public void forceComplete() {
         //TODO(nick): Any additional actions to perform when forcing complete?
-        setStatus(Status.Complete);
+        setStatus(Status.COMPLETE);
     }
 
     @Override
@@ -115,7 +115,7 @@ public class SyncDataCenterBlock implements Block, Runnable {
         while (!isComplete()) {
             if (seeds.sync(url)) {
 
-                setStatus(Status.Complete);
+                setStatus(Status.COMPLETE);
             }
         }
     }

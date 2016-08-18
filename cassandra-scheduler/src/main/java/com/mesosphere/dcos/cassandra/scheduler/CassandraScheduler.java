@@ -26,12 +26,8 @@ import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.ResourceCleaner;
 import org.apache.mesos.offer.ResourceCleanerScheduler;
 import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.scheduler.MesosToSchedulerDriverAdapter;
 import org.apache.mesos.scheduler.SchedulerDriverFactory;
-import org.apache.mesos.scheduler.plan.Block;
-import org.apache.mesos.scheduler.plan.DefaultStageScheduler;
-import org.apache.mesos.scheduler.plan.StageManager;
-import org.apache.mesos.scheduler.plan.StageScheduler;
+import org.apache.mesos.scheduler.plan.*;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
@@ -162,20 +158,18 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void reregistered(SchedulerDriver driver,
                              Protos.MasterInfo masterInfo) {
         LOGGER.info("Re-registered with master: {}", masterInfo);
-        reconciler.start(cassandraTasks.getTaskStatuses());
+        reconcile();
     }
 
     @Override
     public void resourceOffers(SchedulerDriver driver,
                                List<Protos.Offer> offers) {
-        logOffers(offers);
-        reconciler.reconcile(driver);
-
         try {
+            logOffers(offers);
+            reconciler.reconcile(driver);
+
             final List<Protos.OfferID> acceptedOffers = new ArrayList<>();
-
             final Block currentBlock = stageManager.getCurrentBlock();
-
             LOGGER.info("Current execution block = {}",
                     (currentBlock != null) ? currentBlock.toString() :
                             "No block");
@@ -325,18 +319,10 @@ public class CassandraScheduler implements Scheduler, Managed {
 
         if (secretBytes.isPresent()) {
             // Authenticated if a non empty secret is provided.
-//            this.driver = factory.create(this, frameworkInfo, mesosConfig.toZooKeeperUrl(),
-//                    secretBytes.get().toByteArray());
-            final Protos.Credential credential = factory
-                    .getCredential(this, frameworkInfo, mesosConfig.toZooKeeperUrl(), secretBytes.get().toByteArray());
-            this.driver = new MesosToSchedulerDriverAdapter(
-                    this,
-                    frameworkInfo,
-                    mesosConfig.toZooKeeperUrl(),
-                    credential);
+            this.driver = factory.create(this, frameworkInfo, mesosConfig.toZooKeeperUrl(),
+                    secretBytes.get().toByteArray());
         } else {
-//            this.driver = factory.create(this, frameworkInfo, mesosConfig.toZooKeeperUrl());
-            this.driver = new MesosToSchedulerDriverAdapter(this, frameworkInfo, mesosConfig.toZooKeeperUrl());
+            this.driver = factory.create(this, frameworkInfo, mesosConfig.toZooKeeperUrl());
         }
 
         LOGGER.info("Starting driver...");
@@ -370,5 +356,29 @@ public class CassandraScheduler implements Scheduler, Managed {
         Protos.OfferID offerId = offer.getId();
         LOGGER.info("Scheduler declining offer: {}", offerId);
         driver.declineOffer(offerId);
+    }
+
+    private void reconcile() {
+        Block reconcileBlock = getReconciliationBlock();
+
+        if (reconcileBlock != null) {
+            reconcileBlock.restart();
+        } else {
+            LOGGER.error("Failed to reconcile because unable to find the Reconciliation Block");
+        }
+    }
+
+    private Block getReconciliationBlock() {
+        final Stage stage = stageManager.getStage();
+
+        for (Phase phase : stage.getPhases()) {
+            for (Block block : phase.getBlocks()) {
+                if (block instanceof ReconciliationBlock) {
+                    return block;
+                }
+            }
+        }
+
+        return null;
     }
 }
