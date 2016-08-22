@@ -35,7 +35,7 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<BackupRestore
                 cassandraTasks.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon does not exist");
-            setStatus(Status.Complete);
+            setStatus(Status.COMPLETE);
             return Optional.empty();
         }
         return Optional.of(cassandraTasks.getOrCreateRestoreSnapshot(

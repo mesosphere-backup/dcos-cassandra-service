@@ -47,7 +47,7 @@ public class NoOpPhaseStrategy implements PhaseStrategy {
 
     @Override
     public Status getStatus() {
-        return Status.Complete;
+        return Status.COMPLETE;
     }
 
 

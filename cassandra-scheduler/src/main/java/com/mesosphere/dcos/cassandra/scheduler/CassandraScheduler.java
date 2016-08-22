@@ -324,10 +324,16 @@ public class CassandraScheduler implements Scheduler, Managed {
 
         if (secretBytes.isPresent()) {
             // Authenticated if a non empty secret is provided.
-            this.driver = factory.create(this, frameworkInfo, mesosConfig.toZooKeeperUrl(),
-                    secretBytes.get().toByteArray());
+            this.driver = factory.create(
+              this,
+              frameworkInfo,
+              mesosConfig.toZooKeeperUrl(),
+              secretBytes.get().toByteArray());
         } else {
-            this.driver = factory.create(this, frameworkInfo, mesosConfig.toZooKeeperUrl());
+            this.driver = factory.create(
+              this,
+              frameworkInfo,
+              mesosConfig.toZooKeeperUrl());
         }
         LOGGER.info("Starting driver...");
         final Protos.Status startStatus = this.driver.start();
