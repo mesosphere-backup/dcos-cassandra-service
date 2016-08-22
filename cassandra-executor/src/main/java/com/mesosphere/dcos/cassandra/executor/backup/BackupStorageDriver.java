@@ -16,7 +16,6 @@
 package com.mesosphere.dcos.cassandra.executor.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

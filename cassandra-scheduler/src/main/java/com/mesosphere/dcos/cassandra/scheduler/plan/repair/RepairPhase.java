@@ -6,16 +6,11 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirement
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairBlock;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class RepairPhase extends AbstractClusterTaskPhase<RepairBlock,
-        RepairContext> {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(RepairPhase.class);
+public class RepairPhase extends AbstractClusterTaskPhase<RepairBlock, RepairContext> {
 
     public RepairPhase(
             RepairContext context,

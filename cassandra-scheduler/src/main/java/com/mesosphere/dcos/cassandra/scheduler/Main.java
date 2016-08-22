@@ -2,7 +2,6 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.MutableSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;

@@ -1,7 +1,6 @@
 package com.mesosphere.dcos.cassandra.executor.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobInputStream;
 import com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream;
 import com.microsoft.azure.storage.CloudStorageAccount;

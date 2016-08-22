@@ -16,6 +16,7 @@ package com.mesosphere.dcos.cassandra.executor;
  */
 
 import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
+import com.mesosphere.dcos.cassandra.common.config.HeapConfig;
 import com.mesosphere.dcos.cassandra.common.config.Location;
 
 import java.nio.file.Path;
@@ -101,6 +102,15 @@ public class CassandraPaths {
      */
     public Path cassandraLocation() {
         return conf().resolve(Location.DEFAULT_FILE);
+    }
+
+  /**
+   * Gets the JVM options configuration file.
+   * @return The JVM options configuration file.
+   */
+
+  public Path heapConfig() {
+        return conf().resolve(HeapConfig.DEFAULT_FILE_NAME);
     }
 
     /**
