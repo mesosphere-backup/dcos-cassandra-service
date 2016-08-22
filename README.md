@@ -175,7 +175,7 @@ To start a minimal cluster with a single node, create a JSON options file that c
     },
     "task" : {
        "cpus": 0.1,
-       "mem": 128,
+       "mem": 128
     }
 }
 ```
