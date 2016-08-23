@@ -16,7 +16,7 @@ dependencies {
     compile "com.microsoft.azure:azure-storage:4.2.0"
     compile "commons-io:commons-io:2.5"
 
-    compile 'org.xerial.snappy:snappy-java:1.1.2.1'
+    compile 'org.xerial.snappy:snappy-java:1.1.2.6'
     // To override the junit compile dependency that cassandra brings in.
     compile "junit:junit:${junitVer}"
     testCompile "junit:junit:${junitVer}"
