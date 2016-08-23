@@ -19,35 +19,16 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.Constants;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.PartETag;
-import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.UploadPartRequest;
-import com.amazonaws.services.s3.model.UploadPartResult;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xerial.snappy.SnappyInputStream;
-import org.xerial.snappy.SnappyOutputStream;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
@@ -56,11 +37,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -71,11 +48,6 @@ import java.util.Optional;
 public class S3StorageDriver implements BackupStorageDriver {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             S3StorageDriver.class);
-
-    // Chunk size set to 5MB, AWS S3 multi-part uploads default
-    public static final int DEFAULT_PART_SIZE_UPLOAD = 5 * 1024 * 1024;
-    public static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
-
     private StorageUtil storageUtil = new StorageUtil();
 
     String getBucketName(BackupRestoreContext ctx) throws URISyntaxException {
@@ -245,85 +217,20 @@ public class S3StorageDriver implements BackupStorageDriver {
                         LOGGER.info("Visiting file: {}", file.getAbsolutePath());
                         if (isValidFileForUpload(file, BackupRestoreContext)) {
                             String fileKey = key + "/" + keyspaceName + "/" + cfName + "/" + file.getName();
-                            List<PartETag> partETags = new ArrayList<>();
-                            final InitiateMultipartUploadRequest uploadRequest = new InitiateMultipartUploadRequest(bucketName, fileKey);
-                            final InitiateMultipartUploadResult uploadResult = amazonS3Client.initiateMultipartUpload(uploadRequest);
 
                             LOGGER.info(
-                                    "Initiating upload for file: {} | bucket: {} | key: {} | uploadId: {}",
-                                    file.getAbsolutePath(), bucketName, fileKey,
-                                    uploadResult.getUploadId());
+                                    "Initiating upload for file: {} | bucket: {} | key: {}",
+                                    file.getAbsolutePath(), bucketName, fileKey);
 
-                            final byte[] buffer = new byte[DEFAULT_PART_SIZE_UPLOAD];
-                            BufferedInputStream inputStream = null;
-                            ByteArrayOutputStream baos = null;
-                            SnappyOutputStream compress = null;
-                            try {
-                                inputStream = new BufferedInputStream(new FileInputStream(file));
-                                baos = new ByteArrayOutputStream();
-                                compress = new SnappyOutputStream(baos);
+                            amazonS3Client.putObject(bucketName,fileKey,file);
 
-                                int chunkLength;
-                                int partNum = 1;
-                                while ((chunkLength = inputStream.read(buffer)) != -1) {
-                                    LOGGER.debug("Compressing part: {}", partNum);
-                                    compress.write(buffer, 0, chunkLength);
-                                    compress.flush();
-                                    final byte[] bytes = baos.toByteArray();
-                                    final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-                                    final MessageDigest md5Digester = MessageDigest.getInstance("MD5");
-                                    final byte[] digest = md5Digester.digest(bytes);
-                                    final String md5String = Base64.getEncoder().encodeToString(digest);
-
-                                    final UploadPartRequest uploadPartRequest = new UploadPartRequest()
-                                            .withBucketName(bucketName)
-                                            .withKey(fileKey)
-                                            .withUploadId(uploadResult.getUploadId())
-                                            .withPartNumber(partNum++)
-                                            .withInputStream(bais)
-                                            .withPartSize(bytes.length)
-                                            .withMD5Digest(md5String);
-
-                                    LOGGER.debug(
-                                            "Uploading part: {} | bucket: {} | key: {} | uploadId: {}",
-                                            partNum, bucketName, fileKey,
-                                            uploadResult.getUploadId());
-                                    final UploadPartResult uploadPartResult = amazonS3Client.uploadPart(
-                                            uploadPartRequest);
-                                    final PartETag partETag = uploadPartResult.getPartETag();
-                                    if (!partETag.getETag().equals(new String(
-                                            Hex.encodeHex(digest)))) {
-                                        LOGGER.error("Error matching hex");
-                                        // TODO: Add retry logic
-                                    }
-                                    partETags.add(partETag);
-                                }
-                                LOGGER.debug(
-                                        "Done uploading, now completing bucket: {} | key: {} | uploadId: {}",
-                                        bucketName, fileKey,
-                                        uploadResult.getUploadId());
-                                final CompleteMultipartUploadRequest completeMultipartUploadRequest = new CompleteMultipartUploadRequest(
-                                        bucketName, fileKey,
-                                        uploadResult.getUploadId(), partETags);
-                                amazonS3Client.completeMultipartUpload(completeMultipartUploadRequest);
-                                LOGGER.debug(
+                            LOGGER.debug(
                                         "Successfully uploaded the file to S3. Deleting the file now: {}",
                                         file.getAbsolutePath());
-                                final boolean delete = file.delete();
-                                LOGGER.debug("Deletion status: {} for file {}",
+                            final boolean delete = file.delete();
+                            LOGGER.debug("Deletion status: {} for file {}",
                                         delete, file.getAbsolutePath());
-                            } catch (Exception e) {
-                                LOGGER.error("Error uploading file: {}", e);
-                                amazonS3Client.abortMultipartUpload(
-                                        new AbortMultipartUploadRequest(
-                                                bucketName, fileKey,
-                                                uploadResult.getUploadId()));
-                                // TODO: Add retry logic
-                            } finally {
-                                IOUtils.closeQuietly(inputStream);
-                                IOUtils.closeQuietly(compress);
-                                IOUtils.closeQuietly(baos);
-                            }
+
                         }
 
                         return FileVisitResult.CONTINUE;
@@ -375,17 +282,12 @@ public class S3StorageDriver implements BackupStorageDriver {
         LOGGER.info(
                 "DownloadFile | Local location: {} | Bucket Name: {} | fileKey: {} | Size in bytes: {}",
                 localLocation, bucketName, fileKey, sizeInBytes);
-        InputStream inputStream = null;
-        BufferedOutputStream bos = null;
-        SnappyInputStream is = null;
-        FileOutputStream fileOutputStream = null;
-        try {
-            long position = 0;
+
             final String fileLocation = localLocation + File.separator + fileKey;
-            File f = new File(fileLocation);
+            File file = new File(fileLocation);
 
             // Only create parent directory once, if it doesn't exist.
-            final File parentDir = new File(f.getParent());
+            final File parentDir = new File(file.getParent());
             if (!parentDir.isDirectory()) {
                 final boolean parentDirCreated = parentDir.mkdirs();
                 if (!parentDirCreated) {
@@ -396,44 +298,9 @@ public class S3StorageDriver implements BackupStorageDriver {
                 }
             }
 
-            fileOutputStream = new FileOutputStream(f, true);
-            while (position <= sizeInBytes) {
-                final byte[] buffer = new byte[DEFAULT_PART_SIZE_DOWNLOAD];
-                final GetObjectRequest rangeObjectRequest = new GetObjectRequest(
-                        bucketName, fileKey);
-
-                rangeObjectRequest.setRange(position,
-                        DEFAULT_PART_SIZE_DOWNLOAD);
-                final S3Object object = amazonS3Client.getObject(
-                        rangeObjectRequest);
-
-                inputStream = object.getObjectContent();
-                is = new SnappyInputStream(
-                        new BufferedInputStream(inputStream));
-                bos = new BufferedOutputStream(fileOutputStream,
-                        DEFAULT_PART_SIZE_DOWNLOAD);
-                int bytesWritten = 0;
-                try {
-                    int c;
-                    while ((c = is.read(buffer, 0,
-                            DEFAULT_PART_SIZE_DOWNLOAD)) != -1) {
-                        bytesWritten += c;
-                        bos.write(buffer, 0, c);
-                    }
-                } finally {
-                    IOUtils.closeQuietly(is);
-                    IOUtils.closeQuietly(bos);
-                }
-
-                // TODO: Think about resumable downloads in future.
-                LOGGER.info("For file: {} wrote: {} bytes out of {} bytes",
-                        fileKey, position + bytesWritten, sizeInBytes);
-                position += DEFAULT_PART_SIZE_DOWNLOAD + 1;
-            }
-        } finally {
-            IOUtils.closeQuietly(inputStream);
-            IOUtils.closeQuietly(fileOutputStream);
-        }
+            amazonS3Client.getObject(
+              new GetObjectRequest(bucketName, fileKey),
+              file);
     }
 
     public Map<String, Long> listSnapshotFiles(AmazonS3Client amazonS3Client,
