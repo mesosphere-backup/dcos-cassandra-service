@@ -3,13 +3,19 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskRequest;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public class RepairRequest {
+public class RepairRequest implements ClusterTaskRequest {
 
     public static final String ALL = "*";
 
@@ -54,7 +60,9 @@ public class RepairRequest {
         return nodes;
     }
 
-    public boolean isValid(){return !nodes.isEmpty();}
+    public boolean isValid() {
+        return !nodes.isEmpty();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -75,5 +83,24 @@ public class RepairRequest {
     @Override
     public String toString(){
         return JsonUtils.toJsonString(this);
+    }
+
+    public RepairContext toContext(CassandraTasks cassandraTasks) {
+        return RepairContext.create(
+                new ArrayList<>(getNodes(cassandraTasks)),
+                getKeySpaces(),
+                getColumnFamiles());
+    }
+
+    private Set<String> getNodes(CassandraTasks cassandraTasks) {
+        final Set<String> allDaemons = cassandraTasks.getDaemons().keySet();
+        if (getNodes().size() == 1 &&
+                getNodes().get(0).equals(CleanupRequest.ALL)) {
+            return allDaemons;
+        } else {
+            return getNodes().stream()
+                    .filter(node -> allDaemons.contains(node))
+                    .collect(Collectors.toSet());
+        }
     }
 }

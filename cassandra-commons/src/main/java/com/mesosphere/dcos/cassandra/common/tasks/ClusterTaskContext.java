@@ -17,7 +17,7 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 /**
  * Interface for the generic context object for ClusterTask execution (e.g
- * Bakckup, Restore, Cleanup, ... ). It is used to persist any necessary
+ * Backup, Restore, Cleanup, ... ). It is used to persist any necessary
  * state for the set of tasks that implement the cluster wie operation.
  */
 public interface ClusterTaskContext {
