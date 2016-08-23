@@ -97,13 +97,13 @@ func (cmd *NodeHandler) runList(c *kingpin.ParseContext) error {
 func (cmd *NodeHandler) runReplace(c *kingpin.ParseContext) error {
 	query := url.Values{}
 	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId))
-	cli.PrintJSON(cli.HTTPGetQuery("v1/nodes/replace", query.Encode()))
+	cli.PrintText(cli.HTTPGetQuery("v1/nodes/replace", query.Encode()))
 	return nil
 }
 func (cmd *NodeHandler) runRestart(c *kingpin.ParseContext) error {
 	query := url.Values{}
 	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId))
-	cli.PrintJSON(cli.HTTPGetQuery("v1/nodes/restart", query.Encode()))
+	cli.PrintText(cli.HTTPGetQuery("v1/nodes/restart", query.Encode()))
 	return nil
 }
 func (cmd *NodeHandler) runStatus(c *kingpin.ParseContext) error {
@@ -153,7 +153,7 @@ func (cmd *BackupRestoreHandler) runBackup(c *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	cli.PrintJSON(cli.HTTPPutJSON("v1/backup/start", string(payload)))
+	cli.PrintText(cli.HTTPPutJSON("v1/backup/start", string(payload)))
 	return nil
 }
 func (cmd *BackupRestoreHandler) runRestore(c *kingpin.ParseContext) error {
@@ -161,7 +161,7 @@ func (cmd *BackupRestoreHandler) runRestore(c *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	cli.PrintJSON(cli.HTTPPutJSON("v1/restore/start", string(payload)))
+	cli.PrintText(cli.HTTPPutJSON("v1/restore/start", string(payload)))
 	return nil
 }
 func handleBackupRestoreSections(app *kingpin.Application, serviceName string) {
@@ -226,7 +226,7 @@ func (cmd *CleanupRepairHandler) runCleanup(c *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	cli.PrintJSON(cli.HTTPPutJSON("v1/cleanup/start", string(payload)))
+	cli.PrintText(cli.HTTPPutJSON("v1/cleanup/start", string(payload)))
 	return nil
 }
 func (cmd *CleanupRepairHandler) runRepair(c *kingpin.ParseContext) error {
@@ -234,7 +234,7 @@ func (cmd *CleanupRepairHandler) runRepair(c *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	cli.PrintJSON(cli.HTTPPutJSON("v1/repair/start", string(payload)))
+	cli.PrintText(cli.HTTPPutJSON("v1/repair/start", string(payload)))
 	return nil
 }
 func handleCleanupRepairSections(app *kingpin.Application) {
