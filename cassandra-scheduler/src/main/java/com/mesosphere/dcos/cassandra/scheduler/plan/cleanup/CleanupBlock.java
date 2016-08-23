@@ -43,7 +43,7 @@ public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
                 cassandraTasks.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
-            setStatus(Status.Complete);
+            setStatus(Status.COMPLETE);
             return Optional.empty();
         }
         return Optional.of(cassandraTasks.getOrCreateCleanup(

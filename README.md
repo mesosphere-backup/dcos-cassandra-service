@@ -2,7 +2,7 @@
 
 [![Build Status](http://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=cassandra/0-trigger-master)](http://jenkins.mesosphere.com/service/jenkins/job/cassandra/job/0-trigger-master/)
 
-DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation](http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
+DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditionally associated with managing a Cassandra cluster. Apache Cassandra is a distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation](http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
 ## Benefits
 
@@ -108,7 +108,7 @@ cqlsh> SELECT * FROM demo.map;
 ### Default Installation
 Prior to installing a default cluster, ensure that your DC/OS cluster has at least 3 DC/OS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
 
-To start a the default cluster, run the following command on the DC/OS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
+To start a default cluster, run the following command on the DC/OS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
 
 ```
 $ dcos package install cassandra
@@ -144,7 +144,7 @@ See [Configuration Options](#configuration-options) for a list of fields that ca
 
 ### Minimal Installation
 You may wish to install Cassandra on a local DC/OS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
-As with the default installation, you must ensure that ports 7000, 7001,7 199, 9042, and 9160 are available.
+As with the default installation, you must ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
 
 **Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
 
@@ -175,7 +175,7 @@ To start a minimal cluster with a single node, create a JSON options file that c
     },
     "task" : {
        "cpus": 0.1,
-       "mem": 128,
+       "mem": 128
     }
 }
 ```
@@ -266,13 +266,7 @@ The plan can be viewed from the API via the REST endpoint. A curl example is pro
 $ curl http://<dcos_url>/service/cassandra/v1/plan
 ```
 
-If you are using Enterprise DC/OS, use the following command to view the installation plan:
-
-```
-curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan/
-```
-
-If you are using the Enterprise Edition of DC/OS with Authentication enabled you will need to include the token in the POST command.
+If you are using the Enterprise Edition of DC/OS with Authentication enabled you will need to include the token in the GET command.
 
 ```
 curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan
@@ -1652,7 +1646,7 @@ $ dcos cassandra --name=<service-name> restore status
 # Troubleshooting
 
 ## Configuration Update Errors
-The plan below shows shows contains a configuration error that will not allow the installation or configuration update to progress.
+The plan below contains a configuration error that will not allow the installation or configuration update to progress.
 
 ```
 {

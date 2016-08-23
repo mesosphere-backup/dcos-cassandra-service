@@ -14,6 +14,8 @@ message HeapConfig{
     optional int32 sizeMb = 1;
 
     optional int32 newMb = 2;
+
+    optional int32 gcType = 3;
 }
 
 message Location{

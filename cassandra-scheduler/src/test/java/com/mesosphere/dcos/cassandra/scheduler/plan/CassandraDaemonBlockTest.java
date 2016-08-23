@@ -124,7 +124,7 @@ public class CassandraDaemonBlockTest {
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
 
         Assert.assertEquals(EXPECTED_NAME, block.getName());
-        Assert.assertEquals(Status.Pending, Block.getStatus(block));
+        Assert.assertEquals(Status.PENDING, Block.getStatus(block));
     }
 
     @Test

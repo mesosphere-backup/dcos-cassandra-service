@@ -1,5 +1,5 @@
 executor:
-  command : ${EXECUTOR_COMMAND:-"ulimit -l $CASSANDRA_ULIMIT_MEMLOCK && ulimit -n $CASSANDRA_ULIMIT_NOFILE && ulimit -u $CASSANDRA_ULIMIT_NPROC && ulimit -a && ./executor/bin/cassandra-executor server executor/conf/executor.yml"}
+  command : ${EXECUTOR_COMMAND:-"./executor/bin/cassandra-executor server executor/conf/executor.yml"}
   arguments : ${EXECUTOR_ARGS:-[]}
   cpus : ${EXECUTOR_CPUS:-0.1}
   memory_mb : ${EXECUTOR_MEMORY_MB:-768}
@@ -22,12 +22,13 @@ cassandra:
   heap:
     size_mb : ${CASSANDRA_HEAP_SIZE_MB:-2048}
     new_mb : ${CASSANDRA_HEAP_NEW_MB:-100}
+    gc_type : ${CASSANDRA_GC_TYPE:-"CMS"}
   location:
     rack : ${CASSANDRA_LOCATION_RACK:-"rac1"}
     data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
   jmx_port: ${CASSANDRA_JMX_PORT:-7199}
   application:
-     cluster_name : ${SERVICE_NAME:-"cassandra"}
+     cluster_name : ${CASSANDRA_CLUSTER_NAME:-"cassandra"}
      authenticator: "AllowAllAuthenticator"
      authorizer: "AllowAllAuthorizer"
      role_manager: "CassandraRoleManager"

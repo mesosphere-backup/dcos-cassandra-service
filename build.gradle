@@ -109,7 +109,7 @@ configure(project(':seedprovider')) {
     }
 
     dependencies {
-        compile 'org.apache.cassandra:cassandra-all:2.2.5'
+        compile 'org.apache.cassandra:cassandra-all:3.0.7'
 
     }
 }
