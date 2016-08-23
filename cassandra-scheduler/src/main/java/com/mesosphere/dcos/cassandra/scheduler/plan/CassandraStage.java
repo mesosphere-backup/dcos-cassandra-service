@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.collect.ImmutableList;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
@@ -9,6 +10,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Stage;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,12 +34,9 @@ public class CassandraStage implements Stage {
         );
     }
 
-    private final DeploymentManager deployment;
-    private final BackupManager backup;
-    private final RestoreManager restore;
     private final DefaultConfigurationManager defaultConfigurationManager;
-    private final CleanupManager cleanup;
-    private final RepairManager repair;
+    private final DeploymentManager deployment;
+    private final List<ClusterTaskManager<?>> managers;
 
     public CassandraStage(
             final DefaultConfigurationManager defaultConfigurationManager,
@@ -48,21 +47,18 @@ public class CassandraStage implements Stage {
             final RepairManager repair) {
         this.defaultConfigurationManager = defaultConfigurationManager;
         this.deployment = deployment;
-        this.backup = backup;
-        this.restore = restore;
-        this.cleanup = cleanup;
-        this.repair = repair;
+        // Note: This ordering defines the ordering of the phases below:
+        this.managers = Arrays.asList(backup, restore, cleanup, repair);
     }
 
     @Override
     public List<? extends Phase> getPhases() {
-        return ImmutableList.<Phase>builder()
-                .addAll(deployment.getPhases())
-                .addAll(backup.getPhases())
-                .addAll(cleanup.getPhases())
-                .addAll(restore.getPhases())
-                .addAll(repair.getPhases())
-                .build();
+        ImmutableList.Builder<Phase> builder =
+                ImmutableList.<Phase>builder().addAll(deployment.getPhases());
+        for (ClusterTaskManager<?> manager : managers) {
+            builder.addAll(manager.getPhases());
+        }
+        return builder.build();
     }
 
     @Override
@@ -80,29 +76,23 @@ public class CassandraStage implements Stage {
 
     @Override
     public boolean isComplete() {
-        return deployment.isComplete() &&
-                (backup.inProgress() ? backup.isComplete() : true) &&
-                (restore.inProgress() ? restore.isComplete() : true) &&
-                (cleanup.inProgress() ? cleanup.isComplete() : true) &&
-                (repair.inProgress() ? repair.isComplete() : true);
+        if (!deployment.isComplete()) {
+            return false;
+        }
+        for (ClusterTaskManager<?> manager : managers) {
+            if (manager.isInProgress() && !manager.isComplete()) {
+                return false;
+            }
+        }
+        return true;
 
     }
 
     public void update() {
-        if (backup.isComplete()) {
-            backup.stopBackup();
-        }
-
-        if (restore.isComplete()) {
-            restore.stopRestore();
-        }
-
-        if (cleanup.isComplete()) {
-            cleanup.stopCleanup();
-        }
-
-        if (repair.isComplete()) {
-            repair.stopRepair();
+        for (ClusterTaskManager<?> manager : managers) {
+            if (manager.isComplete()) {
+                manager.stop();
+            }
         }
     }
 }
