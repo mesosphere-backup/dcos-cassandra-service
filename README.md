@@ -95,13 +95,13 @@ cqlsh> USE demo;CREATE TABLE map (key varchar, value varchar, PRIMARY KEY(key));
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Cassandra', 'Rocks!');
 cqlsh> INSERT INTO demo.map(key, value) VALUES('StaticInfrastructure', 'BeGone!');
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Buzz', 'DC/OS is the new black!');
-```    
+```
 
 * Step 8. Query the data back to make sure it persisted correctly:
 
 ```
 cqlsh> SELECT * FROM demo.map;
-```    
+```
 
 ## Install and Customize
 
@@ -1297,7 +1297,7 @@ restarted.
 
 If DNS ames are used, the DNS name will always resolve to correct IP address of the node.
 This is true, even if the node is moved to a new IP address. However, it is important to
-understand the DNS caching behavior of your application. For a Java application using  
+understand the DNS caching behavior of your application. For a Java application using
 the CQL driver, if a SecurityManager is installed the default behavior is to cache a
 successful DNS lookup forever. Therefore, if a node moves, your application will always
 maintain the original address. If no security manager is installed, the default cache
@@ -1332,16 +1332,16 @@ try {
        new InetSocketAddress("10.0.0.48", 9042),
        new InetSocketAddress("10.0.0.45", 9042));
 
-    cluster = Cluster.builder()                                                    
+    cluster = Cluster.builder()
             .addContactPointsWithPorts(addresses)
             .build();
-    Session session = cluster.connect();                                           
+    Session session = cluster.connect();
 
-    ResultSet rs = session.execute("select release_version from system.local");   
+    ResultSet rs = session.execute("select release_version from system.local");
     Row row = rs.one();
-    System.out.println(row.getString("release_version"));                          
+    System.out.println(row.getString("release_version"));
 } finally {
-    if (cluster != null) cluster.close();                                          
+    if (cluster != null) cluster.close();
 }
 ```
 
@@ -1534,11 +1534,19 @@ Cleanup can be a CPU- and disk-intensive operation, so you may want to delay run
 To perform a cleanup from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+$ dcos cassandra --name=<service-name> cleanup start --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup, `<key_spaces>` is an optional comma-separated list of the key spaces to cleanup, and `<column-families>` is an optional comma-separated list of the column-families to cleanup.
 If no arguments are specified a cleanup will be performed for all nodes, key spaces, and column families.
+
+To cancel a currently running cleanup from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> cleanup stop
+```
+
+The operation will end after the current node has finished its cleanup.
 
 ### Repair
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed.
@@ -1547,11 +1555,19 @@ Like cleanup, repair can be a CPU and disk intensive operation. When possible, i
 To perform a repair from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+$ dcos cassandra --name=<service-name> repair start --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
 If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
+
+To cancel a currently running repair from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> repair stop
+```
+
+The operation will end after the current node has finished its repair.
 
 ### Backup and Restore
 
@@ -1577,9 +1593,19 @@ $ dcos cassandra --name=<service-name> backup start \
 
 To upload to S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
 
-Check status of the backup:
+To check the status of the backup from the CLI, enter the following command:
 
-    $ dcos cassandra --name=<service-name> backup status
+```
+$ dcos cassandra --name=<service-name> backup status
+```
+
+To cancel a currently running backup from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> backup stop
+```
+
+The operation will end after the current node has finished its backup.
 
 ##### Azure Backup
 
@@ -1595,11 +1621,19 @@ $ dcos cassandra --name=<service-name> backup start \
 
 To upload to Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
 
-Check status of the backup:
+To check the status of the backup from the CLI, enter the following command:
 
 ```
 $ dcos cassandra --name=<service-name> backup status
 ```
+
+To cancel a currently running backup from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> backup stop
+```
+
+The operation will end after the current node has finished its backup.
 
 #### Restore
 
@@ -1637,11 +1671,19 @@ $ dcos cassandra --name=<service-name> restore start \
 
 To restore from Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
 
-Check the status of the restore:
+To check the status of the restore from the CLI, enter the following command:
 
 ```
 $ dcos cassandra --name=<service-name> restore status
 ```
+
+To cancel a currently running restore from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> restore stop
+```
+
+The operation will end after the current node has finished its restore.
 
 # Troubleshooting
 
@@ -1728,7 +1770,7 @@ API:
 $ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "$DCOS_URI/service/cassandra/v1/nodes/restart?node=node-0"
 ```
 
-This will restart the node with the same name running on the same server. 
+This will restart the node with the same name running on the same server.
 
 # API Reference
 The DC/OS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DC/OS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.
