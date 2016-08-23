@@ -14,6 +14,8 @@ import java.util.Iterator;
 /**
  * SnappyCompressedChunker reads bytes from InputStream, compress them, and return a stream of byte[]. The size of
  * byte[] is equal to compressedChunkSize, for all but the last chunk.
+ * <p>
+ * This implementation is not Thread-safe.
  */
 public class SnappyCompressedChunker implements Iterator<byte[]> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SnappyCompressedChunker.class);
@@ -29,12 +31,21 @@ public class SnappyCompressedChunker implements Iterator<byte[]> {
     private int compressedChunkSize;
 
     private boolean hasNextChunk;
+    boolean eof = false;
     private ByteArrayOutputStream baos;
     private InputStream fileStreamToCompress;
     private SnappyOutputStream compressedStream;
 
     public SnappyCompressedChunker(final InputStream fileToCompress,
                                    final int compressedChunkSize) throws IOException {
+        if (fileToCompress == null) {
+            throw new IllegalArgumentException("fileToCompress cannot be null");
+        }
+
+        if (compressedChunkSize <= 0) {
+            throw new IllegalArgumentException("compressedChunkSize must be >= 0");
+        }
+
         this.fileStreamToCompress = fileToCompress;
         this.compressedChunkSize = compressedChunkSize;
         this.hasNextChunk = true;
@@ -51,10 +62,14 @@ public class SnappyCompressedChunker implements Iterator<byte[]> {
 
     @Override
     public byte[] next() {
-        byte[] readBuffer = new byte[READ_BUFFER_SIZE];
-        boolean eof = false;
         int bytesRead = 0;
         try {
+            if (eof) {
+                // Return any exccess bytes.
+                return spillExcessAndReturn(eof);
+            }
+
+            byte[] readBuffer = new byte[READ_BUFFER_SIZE];
             while (baos.size() < compressedChunkSize) {
                 bytesRead = fileStreamToCompress.read(readBuffer);
                 if (bytesRead != -1) {
@@ -86,19 +101,23 @@ public class SnappyCompressedChunker implements Iterator<byte[]> {
         byte[] compressedBytes = baos.toByteArray();
         byte[] bytesToReturn;
 
-        if (eof) {
+        // Only return compressedChunkSize, and save the spill for next.
+        bytesToReturn = Arrays.copyOfRange(compressedBytes, 0, compressedChunkSize);
+        byte[] spilledBytes = Arrays.copyOfRange(compressedBytes,
+                compressedChunkSize < compressedBytes.length ? compressedChunkSize : compressedBytes.length,
+                compressedBytes.length);
+        baos.reset();
+        baos.write(spilledBytes);
+
+        // Only then we have reached EOF and
+        // there's nothing in the compressed stream, we should cleanup.
+        if (eof && baos.toByteArray().length == 0) {
             // Reached EOF, return everything.
             hasNextChunk = false;
             bytesToReturn = compressedBytes;
             IOUtils.closeQuietly(fileStreamToCompress);
             IOUtils.closeQuietly(baos);
             IOUtils.closeQuietly(compressedStream);
-        } else {
-            // Only return compressedChunkSize, and save the spill for next.
-            bytesToReturn = Arrays.copyOfRange(compressedBytes, 0, compressedChunkSize);
-            byte[] spilledBytes = Arrays.copyOfRange(compressedBytes, compressedChunkSize, compressedBytes.length);
-            baos.reset();
-            baos.write(spilledBytes);
         }
 
         return bytesToReturn;
