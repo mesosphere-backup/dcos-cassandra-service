@@ -29,6 +29,25 @@ allprojects {
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url "s3://downloads.mesosphere.io/maven/"
+            credentials(AwsCredentials) {
+                accessKey System.env['AWS_ACCESS_KEY_ID']
+                secretKey System.env['AWS_SECRET_ACCESS_KEY']
+            }
+        }
+        maven {
+            url "s3://downloads.mesosphere.io/maven-snapshot/"
+            credentials(AwsCredentials) {
+                accessKey System.env['AWS_ACCESS_KEY_ID']
+                secretKey System.env['AWS_SECRET_ACCESS_KEY']
+            }
+        }
+    }
 }
 
 ext {

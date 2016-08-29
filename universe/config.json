@@ -75,6 +75,12 @@
 					"id": "http://cassandra/docs/mesosphere.com/service/data_center_url",
 					"type": "string",
 					"description": "A comma separated list of the URLs from which this service instance retrieve data center info to form a cluster spanning multiple data centers."
+				},
+				"mesos_api_version": {
+					"id": "http://cassandra/docs/mesosphere.com/service/mesos_api_version",
+					"type": "string",
+					"description": "Mesos API version to use. Possible values: V0 and V1",
+					"default": "V0"
 				}
 			},
 			"additionalProperties": false,
