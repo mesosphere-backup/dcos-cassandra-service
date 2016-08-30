@@ -47,3 +47,6 @@ cassandra-bin-tmp/
 dcos-commons-tools/
 
 cassandra-scheduler/cassandra.yaml
+
+.cache/
+__pycache__/
