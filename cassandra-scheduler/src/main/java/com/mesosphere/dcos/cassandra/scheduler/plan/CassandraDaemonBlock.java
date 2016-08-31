@@ -66,29 +66,27 @@ public class CassandraDaemonBlock implements Block {
     }
 
     public static boolean isComplete(Protos.TaskStatus status) throws IOException {
-        final CassandraData cassandraData = CassandraData.parse(status.getData());
         final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(status.getState());
-        final boolean isModeNormal = CassandraMode.NORMAL.equals(cassandraData.getMode());
-        LOGGER.info("isRunning: {} isModeNormal: {}", isRunning, isModeNormal);
-        return (isRunning && isModeNormal);
+
+        if (status.hasData()) {
+            final CassandraData data = CassandraData.parse(status.getData());
+            final CassandraMode mode = data.getMode();
+            final boolean isModeNormal = CassandraMode.NORMAL.equals(mode);
+            LOGGER.info("isRunning: {} isModeNormal: {}", isRunning, isModeNormal);
+            return (isRunning) && isModeNormal;
+        } else {
+            // Handle reconcile messages
+            return isRunning;
+        }
     }
 
-    private boolean isComplete(final CassandraContainer container) throws ConfigStoreException {
+    private boolean isComplete(final CassandraContainer container) throws IOException {
         final String name = container.getDaemonTask().getName();
         try {
             final Protos.TaskStatus storedStatus = cassandraTasks.getStateStore().fetchStatus(name);
             final boolean needsConfigUpdate = cassandraTasks.needsConfigUpdate(container.getDaemonTask());
-            final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(storedStatus.getState());
-
-            if (storedStatus.hasData()) {
-                final CassandraData data = CassandraData.parse(storedStatus.getData());
-                final CassandraMode mode = data.getMode();
-                return (isRunning) && CassandraMode.NORMAL.equals(mode) && !needsConfigUpdate;
-            } else {
-                // Handle reconcile messages
-                return isRunning && !needsConfigUpdate;
-            }
-        } catch (StateStoreException e) {
+            return isComplete(storedStatus) && !needsConfigUpdate;
+        } catch (StateStoreException | IOException e) {
             final Throwable cause = e.getCause();
             if (cause instanceof KeeperException.NoNodeException) {
                 // No stored status, must be incomplete
@@ -136,7 +134,7 @@ public class CassandraDaemonBlock implements Block {
             final String name,
             final PersistentOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
-            final SchedulerClient client) throws PersistenceException, ConfigStoreException {
+            final SchedulerClient client) throws PersistenceException, IOException {
 
         return new CassandraDaemonBlock(
                 name,
@@ -149,7 +147,7 @@ public class CassandraDaemonBlock implements Block {
             final String name,
             final PersistentOfferRequirementProvider provider,
             final CassandraTasks cassandraTasks,
-            final SchedulerClient client) throws PersistenceException, ConfigStoreException {
+            final SchedulerClient client) throws PersistenceException, IOException {
         this.cassandraTasks = cassandraTasks;
         this.name = name;
         this.provider = provider;
@@ -220,7 +218,7 @@ public class CassandraDaemonBlock implements Block {
             } else {
                 return null;
             }
-        } catch (PersistenceException | ConfigStoreException ex) {
+        } catch (IOException ex) {
             LOGGER.error(String.format("Block %s - Failed to get or create a " +
                     "container", getName()), ex);
             return null;
@@ -244,9 +242,14 @@ public class CassandraDaemonBlock implements Block {
                 LOGGER.info("Ignoring TaskStatus (Reason is RECONCILIATION): {}", status);
                 return;
             }
-            final CassandraData cassandraData = CassandraData.parse(status.getData());
-            LOGGER.info("{} Block: {} received status: {} with mode: {}",
-                    Block.getStatus(this), getName(), status, cassandraData.getMode());
+            if (status.hasData()) {
+                final CassandraData cassandraData = CassandraData.parse(status.getData());
+                LOGGER.info("{} Block: {} received status: {} with mode: {}",
+                        Block.getStatus(this), getName(), status, cassandraData.getMode());
+            } else {
+                LOGGER.info("{} Block: {} received status: {}",
+                        Block.getStatus(this), getName(), status);
+            }
             if (isComplete(status)) {
                 setStatus(Status.COMPLETE);
                 LOGGER.info("Updating block: {} with: {}", getName(), Status.COMPLETE);
