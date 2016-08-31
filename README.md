@@ -2,7 +2,7 @@
 
 [![Build Status](http://jenkins.mesosphere.com/service/jenkins/buildStatus/icon?job=cassandra/0-trigger-master)](http://jenkins.mesosphere.com/service/jenkins/job/cassandra/job/0-trigger-master/)
 
-DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditional associated with managing a Cassandra cluster. Apache Cassandra is distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation](http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
+DC/OS Cassandra is an automated service that makes it easy to deploy and manage on Mesosphere DC/OS. DC/OS Cassandra eliminates nearly all of the complexity traditionally associated with managing a Cassandra cluster. Apache Cassandra is a distributed database management system designed to handle large amounts of data across many nodes, providing horizonal scalablity and high availability with no single point of failure, with a simple query language (CQL). For more information on Apache Cassandra, see the Apache Cassandra [documentation](http://docs.datastax.com/en/cassandra/2.2/pdf/cassandra22.pdf). DC/OS Cassandra gives you direct access to the Cassandra API so that existing applications can interoperate. You can configure and install DC/OS Cassandra in moments. Multiple Cassandra clusters can be installed on DC/OS and managed independently, so you can offer Cassandra as a managed service to your organization.
 
 ## Benefits
 
@@ -95,20 +95,20 @@ cqlsh> USE demo;CREATE TABLE map (key varchar, value varchar, PRIMARY KEY(key));
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Cassandra', 'Rocks!');
 cqlsh> INSERT INTO demo.map(key, value) VALUES('StaticInfrastructure', 'BeGone!');
 cqlsh> INSERT INTO demo.map(key, value) VALUES('Buzz', 'DC/OS is the new black!');
-```    
+```
 
 * Step 8. Query the data back to make sure it persisted correctly:
 
 ```
 cqlsh> SELECT * FROM demo.map;
-```    
+```
 
 ## Install and Customize
 
 ### Default Installation
 Prior to installing a default cluster, ensure that your DC/OS cluster has at least 3 DC/OS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
 
-To start a the default cluster, run the following command on the DC/OS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
+To start a default cluster, run the following command on the DC/OS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and with local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
 
 ```
 $ dcos package install cassandra
@@ -144,7 +144,7 @@ See [Configuration Options](#configuration-options) for a list of fields that ca
 
 ### Minimal Installation
 You may wish to install Cassandra on a local DC/OS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
-As with the default installation, you must ensure that ports 7000, 7001,7 199, 9042, and 9160 are available.
+As with the default installation, you must ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
 
 **Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
 
@@ -266,13 +266,7 @@ The plan can be viewed from the API via the REST endpoint. A curl example is pro
 $ curl http://<dcos_url>/service/cassandra/v1/plan
 ```
 
-If you are using Enterprise DC/OS, use the following command to view the installation plan:
-
-```
-curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan/
-```
-
-If you are using the Enterprise Edition of DC/OS with Authentication enabled you will need to include the token in the POST command.
+If you are using the Enterprise Edition of DC/OS with Authentication enabled you will need to include the token in the GET command.
 
 ```
 curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan
@@ -1303,7 +1297,7 @@ restarted.
 
 If DNS ames are used, the DNS name will always resolve to correct IP address of the node.
 This is true, even if the node is moved to a new IP address. However, it is important to
-understand the DNS caching behavior of your application. For a Java application using  
+understand the DNS caching behavior of your application. For a Java application using
 the CQL driver, if a SecurityManager is installed the default behavior is to cache a
 successful DNS lookup forever. Therefore, if a node moves, your application will always
 maintain the original address. If no security manager is installed, the default cache
@@ -1338,16 +1332,16 @@ try {
        new InetSocketAddress("10.0.0.48", 9042),
        new InetSocketAddress("10.0.0.45", 9042));
 
-    cluster = Cluster.builder()                                                    
+    cluster = Cluster.builder()
             .addContactPointsWithPorts(addresses)
             .build();
-    Session session = cluster.connect();                                           
+    Session session = cluster.connect();
 
-    ResultSet rs = session.execute("select release_version from system.local");   
+    ResultSet rs = session.execute("select release_version from system.local");
     Row row = rs.one();
-    System.out.println(row.getString("release_version"));                          
+    System.out.println(row.getString("release_version"));
 } finally {
-    if (cluster != null) cluster.close();                                          
+    if (cluster != null) cluster.close();
 }
 ```
 
@@ -1540,11 +1534,19 @@ Cleanup can be a CPU- and disk-intensive operation, so you may want to delay run
 To perform a cleanup from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> cleanup --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+$ dcos cassandra --name=<service-name> cleanup start --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup, `<key_spaces>` is an optional comma-separated list of the key spaces to cleanup, and `<column-families>` is an optional comma-separated list of the column-families to cleanup.
 If no arguments are specified a cleanup will be performed for all nodes, key spaces, and column families.
+
+To cancel a currently running cleanup from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> cleanup stop
+```
+
+The operation will end after the current node has finished its cleanup.
 
 ### Repair
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed.
@@ -1553,11 +1555,19 @@ Like cleanup, repair can be a CPU and disk intensive operation. When possible, i
 To perform a repair from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> repair --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+$ dcos cassandra --name=<service-name> repair start --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
 If no arguments are specified a repair will be performed for all nodes, key spaces, and column families.
+
+To cancel a currently running repair from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> repair stop
+```
+
+The operation will end after the current node has finished its repair.
 
 ### Backup and Restore
 
@@ -1585,9 +1595,19 @@ $ dcos cassandra --name=<service-name> backup start \
 
 To upload to S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
 
-Check status of the backup:
+To check the status of the backup from the CLI, enter the following command:
 
-    $ dcos cassandra --name=<service-name> backup status
+```
+$ dcos cassandra --name=<service-name> backup status
+```
+
+To cancel a currently running backup from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> backup stop
+```
+
+The operation will end after the current node has finished its backup.
 
 ##### Azure Backup
 
@@ -1603,11 +1623,19 @@ $ dcos cassandra --name=<service-name> backup start \
 
 To upload to Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
 
-Check status of the backup:
+To check the status of the backup from the CLI, enter the following command:
 
 ```
 $ dcos cassandra --name=<service-name> backup status
 ```
+
+To cancel a currently running backup from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> backup stop
+```
+
+The operation will end after the current node has finished its backup.
 
 #### Restore
 
@@ -1645,16 +1673,24 @@ $ dcos cassandra --name=<service-name> restore start \
 
 To restore from Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
 
-Check the status of the restore:
+To check the status of the restore from the CLI, enter the following command:
 
 ```
 $ dcos cassandra --name=<service-name> restore status
 ```
 
+To cancel a currently running restore from the CLI, enter the following command:
+
+```
+$ dcos cassandra --name=<service-name> restore stop
+```
+
+The operation will end after the current node has finished its restore.
+
 # Troubleshooting
 
 ## Configuration Update Errors
-The plan below shows shows contains a configuration error that will not allow the installation or configuration update to progress.
+The plan below contains a configuration error that will not allow the installation or configuration update to progress.
 
 ```
 {
@@ -1736,7 +1772,7 @@ API:
 $ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "$DCOS_URI/service/cassandra/v1/nodes/restart?node=node-0"
 ```
 
-This will restart the node with the same name running on the same server. 
+This will restart the node with the same name running on the same server.
 
 # API Reference
 The DC/OS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DC/OS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.

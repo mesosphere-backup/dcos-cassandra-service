@@ -11,8 +11,8 @@ dependencies {
     compile ('com.google.guava:guava:18.0'){force = true}
     compile 'org.apache.cassandra:cassandra-all:3.0.7'
     compile 'org.apache.commons:commons-compress:1.5'
-    compile "com.amazonaws:aws-java-sdk-core:1.9.21"
-    compile "com.amazonaws:aws-java-sdk:1.8.9.1"
+    compile "com.amazonaws:aws-java-sdk-core:${awsVer}"
+    compile "com.amazonaws:aws-java-sdk:${awsVer}"
     compile "com.microsoft.azure:azure-storage:4.2.0"
     compile "commons-io:commons-io:2.5"
 
