@@ -148,8 +148,7 @@ public class CassandraDaemonProcess {
                 final NodeProbe probe,
                 final ExecutorDriver driver,
                 final AtomicBoolean open,
-                final
-                AtomicReference<CassandraMode> mode) {
+                final AtomicReference<CassandraMode> mode) {
             return new ModeReporter(task, probe, driver, open, mode);
         }
 
@@ -181,9 +180,9 @@ public class CassandraDaemonProcess {
                     mode.set(current);
                     LOGGER.info("Cassandra Daemon mode = {}", current);
                     CassandraDaemonStatus daemonStatus =
-                            task.createStatus(Protos.TaskState.TASK_RUNNING,
-                                    mode.get(),
-                                    Optional.of("Cassandra Daemon running."));
+                        task.createStatus(Protos.TaskState.TASK_RUNNING,
+                            mode.get(),
+                            Optional.of("Cassandra Daemon running."));
                     driver.sendStatusUpdate(daemonStatus.getTaskStatus());
                     LOGGER.debug("Sent status update = {} ", daemonStatus);
                 }
@@ -247,7 +246,7 @@ public class CassandraDaemonProcess {
 
 
     private final CassandraDaemonTask task;
-    private final CassandraPaths paths;
+    private final DsePaths paths;
     private final Process process;
     private final AtomicBoolean open = new AtomicBoolean(true);
     private final AtomicReference<CassandraMode> mode;
@@ -270,11 +269,13 @@ public class CassandraDaemonProcess {
     private Process createDaemon() throws IOException {
 
         final ProcessBuilder builder = new ProcessBuilder(
-            paths.cassandraRun().toString(),
-            getReplaceIp(),
-            "-f")
-            .inheritIO()
-            .directory(new File(System.getProperty("user.dir")));
+                paths.dseRun().toString(),
+                "cassandra",
+                "-f",
+                getReplaceIp())
+                .directory(new File(System.getProperty("user.dir")))
+                .redirectOutput(new File("cassandra-stdout.log"))
+                .redirectError(new File("cassandra-stderr.log"));
         builder.environment().put(
                 "JMX_PORT",
                 Integer.toString(task.getConfig().getJmxPort()));
@@ -331,20 +332,22 @@ public class CassandraDaemonProcess {
             throws IOException {
 
         this.task = task;
-        this.paths = CassandraPaths.create(
-                task.getConfig().getVersion());
+        this.paths = DsePaths.create(task.getConfig().getVersion());
         task.getConfig().getLocation().writeProperties(
-                paths.cassandraLocation());
+                paths.cassandra().cassandraLocation());
 
         task.getConfig().getApplication().toBuilder()
-            .setListenAddress(getListenAddress())
-            .setRpcAddress(getListenAddress())
-            .build().writeDaemonConfiguration(paths.cassandraConfig());
+                .setListenAddress(getListenAddress())
+                .setRpcAddress(getListenAddress())
+                .build().writeDaemonConfiguration(paths.cassandra().cassandraConfig());
+        task.getConfig().getDse().writeYaml(paths.dseConfig());
 
-        task.getConfig().getHeap().writeHeapSettings(paths.heapConfig());
+        task.getConfig().getHeap().writeHeapSettings(
+          paths.cassandra().heapConfig());
 
         if (metricsEnabled) {
-            metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());
+            metricsEnabled = MetricsConfig.writeMetricsConfig(
+              paths.cassandra().conf());
         }
 
         process = createDaemon();
