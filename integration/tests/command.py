@@ -117,7 +117,7 @@ def uninstall():
 
         return shakedown.run_command_on_master(
             'docker run mesosphere/janitor /janitor.py '
-            '-r cassandra-role -p cassandra-principal -z dcos-service-cassandra'
+            '-r cassandra-role -p cassandra-principal -z dcos-service-cassandra --username=bootstrapuser --password=deleteme'
         )
 
     spin(fn, lambda x: (x, 'Uninstall failed'))

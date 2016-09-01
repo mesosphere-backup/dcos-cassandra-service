@@ -134,7 +134,7 @@ def run_repair():
 
 @pytest.yield_fixture
 def install_framework():
-    shakedown.install_package_and_wait(PACKAGE_NAME)    
+    shakedown.install_package_and_wait(PACKAGE_NAME)
     check_health()
 
     yield
@@ -195,6 +195,27 @@ def test_partition(install_framework):
     check_health()
 
 
+def test_partition_master_both_ways(install_framework):
+    shakedown.partition_master()
+    shakedown.reconnect_master()
+
+    check_health()
+
+
+def test_partition_master_incoming(install_framework):
+    shakedown.partition_master(incoming=True, outgoing=False)
+    shakedown.reconnect_master()
+
+    check_health()
+
+
+def test_partition_master_outgoing(install_framework):
+    shakedown.partition_master(incoming=False, outgoing=True)
+    shakedown.reconnect_master()
+
+    check_health()
+
+
 def test_all_partition(install_framework):
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
@@ -217,7 +238,7 @@ def test_config_update_then_kill_task_in_node(install_framework):
 
 
 def test_config_update_then_kill_all_task_in_node(install_framework):
-    hosts = shakedown.get_service_ips(PACKAGE_NAME) 
+    hosts = shakedown.get_service_ips(PACKAGE_NAME)
     run_planned_operation(
         bump_cpu_count_config,
         lambda: [kill_task_with_pattern('CassandraDaemon', h) for h in hosts]
