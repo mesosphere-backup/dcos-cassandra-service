@@ -15,13 +15,13 @@
 set -o errexit -o nounset -o pipefail
 
 # VERSION SETTINGS
-CASSANDRA_VERSION="3.0.7"
+CASSANDRA_VERSION="3.0.8"
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
 STATSD_REPORTER_VERSION="4.1.2"
-REPORTER_CONFIG_VERSION_IN="3.0.1-SNAPSHOT"
+REPORTER_CONFIG_VERSION_IN="3.0.3-SNAPSHOT"
 REPORTER_CONFIG_SHA1="595b3c239e2c4764c66d214837005a8e0fe01d99"
-REPORTER_CONFIG_VERSION_OUT="3.0.1-${REPORTER_CONFIG_SHA1:0:8}" # get first 8 chars of sha
-SEED_PROVIDER_VERSION="0.1.0"
+REPORTER_CONFIG_VERSION_OUT="3.0.3-${REPORTER_CONFIG_SHA1:0:8}" # get first 8 chars of sha
+SEED_PROVIDER_VERSION="1.0.16"
 READYTALK_MVN_REPO_DOWNLOAD_URL="https://dl.bintray.com/readytalk/maven/com/readytalk"
 
 # PATHS AND FILENAME SETTINGS
@@ -95,8 +95,6 @@ rm -v "${CONF_DIR}"/cassandra-topology.properties
 
 echo "##### Disable JMX_PORT in cassandra-env.sh #####"
 
-# "JMX_PORT=???" => "#DISABLED FOR DC/OS\n#JMX_PORT=???"
-sed -i "s/\(^JMX_PORT=.*\)/#DISABLED FOR DC\/OS:\n#\1/g" "${CONF_DIR}"/cassandra-env.sh
 
 _sha1sum "${CONF_DIR}"/* &> confdir-after.txt || true
 
