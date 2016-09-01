@@ -4,7 +4,7 @@
       "scheduler-zip":"{{artifact-dir}}/scheduler.zip",
       "executor-zip":"{{artifact-dir}}/executor.zip",
       "jre-tar-gz":"https://downloads.mesosphere.com/datastax/assets/server-jre-8u74-linux-x64.tar.gz",
-      "apache-cassandra-bin-tar-gz":"https://downloads.mesosphere.com/datastax/assets/dse-5.0.0-bin.tar.gz"
+      "apache-cassandra-bin-tar-gz":"https://downloads.mesosphere.com/datastax/assets/dse-5.0.2-bin.tar.gz"
     }
   },
   "images": {
