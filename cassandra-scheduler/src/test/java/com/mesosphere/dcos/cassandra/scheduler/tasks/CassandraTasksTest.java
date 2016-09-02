@@ -187,7 +187,9 @@ public class CassandraTasksTest {
 
         // TaskStatus update with RUNNING should result in RUNNING state.
         cassandraTasks.update(getTestTaskStatus(daemonTask));
-        Assert.assertEquals(Protos.TaskState.TASK_RUNNING, stateStore.fetchStatus(updatedDaemonTask.getName()).getState());
+        Assert.assertEquals(
+                Protos.TaskState.TASK_RUNNING,
+                stateStore.fetchStatus(updatedDaemonTask.getName()).get().getState());
     }
 
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) throws TaskException {
