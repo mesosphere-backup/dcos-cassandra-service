@@ -20,14 +20,15 @@ import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
-import org.apache.mesos.offer.MesosResource;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.state.StateStore;
 import org.junit.*;
 import org.mockito.Mockito;
 
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,77 +64,40 @@ public class ClusterTaskOfferRequirementProviderTest {
         CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
         Protos.TaskInfo initTaskInfo = task.getTaskInfo();
 
-        Protos.Resource cpu = Protos.Resource.newBuilder()
-                .setName("cpus")
-                .setType(Protos.Value.Type.SCALAR)
-                .setRole(testRole)
-                .setScalar(Protos.Value.Scalar.newBuilder().setValue(testCpus))
-                .setReservation(Protos.Resource.ReservationInfo.newBuilder()
-                        .setPrincipal(testPrincipal)
-                        .setLabels(Protos.Labels.newBuilder()
-                                .addLabels(Protos.Label.newBuilder()
-                                        .setKey(MesosResource.RESOURCE_ID_KEY)
-                                        .setValue(testResourceId)
-                                )
-                        )
-                ).build();
-        Protos.Resource mem = Protos.Resource.newBuilder()
-                .setName("mem")
-                .setType(Protos.Value.Type.SCALAR)
-                .setRole(testRole)
-                .setScalar(Protos.Value.Scalar.newBuilder().setValue(testMem))
-                .setReservation(Protos.Resource.ReservationInfo.newBuilder()
-                        .setPrincipal(testPrincipal)
-                        .setLabels(Protos.Labels.newBuilder()
-                                .addLabels(Protos.Label.newBuilder()
-                                        .setKey(MesosResource.RESOURCE_ID_KEY)
-                                        .setValue(testResourceId)
-                                )
-                        )
-                ).build();
-        Protos.Resource disk = Protos.Resource.newBuilder()
-                .setName("disk")
-                .setType(Protos.Value.Type.SCALAR)
-                .setRole(testRole)
-                .setScalar(Protos.Value.Scalar.newBuilder().setValue(testDisk))
-                .setReservation(Protos.Resource.ReservationInfo.newBuilder()
-                        .setPrincipal(testPrincipal)
-                        .setLabels(Protos.Labels.newBuilder()
-                                .addLabels(Protos.Label.newBuilder()
-                                        .setKey(MesosResource.RESOURCE_ID_KEY)
-                                        .setValue(testResourceId)
-                                )
-                        )
-                ).build();
-        final Protos.Value.Range portRange = Protos.Value.Range.newBuilder()
-                .setBegin(testPortBegin)
-                .setEnd(testPortEnd).build();
-        Protos.Resource ports = Protos.Resource.newBuilder()
-                .setName("ports")
-                .setType(Protos.Value.Type.RANGES)
-                .setRole(testRole)
-                .setRanges(Protos.Value.Ranges.newBuilder().addRange(portRange))
-                .setReservation(Protos.Resource.ReservationInfo.newBuilder()
-                        .setPrincipal(testPrincipal)
-                        .setLabels(Protos.Labels.newBuilder()
-                                .addLabels(Protos.Label.newBuilder()
-                                        .setKey(MesosResource.RESOURCE_ID_KEY)
-                                        .setValue(testResourceId)
-                                )
-                        )
-                ).build();
+        Protos.Resource cpu = ResourceUtils.getExpectedScalar(
+                "cpus",
+                testCpus,
+                testResourceId,
+                testRole,
+                testPrincipal);
+        Protos.Resource mem = ResourceUtils.getExpectedScalar(
+                "mem",
+                testMem,
+                testResourceId,
+                testRole,
+                testPrincipal);
+        Protos.Resource disk = ResourceUtils.getExpectedScalar(
+                "disk",
+                testDisk,
+                testResourceId,
+                testRole,
+                testPrincipal);
+
+        Protos.Value.Range range = Protos.Value.Range.newBuilder().setBegin(testPortBegin).setEnd(testPortEnd).build();
+        Protos.Resource ports = ResourceUtils.getExpectedRanges(
+                "ports",
+                Arrays.asList(range),
+                testResourceId,
+                testRole,
+                testPrincipal);
 
         testTaskInfo = Protos.TaskInfo.newBuilder()
                 .setTaskId(initTaskInfo.getTaskId())
                 .setName(initTaskInfo.getName())
                 .setSlaveId(initTaskInfo.getSlaveId())
-                .addResources(cpu)
-                .addResources(mem)
-                .addResources(disk)
-                .addResources(ports)
+                .addAllResources(Arrays.asList(cpu, mem, disk, ports))
                 .setExecutor(initTaskInfo.getExecutor())
                 .build();
-
     }
 
     @BeforeClass

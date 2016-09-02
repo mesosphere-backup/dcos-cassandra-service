@@ -21,7 +21,7 @@ import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
@@ -44,7 +44,7 @@ import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
-import org.apache.mesos.scheduler.plan.StageManager;
+import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.state.StateStore;
 
 import java.net.URISyntaxException;
@@ -200,7 +200,7 @@ public class SchedulerModule extends AbstractModule {
                 Executors .newScheduledThreadPool(8));
         bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
                 .asEagerSingleton();
-        bind(StageManager.class).to(CassandraStageManager.class)
+        bind(PlanManager.class).to(CassandraPlanManager.class)
                 .asEagerSingleton();
         bind(SchedulerClient.class).asEagerSingleton();
         bind(IdentityManager.class).asEagerSingleton();

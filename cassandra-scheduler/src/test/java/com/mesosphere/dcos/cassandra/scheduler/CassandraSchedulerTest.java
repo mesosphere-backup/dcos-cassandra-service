@@ -13,7 +13,7 @@ import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
@@ -37,7 +37,7 @@ import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
-import org.apache.mesos.scheduler.plan.StageManager;
+import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.testing.QueuedSchedulerDriver;
 import org.junit.After;
@@ -66,7 +66,7 @@ public class CassandraSchedulerTest {
 
     private CassandraScheduler scheduler;
     private ConfigurationManager configurationManager;
-    private StageManager stageManager;
+    private PlanManager planManager;
     private PersistentOfferRequirementProvider offerRequirementProvider;
     private CassandraTasks cassandraTasks;
     private Reconciler reconciler;
@@ -112,7 +112,7 @@ public class CassandraSchedulerTest {
         frameworkId = TestUtils.generateFrameworkId();
         eventBus = new EventBus();
 
-        stageManager = new CassandraStageManager(
+        planManager = new CassandraPlanManager(
                 new CassandraPhaseStrategies("org.apache.mesos.scheduler.plan.DefaultInstallStrategy"));
 
         factory = new ConfigurationFactory<>(
@@ -163,7 +163,7 @@ public class CassandraSchedulerTest {
                 configurationManager,
                 mesosConfig,
                 offerRequirementProvider,
-                stageManager,
+                planManager,
                 cassandraTasks,
                 reconciler,
                 client,
@@ -186,9 +186,9 @@ public class CassandraSchedulerTest {
     @Test
     public void testRegistered() throws Exception {
         scheduler.registered(driver, frameworkId, masterInfo);
-        final Protos.FrameworkID frameworkID = stateStore.fetchFrameworkId();
+        final Protos.FrameworkID frameworkID = stateStore.fetchFrameworkId().get();
         assertEquals(frameworkID, this.frameworkId);
-        final Phase currentPhase = stageManager.getCurrentPhase();
+        final Phase currentPhase = planManager.getCurrentPhase().get();
         assertTrue(currentPhase instanceof ReconciliationPhase);
         assertEquals(1, currentPhase.getBlocks().size());
     }
@@ -197,11 +197,11 @@ public class CassandraSchedulerTest {
     public void install() {
         scheduler.registered(driver, frameworkId, Protos.MasterInfo.getDefaultInstance());
         runReconcile(driver);
-        final Phase currentPhase = stageManager.getCurrentPhase();
+        final Phase currentPhase = planManager.getCurrentPhase().get();
         assertEquals("Deploy", currentPhase.getName());
         assertEquals(3, currentPhase.getBlocks().size());
 
-        Block currentBlock = stageManager.getCurrentBlock();
+        Block currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-0", currentBlock.getName());
         assertTrue("expected current block to be in progress due to offer carried over in reconcile stage",
                 currentBlock.isInProgress());
@@ -214,7 +214,7 @@ public class CassandraSchedulerTest {
 
         final Protos.Offer offer2 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
         scheduler.resourceOffers(driver, Arrays.asList(offer2));
-        currentBlock = stageManager.getCurrentBlock();
+        currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-1", currentBlock.getName());
         assertTrue("expected current block to be in progress due to offer carried over in reconcile stage",
                 currentBlock.isInProgress());
@@ -227,7 +227,7 @@ public class CassandraSchedulerTest {
 
         final Protos.Offer offer3 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
         scheduler.resourceOffers(driver, Arrays.asList(offer3));
-        currentBlock = stageManager.getCurrentBlock();
+        currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-2", currentBlock.getName());
         assertTrue("expected current block to be in progress due to offer carried over in reconcile stage",
                 currentBlock.isInProgress());
@@ -242,11 +242,11 @@ public class CassandraSchedulerTest {
     @Test
     public void installAndRecover() throws Exception {
         install();
-        final Phase currentPhase = stageManager.getCurrentPhase();
-        final Block currentBlock = stageManager.getCurrentBlock();
+        final Optional<Phase> currentPhase = planManager.getCurrentPhase();
+        final Optional<Block> currentBlock = planManager.getCurrentBlock();
 
-        assertNull(currentPhase);
-        assertNull(currentBlock);
+        assertTrue(!currentPhase.isPresent());
+        assertTrue(!currentBlock.isPresent());
 
         final CassandraDaemonTask task = cassandraTasks.getDaemons().get("node-0");
         scheduler.statusUpdate(driver,
@@ -279,30 +279,30 @@ public class CassandraSchedulerTest {
     @Test
     public void installAndUpdate() throws Exception {
         install();
-        Phase currentPhase = stageManager.getCurrentPhase();
-        Block currentBlock = stageManager.getCurrentBlock();
+        Optional<Phase> currentPhase = planManager.getCurrentPhase();
+        Optional<Block> currentBlock = planManager.getCurrentBlock();
 
-        assertNull(currentPhase);
-        assertNull(currentBlock);
+        assertTrue(!currentPhase.isPresent());
+        assertTrue(!currentBlock.isPresent());
 
         beforeHelper("update-scheduler.yml");
 
         update();
-        currentPhase = stageManager.getCurrentPhase();
-        currentBlock = stageManager.getCurrentBlock();
+        currentPhase = planManager.getCurrentPhase();
+        currentBlock = planManager.getCurrentBlock();
 
-        assertNull(currentPhase);
-        assertNull(currentBlock);
+        assertTrue(!currentPhase.isPresent());
+        assertTrue(!currentBlock.isPresent());
     }
 
     public void update() {
         scheduler.registered(driver, frameworkId, Protos.MasterInfo.getDefaultInstance());
         runReconcile(driver);
-        final Phase currentPhase = stageManager.getCurrentPhase();
+        final Phase currentPhase = planManager.getCurrentPhase().get();
         assertEquals("Deploy", currentPhase.getName());
         assertEquals(3, currentPhase.getBlocks().size());
 
-        Block currentBlock = stageManager.getCurrentBlock();
+        Block currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-0", currentBlock.getName());
         assertTrue("expected current block to be in Pending due to offer carried over in reconcile stage",
                 currentBlock.isPending());
@@ -316,16 +316,22 @@ public class CassandraSchedulerTest {
         final CassandraTask node0Template = cassandraTasks.get(CassandraTemplateTask.toTemplateTaskName("node-0")).get();
         final Protos.Offer offer1 = TestUtils.generateUpdateOffer(frameworkId.getValue(), node0.getTaskInfo(),
                 node0Template.getTaskInfo(), 3, 1024, 1024);
+        System.out.println("init block: " + planManager.getCurrentBlock());
         scheduler.resourceOffers(driver, Arrays.asList(offer1));
         Mockito.verify(client).shutdown(Mockito.anyString(), Mockito.anyInt());
         // Send TASK_KILL
-        scheduler.statusUpdate(driver, TestUtils.generateStatus(node0.getTaskInfo().getTaskId(),
-                Protos.TaskState.TASK_KILLED));
+        scheduler.statusUpdate(
+                driver,
+                TestUtils.generateStatus(
+                        node0.getTaskInfo().getTaskId(),
+                        Protos.TaskState.TASK_KILLED));
+        System.out.println("sending resource offers");
         scheduler.resourceOffers(driver, Arrays.asList(offer1));
-        currentBlock = stageManager.getCurrentBlock();
+        System.out.println("sent resource offers");
+        currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-0", currentBlock.getName());
-        assertTrue("expected current block to be in progress",
-                currentBlock.isInProgress());
+        System.out.println(currentBlock);
+        assertTrue("expected current block to be in progress", currentBlock.isInProgress());
         offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
@@ -345,7 +351,7 @@ public class CassandraSchedulerTest {
         scheduler.statusUpdate(driver, TestUtils.generateStatus(node1.getTaskInfo().getTaskId(),
                 Protos.TaskState.TASK_KILLED));
         scheduler.resourceOffers(driver, Arrays.asList(offer2));
-        currentBlock = stageManager.getCurrentBlock();
+        currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-1", currentBlock.getName());
         assertTrue("expected current block to be in progress",
                 currentBlock.isInProgress());
@@ -368,7 +374,7 @@ public class CassandraSchedulerTest {
         scheduler.statusUpdate(driver, TestUtils.generateStatus(node2.getTaskInfo().getTaskId(),
                 Protos.TaskState.TASK_KILLED));
         scheduler.resourceOffers(driver, Arrays.asList(offer3));
-        currentBlock = stageManager.getCurrentBlock();
+        currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-2", currentBlock.getName());
         assertTrue("expected current block to be in progress",
                 currentBlock.isInProgress());
@@ -394,7 +400,7 @@ public class CassandraSchedulerTest {
     }
 
     public void runReconcile(QueuedSchedulerDriver driver) {
-        Phase currentPhase = stageManager.getCurrentPhase();
+        Phase currentPhase = planManager.getCurrentPhase().get();
         assertTrue(currentPhase instanceof ReconciliationPhase);
         assertEquals(1, currentPhase.getBlocks().size());
 
@@ -408,7 +414,7 @@ public class CassandraSchedulerTest {
             } else {
                 taskStatuses.forEach(status -> scheduler.statusUpdate(driver, status));
             }
-            currentPhase = stageManager.getCurrentPhase();
+            currentPhase = planManager.getCurrentPhase().get();
 
             if (currentPhase.getName().equals("Reconciliation") && !currentPhase.isComplete()) {
                 final Collection<Protos.OfferID> declined = driver.drainDeclined();

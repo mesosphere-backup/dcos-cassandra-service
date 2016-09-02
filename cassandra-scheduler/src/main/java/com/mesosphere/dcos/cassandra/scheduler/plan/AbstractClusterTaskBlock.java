@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,22 +55,27 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     }
 
     @Override
-    public OfferRequirement start() {
+    public Optional<OfferRequirement> start() {
         LOGGER.info("Starting Block: name = {}, id = {}",
                 getName(),
                 getId());
 
         try {
             // Is Daemon task running ?
-            final Protos.TaskStatus lastKnownDaemonStatus = cassandraTasks.getStateStore().fetchStatus(getDaemon());
-            if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus)) {
-                return null;
+            final Optional<Protos.TaskStatus> lastKnownDaemonStatus = cassandraTasks.getStateStore().fetchStatus(getDaemon());
+            if (!lastKnownDaemonStatus.isPresent()) {
+                return Optional.empty();
             }
+
+            if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus.get())) {
+                return Optional.empty();
+            }
+
             Optional<CassandraTask> task = getOrCreateTask(context);
             if (task.isPresent()) {
                 update(task.get().getCurrentStatus());
                 if (isComplete() || isInProgress()) {
-                    return null;
+                    return Optional.empty();
                 } else {
                     setStatus(Status.PENDING);
                 }
@@ -79,10 +85,10 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                 LOGGER.info("Block has no task: name = {}, id = {}",
                         getName(), getId());
 
-                return null;
+                return Optional.empty();
             } else {
                 LOGGER.info("Block has task: " + task);
-                return getOfferRequirement(task.get());
+                return Optional.of(getOfferRequirement(task.get()));
             }
 
         } catch (IOException ex) {
@@ -91,7 +97,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                     getName(),
                     getId()), ex);
 
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -169,14 +175,15 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     @Override
     public boolean isInProgress() {
+        System.out.println("block status: " + this.status);
         return Status.IN_PROGRESS == this.status;
     }
 
     @Override
-    public void updateOfferStatus(boolean accepted) {
+    public void updateOfferStatus(Optional<Collection<Protos.Offer.Operation>> operations) {
         //TODO(nick): Any additional actions to perform when OfferRequirement returned by start()
         //            was accepted or not accepted?
-        if (accepted) {
+        if (operations.isPresent()) {
             setStatus(Status.IN_PROGRESS);
         } else {
             setStatus(Status.PENDING);

@@ -5,6 +5,8 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -35,8 +37,8 @@ public class EmptyBlock implements Block {
     }
 
     @Override
-    public OfferRequirement start() {
-        return null;
+    public Optional<OfferRequirement> start() {
+        return Optional.empty();
     }
 
     @Override
@@ -65,7 +67,7 @@ public class EmptyBlock implements Block {
     }
 
     @Override
-    public void updateOfferStatus(boolean accepted) {
+    public void updateOfferStatus(Optional<Collection<Protos.Offer.Operation>> operations) {
         // no-op
     }
 
