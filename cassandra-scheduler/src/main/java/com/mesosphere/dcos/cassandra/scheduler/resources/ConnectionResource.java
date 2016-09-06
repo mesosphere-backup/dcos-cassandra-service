@@ -33,7 +33,6 @@ public class ConnectionResource {
 
     @GET
     public Map<String, List<String>> connect() throws ConfigStoreException {
-
         return ImmutableMap.of("address", getRunningAddresses(),
                 "dns", getRunningDns());
     }
@@ -52,7 +51,6 @@ public class ConnectionResource {
 
     @VisibleForTesting
     protected List<String> getRunningAddresses() {
-
         return getRunningDeamons().stream().map(daemonTask ->
                 daemonTask.getHostname() +
                         ":" +

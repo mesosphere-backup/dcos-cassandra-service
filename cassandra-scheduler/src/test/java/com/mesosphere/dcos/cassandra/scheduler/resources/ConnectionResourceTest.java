@@ -20,15 +20,11 @@ import org.apache.curator.test.TestingServer;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.state.StateStore;
 import org.junit.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 public class ConnectionResourceTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            ConnectionResourceTest.class);
     private static TestingServer server;
 
     private static CassandraSchedulerConfiguration config;

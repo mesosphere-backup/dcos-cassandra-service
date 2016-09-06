@@ -16,12 +16,15 @@
 
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
+import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import org.apache.mesos.config.ConfigStoreException;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +36,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Path("/v1/nodes")
@@ -42,12 +46,15 @@ public class TasksResource {
             (TasksResource.class);
     private final CassandraTasks tasks;
     private final SchedulerClient client;
+    private final ConfigurationManager configurationManager;
 
     @Inject
     public TasksResource(final CassandraTasks tasks,
-                         final SchedulerClient client) {
+                         final SchedulerClient client,
+                         final ConfigurationManager configurationManager) {
         this.tasks = tasks;
         this.client = client;
+        this.configurationManager = configurationManager;
     }
 
     @GET
@@ -126,5 +133,38 @@ public class TasksResource {
         } else {
             throw new NotFoundException();
         }
+    }
+
+    /**
+     * Deprecated. See {@code ConnectionResource}.
+     */
+    @GET
+    @Path("connect")
+    @Deprecated
+    public Map<String, List<String>> connect() throws ConfigStoreException {
+        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        return connectionResource.connect();
+    }
+
+    /**
+     * Deprecated. See {@code ConnectionResource}.
+     */
+    @GET
+    @Path("connect/address")
+    @Deprecated
+    public List<String> connectAddress() {
+        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        return connectionResource.connectAddress();
+    }
+
+    /**
+     * Deprecated. See {@code ConnectionResource}.
+     */
+    @GET
+    @Path("connect/dns")
+    @Deprecated
+    public List<String> connectDns() throws ConfigStoreException {
+        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        return connectionResource.connectDns();
     }
 }
