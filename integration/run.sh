@@ -53,4 +53,4 @@ echo "    => Master URI for tests: $DCOS_URL"
 
 # Install shakedown into our virtualenv.
 pip install --no-cache-dir -r requirements.txt
-shakedown --dcos-url "$DCOS_URL" --ssh-key-file none tests
+shakedown --dcos-url "$DCOS_URL" tests
