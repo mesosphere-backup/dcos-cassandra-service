@@ -10,7 +10,6 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.PlacementStrategy;
-import org.apache.mesos.protobuf.LabelBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,20 +78,23 @@ public class PersistentOfferRequirementProvider {
     }
 
     private Protos.TaskInfo updateConfigLabel(String configName, Protos.TaskInfo taskInfo) {
-        final LabelBuilder labelBuilder = new LabelBuilder();
-
+        final Protos.Labels.Builder labelsBuilder = Protos.Labels.newBuilder();
         final Protos.Labels labels = taskInfo.getLabels();
         for (Protos.Label label : labels.getLabelsList()) {
             final String key = label.getKey();
             if (!CONFIG_TARGET_KEY.equals(key)) {
-                labelBuilder.addLabel(key, label.getValue());
+                labelsBuilder.addLabels(label);
             }
         }
 
-        labelBuilder.addLabel(CONFIG_TARGET_KEY, configName);
+        final Protos.Label configTargetLabel = Protos.Label.newBuilder()
+                .setKey(CONFIG_TARGET_KEY)
+                .setValue(configName).build();
+
+        labelsBuilder.addLabels(configTargetLabel);
         return Protos.TaskInfo.newBuilder(taskInfo)
                 .clearLabels()
-                .setLabels(labelBuilder.build())
+                .setLabels(labelsBuilder.build())
                 .build();
     }
 
