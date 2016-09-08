@@ -23,9 +23,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.ServiceConfig;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.slf4j.Logger;
@@ -40,7 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Path("/v1/nodes")
 @Produces(MediaType.APPLICATION_JSON)
@@ -51,41 +48,10 @@ public class TasksResource {
     private final SchedulerClient client;
     private final ConfigurationManager configurationManager;
 
-    private List<CassandraDaemonTask> getRunningDeamons() {
-        return tasks.getDaemons().values().stream()
-            .filter
-                (daemonTask ->
-                    Protos.TaskState.TASK_RUNNING.equals(
-                        daemonTask.getState())).collect
-                (Collectors.toList());
-    }
-
-    private List<String> getRunningAddresses() {
-
-        return getRunningDeamons().stream().map(daemonTask ->
-            daemonTask.getHostname() +
-                ":" +
-                daemonTask.getConfig()
-                    .getApplication()
-                    .getNativeTransportPort())
-            .collect(Collectors.toList());
-    }
-
-    private List<String> getRunningDns() throws ConfigStoreException {
-        final ServiceConfig serviceConfig = configurationManager.getTargetConfig().getServiceConfig();
-        return getRunningDeamons().stream().map(daemonTask ->
-            daemonTask.getName() +
-                "." + serviceConfig.getName() + ".mesos:" +
-                daemonTask.getConfig()
-                    .getApplication()
-                    .getNativeTransportPort()
-        ).collect(Collectors.toList());
-    }
-
     @Inject
     public TasksResource(final CassandraTasks tasks,
-                         final ConfigurationManager configurationManager,
-                         final SchedulerClient client) {
+                         final SchedulerClient client,
+                         final ConfigurationManager configurationManager) {
         this.tasks = tasks;
         this.client = client;
         this.configurationManager = configurationManager;
@@ -169,23 +135,36 @@ public class TasksResource {
         }
     }
 
+    /**
+     * Deprecated. See {@code ConnectionResource}.
+     */
     @GET
     @Path("connect")
+    @Deprecated
     public Map<String, List<String>> connect() throws ConfigStoreException {
-
-        return ImmutableMap.of("address", getRunningAddresses(),
-            "dns", getRunningDns());
+        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        return connectionResource.connect();
     }
 
+    /**
+     * Deprecated. See {@code ConnectionResource}.
+     */
     @GET
     @Path("connect/address")
+    @Deprecated
     public List<String> connectAddress() {
-        return getRunningAddresses();
+        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        return connectionResource.connectAddress();
     }
 
+    /**
+     * Deprecated. See {@code ConnectionResource}.
+     */
     @GET
     @Path("connect/dns")
+    @Deprecated
     public List<String> connectDns() throws ConfigStoreException {
-        return getRunningDns();
+        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        return connectionResource.connectDns();
     }
 }

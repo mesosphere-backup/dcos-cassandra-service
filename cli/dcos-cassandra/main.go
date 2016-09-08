@@ -65,11 +65,11 @@ type ConnectionHandler struct {
 }
 func (cmd *ConnectionHandler) runBase(c *kingpin.ParseContext) error {
 	if cmd.showAddress {
-		cli.PrintJSON(cli.HTTPGet("v1/nodes/connect/address"))
+		cli.PrintJSON(cli.HTTPGet("v1/connection/address"))
 	} else if cmd.showDns {
-		cli.PrintJSON(cli.HTTPGet("v1/nodes/connect/dns"))
+		cli.PrintJSON(cli.HTTPGet("v1/connection/dns"))
 	} else {
-		cli.PrintJSON(cli.HTTPGet("v1/nodes/connect"))
+		cli.PrintJSON(cli.HTTPGet("v1/connection"))
 	}
 	return nil
 }

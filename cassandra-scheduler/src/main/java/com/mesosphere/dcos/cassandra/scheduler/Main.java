@@ -93,6 +93,9 @@ public class Main extends Application<MutableSchedulerConfiguration> {
     environment.jersey().register(
       injector.getInstance(DataCenterResource.class)
     );
+    environment.jersey().register(
+            injector.getInstance(ConnectionResource.class)
+    );
   }
 
   private void registerManagedObjects(Environment environment, Injector injector) {
