@@ -7,7 +7,7 @@ REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $REPO_ROOT_DIR
 
 # Grab dcos-commons build/release tools:
-#rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
+rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
 
 # Get a CCM cluster if not already configured (see available settings in dcos-commons/tools/README.md):
 if [ -z "$CLUSTER_URL" ]; then
