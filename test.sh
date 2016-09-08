@@ -12,7 +12,8 @@ rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/d
 # Get a CCM cluster if not already configured (see available settings in dcos-commons/tools/README.md):
 if [ -z "$CLUSTER_URL" ]; then
     echo "CLUSTER_URL is empty/unset, launching new cluster."
-    CCM_AGENTS=5 CLUSTER_URL=$(./dcos-commons-tools/launch_ccm_cluster.py)
+    export CCM_AGENTS=5
+    CLUSTER_URL=$(./dcos-commons-tools/launch_ccm_cluster.py)
     echo $?
     export CLUSTER_URL=$CLUSTER_URL
 else
