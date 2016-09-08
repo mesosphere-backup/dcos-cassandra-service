@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Path("/v1/connect")
+@Path("/v1/connection")
 @Produces(MediaType.APPLICATION_JSON)
 public class ConnectionResource {
     private final CassandraTasks tasks;

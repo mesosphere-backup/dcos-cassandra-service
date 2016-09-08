@@ -96,7 +96,7 @@ public class ConnectionResourceTest {
 
     @Test
     public void testGetConnectEmpty() throws Exception {
-        final Map map = resources.client().target("/v1/connect").request().get(Map.class);
+        final Map map = resources.client().target("/v1/connection").request().get(Map.class);
         final Object address = map.get("address");
         final Object dns = map.get("dns");
         Assert.assertNotNull(address);
@@ -105,13 +105,13 @@ public class ConnectionResourceTest {
 
     @Test
     public void testGetAddressEmpty() throws Exception {
-        final List address = resources.client().target("/v1/connect/address").request().get(List.class);
+        final List address = resources.client().target("/v1/connection/address").request().get(List.class);
         Assert.assertNotNull(address);
     }
 
     @Test
     public void testGetDnsEmpty() throws Exception {
-        final List dns = resources.client().target("/v1/connect/dns").request().get(List.class);
+        final List dns = resources.client().target("/v1/connection/dns").request().get(List.class);
         Assert.assertNotNull(dns);
     }
 }

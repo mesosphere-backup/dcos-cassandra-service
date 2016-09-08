@@ -25,7 +25,7 @@ def install_framework():
 
 
 def test_connect(install_framework):
-    result = requests.get(cassandra_api_url('connect'), headers=request_headers())
+    result = requests.get(cassandra_api_url('connection'), headers=request_headers())
 
     try:
         body = result.json()
@@ -38,7 +38,7 @@ def test_connect(install_framework):
 
 
 def test_connect_address(install_framework):
-    result = requests.get(cassandra_api_url('connect/address'), headers=request_headers())
+    result = requests.get(cassandra_api_url('connection/address'), headers=request_headers())
 
     try:
         body = result.json()
@@ -49,7 +49,7 @@ def test_connect_address(install_framework):
 
 
 def test_connect_dns(install_framework):
-    result = requests.get(cassandra_api_url('connect/dns'), headers=request_headers())
+    result = requests.get(cassandra_api_url('connection/dns'), headers=request_headers())
 
     try:
         body = result.json()

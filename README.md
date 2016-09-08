@@ -1789,7 +1789,7 @@ $ curl -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/pla
 ### Retrieve Connection Info
 
 ```
-$ curl -H "Authorization:token=<auth_token>" <dcos_url>/cassandra/v1/connect
+$ curl -H "Authorization:token=<auth_token>" <dcos_url>/cassandra/v1/connection
 ```
 
 You will see a response similar to the following:
