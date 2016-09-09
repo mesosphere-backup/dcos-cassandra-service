@@ -29,3 +29,9 @@ if [ -d "${REPO_ROOT_DIR}/dcos-tests" ]; then
 else
     echo "${REPO_ROOT_DIR}/dcos-tests/ not found, skipping dcos-tests"
 fi
+
+# Tests succeeded. Out of courtesy, trigger a teardown of the cluster if we created it ourselves.
+# Don't wait for the cluster to complete teardown.
+if [ -n "${CLUSTER_ID}" ]; then
+    ./dcos-commons-tools/launch_ccm_cluster.py trigger-stop ${CLUSTER_ID}
+fi
