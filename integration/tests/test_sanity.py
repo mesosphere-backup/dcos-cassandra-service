@@ -1,4 +1,5 @@
 import json
+import dcos
 import pytest
 import requests
 import shakedown
@@ -12,11 +13,17 @@ from tests.command import (
     uninstall
 )
 from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME, request_headers
+from . import infinity_commons
 
 
 @pytest.yield_fixture
 def install_framework():
-    shakedown.install_package_and_wait(PACKAGE_NAME)
+    try:
+        shakedown.install_package_and_wait(PACKAGE_NAME)
+    except dcos.errors.DCOSException:
+        uninstall()
+        shakedown.install_package_and_wait(PACKAGE_NAME)
+
     check_health()
 
     yield
@@ -32,7 +39,7 @@ def test_connect(install_framework):
         assert len(body) == 2
         assert len(body["address"]) == DEFAULT_NODE_COUNT
         assert len(body["dns"]) == DEFAULT_NODE_COUNT
-    except json.decoder.JSONDecodeError:
+    except:
         print('Failed to parse connect response')
         return False
 
@@ -43,7 +50,7 @@ def test_connect_address(install_framework):
     try:
         body = result.json()
         assert len(body) == DEFAULT_NODE_COUNT
-    except json.decoder.JSONDecodeError:
+    except:
         print('Failed to parse connect response')
         return False
 
@@ -54,6 +61,13 @@ def test_connect_dns(install_framework):
     try:
         body = result.json()
         assert len(body) == DEFAULT_NODE_COUNT
-    except json.decoder.JSONDecodeError:
+    except:
         print('Failed to parse connect response')
         return False
+
+
+@pytest.mark.sanity
+def test_install(install_framework):
+    completed_plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
+
+    return True
