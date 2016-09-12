@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -17,13 +18,16 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.state.StateStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 public class ServiceConfigResourceTest {
     private static TestingServer server;
@@ -82,7 +86,11 @@ public class ServiceConfigResourceTest {
                     configuration,
                     configValidator,
                     stateStore);
-            configurationManager = new ConfigurationManager(defaultConfigurationManager);
+            Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+            when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+            configurationManager = new ConfigurationManager(
+                    new CassandraDaemonTask.Factory(mockCapabilities),
+                    defaultConfigurationManager);
         } catch (ConfigStoreException e) {
             throw new RuntimeException(e);
         }

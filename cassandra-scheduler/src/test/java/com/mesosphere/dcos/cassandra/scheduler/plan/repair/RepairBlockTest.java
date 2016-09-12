@@ -12,7 +12,6 @@ import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
-import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
 import org.junit.Before;

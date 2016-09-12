@@ -15,8 +15,6 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
-import com.google.inject.Inject;
-
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import org.apache.mesos.offer.VolumeRequirement;
@@ -32,7 +30,10 @@ import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import java.io.IOException;
 import java.util.*;
 
+import javax.annotation.Nullable;
+
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.DiscoveryInfo;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.protobuf.LabelBuilder;
@@ -186,7 +187,6 @@ public abstract class CassandraTask {
     }
 
 
-    @Inject
     protected CassandraTask(
         final String name,
         final String configName,
@@ -197,6 +197,7 @@ public abstract class CassandraTask {
         final VolumeRequirement.VolumeMode volumeMode,
         final VolumeRequirement.VolumeType volumeType,
         final Collection<Integer> ports,
+        @Nullable final DiscoveryInfo discoveryInfo,
         final CassandraData data) {
 
         String role = executor.getRole();
@@ -224,6 +225,10 @@ public abstract class CassandraTask {
 
         if (!ports.isEmpty()) {
             builder.addResources(ResourceUtils.getDesiredRanges(role, principal, "ports", Algorithms.createRanges(ports)));
+        }
+
+        if (discoveryInfo != null) {
+            builder.setDiscovery(discoveryInfo);
         }
 
         info = builder.build();

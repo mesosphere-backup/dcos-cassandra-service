@@ -2,16 +2,21 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.mesosphere.dcos.cassandra.common.config.*;
 import org.apache.mesos.Protos;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.VolumeRequirement;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+
+import static org.mockito.Mockito.when;
 
 /**
  * This class tests the CassandraDaemonTask class.
@@ -21,11 +26,15 @@ public class CassandraDaemonTaskTest {
     private static final UUID TEST_CONFIG_ID = UUID.randomUUID();
     public static final String TEST_CONFIG_NAME = TEST_CONFIG_ID.toString();
 
+    private CassandraDaemonTask.Factory testTaskFactory;
     private ExecutorConfig testExecutorConfig;
     private CassandraTaskExecutor testTaskExecutor;
 
     @Before
-    public void beforeEach() throws URISyntaxException {
+    public void beforeEach() throws URISyntaxException, IOException {
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        testTaskFactory = new CassandraDaemonTask.Factory(mockCapabilities);
         testExecutorConfig = ExecutorConfig.create(
                 "test-cmd",
                 Arrays.asList("arg0"),
@@ -40,7 +49,7 @@ public class CassandraDaemonTaskTest {
 
         testTaskExecutor = CassandraTaskExecutor.create(
                 "test-framework-id",
-          TEST_DAEMON_NAME,
+                TEST_DAEMON_NAME,
                 "test-role",
                 "test-principal",
                 testExecutorConfig);
@@ -48,7 +57,7 @@ public class CassandraDaemonTaskTest {
 
     @Test
     public void testConstructCassandraDaemonTask() {
-        Assert.assertNotNull(CassandraDaemonTask.create(
+        Assert.assertNotNull(testTaskFactory.create(
           TEST_DAEMON_NAME,
           TEST_CONFIG_NAME,
                 testTaskExecutor,
@@ -57,7 +66,7 @@ public class CassandraDaemonTaskTest {
 
     @Test
     public void testUpdateUnchangedConfig() {
-        CassandraDaemonTask daemonTask = CassandraDaemonTask.create(
+        CassandraDaemonTask daemonTask = testTaskFactory.create(
           TEST_DAEMON_NAME,
           TEST_CONFIG_NAME,
                 testTaskExecutor,
@@ -69,7 +78,7 @@ public class CassandraDaemonTaskTest {
 
     @Test
     public void testUpdateCpuConfig() {
-        CassandraDaemonTask daemonTask = CassandraDaemonTask.create(
+        CassandraDaemonTask daemonTask = testTaskFactory.create(
           TEST_DAEMON_NAME,
           TEST_CONFIG_NAME,
                 testTaskExecutor,
@@ -95,7 +104,7 @@ public class CassandraDaemonTaskTest {
 
     @Test
     public void testUpdateMemConfig() {
-        CassandraDaemonTask daemonTask = CassandraDaemonTask.create(
+        CassandraDaemonTask daemonTask = testTaskFactory.create(
           TEST_DAEMON_NAME,
           TEST_CONFIG_NAME,
                 testTaskExecutor,
@@ -123,7 +132,7 @@ public class CassandraDaemonTaskTest {
 
     @Test
     public void testUpdateDiskConfig() {
-        CassandraDaemonTask daemonTask = CassandraDaemonTask.create(
+        CassandraDaemonTask daemonTask = testTaskFactory.create(
           TEST_DAEMON_NAME,
           TEST_CONFIG_NAME,
                 testTaskExecutor,

@@ -16,7 +16,6 @@
 
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
@@ -25,6 +24,7 @@ import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.config.ConfigStoreException;
+import org.apache.mesos.dcos.Capabilities;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,14 +44,18 @@ import java.util.Optional;
 public class TasksResource {
     private static final Logger LOGGER = LoggerFactory.getLogger
             (TasksResource.class);
+    private final Capabilities capabilities;
     private final CassandraTasks tasks;
     private final SchedulerClient client;
     private final ConfigurationManager configurationManager;
 
     @Inject
-    public TasksResource(final CassandraTasks tasks,
-                         final SchedulerClient client,
-                         final ConfigurationManager configurationManager) {
+    public TasksResource(
+            final Capabilities capabilities,
+            final CassandraTasks tasks,
+            final SchedulerClient client,
+            final ConfigurationManager configurationManager) {
+        this.capabilities = capabilities;
         this.tasks = tasks;
         this.client = client;
         this.configurationManager = configurationManager;
@@ -141,8 +145,9 @@ public class TasksResource {
     @GET
     @Path("connect")
     @Deprecated
-    public Map<String, List<String>> connect() throws ConfigStoreException {
-        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+    public Map<String, Object> connect() throws ConfigStoreException {
+        final ConnectionResource connectionResource =
+                new ConnectionResource(capabilities, tasks, configurationManager);
         return connectionResource.connect();
     }
 
@@ -153,7 +158,8 @@ public class TasksResource {
     @Path("connect/address")
     @Deprecated
     public List<String> connectAddress() {
-        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        final ConnectionResource connectionResource =
+                new ConnectionResource(capabilities, tasks, configurationManager);
         return connectionResource.connectAddress();
     }
 
@@ -164,7 +170,8 @@ public class TasksResource {
     @Path("connect/dns")
     @Deprecated
     public List<String> connectDns() throws ConfigStoreException {
-        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        final ConnectionResource connectionResource =
+                new ConnectionResource(capabilities, tasks, configurationManager);
         return connectionResource.connectDns();
     }
 }

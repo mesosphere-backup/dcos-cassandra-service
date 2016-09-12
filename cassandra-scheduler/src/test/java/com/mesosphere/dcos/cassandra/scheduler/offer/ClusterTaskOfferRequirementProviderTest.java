@@ -19,11 +19,15 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.protobuf.ResourceBuilder;
 import org.apache.mesos.protobuf.TaskInfoBuilder;
 import org.apache.mesos.state.StateStore;
 import org.junit.*;
+import org.mockito.Mockito;
+
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
@@ -140,7 +144,11 @@ public class ClusterTaskOfferRequirementProviderTest {
                 config,
                 new ConfigValidator(),
                 stateStore);
-        configuration = new ConfigurationManager(configurationManager);
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        configuration = new ConfigurationManager(
+                new CassandraDaemonTask.Factory(mockCapabilities),
+                configurationManager);
 
         provider = new ClusterTaskOfferRequirementProvider();
     }

@@ -36,12 +36,15 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.http.client.HttpClient;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
+import org.apache.mesos.dcos.DcosCluster;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.StageManager;
 import org.apache.mesos.state.StateStore;
 
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,6 +90,13 @@ public class SchedulerModule extends AbstractModule {
                 curatorConfig.getServers(),
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
+
+        try {
+            Capabilities capabilities = new Capabilities(new DcosCluster());
+            bind(Capabilities.class).toInstance(capabilities);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
 
         try {
             final ConfigValidator configValidator = new ConfigValidator();
