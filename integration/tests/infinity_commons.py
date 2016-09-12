@@ -1,5 +1,7 @@
 import json
 import requests
+import shakedown
+from dcos import marathon
 from enum import Enum
 from tests.command import (
     cassandra_api_url,
@@ -62,3 +64,20 @@ def get_and_verify_plan(predicate=lambda r: True):
 
     return spin(fn, success_predicate).json()
 
+
+def get_marathon_uri():
+    """Gets URL to the Marathon instance"""
+    return '{}/marathon'.format(shakedown.dcos_url()) 
+
+
+def get_marathon_client():
+    """Gets a marathon client"""
+    return marathon.Client(get_marathon_uri())
+
+
+def strip_meta(app):
+    app.pop('fetch')
+    app.pop('version')
+    app.pop('versionInfo')
+    return app
+    
