@@ -250,8 +250,7 @@ public class CassandraScheduler implements Scheduler, Managed {
 
     @Override
     public void frameworkMessage(SchedulerDriver driver,
-                                 Protos.ExecutorID executorId
-            ,
+                                 Protos.ExecutorID executorId,
                                  Protos.SlaveID slaveId,
                                  byte[] data) {
         LOGGER.info("Framework message: executorId={} slaveId={} data='{}'",
