@@ -13,29 +13,35 @@ public class MesosConfig {
     @JsonProperty("path")
     private final String path;
     private final Duration timeout;
+    @JsonProperty("refuse_seconds")
+    private final int refuseSeconds;
 
     public static MesosConfig create(String servers,
                                      String path,
-                                     Duration timeout) {
+                                     Duration timeout,
+                                     int refuseSeconds) {
 
-        return new MesosConfig(servers, path, timeout);
+        return new MesosConfig(servers, path, timeout, refuseSeconds);
     }
 
     @JsonCreator
     public static MesosConfig create(@JsonProperty("servers") String servers,
                                      @JsonProperty("path") String path,
                                      @JsonProperty("timeout_ms") Long
-                                                 timeoutMs) {
+                                                 timeoutMs,
+                                     @JsonProperty("refuse_seconds") int refuseSeconds) {
 
         return create(servers,
                 path,
-                Duration.ofMillis(timeoutMs));
+                Duration.ofMillis(timeoutMs),
+                refuseSeconds);
     }
 
-    public MesosConfig(String servers, String path, Duration timeout) {
+    public MesosConfig(String servers, String path, Duration timeout, int refuseSeconds) {
         this.servers = servers;
         this.path = path;
         this.timeout = timeout;
+        this.refuseSeconds = refuseSeconds;
     }
 
     public String getServers() {
@@ -49,6 +55,8 @@ public class MesosConfig {
     public Duration getTimeout() {
         return timeout;
     }
+
+    public int getRefuseSeconds() { return refuseSeconds; }
 
     public String toZooKeeperUrl() {
         return "zk://" + servers + path;
@@ -71,6 +79,7 @@ public class MesosConfig {
                 that.getServers()) : that.getServers() != null) return false;
         if (getPath() != null ? !getPath().equals(
                 that.getPath()) : that.getPath() != null) return false;
+        if (getRefuseSeconds() != that.getRefuseSeconds()) return false;
         return getTimeout() != null ? getTimeout().equals(
                 that.getTimeout()) : that.getTimeout() == null;
 
@@ -81,6 +90,7 @@ public class MesosConfig {
         int result = getServers() != null ? getServers().hashCode() : 0;
         result = 31 * result + (getPath() != null ? getPath().hashCode() : 0);
         result = 31 * result + (getTimeout() != null ? getTimeout().hashCode() : 0);
+        result = 31 * result + getRefuseSeconds();
         return result;
     }
 
