@@ -1,7 +1,6 @@
 import json
-
+import dcos
 import pytest
-import requests
 import shakedown
 
 from tests.command import (
@@ -13,7 +12,7 @@ from tests.command import (
     spin,
     uninstall
 )
-from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME, request_headers
+from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
 
 
 def bump_cpu_count_config():
@@ -23,10 +22,9 @@ def bump_cpu_count_config():
     )
 
     return request(
-        requests.put,
+        dcos.http.put,
         marathon_api_url('apps/cassandra'),
-        json=config,
-        headers=request_headers()
+        json=config
     )
 
 
@@ -34,9 +32,7 @@ counter = 0
 def get_and_verify_plan(predicate=lambda r: True):
     global counter
     def fn():
-        return requests.get(
-            cassandra_api_url('plan'), headers=request_headers()
-        )
+        return dcos.http.get(cassandra_api_url('plan'))
 
     def success_predicate(result):
         global counter
@@ -94,10 +90,9 @@ def kill_task_with_pattern(pattern, host=None):
 def run_cleanup():
     payload = {'nodes': ['*']}
     request(
-        requests.put,
+        dcos.http.put,
         cassandra_api_url('cleanup/start'),
         json=payload,
-        headers=request_headers()
     )
 
 
@@ -125,10 +120,9 @@ def run_planned_operation(operation, failure=lambda: None):
 def run_repair():
     payload = {'nodes': ['*']}
     request(
-        requests.put,
+        dcos.http.put,
         cassandra_api_url('repair/start'),
         json=payload,
-        headers=request_headers()
     )
 
 
