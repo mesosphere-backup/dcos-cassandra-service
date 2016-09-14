@@ -98,7 +98,7 @@ public class CassandraDaemonController {
     @Counted
     public void shutdown() {
 
-        getDaemon().shutdown();
+        getDaemon().shutdownAfter(2000);
     }
 
 

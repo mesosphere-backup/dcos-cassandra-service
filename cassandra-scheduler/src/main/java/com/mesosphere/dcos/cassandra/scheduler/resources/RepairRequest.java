@@ -95,7 +95,7 @@ public class RepairRequest implements ClusterTaskRequest {
     private Set<String> getNodes(CassandraTasks cassandraTasks) {
         final Set<String> allDaemons = cassandraTasks.getDaemons().keySet();
         if (getNodes().size() == 1 &&
-                getNodes().get(0).equals(CleanupRequest.ALL)) {
+                getNodes().get(0).equals(RepairRequest.ALL)) {
             return allDaemons;
         } else {
             return getNodes().stream()
