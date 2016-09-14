@@ -18,7 +18,7 @@ from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME, request_headers
 def install_framework():
     shakedown.install_package_and_wait(PACKAGE_NAME)
     check_health()
-
+    requests.Session().verify = False
     yield
 
     uninstall()
