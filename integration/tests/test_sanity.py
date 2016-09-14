@@ -24,6 +24,7 @@ def install_framework():
     uninstall()
 
 
+@pytest.mark.sanity
 def test_connect(install_framework):
     result = requests.get(cassandra_api_url('connection'), headers=request_headers())
 
@@ -37,6 +38,7 @@ def test_connect(install_framework):
         return False
 
 
+@pytest.mark.sanity
 def test_connect_address(install_framework):
     result = requests.get(cassandra_api_url('connection/address'), headers=request_headers())
 
@@ -48,6 +50,7 @@ def test_connect_address(install_framework):
         return False
 
 
+@pytest.mark.sanity
 def test_connect_dns(install_framework):
     result = requests.get(cassandra_api_url('connection/dns'), headers=request_headers())
 
