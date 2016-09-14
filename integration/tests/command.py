@@ -3,14 +3,12 @@ import time
 from functools import wraps
 
 import dcos
-import requests
 import shakedown
 
 from tests.defaults import (
     DEFAULT_NODE_COUNT,
     PACKAGE_NAME,
     TASK_RUNNING_STATE,
-    request_headers,
 )
 
 
@@ -50,18 +48,14 @@ def check_health():
 
 def get_cassandra_config():
     response = request(
-        requests.get,
-        marathon_api_url('apps/cassandra/versions'),
-        headers=request_headers()
+        dcos.http.get,
+        marathon_api_url('apps/{}/versions'.format(PACKAGE_NAME))
     )
     assert response.status_code == 200, 'Marathon versions request failed'
 
     version = response.json()['versions'][0]
 
-    response = requests.get(
-        marathon_api_url('apps/cassandra/versions/%s' % version),
-        headers=request_headers()
-    )
+    response = dcos.http.get(marathon_api_url('apps/{}/versions/{}'.format(PACKAGE_NAME, version)))
     assert response.status_code == 200
 
     config = response.json()
