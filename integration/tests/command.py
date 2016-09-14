@@ -113,15 +113,18 @@ def spin(fn, success_predicate, *args, **kwargs):
 
 
 def uninstall():
-    def fn():
-        try:
-            shakedown.uninstall_package_and_wait(PACKAGE_NAME)
-        except (dcos.errors.DCOSException, json.decoder.JSONDecodeError):
-            return False
+    print('Uninstalling/janitoring {}'.format(PACKAGE_NAME))
+    try:
+        shakedown.uninstall_package_and_wait(PACKAGE_NAME, app_id=PACKAGE_NAME)
+    except (dcos.errors.DCOSException, ValueError) as e:
+        print('Got exception when uninstalling package, continuing with janitor anyway: {}'.format(e))
 
-        return shakedown.run_command_on_master(
-            'docker run mesosphere/janitor /janitor.py '
-            '-r cassandra-role -p cassandra-principal -z dcos-service-cassandra --username=bootstrapuser --password=deleteme'
+    shakedown.run_command_on_master(
+        'docker run mesosphere/janitor /janitor.py '
+        '-r cassandra-role -p cassandra-principal -z dcos-service-cassandra '
+        '--auth_token={}'.format(
+            shakedown.run_dcos_command(
+                'config show core.dcos_acs_token'
+            )[0].strip()
         )
-
-    spin(fn, lambda x: (x, 'Uninstall failed'))
+    )
