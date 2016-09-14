@@ -44,7 +44,7 @@ def get_and_verify_plan(predicate=lambda r: True):
 
         try:
             body = result.json()
-        except json.decoder.JSONDecodeError:
+        except:
             return False, message
 
         if counter < 3:

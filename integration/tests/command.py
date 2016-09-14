@@ -38,6 +38,8 @@ def check_health():
 
     def success_predicate(tasks):
         running_tasks = [t for t in tasks if t['state'] == TASK_RUNNING_STATE]
+        print('Waiting for {} healthy tasks, got {}/{}'.format(
+            DEFAULT_NODE_COUNT, len(running_tasks), len(tasks)))
         return (
             len(running_tasks) == DEFAULT_NODE_COUNT,
             'Service did not become healthy'
@@ -100,7 +102,9 @@ def spin(fn, success_predicate, *args, **kwargs):
         result = fn(*args, **kwargs)
         is_successful, error_message = success_predicate(result)
         if is_successful:
+            print('Success state reached, exiting spin. prev_err={}'.format(error_message))
             break
+        print('Waiting for success state... err={}'.format(error_message))
         time.sleep(1)
 
     assert is_successful, error_message
