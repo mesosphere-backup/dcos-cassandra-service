@@ -38,6 +38,8 @@ def check_health():
 
     def success_predicate(tasks):
         running_tasks = [t for t in tasks if t['state'] == TASK_RUNNING_STATE]
+        print('Waiting for {} healthy tasks, got {}/{}'.format(
+            DEFAULT_NODE_COUNT, len(running_tasks), len(tasks)))
         return (
             len(running_tasks) == DEFAULT_NODE_COUNT,
             'Service did not become healthy'
@@ -100,7 +102,9 @@ def spin(fn, success_predicate, *args, **kwargs):
         result = fn(*args, **kwargs)
         is_successful, error_message = success_predicate(result)
         if is_successful:
+            print('Success state reached, exiting spin. prev_err={}'.format(error_message))
             break
+        print('Waiting for success state... err={}'.format(error_message))
         time.sleep(1)
 
     assert is_successful, error_message
@@ -109,15 +113,18 @@ def spin(fn, success_predicate, *args, **kwargs):
 
 
 def uninstall():
-    def fn():
-        try:
-            shakedown.uninstall_package_and_wait(PACKAGE_NAME)
-        except (dcos.errors.DCOSException, json.decoder.JSONDecodeError):
-            return False
+    print('Uninstalling/janitoring {}'.format(PACKAGE_NAME))
+    try:
+        shakedown.uninstall_package_and_wait(PACKAGE_NAME, app_id=PACKAGE_NAME)
+    except (dcos.errors.DCOSException, ValueError) as e:
+        print('Got exception when uninstalling package, continuing with janitor anyway: {}'.format(e))
 
-        return shakedown.run_command_on_master(
-            'docker run mesosphere/janitor /janitor.py '
-            '-r cassandra-role -p cassandra-principal -z dcos-service-cassandra --username=bootstrapuser --password=deleteme'
+    shakedown.run_command_on_master(
+        'docker run mesosphere/janitor /janitor.py '
+        '-r cassandra-role -p cassandra-principal -z dcos-service-cassandra '
+        '--auth_token={}'.format(
+            shakedown.run_dcos_command(
+                'config show core.dcos_acs_token'
+            )[0].strip()
         )
-
-    spin(fn, lambda x: (x, 'Uninstall failed'))
+    )
