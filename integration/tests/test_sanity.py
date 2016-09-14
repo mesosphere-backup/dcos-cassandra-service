@@ -16,6 +16,7 @@ from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME, request_headers
 
 @pytest.yield_fixture
 def install_framework():
+    uninstall()
     shakedown.install_package_and_wait(PACKAGE_NAME)
     check_health()
     requests.Session().verify = False
@@ -24,6 +25,7 @@ def install_framework():
     uninstall()
 
 
+@pytest.mark.sanity
 def test_connect(install_framework):
     result = requests.get(cassandra_api_url('connection'), headers=request_headers())
 
@@ -32,28 +34,30 @@ def test_connect(install_framework):
         assert len(body) == 2
         assert len(body["address"]) == DEFAULT_NODE_COUNT
         assert len(body["dns"]) == DEFAULT_NODE_COUNT
-    except json.decoder.JSONDecodeError:
+    except:
         print('Failed to parse connect response')
-        return False
+        raise
 
 
+@pytest.mark.sanity
 def test_connect_address(install_framework):
     result = requests.get(cassandra_api_url('connection/address'), headers=request_headers())
 
     try:
         body = result.json()
         assert len(body) == DEFAULT_NODE_COUNT
-    except json.decoder.JSONDecodeError:
+    except:
         print('Failed to parse connect response')
-        return False
+        raise
 
 
+@pytest.mark.sanity
 def test_connect_dns(install_framework):
     result = requests.get(cassandra_api_url('connection/dns'), headers=request_headers())
 
     try:
         body = result.json()
         assert len(body) == DEFAULT_NODE_COUNT
-    except json.decoder.JSONDecodeError:
+    except:
         print('Failed to parse connect response')
-        return False
+        raise
