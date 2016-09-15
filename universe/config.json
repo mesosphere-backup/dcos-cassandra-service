@@ -6,7 +6,7 @@
 		"service": {
 			"id": "http://cassandra/docs/mesosphere.com/service",
 			"type": "object",
-			"description": "DC/OS service configuration properties",
+			"description": "DC/OS Apache Cassandra service configuration properties",
 			"properties": {
 				"name": {
 					"id": "http://cassandra/docs/mesosphere.com/service/name",
@@ -91,7 +91,7 @@
 		"nodes": {
 			"id": "http://cassandra/docs/mesosphere.com/node",
 			"type": "object",
-			"description": "Cassandra node configuration properties",
+			"description": "DC/OS Apache Cassandra node configuration properties",
 			"properties": {
 				"count": {
 					"id": "http://cassandra/docs/mesosphere.com/node/count",
@@ -175,7 +175,7 @@
 		},
 		"cassandra": {
 			"id": "http://cassandra/docs/mesosphere.com/cassandra",
-			"description": "Cassandra service configuration properties",
+			"description": "Apache Cassandra configuration properties",
 			"type": "object",
 			"properties": {
 				"cluster_name" : {
@@ -523,7 +523,7 @@
 		"executor": {
 			"id": "http://cassandra/docs/mesosphere.com/executor",
 			"type": "object",
-			"description": "The Cassandra service executor configuration object.",
+			"description": "The DC/OS Apache Cassandra service executor configuration object.",
 			"properties": {
 				"cpus": {
 					"id": "http://cassandra/docs/mesosphere.com/executor/cpus",
@@ -568,7 +568,7 @@
 		"task": {
 			"id": "http://cassandra/docs/mesosphere.com/task",
 			"type": "object",
-			"description": "The Cassandra service cluster task configuration object.",
+			"description": "The DC/OS Apache Cassandra service cluster task configuration object.",
 			"properties": {
 				"cpus": {
 					"id": "http://cassandra/docs/mesosphere.com/task/cpus",
