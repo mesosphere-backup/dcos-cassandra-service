@@ -1,7 +1,9 @@
-import dcos
 import json
 import pytest
+
+import dcos
 import shakedown
+
 from tests.command import (
     cassandra_api_url,
     check_health,
@@ -22,7 +24,11 @@ def install_framework():
 
 @pytest.mark.sanity
 def test_connect(install_framework):
-    result = dcos.http.get(cassandra_api_url('connection'))
+    # TODO: remove fallback when universe has recent build with '/connection'
+    try:
+        result = dcos.http.get(cassandra_api_url('connection'))
+    except:
+        result = dcos.http.get(cassandra_api_url('nodes/connect'))
 
     try:
         body = result.json()
@@ -36,7 +42,11 @@ def test_connect(install_framework):
 
 @pytest.mark.sanity
 def test_connect_address(install_framework):
-    result = dcos.http.get(cassandra_api_url('connection/address'))
+    # TODO: remove fallback when universe has recent build with '/connection'
+    try:
+        result = dcos.http.get(cassandra_api_url('connection/address'))
+    except:
+        result = dcos.http.get(cassandra_api_url('nodes/connect/address'))
 
     try:
         body = result.json()
@@ -48,7 +58,11 @@ def test_connect_address(install_framework):
 
 @pytest.mark.sanity
 def test_connect_dns(install_framework):
-    result = dcos.http.get(cassandra_api_url('connection/dns'))
+    # TODO: remove fallback when universe has recent build with '/connection'
+    try:
+        result = dcos.http.get(cassandra_api_url('connection/dns'))
+    except:
+        result = dcos.http.get(cassandra_api_url('nodes/connect/dns'))
 
     try:
         body = result.json()
