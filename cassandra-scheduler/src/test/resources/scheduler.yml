@@ -128,6 +128,7 @@ mesos:
   servers: ${MESOS_SERVERS:-"localhost:40000"}
   path: ${MESOS_PATH:-"/mesos"}
   timeout_ms: ${MESOS_TIMEOUT_MS:-10000}
+  refuse_seconds: ${MESOS_REFUSE_SECONDS:-5}
 zookeeper:
   servers: ${ZOOKEEPER_SERVERS:-"localhost:40000"}
   session_timeout_ms: 10000
