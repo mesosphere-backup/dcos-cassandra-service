@@ -27,7 +27,7 @@ ${REPO_ROOT_DIR}/dcos-commons-tools/run_tests.py shakedown ${REPO_ROOT_DIR}/inte
 
 # Run legacy dcos-tests:
 if [ -d "${REPO_ROOT_DIR}/dcos-tests" ]; then
-    ${REPO_ROOT_DIR}/dcos-commons-tools/run_tests.py dcos-tests ${REPO_ROOT_DIR}/dcos-tests/infinitytests/kafka ${REPO_ROOT_DIR}/dcos-tests/
+    ${REPO_ROOT_DIR}/dcos-commons-tools/run_tests.py dcos-tests ${REPO_ROOT_DIR}/dcos-tests/infinitytests/cassandra ${REPO_ROOT_DIR}/dcos-tests/
 else
     echo "${REPO_ROOT_DIR}/dcos-tests/ not found, skipping dcos-tests"
 fi
