@@ -24,20 +24,28 @@ def install_framework():
 
 @pytest.mark.sanity
 def test_connect(install_framework):
-    # TODO: remove fallback when universe has recent build with '/connection'
     try:
         result = dcos.http.get(cassandra_api_url('connection'))
+        try:
+            body = result.json()
+            assert len(body) == 3
+            assert len(body["address"]) == DEFAULT_NODE_COUNT
+            assert len(body["dns"]) == DEFAULT_NODE_COUNT
+            assert body["vip"] == 'node.{}.l4lb.thisdcos.directory:9042'.format(PACKAGE_NAME)
+        except:
+            print('Failed to parse connect response')
+            raise
     except:
+        # TODO: remove fallback when universe has recent build with '/connection'
         result = dcos.http.get(cassandra_api_url('nodes/connect'))
-
-    try:
-        body = result.json()
-        assert len(body) == 2
-        assert len(body["address"]) == DEFAULT_NODE_COUNT
-        assert len(body["dns"]) == DEFAULT_NODE_COUNT
-    except:
-        print('Failed to parse connect response')
-        raise
+        try:
+            body = result.json()
+            assert len(body) == 2
+            assert len(body["address"]) == DEFAULT_NODE_COUNT
+            assert len(body["dns"]) == DEFAULT_NODE_COUNT
+        except:
+            print('Failed to parse connect response')
+            raise
 
 
 @pytest.mark.sanity
