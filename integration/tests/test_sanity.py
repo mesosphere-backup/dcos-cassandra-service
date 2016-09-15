@@ -1,7 +1,9 @@
-import dcos
 import json
 import pytest
+
+import dcos
 import shakedown
+
 from tests.command import (
     cassandra_api_url,
     check_health,
