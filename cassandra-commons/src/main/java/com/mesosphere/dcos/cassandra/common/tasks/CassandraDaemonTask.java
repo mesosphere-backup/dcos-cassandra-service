@@ -20,7 +20,6 @@ import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.VolumeRequirement;
-import org.apache.mesos.protobuf.LabelBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,7 +195,10 @@ public class CassandraDaemonTask extends CassandraTask {
 
     public CassandraDaemonTask updateConfig(CassandraConfig config, UUID targetConfigName) {
         LOGGER.info("Updating config for task: {} to config: {}", getTaskInfo().getName(), targetConfigName.toString());
-        final Protos.Label label = LabelBuilder.createLabel("config_target", targetConfigName.toString());
+        final Protos.Label label = Protos.Label.newBuilder()
+                .setKey("config_target")
+                .setValue(targetConfigName.toString())
+                .build();
         return new CassandraDaemonTask(getBuilder()
             .setExecutor(getExecutor().withNewId().getExecutorInfo())
             .setTaskId(createId(getName()))

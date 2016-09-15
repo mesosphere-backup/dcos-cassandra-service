@@ -5,9 +5,11 @@ import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import org.apache.mesos.Protos;
-import org.apache.mesos.config.*;
+import org.apache.mesos.config.ConfigStore;
+import org.apache.mesos.config.ConfigStoreException;
+import org.apache.mesos.config.Configuration;
+import org.apache.mesos.config.ConfigurationFactory;
 import org.apache.mesos.curator.CuratorConfigStore;
-import org.apache.mesos.protobuf.LabelBuilder;
 import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,8 +133,13 @@ public class DefaultConfigurationManager {
 
             for(String duplicateConfig : duplicateConfigs) {
                 if (duplicateConfig.equals(taskConfigName)) {
-                    final Protos.Labels labels = new LabelBuilder()
-                            .addLabel(PersistentOfferRequirementProvider.CONFIG_TARGET_KEY, targetConfigName)
+                    final Protos.Label configTargetKeyLabel = Protos.Label.newBuilder()
+                            .setKey(PersistentOfferRequirementProvider.CONFIG_TARGET_KEY)
+                            .setValue(targetConfigName)
+                            .build();
+
+                    final Protos.Labels labels = Protos.Labels.newBuilder()
+                            .addLabels(configTargetKeyLabel)
                             .build();
 
                     final Protos.TaskInfo updatedTaskInfo = Protos.TaskInfo.newBuilder(taskInfo)
