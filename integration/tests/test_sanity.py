@@ -26,7 +26,7 @@ def test_connect(install_framework):
     try:
         result = dcos.http.get(cassandra_api_url('connection'))
     except:
-        result = dcos.http.get(cassandra_api_url('connect'))
+        result = dcos.http.get(cassandra_api_url('nodes/connect'))
 
     try:
         body = result.json()
@@ -44,7 +44,7 @@ def test_connect_address(install_framework):
     try:
         result = dcos.http.get(cassandra_api_url('connection/address'))
     except:
-        result = dcos.http.get(cassandra_api_url('connect/address'))
+        result = dcos.http.get(cassandra_api_url('nodes/connect/address'))
 
     try:
         body = result.json()
@@ -60,7 +60,7 @@ def test_connect_dns(install_framework):
     try:
         result = dcos.http.get(cassandra_api_url('connection/dns'))
     except:
-        result = dcos.http.get(cassandra_api_url('connect/dns'))
+        result = dcos.http.get(cassandra_api_url('nodes/connect/dns'))
 
     try:
         body = result.json()
