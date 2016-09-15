@@ -110,7 +110,6 @@ public class CassandraSchedulerTest {
 
         executorService = Executors.newCachedThreadPool();
         frameworkId = TestUtils.generateFrameworkId();
-        reconciler = new DefaultReconciler();
         eventBus = new EventBus();
 
         stageManager = new CassandraStageManager(
@@ -157,6 +156,7 @@ public class CassandraSchedulerTest {
                 curatorConfig,
                 clusterTaskConfig,
                 stateStore);
+        reconciler = new DefaultReconciler(cassandraTasks);
 
         offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager, cassandraTasks);
         scheduler = new CassandraScheduler(

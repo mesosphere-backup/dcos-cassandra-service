@@ -15,9 +15,9 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
+import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import org.apache.mesos.offer.VolumeRequirement;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
@@ -27,17 +27,20 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 
-import java.io.IOException;
-import java.util.*;
-
-import javax.annotation.Nullable;
-
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.DiscoveryInfo;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskUtils;
-import org.apache.mesos.protobuf.LabelBuilder;
+import org.apache.mesos.offer.VolumeRequirement;
 import org.apache.mesos.util.Algorithms;
+
+import javax.annotation.Nullable;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * CassandraTask is the base class from which all framework tasks derive.
@@ -212,7 +215,10 @@ public abstract class CassandraTask {
                 ResourceUtils.getDesiredScalar(role, principal, "cpus", cpus),
                 ResourceUtils.getDesiredScalar(role, principal, "mem", memoryMb)))
             .setData(data.getBytes());
-        final Protos.Label label = LabelBuilder.createLabel("config_target", configName);
+        final Protos.Label label = Protos.Label.newBuilder()
+                .setKey("config_target")
+                .setValue(configName)
+                .build();
         builder.setLabels(Protos.Labels.newBuilder().addLabels(label));
 
         if (!volumeMode.equals(VolumeRequirement.VolumeMode.NONE)) {
