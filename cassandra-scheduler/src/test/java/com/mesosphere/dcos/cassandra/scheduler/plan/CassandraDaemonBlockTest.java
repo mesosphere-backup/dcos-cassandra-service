@@ -25,6 +25,7 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
@@ -50,8 +51,13 @@ public class CassandraDaemonBlockTest {
     private CassandraTasks cassandraTasks;
     @Mock
     private SchedulerClient client;
+    @Mock
+    private CompletionStage<Boolean> mockStage;
+    @Mock
+    private CompletableFuture<Boolean> mockFuture;
 
     private static TestingServer server;
+    private static CassandraDaemonTask.Factory taskFactory;
     private static MutableSchedulerConfiguration config;
     private static ClusterTaskConfig clusterTaskConfig;
     private static StateStore stateStore;
@@ -61,8 +67,11 @@ public class CassandraDaemonBlockTest {
     public void beforeEach() throws Exception {
         MockitoAnnotations.initMocks(this);
         server = new TestingServer();
-
         server.start();
+
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        taskFactory = new CassandraDaemonTask.Factory(mockCapabilities);
 
         final ConfigurationFactory<MutableSchedulerConfiguration> factory =
                 new ConfigurationFactory<>(
@@ -104,10 +113,8 @@ public class CassandraDaemonBlockTest {
                         new ConfigValidator(),
                         stateStore);
 
-        ConfigurationManager configuration = new ConfigurationManager(configurationManager);
-
         cassandraTasks = new CassandraTasks(
-                configuration,
+                new ConfigurationManager(taskFactory, configurationManager),
                 curatorConfig,
                 clusterTaskConfig,
                 stateStore);
@@ -152,7 +159,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
                 config.getCassandraConfig());
@@ -181,7 +188,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
                 config.getCassandraConfig());
@@ -209,7 +216,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
                 config.getCassandraConfig());
@@ -224,8 +231,6 @@ public class CassandraDaemonBlockTest {
 
         offerRequirement = block.start();
         Assert.assertNull(offerRequirement);
-        final CompletionStage mockStage = Mockito.mock(CompletionStage.class);
-        final CompletableFuture mockFuture = Mockito.mock(CompletableFuture.class);
         when(mockStage.toCompletableFuture()).thenReturn(mockFuture);
         when(mockFuture.get()).thenReturn(true);
         when(client.shutdown("1234", 1234)).thenReturn(mockStage);
@@ -250,7 +255,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
                 config.getCassandraConfig());
@@ -265,8 +270,6 @@ public class CassandraDaemonBlockTest {
 
         offerRequirement = block.start();
         Assert.assertNull(offerRequirement);
-        final CompletionStage mockStage = Mockito.mock(CompletionStage.class);
-        final CompletableFuture mockFuture = Mockito.mock(CompletableFuture.class);
         when(mockStage.toCompletableFuture()).thenReturn(mockFuture);
         when(mockFuture.get()).thenReturn(false);
         when(client.shutdown("1234", 1234)).thenReturn(mockStage);
@@ -291,7 +294,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
                 config.getCassandraConfig());
@@ -318,7 +321,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal",
                         config.getExecutorConfig()),
@@ -348,7 +351,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 configurationManager.getTargetName().toString(),
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
                 config.getCassandraConfig());
@@ -380,7 +383,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
                 config.getCassandraConfig());
@@ -407,7 +410,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
-        final CassandraDaemonTask task = CassandraDaemonTask.create(EXPECTED_NAME,
+        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
                 config.getCassandraConfig());

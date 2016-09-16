@@ -18,6 +18,7 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
@@ -26,6 +27,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -100,7 +104,11 @@ public class CassandraTasksTest {
                 new ConfigValidator(),
                 stateStore);
 
-        configuration = new ConfigurationManager(configurationManager);
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        configuration = new ConfigurationManager(
+                new CassandraDaemonTask.Factory(mockCapabilities),
+                configurationManager);
 
         cassandraTasks = new CassandraTasks(
                 configuration,
