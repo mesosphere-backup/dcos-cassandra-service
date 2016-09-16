@@ -7,7 +7,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
@@ -28,7 +28,7 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackupManager.class);
     static final String BACKUP_KEY = "backup";
 
-    private final CassandraTasks cassandraTasks;
+    private final CassandraState cassandraState;
     private final ClusterTaskOfferRequirementProvider provider;
     private volatile BackupSnapshotPhase backup = null;
     private volatile UploadBackupPhase upload = null;
@@ -37,11 +37,11 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
 
     @Inject
     public BackupManager(
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             ClusterTaskOfferRequirementProvider provider,
             StateStore stateStore) {
         this.provider = provider;
-        this.cassandraTasks = cassandraTasks;
+        this.cassandraState = cassandraState;
         this.stateStore = stateStore;
 
         // Load BackupManager from state store
@@ -52,11 +52,11 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
             if (context != null) {
                 this.backup = new BackupSnapshotPhase(
                         context,
-                        cassandraTasks,
+                        cassandraState,
                         provider);
                 this.upload = new UploadBackupPhase(
                         context,
-                        cassandraTasks,
+                        cassandraState,
                         provider);
                 this.activeContext = context;
             }
@@ -78,16 +78,16 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
         LOGGER.info("Starting backup");
         try {
             if (isComplete()) {
-                for (String name : cassandraTasks.getBackupSnapshotTasks().keySet()) {
-                    cassandraTasks.remove(name);
+                for (String name : cassandraState.getBackupSnapshotTasks().keySet()) {
+                    cassandraState.remove(name);
                 }
-                for (String name : cassandraTasks.getBackupUploadTasks().keySet()) {
-                    cassandraTasks.remove(name);
+                for (String name : cassandraState.getBackupUploadTasks().keySet()) {
+                    cassandraState.remove(name);
                 }
             }
             stateStore.storeProperty(BACKUP_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
-            this.backup = new BackupSnapshotPhase(context, cassandraTasks, provider);
-            this.upload = new UploadBackupPhase(context, cassandraTasks, provider);
+            this.backup = new BackupSnapshotPhase(context, cassandraState, provider);
+            this.upload = new UploadBackupPhase(context, cassandraState, provider);
             //this volatile signals that backup is started
             activeContext = context;
         } catch (SerializationException | PersistenceException e) {
@@ -101,8 +101,8 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
         LOGGER.info("Stopping backup");
         try {
             stateStore.clearProperty(BACKUP_KEY);
-            cassandraTasks.remove(cassandraTasks.getBackupSnapshotTasks().keySet());
-            cassandraTasks.remove(cassandraTasks.getBackupUploadTasks().keySet());
+            cassandraState.remove(cassandraState.getBackupSnapshotTasks().keySet());
+            cassandraState.remove(cassandraState.getBackupUploadTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error deleting backup context from persistence store. Reason: {}",

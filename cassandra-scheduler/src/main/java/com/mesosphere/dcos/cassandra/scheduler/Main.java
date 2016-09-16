@@ -8,7 +8,7 @@ import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
 import com.mesosphere.dcos.cassandra.scheduler.resources.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -102,7 +102,7 @@ public class Main extends Application<MutableSchedulerConfiguration> {
     environment.lifecycle().manage(
       injector.getInstance(ConfigurationManager.class));
     environment.lifecycle().manage(
-      injector.getInstance(CassandraTasks.class));
+      injector.getInstance(CassandraState.class));
     environment.lifecycle().manage(
       injector.getInstance(CassandraScheduler.class));
   }

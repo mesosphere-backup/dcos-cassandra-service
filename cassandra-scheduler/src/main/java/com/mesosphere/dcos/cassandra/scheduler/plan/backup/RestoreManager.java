@@ -7,7 +7,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
@@ -23,7 +23,7 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestoreManager.class);
     static final String RESTORE_KEY = "restore";
 
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     private final ClusterTaskOfferRequirementProvider provider;
     private volatile BackupRestoreContext activeContext = null;
     private volatile DownloadSnapshotPhase download = null;
@@ -32,11 +32,11 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> 
 
     @Inject
     public RestoreManager(
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final ClusterTaskOfferRequirementProvider provider,
             StateStore stateStore) {
         this.provider = provider;
-        this.cassandraTasks = cassandraTasks;
+        this.cassandraState = cassandraState;
         this.stateStore = stateStore;
         // Load RestoreManager from state store
         try {
@@ -45,11 +45,11 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> 
             if (context != null) {
                 this.download = new DownloadSnapshotPhase(
                         context,
-                        cassandraTasks,
+                        cassandraState,
                         provider);
                 this.restore = new RestoreSnapshotPhase(
                         context,
-                        cassandraTasks,
+                        cassandraState,
                         provider);
                 this.activeContext = context;
             }
@@ -71,22 +71,22 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> 
         try {
             if (isComplete()) {
                 for(String name:
-                        cassandraTasks.getDownloadSnapshotTasks().keySet()){
-                    cassandraTasks.remove(name);
+                        cassandraState.getDownloadSnapshotTasks().keySet()){
+                    cassandraState.remove(name);
                 }
                 for(String name:
-                        cassandraTasks.getRestoreSnapshotTasks().keySet()){
-                    cassandraTasks.remove(name);
+                        cassandraState.getRestoreSnapshotTasks().keySet()){
+                    cassandraState.remove(name);
                 }
             }
             stateStore.storeProperty(RESTORE_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
             this.download = new DownloadSnapshotPhase(
                     context,
-                    cassandraTasks,
+                    cassandraState,
                     provider);
             this.restore = new RestoreSnapshotPhase(
                     context,
-                    cassandraTasks,
+                    cassandraState,
                     provider);
             //this volatile signals that restore is started
             this.activeContext = context;
@@ -103,7 +103,7 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> 
         try {
             // TODO: Delete restore context from Property store
             stateStore.clearProperty(RESTORE_KEY);
-            cassandraTasks.remove(cassandraTasks.getRestoreSnapshotTasks().keySet());
+            cassandraState.remove(cassandraState.getRestoreSnapshotTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error deleting restore context from persistence store. Reason: {}",

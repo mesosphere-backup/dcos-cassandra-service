@@ -199,3 +199,9 @@ def test_cpus_increase_slightly(install_framework):
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
 
+
+@pytest.mark.sanity
+def test_is_suppressed():
+    response = dcos.http.get(cassandr_api_url('service/kafka/v1/state/properties/suppressed'))
+    response.raise_for_status()
+    assert response.text == "true"
