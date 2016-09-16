@@ -6,7 +6,7 @@ import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.Phase;
@@ -22,14 +22,14 @@ public class DeploymentManager {
             final PersistentOfferRequirementProvider provider,
             final ConfigurationManager configurationManager,
             final DefaultConfigurationManager defaultConfigurationManager,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final SchedulerClient client,
             final Reconciler reconciler,
             final SeedsManager seeds,
             final ExecutorService executor) throws ConfigStoreException {
         return new DeploymentManager(provider,
                 defaultConfigurationManager,
-                cassandraTasks,
+                cassandraState,
                 client,
                 reconciler,
                 seeds,
@@ -43,13 +43,13 @@ public class DeploymentManager {
     public DeploymentManager(
             final PersistentOfferRequirementProvider provider,
             final DefaultConfigurationManager defaultConfigurationManager,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final SchedulerClient client,
             final Reconciler reconciler,
             final SeedsManager seeds,
             final ExecutorService executor) throws ConfigStoreException {
         this.deploy = CassandraDaemonPhase.create(
-                cassandraTasks,
+                cassandraState,
                 provider,
                 client,
                 defaultConfigurationManager);

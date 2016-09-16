@@ -6,12 +6,10 @@ import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.StateStore;
-import org.apache.mesos.state.StateStoreException;
-import org.apache.zookeeper.KeeperException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +25,7 @@ public class CassandraDaemonPhaseTest {
     @Mock
     private PersistentOfferRequirementProvider persistentOfferRequirementProvider;
     @Mock
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     @Mock
     private SchedulerClient client;
     @Mock
@@ -45,7 +43,7 @@ public class CassandraDaemonPhaseTest {
         when(mockConfigManager.getTargetConfig()).thenReturn(configuration);
         Mockito.when(configuration.getServers()).thenReturn(0);
         final CassandraDaemonPhase phase = CassandraDaemonPhase.create(
-                cassandraTasks,
+                cassandraState,
                 persistentOfferRequirementProvider,
                 client,
                 mockConfigManager);
@@ -62,16 +60,16 @@ public class CassandraDaemonPhaseTest {
         final String EXPECTED_NAME = "node-0";
         when(daemonTask.getName()).thenReturn(EXPECTED_NAME);
         final StateStore stateStore = Mockito.mock(StateStore.class);
-        when(cassandraTasks.getStateStore()).thenReturn(stateStore);
+        when(cassandraState.getStateStore()).thenReturn(stateStore);
         when(stateStore.fetchStatus(EXPECTED_NAME))
                 .thenReturn(Optional.empty());
 
-        when(cassandraTasks.getOrCreateContainer(EXPECTED_NAME)).thenReturn(cassandraContainer);
+        when(cassandraState.getOrCreateContainer(EXPECTED_NAME)).thenReturn(cassandraContainer);
         CassandraSchedulerConfiguration configuration = Mockito.mock(CassandraSchedulerConfiguration.class);
         when(configurationManager.getTargetConfig()).thenReturn(configuration);
         Mockito.when(configuration.getServers()).thenReturn(1);
         final CassandraDaemonPhase phase = CassandraDaemonPhase.create(
-                cassandraTasks,
+                cassandraState,
                 persistentOfferRequirementProvider,
                 client,
                 configurationManager);

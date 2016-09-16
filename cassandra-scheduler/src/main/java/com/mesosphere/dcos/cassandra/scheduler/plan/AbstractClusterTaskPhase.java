@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
@@ -15,16 +15,16 @@ public abstract class AbstractClusterTaskPhase<B extends Block, C extends Cluste
     protected final UUID id = UUID.randomUUID();
     protected final C context;
     protected final List<B> blocks;
-    protected final CassandraTasks cassandraTasks;
+    protected final CassandraState cassandraState;
     protected final ClusterTaskOfferRequirementProvider provider;
 
     public AbstractClusterTaskPhase(
             C context,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             ClusterTaskOfferRequirementProvider provider) {
         this.provider = provider;
         this.context = context;
-        this.cassandraTasks = cassandraTasks;
+        this.cassandraState = cassandraState;
         this.blocks = createBlocks();
     }
 

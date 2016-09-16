@@ -6,7 +6,7 @@ import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -39,7 +39,7 @@ public class ClusterTaskOfferRequirementProviderTest {
     private static ConfigurationManager configuration;
     private static CuratorFrameworkConfig curatorConfig;
     private static ClusterTaskConfig clusterTaskConfig;
-    private static CassandraTasks cassandraTasks;
+    private static CassandraState cassandraState;
     private static ClusterTaskOfferRequirementProvider provider;
     private static Protos.TaskInfo testTaskInfo;
 
@@ -55,13 +55,13 @@ public class ClusterTaskOfferRequirementProviderTest {
 
     @Before
     public void beforeEach() throws Exception {
-        cassandraTasks = new CassandraTasks(
+        cassandraState = new CassandraState(
                 configuration,
                 curatorConfig,
                 clusterTaskConfig,
                 stateStore);
 
-        CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
+        CassandraDaemonTask task = cassandraState.createDaemon("test-daemon");
         Protos.TaskInfo initTaskInfo = task.getTaskInfo();
 
         Protos.Resource cpu = ResourceUtils.getExpectedScalar(
@@ -183,7 +183,7 @@ public class ClusterTaskOfferRequirementProviderTest {
     @Test
     public void testConstructor() throws Exception {
         ClusterTaskOfferRequirementProvider provider = new ClusterTaskOfferRequirementProvider();
-        CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
+        CassandraDaemonTask task = cassandraState.createDaemon("test-daemon");
         Protos.TaskInfo taskInfo = task.getTaskInfo();
 
         OfferRequirement requirement = provider.getNewOfferRequirement(taskInfo);
