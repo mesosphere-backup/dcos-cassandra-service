@@ -321,8 +321,9 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start();
         Assert.assertNotNull(offerRequirement);
 
+        String target = new ConfigurationManager(taskFactory, configurationManager).getTargetConfigName().toString();
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
-                "abc",
+                target,
                 CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal",
                         config.getExecutorConfig()),
                 config.getCassandraConfig());
