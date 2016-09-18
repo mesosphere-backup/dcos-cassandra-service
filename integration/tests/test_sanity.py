@@ -78,3 +78,10 @@ def test_connect_dns(install_framework):
     except:
         print('Failed to parse connect response')
         raise
+
+
+@pytest.mark.sanity
+def test_is_suppressed():
+    response = dcos.http.get(cassandr_api_url('service/kafka/v1/state/properties/suppressed'))
+    response.raise_for_status()
+    assert response.text == "true"

@@ -13,7 +13,7 @@ import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfigur
 import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.SeedsResponse;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
@@ -33,7 +33,7 @@ public class SeedsManager implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             SeedsManager.class);
 
-    private final CassandraTasks tasks;
+    private final CassandraState tasks;
     private static final String DATA_CENTERS_KEY = "datacenters";
     private volatile ImmutableMap<String, DataCenterInfo> dataCenters;
     private final SchedulerClient client;
@@ -98,7 +98,7 @@ public class SeedsManager implements Runnable {
 
     @Inject
     public SeedsManager(final DefaultConfigurationManager configurationManager,
-                        final CassandraTasks tasks,
+                        final CassandraState tasks,
                         final Serializer<DataCenterInfo> serializer,
                         final ScheduledExecutorService executor,
                         final SchedulerClient client,
