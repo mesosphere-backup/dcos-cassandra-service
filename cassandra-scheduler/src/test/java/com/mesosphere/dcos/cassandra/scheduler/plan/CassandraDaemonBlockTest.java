@@ -31,9 +31,11 @@ import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.powermock.reflect.Whitebox;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -339,6 +341,12 @@ public class CassandraDaemonBlockTest {
         when(persistentOfferRequirementProvider.getReplacementOfferRequirement(any())).thenReturn(mockOfferReq);
         offerRequirement = block.start();
         Assert.assertEquals(mockOfferReq, offerRequirement);
+
+        CassandraTemplateTask templateTask = cassandraTasks.getOrCreateTemplateTask(
+                CassandraTemplateTask.toTemplateTaskName(task.getName()), task);
+        ArgumentCaptor<CassandraContainer> containerCaptor = ArgumentCaptor.forClass(CassandraContainer.class);
+        verify(persistentOfferRequirementProvider).getReplacementOfferRequirement(containerCaptor.capture());
+        Assert.assertEquals(templateTask, Whitebox.getInternalState(containerCaptor.getValue(), "clusterTemplateTask"));
     }
 
     @Test
