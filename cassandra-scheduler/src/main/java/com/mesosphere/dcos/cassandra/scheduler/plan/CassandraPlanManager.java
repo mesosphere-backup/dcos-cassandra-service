@@ -2,19 +2,21 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.inject.Inject;
 import org.apache.mesos.Protos;
-import org.apache.mesos.scheduler.plan.DefaultStageManager;
+import org.apache.mesos.scheduler.plan.DefaultPlanManager;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 
-public class CassandraStageManager extends DefaultStageManager {
+import java.util.Optional;
+
+public class CassandraPlanManager extends DefaultPlanManager {
     @Inject
-    public CassandraStageManager(
+    public CassandraPlanManager(
             final PhaseStrategyFactory strategyFactory) {
-        super(EmptyStage.get(), strategyFactory);
+        super(EmptyPlan.get(), strategyFactory);
     }
 
     @Override
-    public Phase getCurrentPhase() {
+    public Optional<Phase> getCurrentPhase() {
         return super.getCurrentPhase();
     }
 
@@ -22,7 +24,7 @@ public class CassandraStageManager extends DefaultStageManager {
     public void update(Protos.TaskStatus status) {
         super.update(status);
 
-        CassandraStage cassandraStage = (CassandraStage) getStage();
-        cassandraStage.update();
+        CassandraPlan cassandraPlan = (CassandraPlan) getPlan();
+        cassandraPlan.update();
     }
 }

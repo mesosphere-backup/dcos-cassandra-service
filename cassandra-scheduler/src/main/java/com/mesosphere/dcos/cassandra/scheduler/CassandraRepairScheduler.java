@@ -48,21 +48,23 @@ public class CassandraRepairScheduler {
                 CassandraDaemonTask terminated = terminatedOption.get();
                 terminated = cassandraTasks.replaceDaemon(terminated);
 
-                OfferRequirement offerReq;
+                Optional<OfferRequirement> offerReq;
                 if (terminated.getConfig().getReplaceIp().isEmpty()) {
                     offerReq = offerRequirementProvider.getReplacementOfferRequirement(cassandraTasks.getOrCreateContainer(terminated.getName()));
                 } else {
                     offerReq = offerRequirementProvider.getNewOfferRequirement(cassandraTasks.createCassandraContainer(terminated));
                 }
 
-                List<OfferRecommendation> recommendations =
-                        offerEvaluator.evaluate(offerReq, offers);
-                LOGGER.debug(
-                        "Got recommendations: {} for terminated task: {}",
-                        recommendations,
-                        terminated.getId());
-                acceptedOffers = offerAccepter.accept(driver,
-                        recommendations);
+                if (offerReq.isPresent()) {
+                    List<OfferRecommendation> recommendations =
+                            offerEvaluator.evaluate(offerReq.get(), offers);
+                    LOGGER.debug(
+                            "Got recommendations: {} for terminated task: {}",
+                            recommendations,
+                            terminated.getId());
+                    acceptedOffers = offerAccepter.accept(driver,
+                            recommendations);
+                }
 
 
             } catch (PersistenceException | ConfigStoreException ex) {

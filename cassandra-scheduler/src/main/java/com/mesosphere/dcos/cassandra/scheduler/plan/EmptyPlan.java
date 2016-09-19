@@ -1,13 +1,13 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Stage;
+import org.apache.mesos.scheduler.plan.Plan;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * EmptyStage is used to represent and a Stage that is complete and can not be
+ * EmptyPlan is used to represent and a Stage that is complete and can not be
  * executed. It is useful for frameworks that must provide a Stage to clients
  * (e.g. via a REST API) prior to being able to construct Stage. This occurs,
  * for instance, when a framework scheduler is running, but has not yet
@@ -15,15 +15,15 @@ import java.util.List;
  * EmptyPlan is an immutable singleton that contains exactly one Phase (the
  * EmptyPhase).
  */
-public class EmptyStage implements Stage {
+public class EmptyPlan implements Plan {
 
-    private static final EmptyStage instance = new EmptyStage();
+    private static final EmptyPlan instance = new EmptyPlan();
 
-    public static EmptyStage get() {
+    public static EmptyPlan get() {
         return instance;
     }
 
-    private EmptyStage() {
+    private EmptyPlan() {
     }
 
     @Override
