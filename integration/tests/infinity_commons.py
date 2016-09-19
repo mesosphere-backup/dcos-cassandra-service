@@ -1,13 +1,13 @@
 import json
-import requests
 import shakedown
+import dcos
 from dcos import marathon
 from enum import Enum
 from tests.command import (
     cassandra_api_url,
     spin
 )
-from tests.defaults import request_headers
+
 
 
 class PlanState(Enum):
@@ -41,9 +41,7 @@ def get_and_verify_plan(predicate=lambda r: True):
     global counter
     plan_url = cassandra_api_url('plan')
     def fn():
-        return requests.get(
-            plan_url, headers=request_headers()
-        )
+        dcos.http.get( plan_url )
 
     def success_predicate(result):
         global counter
