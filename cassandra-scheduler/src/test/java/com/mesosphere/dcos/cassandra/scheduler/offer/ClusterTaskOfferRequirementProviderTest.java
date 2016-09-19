@@ -19,13 +19,15 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
+import org.apache.mesos.offer.MesosResource;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.protobuf.ResourceBuilder;
-import org.apache.mesos.protobuf.TaskInfoBuilder;
 import org.apache.mesos.state.StateStore;
 import org.junit.*;
+import org.mockito.Mockito;
 
-import java.util.Arrays;
+import static org.mockito.Mockito.when;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -61,22 +63,77 @@ public class ClusterTaskOfferRequirementProviderTest {
         CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
         Protos.TaskInfo initTaskInfo = task.getTaskInfo();
 
-        TaskInfoBuilder builder = new TaskInfoBuilder(
-            initTaskInfo.getTaskId().getValue(),
-            initTaskInfo.getName(),
-            initTaskInfo.getSlaveId().getValue());
-        Protos.Resource cpu = ResourceBuilder.reservedCpus(
-            testCpus, testRole, testPrincipal, testResourceId);
-        Protos.Resource mem = ResourceBuilder.reservedMem(
-            testMem, testRole, testPrincipal, testResourceId);
-        Protos.Resource disk = ResourceBuilder.reservedDisk(
-            testDisk, testRole, testPrincipal, testResourceId);
-        Protos.Resource ports = ResourceBuilder.reservedPorts(
-            testPortBegin, testPortEnd, testRole, testPrincipal, testResourceId);
-        builder.addAllResources(Arrays.asList(cpu, mem, disk, ports));
-        builder.setExecutorInfo(initTaskInfo.getExecutor());
+        Protos.Resource cpu = Protos.Resource.newBuilder()
+                .setName("cpus")
+                .setType(Protos.Value.Type.SCALAR)
+                .setRole(testRole)
+                .setScalar(Protos.Value.Scalar.newBuilder().setValue(testCpus))
+                .setReservation(Protos.Resource.ReservationInfo.newBuilder()
+                        .setPrincipal(testPrincipal)
+                        .setLabels(Protos.Labels.newBuilder()
+                                .addLabels(Protos.Label.newBuilder()
+                                        .setKey(MesosResource.RESOURCE_ID_KEY)
+                                        .setValue(testResourceId)
+                                )
+                        )
+                ).build();
+        Protos.Resource mem = Protos.Resource.newBuilder()
+                .setName("mem")
+                .setType(Protos.Value.Type.SCALAR)
+                .setRole(testRole)
+                .setScalar(Protos.Value.Scalar.newBuilder().setValue(testMem))
+                .setReservation(Protos.Resource.ReservationInfo.newBuilder()
+                        .setPrincipal(testPrincipal)
+                        .setLabels(Protos.Labels.newBuilder()
+                                .addLabels(Protos.Label.newBuilder()
+                                        .setKey(MesosResource.RESOURCE_ID_KEY)
+                                        .setValue(testResourceId)
+                                )
+                        )
+                ).build();
+        Protos.Resource disk = Protos.Resource.newBuilder()
+                .setName("disk")
+                .setType(Protos.Value.Type.SCALAR)
+                .setRole(testRole)
+                .setScalar(Protos.Value.Scalar.newBuilder().setValue(testDisk))
+                .setReservation(Protos.Resource.ReservationInfo.newBuilder()
+                        .setPrincipal(testPrincipal)
+                        .setLabels(Protos.Labels.newBuilder()
+                                .addLabels(Protos.Label.newBuilder()
+                                        .setKey(MesosResource.RESOURCE_ID_KEY)
+                                        .setValue(testResourceId)
+                                )
+                        )
+                ).build();
+        final Protos.Value.Range portRange = Protos.Value.Range.newBuilder()
+                .setBegin(testPortBegin)
+                .setEnd(testPortEnd).build();
+        Protos.Resource ports = Protos.Resource.newBuilder()
+                .setName("ports")
+                .setType(Protos.Value.Type.RANGES)
+                .setRole(testRole)
+                .setRanges(Protos.Value.Ranges.newBuilder().addRange(portRange))
+                .setReservation(Protos.Resource.ReservationInfo.newBuilder()
+                        .setPrincipal(testPrincipal)
+                        .setLabels(Protos.Labels.newBuilder()
+                                .addLabels(Protos.Label.newBuilder()
+                                        .setKey(MesosResource.RESOURCE_ID_KEY)
+                                        .setValue(testResourceId)
+                                )
+                        )
+                ).build();
 
-        testTaskInfo = builder.build();
+        testTaskInfo = Protos.TaskInfo.newBuilder()
+                .setTaskId(initTaskInfo.getTaskId())
+                .setName(initTaskInfo.getName())
+                .setSlaveId(initTaskInfo.getSlaveId())
+                .addResources(cpu)
+                .addResources(mem)
+                .addResources(disk)
+                .addResources(ports)
+                .setExecutor(initTaskInfo.getExecutor())
+                .build();
+
     }
 
     @BeforeClass
@@ -140,7 +197,11 @@ public class ClusterTaskOfferRequirementProviderTest {
                 config,
                 new ConfigValidator(),
                 stateStore);
-        configuration = new ConfigurationManager(configurationManager);
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        configuration = new ConfigurationManager(
+                new CassandraDaemonTask.Factory(mockCapabilities),
+                configurationManager);
 
         provider = new ClusterTaskOfferRequirementProvider();
     }

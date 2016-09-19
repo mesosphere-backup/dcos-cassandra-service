@@ -53,8 +53,7 @@ public class DeploymentManager {
                 provider,
                 client,
                 defaultConfigurationManager);
-        this.reconciliation = ReconciliationPhase.create(reconciler,
-                cassandraTasks);
+        this.reconciliation = ReconciliationPhase.create(reconciler);
 
         this.syncDc = SyncDataCenterPhase.create(seeds, executor);
     }

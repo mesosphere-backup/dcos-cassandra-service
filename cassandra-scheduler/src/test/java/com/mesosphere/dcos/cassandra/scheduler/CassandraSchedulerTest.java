@@ -31,6 +31,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.Block;
@@ -42,7 +43,9 @@ import org.apache.mesos.testing.QueuedSchedulerDriver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,8 +58,12 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 public class CassandraSchedulerTest {
+    @Mock private CompletionStage<Boolean> mockStage;
+    @Mock private CompletableFuture<Boolean> mockFuture;
+
     private CassandraScheduler scheduler;
     private ConfigurationManager configurationManager;
     private StageManager stageManager;
@@ -88,14 +95,13 @@ public class CassandraSchedulerTest {
     }
 
     public void beforeHelper(String configName) throws Exception {
+        MockitoAnnotations.initMocks(this);
         mesosConfig = Mockito.mock(MesosConfig.class);
 
         client = Mockito.mock(SchedulerClient.class);
-        CompletionStage<Boolean> csb = Mockito.mock(CompletionStage.class);
-        CompletableFuture<Boolean> cfb = Mockito.mock(CompletableFuture.class);
-        Mockito.when(cfb.get()).thenReturn(true);
-        Mockito.when(csb.toCompletableFuture()).thenReturn(cfb);
-        Mockito.when(client.shutdown(Mockito.anyString(), Mockito.anyInt())).thenReturn(csb);
+        Mockito.when(mockFuture.get()).thenReturn(true);
+        Mockito.when(mockStage.toCompletableFuture()).thenReturn(mockFuture);
+        Mockito.when(client.shutdown(Mockito.anyString(), Mockito.anyInt())).thenReturn(mockStage);
         backup = Mockito.mock(BackupManager.class);
         restore = Mockito.mock(RestoreManager.class);
         cleanup = Mockito.mock(CleanupManager.class);
@@ -104,7 +110,6 @@ public class CassandraSchedulerTest {
 
         executorService = Executors.newCachedThreadPool();
         frameworkId = TestUtils.generateFrameworkId();
-        reconciler = new DefaultReconciler();
         eventBus = new EventBus();
 
         stageManager = new CassandraStageManager(
@@ -138,7 +143,12 @@ public class CassandraSchedulerTest {
                 new ConfigValidator(),
                 stateStore);
 
-        configurationManager = new ConfigurationManager(defaultConfigurationManager);
+
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        configurationManager = new ConfigurationManager(
+                new CassandraDaemonTask.Factory(mockCapabilities),
+                defaultConfigurationManager);
 
         final ClusterTaskConfig clusterTaskConfig = configurationManager.getTargetConfig().getClusterTaskConfig();
         cassandraTasks = new CassandraTasks(
@@ -146,6 +156,7 @@ public class CassandraSchedulerTest {
                 curatorConfig,
                 clusterTaskConfig,
                 stateStore);
+        reconciler = new DefaultReconciler(cassandraTasks);
 
         offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager, cassandraTasks);
         scheduler = new CassandraScheduler(

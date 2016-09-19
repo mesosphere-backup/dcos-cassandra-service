@@ -65,6 +65,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final ExecutorService executor;
     private final StateStore stateStore;
     private final DefaultConfigurationManager defaultConfigurationManager;
+    private final Protos.Filters offerFilters;
 
     @Inject
     public CassandraScheduler(
@@ -106,6 +107,8 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.executor = executor;
         this.stateStore = stateStore;
         this.defaultConfigurationManager = defaultConfigurationManager;
+        this.offerFilters = Protos.Filters.newBuilder().setRefuseSeconds(mesosConfig.getRefuseSeconds()).build();
+        LOGGER.info("Creating an offer filter with refuse_seconds = {}", mesosConfig.getRefuseSeconds());
     }
 
     @Override
@@ -148,7 +151,7 @@ public class CassandraScheduler implements Scheduler, Managed {
                     restore,
                     cleanup,
                     repair));
-            reconciler.start(cassandraTasks.getTaskStatuses());
+            reconciler.start();
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";
@@ -161,7 +164,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     public void reregistered(SchedulerDriver driver,
                              Protos.MasterInfo masterInfo) {
         LOGGER.info("Re-registered with master: {}", masterInfo);
-        reconciler.start(cassandraTasks.getTaskStatuses());
+        reconciler.start();
     }
 
     @Override
@@ -364,6 +367,6 @@ public class CassandraScheduler implements Scheduler, Managed {
     private void declineOffer(SchedulerDriver driver, Protos.Offer offer) {
         Protos.OfferID offerId = offer.getId();
         LOGGER.info("Scheduler declining offer: {}", offerId);
-        driver.declineOffer(offerId);
+        driver.declineOffer(offerId, offerFilters);
     }
 }

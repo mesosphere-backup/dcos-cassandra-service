@@ -2,6 +2,8 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
@@ -36,12 +38,16 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.http.client.HttpClient;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
+import org.apache.mesos.dcos.DcosCluster;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
+import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.StageManager;
 import org.apache.mesos.state.StateStore;
 
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,6 +93,13 @@ public class SchedulerModule extends AbstractModule {
                 curatorConfig.getServers(),
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
+
+        try {
+            Capabilities capabilities = new Capabilities(new DcosCluster());
+            bind(Capabilities.class).toInstance(capabilities);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
 
         try {
             final ConfigValidator configValidator = new ConfigValidator();
@@ -194,10 +207,15 @@ public class SchedulerModule extends AbstractModule {
         bind(ConfigurationManager.class).asEagerSingleton();
         bind(PersistentOfferRequirementProvider.class);
         bind(CassandraTasks.class).asEagerSingleton();
+        bind(TaskStatusProvider.class).to(CassandraTasks.class);
         bind(EventBus.class).asEagerSingleton();
         bind(BackupManager.class).asEagerSingleton();
         bind(ClusterTaskOfferRequirementProvider.class);
-        bind(Reconciler.class).to(DefaultReconciler.class).asEagerSingleton();
+        try {
+            bind(Reconciler.class).toConstructor(DefaultReconciler.class.getConstructor(TaskStatusProvider.class));
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
         bind(RestoreManager.class).asEagerSingleton();
         bind(CleanupManager.class).asEagerSingleton();
         bind(RepairManager.class).asEagerSingleton();

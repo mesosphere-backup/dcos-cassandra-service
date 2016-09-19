@@ -15,12 +15,15 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
+import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.DiscoveryInfo;
+import org.apache.mesos.Protos.Port;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.VolumeRequirement;
-import org.apache.mesos.protobuf.LabelBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 /**
  * CassandraDaemonTask extends CassandraTask to implement the task for a
@@ -40,22 +45,83 @@ import java.util.UUID;
 public class CassandraDaemonTask extends CassandraTask {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CassandraDaemonTask.class);
+
     /**
      * String prefix for the CassandraDaemon task.
      */
     public static final String NAME_PREFIX = "node-";
+
+    /**
+     * Public node name used in VIP
+     */
+    public static final String VIP_NODE_NAME = "node";
+
+    /**
+     * Public port used in VIP
+     */
+    public static final int VIP_NODE_PORT = 9042; // cassandra's default native transport port
 
 
     public static CassandraDaemonTask parse(final Protos.TaskInfo info) {
         return new CassandraDaemonTask(info);
     }
 
-    public static CassandraDaemonTask create(
-        final String name,
-        final String configName,
-        final CassandraTaskExecutor executor,
-        final CassandraConfig config) {
-        return new CassandraDaemonTask(name, configName, executor, config);
+    /**
+     * Factory for {@link CassandraDaemonTask}s.
+     */
+    public static class Factory {
+
+        private final Capabilities capabilities;
+
+        @Inject
+        public Factory(Capabilities capabilities) {
+            this.capabilities = capabilities;
+        }
+
+        public CassandraDaemonTask create(
+                final String name,
+                final String configName,
+                final CassandraTaskExecutor executor,
+                final CassandraConfig config) {
+            return new CassandraDaemonTask(name, configName, executor, config, capabilities);
+        }
+
+        public CassandraDaemonTask move(
+                CassandraDaemonTask currentDaemon, CassandraTaskExecutor executor) {
+            final List<Protos.Label> labelsList =
+                    currentDaemon.getTaskInfo().getLabels().getLabelsList();
+            String configName = "";
+            for (Protos.Label label : labelsList) {
+                if ("config_target".equals(label.getKey())) {
+                    configName = label.getValue();
+                }
+            }
+            if (StringUtils.isBlank(configName)) {
+                throw new IllegalStateException("Task should have 'config_target'");
+            }
+            CassandraDaemonTask replacementDaemon = new CassandraDaemonTask(
+                    currentDaemon.getName(),
+                    configName,
+                    executor,
+                    currentDaemon.getConfig(),
+                    capabilities,
+                    currentDaemon.getData().replacing(currentDaemon.getData().getHostname()));
+
+            Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder(replacementDaemon.getTaskInfo())
+                    .setTaskId(currentDaemon.getTaskInfo().getTaskId())
+                    .build();
+
+            return new CassandraDaemonTask(taskInfo);
+        }
+
+        public CassandraDaemonTask create(
+                final String name,
+                final String configName,
+                final CassandraTaskExecutor executor,
+                final CassandraConfig config,
+                final CassandraData data) {
+            return new CassandraDaemonTask(name, configName, executor, config, capabilities, data);
+        }
     }
 
     private static CassandraConfig updateConfig(
@@ -75,13 +141,13 @@ public class CassandraDaemonTask extends CassandraTask {
      * @param executor The exeuctor for the CassandraDaemonTask.
      * @param config   The configuration for the Cassandra node.
      */
-    protected CassandraDaemonTask(
+    private CassandraDaemonTask(
         final String name,
         final String configName,
         final CassandraTaskExecutor executor,
         final CassandraConfig config,
+        final Capabilities capabilities,
         final CassandraData data) {
-
         super(
             name,
             configName,
@@ -96,26 +162,29 @@ public class CassandraDaemonTask extends CassandraTask {
                 config.getApplication().getSslStoragePort(),
                 config.getApplication().getRpcPort(),
                 config.getApplication().getNativeTransportPort()),
+            getDiscoveryInfo(capabilities, name, config.getApplication().getNativeTransportPort()),
             data);
     }
 
-    protected CassandraDaemonTask(
+    private CassandraDaemonTask(
             final String name,
             final String configName,
             final CassandraTaskExecutor executor,
-            final CassandraConfig config) {
+            final CassandraConfig config,
+            final Capabilities capabilities) {
         this(
             name,
             configName,
             executor,
             config,
+            capabilities,
             CassandraData.createDaemonData(
                 "",
                 CassandraMode.STARTING,
                 config));
     }
 
-    protected CassandraDaemonTask(final Protos.TaskInfo info) {
+    private CassandraDaemonTask(final Protos.TaskInfo info) {
         super(info);
     }
 
@@ -196,7 +265,10 @@ public class CassandraDaemonTask extends CassandraTask {
 
     public CassandraDaemonTask updateConfig(CassandraConfig config, UUID targetConfigName) {
         LOGGER.info("Updating config for task: {} to config: {}", getTaskInfo().getName(), targetConfigName.toString());
-        final Protos.Label label = LabelBuilder.createLabel("config_target", targetConfigName.toString());
+        final Protos.Label label = Protos.Label.newBuilder()
+                .setKey("config_target")
+                .setValue(targetConfigName.toString())
+                .build();
         return new CassandraDaemonTask(getBuilder()
             .setExecutor(getExecutor().withNewId().getExecutorInfo())
             .setTaskId(createId(getName()))
@@ -211,31 +283,6 @@ public class CassandraDaemonTask extends CassandraTask {
             .setLabels(Protos.Labels.newBuilder().addLabels(label).build()).build());
     }
 
-    public CassandraDaemonTask move(CassandraTaskExecutor executor) {
-        final List<Protos.Label> labelsList = getTaskInfo().getLabels().getLabelsList();
-        String configName = "";
-        for (Protos.Label label : labelsList) {
-            if ("config_target".equals(label.getKey())) {
-                configName = label.getValue();
-            }
-        }
-        if (StringUtils.isBlank(configName)) {
-            throw new IllegalStateException("Task should have 'config_target'");
-        }
-        CassandraDaemonTask replacementDaemon = new CassandraDaemonTask(
-            getName(),
-            configName,
-            executor,
-            getConfig(),
-            getData().replacing(getData().getHostname()));
-
-        Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder(replacementDaemon.getTaskInfo())
-                .setTaskId(getTaskInfo().getTaskId())
-                .build();
-
-        return new CassandraDaemonTask(taskInfo);
-    }
-
     @Override
     public CassandraDaemonTask updateId() {
         return new CassandraDaemonTask(getBuilder()
@@ -246,5 +293,26 @@ public class CassandraDaemonTask extends CassandraTask {
             .build());
     }
 
-
+    @Nullable
+    private static DiscoveryInfo getDiscoveryInfo(
+            Capabilities capabilities, String nodeName, int nativePort) {
+        try {
+            if (!capabilities.supportsNamedVips()) {
+                return null;
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Unable to determine Named VIP support, assuming they are unavailable.", e);
+            return null;
+        }
+        DiscoveryInfo.Builder discoveryBuilder = DiscoveryInfo.newBuilder()
+            .setVisibility(DiscoveryInfo.Visibility.EXTERNAL)
+            .setName(nodeName);
+        Port.Builder portBuilder = discoveryBuilder.getPortsBuilder().addPortsBuilder()
+            .setNumber(nativePort)
+            .setProtocol("tcp");
+        portBuilder.getLabelsBuilder().addLabelsBuilder()
+            .setKey("VIP_" + UUID.randomUUID())
+            .setValue(String.format("%s:%d", VIP_NODE_NAME, VIP_NODE_PORT));
+        return discoveryBuilder.build();
+    }
 }

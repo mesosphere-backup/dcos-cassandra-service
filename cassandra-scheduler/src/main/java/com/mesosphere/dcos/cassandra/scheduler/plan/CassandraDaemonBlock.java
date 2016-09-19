@@ -118,8 +118,10 @@ public class CassandraDaemonBlock implements Block {
 
     private OfferRequirement replaceTask(final CassandraDaemonTask task) {
         try {
+            String templateTaskName = CassandraTemplateTask.toTemplateTaskName(task.getName());
+            CassandraTemplateTask templateTask = cassandraTasks.getOrCreateTemplateTask(templateTaskName, task);
             return provider.getReplacementOfferRequirement(
-                    cassandraTasks.createCassandraContainer(cassandraTasks.replaceDaemon(task)));
+                    cassandraTasks.createCassandraContainer(cassandraTasks.replaceDaemon(task), templateTask));
         } catch (PersistenceException ex) {
             LOGGER.error(
                     String.format("Block %s failed to replace task %s,"),
