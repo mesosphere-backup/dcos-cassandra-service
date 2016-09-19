@@ -21,6 +21,7 @@ import com.mesosphere.dcos.cassandra.executor.CassandraPaths;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.executor.ExecutorTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Future;
 
 /**
  * Implements RestoreSnapshotTask by invoking the SSTableLoader binary that is
@@ -39,7 +41,7 @@ import java.util.Optional;
  *
  * @TODO Why not just invoke the SSTableLoader class directly ins
  */
-public class RestoreSnapshot implements Runnable {
+public class RestoreSnapshot implements ExecutorTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(
         RestoreSnapshot.class);
 
@@ -172,5 +174,10 @@ public class RestoreSnapshot implements Runnable {
         Protos.TaskStatus status = cassandraTask
             .createStatus(state, Optional.of(message)).getTaskStatus();
         driver.sendStatusUpdate(status);
+    }
+
+    @Override
+    public void stop(Future<?> future) {
+        future.cancel(true);
     }
 }

@@ -1,9 +1,9 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.config.ConfigStoreException;
@@ -48,21 +48,23 @@ public class CassandraRepairScheduler {
                 CassandraDaemonTask terminated = terminatedOption.get();
                 terminated = cassandraTasks.replaceDaemon(terminated);
 
-                OfferRequirement offerReq;
+                Optional<OfferRequirement> offerReq;
                 if (terminated.getConfig().getReplaceIp().isEmpty()) {
                     offerReq = offerRequirementProvider.getReplacementOfferRequirement(cassandraTasks.getOrCreateContainer(terminated.getName()));
                 } else {
                     offerReq = offerRequirementProvider.getNewOfferRequirement(cassandraTasks.createCassandraContainer(terminated));
                 }
 
-                List<OfferRecommendation> recommendations =
-                        offerEvaluator.evaluate(offerReq, offers);
-                LOGGER.debug(
-                        "Got recommendations: {} for terminated task: {}",
-                        recommendations,
-                        terminated.getId());
-                acceptedOffers = offerAccepter.accept(driver,
-                        recommendations);
+                if (offerReq.isPresent()) {
+                    List<OfferRecommendation> recommendations =
+                            offerEvaluator.evaluate(offerReq.get(), offers);
+                    LOGGER.debug(
+                            "Got recommendations: {} for terminated task: {}",
+                            recommendations,
+                            terminated.getId());
+                    acceptedOffers = offerAccepter.accept(driver,
+                            recommendations);
+                }
 
 
             } catch (PersistenceException | ConfigStoreException ex) {

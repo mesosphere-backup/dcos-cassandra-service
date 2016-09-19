@@ -1,10 +1,8 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
-import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import io.dropwizard.testing.junit.ResourceTestRule;
 
 import org.apache.mesos.Protos.TaskState;

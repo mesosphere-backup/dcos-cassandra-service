@@ -3,10 +3,10 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
-import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.scheduler.plan.DefaultPhase;
 import org.slf4j.Logger;
@@ -24,7 +24,6 @@ public class CassandraDaemonPhase extends DefaultPhase {
     private static void createBlocks(
             final CassandraTasks cassandraTasks,
             final PersistentOfferRequirementProvider provider,
-            final SchedulerClient client,
             final List<CassandraDaemonBlock> blocks,
             final List<String> errors,
             final DefaultConfigurationManager configurationManager)
@@ -48,8 +47,7 @@ public class CassandraDaemonPhase extends DefaultPhase {
                         CassandraDaemonBlock.create(
                                 names.get(i),
                                 provider,
-                                cassandraTasks,
-                                client);
+                                cassandraTasks);
                 blocks.add(daemonBlock);
             }
         } catch (Throwable throwable) {
@@ -75,7 +73,6 @@ public class CassandraDaemonPhase extends DefaultPhase {
         createBlocks(
                 cassandraTasks,
                 provider,
-                client,
                 blocks,
                 errors,
                 configurationManager

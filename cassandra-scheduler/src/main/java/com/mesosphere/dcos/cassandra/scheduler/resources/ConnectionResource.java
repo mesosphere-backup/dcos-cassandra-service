@@ -2,9 +2,9 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.google.common.collect.ImmutableMap;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.ServiceConfig;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.config.ServiceConfig;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;

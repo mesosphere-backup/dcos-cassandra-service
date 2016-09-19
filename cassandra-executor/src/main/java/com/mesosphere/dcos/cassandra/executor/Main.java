@@ -17,7 +17,6 @@ package com.mesosphere.dcos.cassandra.executor;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.mesosphere.dcos.cassandra.executor.checks.DaemonMode;
 import com.mesosphere.dcos.cassandra.executor.checks.DaemonRunning;
 import com.mesosphere.dcos.cassandra.executor.config.CassandraExecutorConfiguration;
 import com.mesosphere.dcos.cassandra.executor.resources.CassandraDaemonController;
@@ -69,8 +68,6 @@ public class Main extends Application<CassandraExecutorConfiguration> {
 
         environment.healthChecks().register(DaemonRunning.NAME,
                 injector.getInstance(DaemonRunning.class));
-        environment.healthChecks().register(DaemonMode.NAME,
-                injector.getInstance(DaemonMode.class));
         environment.jersey().register(
                 injector.getInstance(CassandraDaemonController.class));
         environment.lifecycle().manage(

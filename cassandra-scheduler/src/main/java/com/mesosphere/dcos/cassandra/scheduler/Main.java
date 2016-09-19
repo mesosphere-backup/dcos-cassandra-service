@@ -2,13 +2,13 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.MutableSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.config.MutableSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
 import com.mesosphere.dcos.cassandra.scheduler.resources.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -16,7 +16,7 @@ import io.dropwizard.java8.Java8Bundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.apache.mesos.scheduler.plan.api.StageResource;
+import org.apache.mesos.scheduler.plan.api.PlanResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +83,7 @@ public class Main extends Application<MutableSchedulerConfiguration> {
     environment.jersey().register(
       injector.getInstance(BackupResource.class));
     environment.jersey().register(
-      injector.getInstance(StageResource.class));
+      injector.getInstance(PlanResource.class));
     environment.jersey().register(
       injector.getInstance(RestoreResource.class));
     environment.jersey().register(

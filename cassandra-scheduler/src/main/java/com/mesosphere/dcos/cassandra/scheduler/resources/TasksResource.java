@@ -18,13 +18,14 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
+import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.dcos.Capabilities;
+import org.apache.mesos.scheduler.TaskKiller;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,15 +49,18 @@ public class TasksResource {
     private final CassandraTasks tasks;
     private final SchedulerClient client;
     private final ConfigurationManager configurationManager;
+    private final TaskKiller taskKiller;
 
     @Inject
     public TasksResource(
             final Capabilities capabilities,
             final CassandraTasks tasks,
+            final TaskKiller taskKiller,
             final SchedulerClient client,
             final ConfigurationManager configurationManager) {
         this.capabilities = capabilities;
         this.tasks = tasks;
+        this.taskKiller = taskKiller;
         this.client = client;
         this.configurationManager = configurationManager;
     }
@@ -112,8 +116,7 @@ public class TasksResource {
             Optional.ofNullable(tasks.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
-            client.shutdown(task.getHostname(),
-                task.getExecutor().getApiPort());
+            taskKiller.killTask(task.getName(), false);
         } else {
             throw new NotFoundException();
         }
@@ -131,8 +134,7 @@ public class TasksResource {
             LOGGER.info("Moved container ExecutorInfo: {}",
                     TextFormat.shortDebugString(movedContainer.getExecutorInfo()));
             if (!task.isTerminated()) {
-                client.shutdown(task.getHostname(),
-                    task.getExecutor().getApiPort());
+                taskKiller.killTask(task.getName(), false);
             }
         } else {
             throw new NotFoundException();

@@ -18,7 +18,7 @@ public class RegisteredCheck extends HealthCheck {
 
     protected Result check() throws Exception {
         try {
-            final Protos.FrameworkID frameworkID = stateStore.fetchFrameworkId();
+            final Protos.FrameworkID frameworkID = stateStore.fetchFrameworkId().get();
             String id = frameworkID.getValue();
             if (!id.isEmpty()) {
                 return Result.healthy("Framework registered with id = " + id);

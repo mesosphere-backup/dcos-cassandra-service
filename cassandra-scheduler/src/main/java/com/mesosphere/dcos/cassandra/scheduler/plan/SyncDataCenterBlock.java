@@ -9,6 +9,7 @@ import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -60,7 +61,7 @@ public class SyncDataCenterBlock implements Block, Runnable {
     }
 
     @Override
-    public OfferRequirement start() {
+    public Optional<OfferRequirement> start() {
 
         Optional<DataCenterInfo> dc = byUrl();
         if (dc.isPresent() && dc.get().getSeeds().size() > 0) {
@@ -70,7 +71,7 @@ public class SyncDataCenterBlock implements Block, Runnable {
         }
         setStatus(Status.IN_PROGRESS);
         executor.execute(this);
-        return null;
+        return Optional.empty();
     }
 
     @Override
@@ -79,8 +80,9 @@ public class SyncDataCenterBlock implements Block, Runnable {
     }
 
     @Override
-    public void updateOfferStatus(boolean accepted) {
+    public void updateOfferStatus(Collection<Protos.Offer.Operation> operations) {
         // Not expected to be called: start() always returns a null OfferRequirement.
+        LOGGER.warn("Ignoring unexpected operations: " + operations);
     }
 
     @Override
