@@ -350,46 +350,6 @@ public class CassandraDaemonBlockTest {
     }
 
     @Test
-    public void start_whenContainerTerminated_shouldUseExistingTemplateTask() throws Exception {
-        String nodeName = "node-2";
-        CassandraContainer container = mock(CassandraContainer.class);
-        when(container.getAgentId()).thenReturn("agent-2");
-        when(container.isTerminated()).thenReturn(true);
-
-        CassandraTasks tasks = mock(CassandraTasks.class);
-        when(tasks.getOrCreateContainer(nodeName)).thenReturn(container);
-
-        CassandraDaemonTask daemonTask = taskFactory.create(
-                nodeName,
-                "abc",
-                CassandraTaskExecutor.create("1234", nodeName, "role", "principal", config.getExecutorConfig()),
-                config.getCassandraConfig());
-        when(container.getDaemonTask()).thenReturn(daemonTask);
-        Protos.TaskInfo taskInfo = daemonTask.getTaskInfo();
-        taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
-                .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build())
-                .build();
-        Protos.TaskStatus taskStatus = TestUtils.generateStatus(taskInfo.getTaskId(), Protos.TaskState.TASK_ERROR);
-        StateStore stateStore = mock(StateStore.class);
-        when(stateStore.fetchStatus(anyString())).thenReturn(taskStatus);
-        when(tasks.getStateStore()).thenReturn(stateStore);
-
-        CassandraTemplateTask templateTask = mock(CassandraTemplateTask.class);
-        when(tasks.getOrCreateTemplateTask(nodeName + "-task-template", daemonTask)).thenReturn(templateTask);
-
-        CassandraDaemonTask newDaemonTask = mock(CassandraDaemonTask.class);
-        when(tasks.replaceDaemon(daemonTask)).thenReturn(newDaemonTask);
-        when(tasks.createCassandraContainer(newDaemonTask, templateTask)).thenReturn(container);
-
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(nodeName,
-                persistentOfferRequirementProvider, tasks, client);
-        block.start();
-
-        verify(persistentOfferRequirementProvider).getReplacementOfferRequirement(container);
-        verify(tasks).createCassandraContainer(newDaemonTask, templateTask);
-    }
-
-    @Test
     public void testStartLaunching() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
