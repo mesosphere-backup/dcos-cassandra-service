@@ -23,7 +23,8 @@ public class MutableSchedulerConfiguration extends Configuration {
     MesosConfig.create(
       "master.mesos:2181",
       "/mesos",
-      10000L
+      10000L,
+      5
     );
   private CuratorFrameworkConfig curatorConfig =
     CuratorFrameworkConfig.create(
