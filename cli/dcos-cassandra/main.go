@@ -221,8 +221,13 @@ type CleanupRepairHandler struct {
 }
 func (cmd *CleanupRepairHandler) getArgs() map[string]interface{} {
 	nodesList := []string{}
-	for _, node := range strings.Split(cmd.nodes, ",") {
-		nodesList = append(nodesList, fmt.Sprintf("node-%s", strings.TrimSpace(node)))
+	nodesSplit := strings.Split(cmd.nodes, ",")
+	if sliceContains(nodesSplit, "*") {
+		nodesList = append(nodesList, "*")
+	} else {
+		for _, node := range nodesSplit {
+			nodesList = append(nodesList, fmt.Sprintf("node-%s", strings.TrimSpace(node)))
+		}
 	}
 
 	dict := map[string]interface{} {"nodes": nodesList}
@@ -283,4 +288,12 @@ func handleCleanupRepairSections(app *kingpin.Application) {
 	repair.Command(
 		"stop",
 		"Stops a currently running repair").Action(cmd.runRepairStop)
+}
+func sliceContains(stringSlice []string, searchString string) bool {
+	for _, value := range stringSlice {
+		if value == searchString {
+			return true
+		}
+	}
+	return false
 }
