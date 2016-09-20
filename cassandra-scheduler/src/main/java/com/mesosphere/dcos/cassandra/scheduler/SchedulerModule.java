@@ -2,8 +2,6 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
@@ -21,7 +19,7 @@ import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
@@ -44,10 +42,9 @@ import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
-import org.apache.mesos.scheduler.plan.StageManager;
+import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.state.StateStore;
 
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -94,12 +91,8 @@ public class SchedulerModule extends AbstractModule {
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
 
-        try {
-            Capabilities capabilities = new Capabilities(new DcosCluster());
-            bind(Capabilities.class).toInstance(capabilities);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        Capabilities capabilities = new Capabilities(new DcosCluster());
+        bind(Capabilities.class).toInstance(capabilities);
 
         try {
             final ConfigValidator configValidator = new ConfigValidator();
@@ -200,7 +193,7 @@ public class SchedulerModule extends AbstractModule {
                 Executors .newScheduledThreadPool(8));
         bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
                 .asEagerSingleton();
-        bind(StageManager.class).to(CassandraStageManager.class)
+        bind(PlanManager.class).to(CassandraPlanManager.class)
                 .asEagerSingleton();
         bind(SchedulerClient.class).asEagerSingleton();
         bind(IdentityManager.class).asEagerSingleton();

@@ -42,7 +42,7 @@ public class CleanupBlockTest {
         final StateStore mockStateStore = Mockito.mock(StateStore.class);
         final Protos.TaskStatus status = TestUtils
                 .generateStatus(TaskUtils.toTaskId("node-0"), Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
-        Mockito.when(mockStateStore.fetchStatus("node-0")).thenReturn(status);
+        Mockito.when(mockStateStore.fetchStatus("node-0")).thenReturn(Optional.of(status));
         Mockito.when(cassandraTasks.getStateStore()).thenReturn(mockStateStore);
     }
 

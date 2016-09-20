@@ -29,11 +29,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.mockito.Mockito.when;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
+
+import static org.mockito.Mockito.when;
 
 /**
  * This class tests the CassandraTasks class.
@@ -187,7 +187,7 @@ public class CassandraTasksTest {
 
         // TaskStatus update with RUNNING should result in RUNNING state.
         cassandraTasks.update(getTestTaskStatus(daemonTask));
-        Assert.assertEquals(Protos.TaskState.TASK_RUNNING, stateStore.fetchStatus(updatedDaemonTask.getName()).getState());
+        Assert.assertEquals(Protos.TaskState.TASK_RUNNING, stateStore.fetchStatus(updatedDaemonTask.getName()).get().getState());
     }
 
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) throws TaskException {
