@@ -41,7 +41,7 @@ public class DownloadSnapshotBlockTest {
         final StateStore mockStateStore = Mockito.mock(StateStore.class);
         final Protos.TaskStatus status = TestUtils
                 .generateStatus(TaskUtils.toTaskId("node-0"), Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
-        Mockito.when(mockStateStore.fetchStatus("node-0")).thenReturn(status);
+        Mockito.when(mockStateStore.fetchStatus("node-0")).thenReturn(Optional.of(status));
         Mockito.when(cassandraTasks.getStateStore()).thenReturn(mockStateStore);
     }
 
@@ -99,7 +99,7 @@ public class DownloadSnapshotBlockTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
-        Assert.assertNull(backupSnapshotBlock.start());
+        Assert.assertTrue(!backupSnapshotBlock.start().isPresent());
         Assert.assertEquals(Status.COMPLETE, Block.getStatus(backupSnapshotBlock));
     }
 
@@ -126,7 +126,7 @@ public class DownloadSnapshotBlockTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
-        Assert.assertNotNull(downloadSnapshotBlock.start());
+        Assert.assertTrue(downloadSnapshotBlock.start().isPresent());
         Assert.assertEquals(Status.IN_PROGRESS, Block.getStatus(downloadSnapshotBlock));
     }
 }

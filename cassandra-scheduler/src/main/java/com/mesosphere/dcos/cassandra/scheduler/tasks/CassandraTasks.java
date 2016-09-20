@@ -206,7 +206,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         final CassandraSchedulerConfiguration targetConfig = configuration.getTargetConfig();
         final UUID targetConfigName = configuration.getTargetConfigName();
         final ServiceConfig serviceConfig = targetConfig.getServiceConfig();
-        final String frameworkId = stateStore.fetchFrameworkId().getValue();
+        final String frameworkId = stateStore.fetchFrameworkId().get().getValue();
         return configuration.createDaemon(
             frameworkId,
             name,
@@ -222,7 +222,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         final ServiceConfig serviceConfig = targetConfig.getServiceConfig();
         CassandraDaemonTask updated = configuration.moveDaemon(
             daemon,
-            stateStore.fetchFrameworkId().getValue(),
+            stateStore.fetchFrameworkId().get().getValue(),
             serviceConfig.getRole(),
             serviceConfig.getPrincipal());
         update(updated);
@@ -232,7 +232,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     private Optional<Protos.TaskInfo> getTemplate(CassandraDaemonTask daemon) {
             String templateTaskName = CassandraTemplateTask.toTemplateTaskName(daemon.getName());
         try {
-            Optional<Protos.TaskInfo> info = Optional.of(stateStore.fetchTask(templateTaskName));
+            Optional<Protos.TaskInfo> info = stateStore.fetchTask(templateTaskName);
             LOGGER.info("Fetched template task for daemon '{}': {}",
                     daemon.getName(), TextFormat.shortDebugString(info.get()));
             return info;
@@ -516,8 +516,12 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
             final String name = task.getName();
             final Collection<String> taskNames = stateStore.fetchTaskNames();
             if (CollectionUtils.isNotEmpty(taskNames) && taskNames.contains(name)) {
-                final Protos.TaskStatus status = stateStore.fetchStatus(name);
-                return CassandraDaemonStatus.isTerminated(status.getState());
+                final Optional<Protos.TaskStatus> status = stateStore.fetchStatus(name);
+                if (status.isPresent()) {
+                    return CassandraDaemonStatus.isTerminated(status.get().getState());
+                } else {
+                    return false;
+                }
             }
         } catch (StateStoreException e) {
             LOGGER.error(e.getMessage(), e);
