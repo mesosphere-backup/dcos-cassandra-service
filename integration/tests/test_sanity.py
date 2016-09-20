@@ -1,7 +1,7 @@
 import json
 import dcos
 import pytest
-import tests.infinity_commons
+from . import infinity_commons
 
 import dcos
 import shakedown
