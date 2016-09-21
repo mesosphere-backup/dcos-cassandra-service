@@ -26,8 +26,8 @@ def as_json(fn):
     return wrapper
 
 
-def cassandra_api_url(basename):
-    return '{}/v1/{}'.format(shakedown.dcos_service_url('cassandra'), basename)
+def cassandra_api_url(basename, app_id='cassandra'):
+    return '{}/v1/{}'.format(shakedown.dcos_service_url(app_id), basename)
 
 
 def check_health():
