@@ -43,7 +43,7 @@ def get_and_verify_plan(predicate=lambda r: True):
     def fn():
         try:
             return dcos.http.get( plan_url )
-        except dcos.DCOSHTTPException as err :
+        except dcos.errors.DCOSHTTPException as err :
             return err.response
 
     def success_predicate(result):
