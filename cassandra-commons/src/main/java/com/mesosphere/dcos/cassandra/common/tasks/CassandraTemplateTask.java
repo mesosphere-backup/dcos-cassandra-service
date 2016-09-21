@@ -9,9 +9,7 @@ import org.apache.mesos.offer.TaskUtils;
 import java.util.Arrays;
 import java.util.Optional;
 
-/**
- * Created by gabriel on 6/8/16.
- */
+
 public class CassandraTemplateTask extends CassandraTask  {
     private static final String CLUSTER_TASK_TEMPLATE_SUFFIX = "-task-template";
 
@@ -29,8 +27,9 @@ public class CassandraTemplateTask extends CassandraTask  {
         super(taskInfo);
     }
 
-    public static CassandraTemplateTask create(CassandraDaemonTask daemonTask,
-        ClusterTaskConfig clusterTaskConfig) {
+    public static CassandraTemplateTask create(
+            CassandraDaemonTask daemonTask,
+            ClusterTaskConfig clusterTaskConfig) {
         final String role = daemonTask.getExecutor().getRole();
         final String principal = daemonTask.getExecutor().getPrincipal();
 

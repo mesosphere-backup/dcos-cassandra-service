@@ -17,9 +17,9 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CassandraRepairScheduler {
+public class CassandraRecoveryScheduler {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            CassandraRepairScheduler.class);
+            CassandraRecoveryScheduler.class);
 
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
@@ -27,7 +27,7 @@ public class CassandraRepairScheduler {
     private final OfferEvaluator offerEvaluator = new OfferEvaluator();
     private final Random random = new Random();
 
-    public CassandraRepairScheduler(
+    public CassandraRecoveryScheduler(
             PersistentOfferRequirementProvider requirementProvider,
             OfferAccepter offerAccepter, CassandraTasks cassandraTasks) {
         this.offerAccepter = offerAccepter;
@@ -35,6 +35,9 @@ public class CassandraRepairScheduler {
         this.offerRequirementProvider = requirementProvider;
     }
 
+    public boolean hasOperations() {
+        return getTerminatedTask(new HashSet<>()).isPresent();
+    }
 
     public List<Protos.OfferID> resourceOffers(final SchedulerDriver driver,
                                                final List<Protos.Offer> offers,
@@ -50,9 +53,11 @@ public class CassandraRepairScheduler {
 
                 OfferRequirement offerReq;
                 if (terminated.getConfig().getReplaceIp().isEmpty()) {
-                    offerReq = offerRequirementProvider.getReplacementOfferRequirement(cassandraTasks.getOrCreateContainer(terminated.getName()));
+                    offerReq = offerRequirementProvider.getReplacementOfferRequirement(
+                            cassandraTasks.getOrCreateContainer(terminated.getName())).get();
                 } else {
-                    offerReq = offerRequirementProvider.getNewOfferRequirement(cassandraTasks.createCassandraContainer(terminated));
+                    offerReq = offerRequirementProvider.getNewOfferRequirement(
+                            cassandraTasks.createCassandraContainer(terminated)).get();
                 }
 
                 List<OfferRecommendation> recommendations =
