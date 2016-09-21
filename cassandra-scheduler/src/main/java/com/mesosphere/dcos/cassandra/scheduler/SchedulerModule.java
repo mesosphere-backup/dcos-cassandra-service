@@ -44,6 +44,8 @@ import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.api.JsonPropertyDeserializer;
+import org.apache.mesos.state.api.PropertyDeserializer;
 
 import java.net.URISyntaxException;
 import java.util.List;
@@ -218,5 +220,6 @@ public class SchedulerModule extends AbstractModule {
         bind(CleanupManager.class).asEagerSingleton();
         bind(RepairManager.class).asEagerSingleton();
         bind(SeedsManager.class).asEagerSingleton();
+        bind(PropertyDeserializer.class).to(JsonPropertyDeserializer.class);
     }
 }

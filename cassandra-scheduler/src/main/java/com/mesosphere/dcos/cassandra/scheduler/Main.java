@@ -17,6 +17,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.mesos.scheduler.plan.api.PlanResource;
+import org.apache.mesos.state.api.StateResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,7 @@ public class Main extends Application<MutableSchedulerConfiguration> {
 
   @Override
   public String getName() {
-    return "DCOS Cassandra Service";
+    return "DC/OS Cassandra Service";
   }
 
   @Override
@@ -91,11 +92,11 @@ public class Main extends Application<MutableSchedulerConfiguration> {
     environment.jersey().register(
       injector.getInstance(RepairResource.class));
     environment.jersey().register(
-      injector.getInstance(DataCenterResource.class)
-    );
+      injector.getInstance(DataCenterResource.class));
     environment.jersey().register(
-            injector.getInstance(ConnectionResource.class)
-    );
+      injector.getInstance(ConnectionResource.class));
+    environment.jersey().register(
+      injector.getInstance(StateResource.class));
   }
 
   private void registerManagedObjects(Environment environment, Injector injector) {
