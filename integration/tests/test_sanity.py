@@ -217,7 +217,7 @@ def test_jmx_default(install_framework):
         raise
 
 
-@pytest.mark.sanity
+@pytest.mark.disabled
 def test_jmx_override():
     try:
         uninstall()
