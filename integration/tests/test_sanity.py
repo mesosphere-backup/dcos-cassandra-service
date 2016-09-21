@@ -1,8 +1,8 @@
+import sys
 import json
 import dcos
 import pytest
 from . import infinity_commons
-
 import dcos
 import shakedown
 
@@ -199,3 +199,45 @@ def test_cpus_increase_slightly(install_framework):
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
 
+
+@pytest.mark.sanity
+def test_jmx_default(install_framework):
+    try:
+        result = dcos.http.get(cassandra_api_url('connection/address'))
+    except:
+        result = dcos.http.get(cassandra_api_url('nodes/connect/address'))
+
+    try:
+        nodes = result.json()
+        for node in nodes:
+            node = node.split(":")[0]
+            assert is_port_listen(node, "7199")
+    except:
+        print('Failed to parse connect response')
+        raise
+
+
+@pytest.mark.sanity
+def test_jmx_override():
+    try:
+        uninstall()
+        shakedown.install_package_and_wait(package_name=PACKAGE_NAME, options_file=sys.path[0] + "/tests/jmx.json")
+        check_health()
+        try:
+            result = dcos.http.get(cassandra_api_url('connection/address'))
+        except:
+            result = dcos.http.get(cassandra_api_url('nodes/connect/address'))
+
+        nodes = result.json()
+        for node in nodes:
+            node = node.split(":")[0]
+            assert is_port_listen(node, "8199")
+    finally:
+        uninstall()
+
+
+def is_port_listen(host, port):
+    """
+    Returns True if the netstat -plant | grep <PORT> command exits successfully, False otherwise.
+    """
+    return shakedown.run_command_on_agent(host, "netstat -plant | grep {}".format(port))
