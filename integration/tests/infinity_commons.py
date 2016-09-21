@@ -41,7 +41,10 @@ def get_and_verify_plan(predicate=lambda r: True):
     global counter
     plan_url = cassandra_api_url('plan')
     def fn():
-        dcos.http.get( plan_url )
+        try:
+            return dcos.http.get( plan_url )
+        except dcos.DCOSHTTPException as err :
+            return err.response
 
     def success_predicate(result):
         global counter
