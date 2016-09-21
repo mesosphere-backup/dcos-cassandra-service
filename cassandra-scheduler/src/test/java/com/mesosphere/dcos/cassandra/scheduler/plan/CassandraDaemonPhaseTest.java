@@ -19,6 +19,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Optional;
+
 import static org.mockito.Mockito.when;
 
 public class CassandraDaemonPhaseTest {
@@ -62,7 +64,7 @@ public class CassandraDaemonPhaseTest {
         final StateStore stateStore = Mockito.mock(StateStore.class);
         when(cassandraTasks.getStateStore()).thenReturn(stateStore);
         when(stateStore.fetchStatus(EXPECTED_NAME))
-                .thenThrow(new StateStoreException(new KeeperException.NoNodeException()));
+                .thenReturn(Optional.empty());
 
         when(cassandraTasks.getOrCreateContainer(EXPECTED_NAME)).thenReturn(cassandraContainer);
         CassandraSchedulerConfiguration configuration = Mockito.mock(CassandraSchedulerConfiguration.class);
