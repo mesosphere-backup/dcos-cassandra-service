@@ -8,15 +8,15 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Stage;
+import org.apache.mesos.scheduler.plan.Plan;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CassandraStage implements Stage {
+public class CassandraPlan implements Plan {
 
-    public static final CassandraStage create(
+    public static final CassandraPlan create(
             final DefaultConfigurationManager defaultConfigurationManager,
             final DeploymentManager deployment,
             final BackupManager backup,
@@ -24,7 +24,7 @@ public class CassandraStage implements Stage {
             final CleanupManager cleanup,
             final RepairManager repair) {
 
-        return new CassandraStage(
+        return new CassandraPlan(
                 defaultConfigurationManager,
                 deployment,
                 backup,
@@ -38,7 +38,7 @@ public class CassandraStage implements Stage {
     private final DeploymentManager deployment;
     private final List<ClusterTaskManager<?>> managers;
 
-    public CassandraStage(
+    public CassandraPlan(
             final DefaultConfigurationManager defaultConfigurationManager,
             final DeploymentManager deployment,
             final BackupManager backup,

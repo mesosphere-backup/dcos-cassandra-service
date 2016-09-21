@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class ClusterTaskOfferRequirementProvider
         implements CassandraOfferRequirementProvider {
@@ -44,7 +45,7 @@ public class ClusterTaskOfferRequirementProvider
         try {
             return new OfferRequirement(
                     Arrays.asList(taskInfo),
-                    execInfo,
+                    Optional.of(execInfo),
                     agentsToAvoid,
                     agentsToColocate);
         } catch (InvalidRequirementException e) {
@@ -67,7 +68,7 @@ public class ClusterTaskOfferRequirementProvider
         try {
             return new OfferRequirement(
                     Arrays.asList(taskInfo),
-                    execInfo,
+                    Optional.of(execInfo),
                     placementStrategy.getAgentsToAvoid(taskInfo),
                     placementStrategy.getAgentsToColocate(taskInfo));
         } catch (InvalidRequirementException e) {
@@ -92,7 +93,7 @@ public class ClusterTaskOfferRequirementProvider
         try {
             return new OfferRequirement(
                     Arrays.asList(taskInfo),
-                    execInfo,
+                    Optional.of(execInfo),
                     null,
                     null);
         } catch (InvalidRequirementException e) {
