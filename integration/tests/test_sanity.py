@@ -202,6 +202,6 @@ def test_cpus_increase_slightly(install_framework):
 
 @pytest.mark.sanity
 def test_is_suppressed():
-    response = dcos.http.get(cassandr_api_url('state/properties/suppressed'))
+    response = dcos.http.get(cassandra_api_url('state/properties/suppressed'))
     response.raise_for_status()
     assert response.text == "true"
