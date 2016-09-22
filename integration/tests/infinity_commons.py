@@ -42,8 +42,8 @@ def get_and_verify_plan(predicate=lambda r: True):
     plan_url = cassandra_api_url('plan')
     def fn():
         try:
-            return dcos.http.get( plan_url )
-        except dcos.errors.DCOSHTTPException as err :
+            return dcos.http.get(plan_url)
+        except dcos.errors.DCOSHTTPException as err:
             return err.response
 
     def success_predicate(result):
@@ -52,13 +52,13 @@ def get_and_verify_plan(predicate=lambda r: True):
 
         try:
             body = result.json()
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             return False, message
 
         if counter < 3:
             counter += 1
         pred_res = predicate(body)
-        if pred_res: 
+        if pred_res:
             counter = 0
 
         return pred_res, message
@@ -68,7 +68,7 @@ def get_and_verify_plan(predicate=lambda r: True):
 
 def get_marathon_uri():
     """Gets URL to the Marathon instance"""
-    return '{}/marathon'.format(shakedown.dcos_url()) 
+    return '{}/marathon'.format(shakedown.dcos_url())
 
 
 def get_marathon_client():
@@ -81,4 +81,3 @@ def strip_meta(app):
     app.pop('version')
     app.pop('versionInfo')
     return app
-    
