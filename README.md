@@ -1767,7 +1767,7 @@ The <dcos_url> parameter referenced below indicates the base URL of the DC/OS cl
 <a name="#rest-auth"></a>
 ## REST API Authentication
 
-Rest API requests must be authenticated. This authentication is only applicable for interacting with the Kafka REST API directly. You do not need the token to access the Kafka brokers themselves.
+Rest API requests must be authenticated. This authentication is only applicable for interacting with the Cassandra REST API directly. You do not need the token to access the Cassandra nodes themselves.
  
 If you are using Enterprise DC/OS, follow these instructions to [create a service account and an authentication token](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/custom-service-auth/). You can then configure your service to automatically refresh the authentication token when it expires. To get started more quickly, you can also [get the authentication token without a service account](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/iam-api/), but you will need to manually refresh the token.
 
