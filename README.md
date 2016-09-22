@@ -73,7 +73,7 @@ Now that you are inside your DC/OS cluster, you can connect to your Cassandra cl
 * Step 4. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
 
 ```
-core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh 10.0.2.136
+core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh --cqlversion="3.4.0" 10.0.2.136
 cqlsh>
 ```
 
@@ -200,7 +200,7 @@ In order to avoid port conflicts, by default you cannot collocate more than one 
 
 ### Installation Plan
 
-When the DC/OS Cassandra service is initially installed it will generate an installation plan as shown below. You can view, pause, and resume installation via the REST API. If you are using the Enterprise Edition of DC/OS with authentication enabled you will need to [pass your HTTP API token to the DC/OS endpoint](https://dcos.io/docs/1.8/administration/id-and-access-mgt/auth-api/#passing-your-http-api-token-to-dc-os-endpoints).
+When the DC/OS Cassandra service is initially installed it will generate an installation plan as shown below. You can view, pause, and resume installation via the REST API. See [REST API authentication][#rest-auth] for information on how this request must be authenticated.
 
 ```
 {
@@ -263,7 +263,7 @@ When the DC/OS Cassandra service is initially installed it will generate an inst
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
 ```
-$ curl http://<dcos_url>/service/cassandra/v1/plan
+$ curl -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan
 ```
 
 #### Plan Errors
@@ -279,7 +279,7 @@ The second phase of the installation is the deploy phase. This phase will deploy
 In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 
@@ -287,7 +287,7 @@ $ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
+$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 # Upgrade
@@ -437,7 +437,7 @@ This configuration update strategy is analogous to the installation procedure ab
 Make the REST request below to view the current plan:
 
 ```
-$ curl -v http://<dcos_url>/service/cassandra/v1/plan
+$ curl -H "Authorization: token=$AUTH_TOKEN" -v http://<dcos_url>/service/cassandra/v1/plan
 ```
 
 The response will look similar to this:
@@ -502,7 +502,7 @@ The response will look similar to this:
 If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
 
 ```
-$ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 
@@ -570,7 +570,7 @@ If you query the plan again, the response will look like this (notice `status: "
 Enter the `continue` command to resume the update process.
 
 ```
-$ curl -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
+$ curl -X -H "Authorization: token=$AUTH_TOKEN" POST http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 After you execute the continue operation, the plan will look like this:
@@ -1739,7 +1739,7 @@ $ dcos cassandra --name=cassandra node replace 0
 
 Via API:
 ```
-$ curl -X PUT "<dcos_url>/service/cassandra/v1/nodes/replace?node=node-0"
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/replace?node=node-0"
 ```
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
@@ -1754,28 +1754,45 @@ $ dcos cassandra --name=cassandra node restart 0
 
 API:
 ```
-$ curl -X PUT "<dcos_url>/service/cassandra/v1/nodes/restart?node=node-0"
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/restart?node=node-0"
 ```
 
 This will restart the node with the same name running on the same server.
 
 # API Reference
-The DC/OS Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DC/OS cluster is configured with OAuth enabled, then [you must acquire a valid token and include that token in the Authorization header of all requests](https://dcos.io/docs/1.8/administration/id-and-access-mgt/auth-api/#passing-your-http-api-token-to-dc-os-endpoints).
+The DC/OS Cassandra Service implements a REST API that may be accessed from outside the cluster.
 
 The <dcos_url> parameter referenced below indicates the base URL of the DC/OS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
+
+<a name="#rest-auth"></a>
+## REST API Authentication
+
+Rest API requests must be authenticated. This authentication is only applicable for interacting with the Kafka REST API directly. You do not need the token to access the Kafka brokers themselves.
+ 
+If you are using Enterprise DC/OS, follow these instructions to [create a service account and an authentication token](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/custom-service-auth/). You can then configure your service to automatically refresh the authentication token when it expires. To get started more quickly, you can also [get the authentication token without a service account](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/iam-api/), but you will need to manually refresh the token.
+
+If you are using open source DC/OS, follow these instructions to [pass your HTTP API token to the DC/OS endpoint](https://dcos.io/docs/1.8/administration/id-and-access-mgt/auth-api/#passing-your-http-api-token-to-dc-os-endpoints). 
+
+Once you have the authentication token, you can store it in an environment variable and reference it in your REST API calls:
+
+```
+$ export AUTH_TOKEN=uSeR_t0k3n
+```
+
+The `curl` examples in this document assume that an auth token has been stored in an environment variable named `AUTH_TOKEN`.
 
 ## Configuration
 
 ### View the Installation Plan
 
 ```
-$ curl <dcos_url>/service/cassandra/v1/plan
+$ curl -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/plan
 ```
 
 ### Retrieve Connection Info
 
 ```
-$ curl <dcos_url>/cassandra/v1/connection
+$ curl -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/cassandra/v1/connection
 ```
 
 You will see a response similar to the following:
@@ -1797,7 +1814,7 @@ This JSON array contains a list of valid nodes that the client can use to connec
 The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X POST <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
 ### Resume Installation
@@ -1805,7 +1822,7 @@ $ curl -X POST <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 The REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 ```
 
 ## Managing
@@ -1814,14 +1831,14 @@ $ curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 Retrieve the status of a node by sending a GET request to `/v1/nodes/<node-#>/status`:
 
 ```
-$ curl <dcos_url>/service/cassandra/v1/nodes/<node-#>/status
+$ curl -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/nodes/<node-#>/status
 ```
 
 ### Node Info
 Retrieve node information by sending a GET request to `/v1/nodes/<node-#>/info`:
 
 ```
-$ curl <dcos_url>/service/cassandra/v1/nodes/</node-#>/info
+$ curl -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/nodes/</node-#>/info
 ```
 ### Cleanup
 
@@ -1844,7 +1861,7 @@ In the above, the nodes list indicates the nodes on which cleanup will be perfor
 ```
 
 ```
-$ curl -X PUT -H "Content-Type:application/json" <dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type:application/json" <dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
 ```
 
 ### Repair
@@ -1867,7 +1884,7 @@ In the above, the nodes list indicates the nodes on which the repair will be per
 ```
 
 ```
-curl -X PUT -H "Content-Type:application/json" <dcos_url>/service/cassandra/v1/repair/start --data @repair.json
+curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type:application/json" <dcos_url>/service/cassandra/v1/repair/start --data @repair.json
 ```
 
 ### Backup
@@ -1886,14 +1903,14 @@ First, create the request payload, for example, in a file `backup.json`:
 Then, submit the request payload via `PUT` request to `/v1/backup/start`
 
 ```
-$ curl -X PUT -H "Content-Type: application/json" -d @backup.json <dcos_url>/service/cassandra/v1/backup/start
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type: application/json" -d @backup.json <dcos_url>/service/cassandra/v1/backup/start
 {"status":"started", message:""}
 ```
 
 Check status of the backup:
 
 ```
-$ curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
+$ curl -X GET -H "Authorization: token=$AUTH_TOKEN" http://cassandra.marathon.mesos:9000/v1/backup/status
 ```
 
 ### Restore
@@ -1914,14 +1931,14 @@ Next, create the request payload, for example, in a file `restore.json`:
 Next, submit the request payload via `PUT` request to `/v1/restore/start`
 
 ```
-$ curl -X PUT -H "Content-Type: application/json" -d @restore.json <dcos_url>/service/cassandra/v1/restore/start
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type: application/json" -d @restore.json <dcos_url>/service/cassandra/v1/restore/start
 {"status":"started", message:""}
 ```
 
 Check status of the restore:
 
 ```
-$ curl -X <dcos_url>/service/cassandra/v1/restore/status
+$ curl -X -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/restore/status
 ```
 
 # Limitations
