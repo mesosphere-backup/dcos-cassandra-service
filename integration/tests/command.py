@@ -122,3 +122,28 @@ def uninstall():
             )[0].strip()
         )
     )
+
+
+def get_and_verify_plan(predicate=lambda r: True):
+    def fn():
+        try:
+            return dcos.http.get(cassandra_api_url('plan'))
+        except dcos.errors.DCOSHTTPException as ex:
+            # /plan returns a 503 when the plan is incomplete
+            response = ex.args[0]
+            if response.status_code == 503:
+                return response
+            else:
+                response.raise_for_status()
+                return response
+
+
+    def success_predicate(result):
+        message = 'Request to /plan failed'
+        try:
+            body = result.json()
+        except Exception as e:
+            return False, e
+        return predicate(body), message
+
+    return spin(fn, success_predicate).json()

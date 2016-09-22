@@ -1,15 +1,18 @@
 import json
 import dcos
 import pytest
-from . import infinity_commons
+import time
 
 import dcos
 import shakedown
 
+from . import infinity_commons
+
 from tests.command import (
     cassandra_api_url,
     check_health,
-    uninstall
+    uninstall,
+    get_and_verify_plan
 )
 from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
 
@@ -201,7 +204,9 @@ def test_cpus_increase_slightly(install_framework):
 
 
 @pytest.mark.sanity
-def test_is_suppressed():
+def test_is_suppressed(install_framework):
+    get_and_verify_plan(lambda p: p['status'] == 'COMPLETE')
+    time.sleep(5)
     response = dcos.http.get(cassandra_api_url('state/properties/suppressed'))
     response.raise_for_status()
     assert response.text == "true"
