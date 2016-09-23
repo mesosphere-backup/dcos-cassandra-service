@@ -61,7 +61,7 @@ $ dcos cassandra connection
 }
 ```
 
-* Step 3. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
+* Step 3. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/access-node/sshcluster/):
 
 ```
 $ dcos node ssh --master-proxy --leader
@@ -73,7 +73,7 @@ Now that you are inside your DC/OS cluster, you can connect to your Cassandra cl
 * Step 4. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
 
 ```
-core@ip-10-0-6-153 ~ $ docker run -ti cassandra:2.2.5 cqlsh --cqlversion="3.4.0" 10.0.2.136
+core@ip-10-0-6-153 ~ $ docker run -ti cassandra:3.0.7 cqlsh --cqlversion="3.4.0" 10.0.2.136
 cqlsh>
 ```
 
@@ -430,7 +430,7 @@ The Cassandra scheduler runs as a Marathon process and can be reconfigured by ch
 Configuration updates are rolled out through execution of Update Plans. You can configure the way these plans are executed.
 
 #### Configuration Update Plans
-This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration. However, the default strategy can be overridden by a strategy the user provides.
+This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration.
 
 ## Configuration Update
 
@@ -1303,10 +1303,10 @@ connected even if a node moves.
 </dependency>
 ```
 
-The snippet above is the correct dependency for CQL driver to use with the DC/OS Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
+The snippet above is the correct dependency for CQL driver to use with the DC/OS Cassandra service. After adding this dependency to the `pom.xml` file in your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
 
 #### Connecting the CQL Driver.
-The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query.
+The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query. Run this script from anywhere where the private IP addresses of your nodes are reachable. Find the IP addresses of your nodes by running the `dcos cassandra connection` command from the DC/OS CLI.
 
 ```
 Cluster cluster = null;
