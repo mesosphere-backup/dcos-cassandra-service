@@ -199,10 +199,11 @@ public class CassandraSchedulerTest {
         assertEquals(3, currentPhase.getBlocks().size());
 
         // node-0
+        final Protos.Offer offer1 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
+        scheduler.resourceOffers(driver, Arrays.asList(offer1));
         Block currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-0", currentBlock.getName());
-        assertTrue("expected current block to be in progress due to offer carried over in reconcile stage",
-                currentBlock.isInProgress());
+        assertTrue(currentBlock.isInProgress());
         Collection<QueuedSchedulerDriver.OfferOperations> offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
@@ -215,8 +216,7 @@ public class CassandraSchedulerTest {
         scheduler.resourceOffers(driver, Arrays.asList(offer2));
         currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-1", currentBlock.getName());
-        assertTrue("expected current block to be in progress due to offer carried over in reconcile stage",
-                currentBlock.isInProgress());
+        assertTrue(currentBlock.isInProgress());
         offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
@@ -229,8 +229,7 @@ public class CassandraSchedulerTest {
         scheduler.resourceOffers(driver, Arrays.asList(offer3));
         currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-2", currentBlock.getName());
-        assertTrue("expected current block to be in progress due to offer carried over in reconcile stage",
-                currentBlock.isInProgress());
+        assertTrue(currentBlock.isInProgress());
         offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
