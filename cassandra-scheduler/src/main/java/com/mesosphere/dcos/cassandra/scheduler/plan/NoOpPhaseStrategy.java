@@ -5,6 +5,7 @@ import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.PhaseStrategy;
 import org.apache.mesos.scheduler.plan.Status;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -21,8 +22,8 @@ public class NoOpPhaseStrategy implements PhaseStrategy {
     }
 
     @Override
-    public Block getCurrentBlock() {
-        return EmptyBlock.get();
+    public Optional<Block> getCurrentBlock() {
+        return Optional.of(EmptyBlock.get());
     }
 
     @Override

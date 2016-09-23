@@ -204,8 +204,12 @@ public class CassandraSchedulerTest {
 
         Block currentBlock = planManager.getCurrentBlock().get();
         assertEquals("node-0", currentBlock.getName());
-        assertTrue("expected current block to be in progress due to offer carried over in reconcile stage",
-                currentBlock.isInProgress());
+        assertTrue(currentBlock.isPending());
+        final Protos.Offer offer1 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
+        scheduler.resourceOffers(driver, Arrays.asList(offer1));
+        assertEquals("node-0", currentBlock.getName());
+        assertTrue(currentBlock.isInProgress());
+
         Collection<QueuedSchedulerDriver.OfferOperations> offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
