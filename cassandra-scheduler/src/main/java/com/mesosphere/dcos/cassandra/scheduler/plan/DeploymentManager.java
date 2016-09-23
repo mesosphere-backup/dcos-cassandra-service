@@ -9,6 +9,9 @@ import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.reconciliation.Reconciler;
+import org.apache.mesos.scheduler.DefaultObservable;
+import org.apache.mesos.scheduler.Observable;
+import org.apache.mesos.scheduler.Observer;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
 
@@ -16,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-public class DeploymentManager {
+public class DeploymentManager extends DefaultObservable implements Observer {
 
     public static final DeploymentManager create(
             final PersistentOfferRequirementProvider provider,
@@ -54,8 +57,9 @@ public class DeploymentManager {
                 client,
                 defaultConfigurationManager);
         this.reconciliation = ReconciliationPhase.create(reconciler);
-
         this.syncDc = SyncDataCenterPhase.create(seeds, executor);
+
+        this.deploy.subscribe(this);
     }
 
     public List<? extends Phase> getPhases() {
@@ -68,5 +72,10 @@ public class DeploymentManager {
 
     public boolean isComplete() {
         return deploy.isComplete();
+    }
+
+    @Override
+    public void update(Observable observable) {
+        notifyObservers();
     }
 }

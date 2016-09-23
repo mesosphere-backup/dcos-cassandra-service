@@ -9,6 +9,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
+import org.apache.mesos.scheduler.ChainedObserver;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
@@ -19,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> {
+public class RestoreManager extends ChainedObserver implements ClusterTaskManager<BackupRestoreRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RestoreManager.class);
     static final String RESTORE_KEY = "restore";
 
@@ -88,6 +89,8 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> 
                     context,
                     cassandraState,
                     provider);
+            this.download.subscribe(this);
+            this.restore.subscribe(this);
             //this volatile signals that restore is started
             this.activeContext = context;
         } catch (SerializationException | PersistenceException e) {
@@ -96,6 +99,8 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> 
                     e);
             this.activeContext = null;
         }
+
+        notifyObservers();
     }
 
     public void stop() {
@@ -112,6 +117,8 @@ public class RestoreManager implements ClusterTaskManager<BackupRestoreRequest> 
         this.activeContext = null;
         this.download = null;
         this.restore = null;
+
+        notifyObservers();
     }
 
     public boolean isInProgress() {

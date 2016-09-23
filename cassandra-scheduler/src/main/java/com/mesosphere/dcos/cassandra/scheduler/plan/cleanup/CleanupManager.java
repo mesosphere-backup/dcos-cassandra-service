@@ -9,6 +9,10 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirement
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.CleanupRequest;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import org.apache.mesos.scheduler.ChainedObserver;
+import org.apache.mesos.scheduler.DefaultObservable;
+import org.apache.mesos.scheduler.Observable;
+import org.apache.mesos.scheduler.Observer;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
@@ -19,7 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class CleanupManager implements ClusterTaskManager<CleanupRequest> {
+public class CleanupManager extends ChainedObserver implements ClusterTaskManager<CleanupRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupManager.class);
     static final String CLEANUP_KEY = "cleanup";
 
@@ -44,6 +48,7 @@ public class CleanupManager implements ClusterTaskManager<CleanupRequest> {
             // Recovering from failure
             if (cleanup != null) {
                 this.phase = new CleanupPhase(cleanup, cassandraState, provider);
+                this.phase.subscribe(this);
                 this.activeContext = cleanup;
             }
         } catch (SerializationException e) {
@@ -77,6 +82,8 @@ public class CleanupManager implements ClusterTaskManager<CleanupRequest> {
                             ". Reason: ",
                     e);
         }
+
+        notifyObservers();
     }
 
     public void stop() {
@@ -90,6 +97,8 @@ public class CleanupManager implements ClusterTaskManager<CleanupRequest> {
                     e);
         }
         this.activeContext = null;
+
+        notifyObservers();
     }
 
     public boolean isInProgress() {

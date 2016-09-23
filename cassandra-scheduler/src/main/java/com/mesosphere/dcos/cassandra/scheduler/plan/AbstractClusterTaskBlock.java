@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
@@ -17,7 +18,9 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> implements Block {
+public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext>
+        extends DefaultObservable
+        implements Block {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             AbstractClusterTaskBlock.class);
 
@@ -217,6 +220,11 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     protected void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        Status oldStatus = status;
         status = newStatus;
+
+        if (oldStatus != status) {
+            notifyObservers();
+        }
     }
 }

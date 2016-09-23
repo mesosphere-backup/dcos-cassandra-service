@@ -9,6 +9,7 @@ import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirement
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.RepairRequest;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import org.apache.mesos.scheduler.ChainedObserver;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
@@ -19,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class RepairManager implements ClusterTaskManager<RepairRequest> {
+public class RepairManager extends ChainedObserver implements ClusterTaskManager<RepairRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RepairManager.class);
     static final String REPAIR_KEY = "repair";
 
@@ -69,14 +70,16 @@ public class RepairManager implements ClusterTaskManager<RepairRequest> {
                 }
             }
             stateStore.storeProperty(REPAIR_KEY, RepairContext.JSON_SERIALIZER.serialize(context));
-            this.phase = new RepairPhase(context, cassandraState,
-                    provider);
+            this.phase = new RepairPhase(context, cassandraState, provider);
+            this.phase.subscribe(this);
             this.activeContext = context;
         } catch (SerializationException | PersistenceException e) {
             LOGGER.error("Error storing repair context into persistence store. " +
                     "Reason: ", e);
 
         }
+
+        notifyObservers();
     }
 
     public void stop() {
@@ -91,6 +94,8 @@ public class RepairManager implements ClusterTaskManager<RepairRequest> {
                     e);
         }
         this.activeContext = null;
+
+        notifyObservers();
     }
 
     public boolean isInProgress() {

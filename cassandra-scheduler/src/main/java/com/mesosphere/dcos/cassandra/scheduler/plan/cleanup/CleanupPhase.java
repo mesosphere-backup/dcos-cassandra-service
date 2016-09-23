@@ -18,6 +18,7 @@ public class CleanupPhase extends AbstractClusterTaskPhase<CleanupBlock, Cleanup
         super(context, cassandraState, provider);
     }
 
+    @Override
     protected List<CleanupBlock> createBlocks() {
         final Set<String> nodes = new HashSet<>(context.getNodes());
         final List<String> daemons =

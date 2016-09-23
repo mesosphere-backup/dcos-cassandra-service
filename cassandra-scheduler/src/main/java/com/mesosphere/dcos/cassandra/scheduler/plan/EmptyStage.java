@@ -1,5 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import org.apache.mesos.scheduler.DefaultObservable;
+import org.apache.mesos.scheduler.Observable;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Plan;
 
@@ -15,7 +17,7 @@ import java.util.List;
  * EmptyPlan is an immutable singleton that contains exactly one Phase (the
  * EmptyPhase).
  */
-public class EmptyStage implements Plan {
+public class EmptyStage extends DefaultObservable implements Plan {
 
     private static final EmptyStage instance = new EmptyStage();
 

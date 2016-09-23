@@ -9,6 +9,9 @@ import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
+import org.apache.mesos.scheduler.DefaultObservable;
+import org.apache.mesos.scheduler.Observable;
+import org.apache.mesos.scheduler.Observer;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
@@ -24,7 +27,7 @@ import java.util.List;
  * It also ensures that only one backup can run an anytime. For each new backup
  * a new BackupPlan is created, which will assist in orchestration.
  */
-public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
+public class BackupManager extends DefaultObservable implements ClusterTaskManager<BackupRestoreRequest>, Observer {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackupManager.class);
     static final String BACKUP_KEY = "backup";
 
@@ -86,8 +89,10 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
                 }
             }
             stateStore.storeProperty(BACKUP_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
-            this.backup = new BackupSnapshotPhase(context, cassandraState, provider);
-            this.upload = new UploadBackupPhase(context, cassandraState, provider);
+            backup = new BackupSnapshotPhase(context, cassandraState, provider);
+            upload = new UploadBackupPhase(context, cassandraState, provider);
+            backup.subscribe(this);
+            upload.subscribe(this);
             //this volatile signals that backup is started
             activeContext = context;
         } catch (SerializationException | PersistenceException e) {
@@ -95,6 +100,8 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
                     "Error storing backup context into persistence store. Reason: ",
                     e);
         }
+
+        notifyObservers();
     }
 
     public void stop() {
@@ -109,6 +116,8 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
                     e);
         }
         this.activeContext = null;
+
+        notifyObservers();
     }
 
     public boolean isInProgress() {
@@ -127,5 +136,10 @@ public class BackupManager implements ClusterTaskManager<BackupRestoreRequest> {
         } else {
             return Arrays.asList(backup, upload);
         }
+    }
+
+    @Override
+    public void update(Observable observable) {
+        notifyObservers();
     }
 }
