@@ -159,7 +159,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             plan.subscribe(this);
             planManager.setPlan(plan);
             reconciler.start();
-            reviveOffers(driver);
+            suppressOrRevive();
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";
@@ -173,7 +173,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                              Protos.MasterInfo masterInfo) {
         LOGGER.info("Re-registered with master: {}", masterInfo);
         reconciler.start();
-        reviveOffers(driver);
+        reviveOffers();
     }
 
     @Override
@@ -213,10 +213,6 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             }
 
             declineOffers(driver, acceptedOffers, offers);
-
-//            if (!hasOperations()) {
-//                suppressOffers(driver);
-//            }
         } catch (Throwable t){
             LOGGER.error("Error in offer acceptance cycle", t);
         }
@@ -256,10 +252,6 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         } catch (Exception ex) {
             LOGGER.error("Error updating Stage Manager with status: {} reason: {}", status, ex);
         }
-
-//        if (hasOperations()) {
-//            reviveOffers(driver);
-//        }
     }
 
     @Override
@@ -378,13 +370,13 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         driver.declineOffer(offerId, offerFilters);
     }
 
-    private void reviveOffers(SchedulerDriver driver) {
+    private void reviveOffers() {
         LOGGER.info("Reviving offers.");
         driver.reviveOffers();
         cassandraState.setSuppressed(false);
     }
 
-    private void suppressOffers(SchedulerDriver driver) {
+    private void suppressOffers() {
         LOGGER.info("Suppressing offers.");
         driver.suppressOffers();
         cassandraState.setSuppressed(true);
@@ -403,11 +395,15 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     @Override
     public void update(Observable observable) {
         if (observable == planManager.getPlan()) {
-            if (hasOperations()) {
-                reviveOffers(driver);
-            } else {
-                suppressOffers(driver);
-            }
+            suppressOrRevive();
+        }
+    }
+
+    private void suppressOrRevive() {
+        if (hasOperations()) {
+            reviveOffers();
+        } else {
+            suppressOffers();
         }
     }
 }
