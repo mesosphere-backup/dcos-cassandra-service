@@ -102,6 +102,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                 offerRequirementProvider,
                 offerAccepter,
                 cassandraState);
+        recoveryScheduler.subscribe(this);
         this.client = client;
         this.planManager = planManager;
         this.reconciler = reconciler;
@@ -113,6 +114,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         this.executor = executor;
         this.stateStore = stateStore;
         this.defaultConfigurationManager = defaultConfigurationManager;
+
         this.offerFilters = Protos.Filters.newBuilder().setRefuseSeconds(mesosConfig.getRefuseSeconds()).build();
         LOGGER.info("Creating an offer filter with refuse_seconds = {}", mesosConfig.getRefuseSeconds());
     }
@@ -399,7 +401,8 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
 
     @Override
     public void update(Observable observable) {
-        if (observable == planManager.getPlan()) {
+        if (observable == planManager.getPlan() ||
+            observable == recoveryScheduler) {
             suppressOrRevive();
         }
     }

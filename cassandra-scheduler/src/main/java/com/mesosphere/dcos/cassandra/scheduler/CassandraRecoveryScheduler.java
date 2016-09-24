@@ -11,13 +11,15 @@ import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.OfferRecommendation;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.ChainedObserver;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CassandraRecoveryScheduler {
+public class CassandraRecoveryScheduler extends ChainedObserver {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraRecoveryScheduler.class);
 
@@ -33,6 +35,8 @@ public class CassandraRecoveryScheduler {
         this.offerAccepter = offerAccepter;
         this.cassandraState = cassandraState;
         this.offerRequirementProvider = requirementProvider;
+
+        this.cassandraState.subscribe(this);
     }
 
     public boolean hasOperations() {

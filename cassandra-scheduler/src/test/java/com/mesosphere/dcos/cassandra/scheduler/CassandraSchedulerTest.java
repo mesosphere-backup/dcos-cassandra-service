@@ -294,27 +294,24 @@ public class CassandraSchedulerTest {
         assertTrue(!currentPhase.isPresent());
         assertTrue(!currentBlock.isPresent());
     }
-//
-//    @Test
-//    public void testResourceOffersSuppress() throws Exception {
-//        install();
-//        assertTrue(!driver.isSuppressed());
-//        scheduler.resourceOffers(driver, Collections.emptyList());
-//        assertTrue(driver.isSuppressed());
-//    }
-//
-//    @Test
-//    public void testResourceOffersRevive() throws Exception {
-//        install();
-//        assertTrue(!driver.isSuppressed());
-//        scheduler.resourceOffers(driver, Collections.emptyList());
-//        assertTrue(driver.isSuppressed());
-//
-//        final CassandraDaemonTask task = cassandraState.getDaemons().get("node-0");
-//        scheduler.statusUpdate(driver,
-//                TestUtils.generateStatus(task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_KILLED));
-//        assertTrue(!driver.isSuppressed());
-//    }
+
+    @Test
+    public void testSuppress() throws Exception {
+        assertTrue(!driver.isSuppressed());
+        install();
+        assertTrue(driver.isSuppressed());
+    }
+
+    @Test
+    public void testRevive() throws Exception {
+        install();
+        assertTrue(driver.isSuppressed());
+        final CassandraDaemonTask task = cassandraState.getDaemons().get("node-0");
+        scheduler.statusUpdate(
+                driver,
+                TestUtils.generateStatus(task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_KILLED));
+        assertTrue(!driver.isSuppressed());
+    }
 
     public void update() {
         scheduler.registered(driver, frameworkId, Protos.MasterInfo.getDefaultInstance());

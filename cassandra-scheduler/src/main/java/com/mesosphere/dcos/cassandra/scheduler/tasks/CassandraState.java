@@ -448,6 +448,8 @@ public class CassandraState extends SchedulerState implements Managed, TaskStatu
                     .put(task.getName(), task)
                     .build();
         }
+
+        notifyObservers();
     }
 
     public void update(Protos.TaskInfo taskInfo, Offer offer) throws Exception {
