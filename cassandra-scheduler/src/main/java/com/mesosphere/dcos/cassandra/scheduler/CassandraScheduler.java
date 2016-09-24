@@ -334,7 +334,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                     secretBytes.get().toByteArray()));
         } else {
             setSchedulerDriver(factory.create(
-                    null,
+                    this,
                     frameworkInfo,
                     mesosConfig.toZooKeeperUrl()));
         }
