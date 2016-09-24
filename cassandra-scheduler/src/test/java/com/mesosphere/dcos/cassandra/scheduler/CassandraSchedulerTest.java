@@ -177,6 +177,7 @@ public class CassandraSchedulerTest {
         masterInfo = TestUtils.generateMasterInfo();
 
         driver = new QueuedSchedulerDriver();
+        scheduler.setSchedulerDriver(driver);
         scheduler.registered(driver, frameworkId, masterInfo);
     }
 

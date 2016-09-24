@@ -19,6 +19,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
@@ -326,20 +327,24 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
 
         if (secretBytes.isPresent()) {
             // Authenticated if a non empty secret is provided.
-            this.driver = factory.create(
-              this,
-              frameworkInfo,
-              mesosConfig.toZooKeeperUrl(),
-              secretBytes.get().toByteArray());
+            setSchedulerDriver(factory.create(
+                    this,
+                    frameworkInfo,
+                    mesosConfig.toZooKeeperUrl(),
+                    secretBytes.get().toByteArray()));
         } else {
-            this.driver = factory.create(
-              this,
-              frameworkInfo,
-              mesosConfig.toZooKeeperUrl());
+            setSchedulerDriver(factory.create(
+                    null,
+                    frameworkInfo,
+                    mesosConfig.toZooKeeperUrl()));
         }
         LOGGER.info("Starting driver...");
         final Protos.Status startStatus = this.driver.start();
         LOGGER.info("Driver started with status: {}", startStatus);
+    }
+
+    public void setSchedulerDriver(SchedulerDriver driver) {
+        this.driver = driver;
     }
 
     private void logOffers(List<Protos.Offer> offers) {
