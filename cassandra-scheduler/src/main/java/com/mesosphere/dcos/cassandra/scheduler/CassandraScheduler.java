@@ -173,7 +173,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                              Protos.MasterInfo masterInfo) {
         LOGGER.info("Re-registered with master: {}", masterInfo);
         reconciler.start();
-        reviveOffers();
+        suppressOrRevive();
     }
 
     @Override
