@@ -17,6 +17,7 @@ $ ./gradlew clean build
 ## Updating apache-cassandra binary package
 
 We need to update the vanilla apache-cassandra binary package for following:
+
 1. Make JMX_PORT configurable
 2. Copy reporter-config JARs into lib directory for metric reporting:
 
