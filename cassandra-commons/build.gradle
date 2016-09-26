@@ -9,6 +9,9 @@ dependencies {
 }
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.0.0'
+    }
 }
 idea.module {
     sourceDirs += file("$projectDir/src/generated/main/java")
