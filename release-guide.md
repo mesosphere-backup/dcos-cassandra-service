@@ -35,7 +35,7 @@ See [build-cassandra-bin.bash](https://github.com/mesosphere/dcos-cassandra-serv
 
 ## Releasing DC/OS Cassandra service
 
-1. Make necessary chanages to `dcos-cassandra-service/universe`
+1. Make necessary chanages to [dcos-cassandra-service/universe](https://github.com/mesosphere/dcos-cassandra-service/tree/master/universe)
 2. Prepare RELEASE NOTES
 3. Cut a tag with following format: `X.Y.Z-A.B.C`, where `X.Y.Z` is the version of service and `A.B.C` is the version of underlying Cassandra
 
