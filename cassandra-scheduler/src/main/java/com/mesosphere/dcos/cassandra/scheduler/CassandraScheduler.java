@@ -192,7 +192,11 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
 
             if (currentBlock.isPresent()) {
                 LOGGER.info("Current execution block = {}", currentBlock.toString());
-                acceptedOffers.addAll(planScheduler.resourceOffers(driver, offers, currentBlock.get()));
+                try {
+                    acceptedOffers.addAll(planScheduler.resourceOffers(driver, offers, currentBlock.get()));
+                } catch (Throwable t) {
+                    LOGGER.error("Error occured with plan scheduler: {}", t);
+                }
             } else {
                 LOGGER.info("Current execution block = No block");
                 LOGGER.info("Current plan {} interrupted.", (planManager.isInterrupted()) ? "is" : "is not");
@@ -202,17 +206,25 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                     offers,
                     acceptedOffers);
 
-            acceptedOffers.addAll(
-                    recoveryScheduler.resourceOffers(
-                            driver,
-                            unacceptedOffers,
-                            (currentBlock.isPresent()) ?
-                                    ImmutableSet.of(currentBlock.get().getName()):
-                                    Collections.emptySet()));
+            try {
+                acceptedOffers.addAll(
+                        recoveryScheduler.resourceOffers(
+                                driver,
+                                unacceptedOffers,
+                                (currentBlock.isPresent()) ?
+                                        ImmutableSet.of(currentBlock.get().getName()) :
+                                        Collections.emptySet()));
+            } catch (Throwable t) {
+                LOGGER.error("Error occured with plan scheduler: {}", t);
+            }
 
             ResourceCleanerScheduler cleanerScheduler = getCleanerScheduler();
             if (cleanerScheduler != null) {
-                acceptedOffers.addAll(getCleanerScheduler().resourceOffers(driver, offers));
+                try {
+                    acceptedOffers.addAll(getCleanerScheduler().resourceOffers(driver, offers));
+                } catch (Throwable t) {
+                    LOGGER.error("Error occured with plan scheduler: {}", t);
+                }
             }
 
             declineOffers(driver, acceptedOffers, offers);
