@@ -14,8 +14,9 @@ $ git clone git@github.com:mesosphere/dcos-cassandra-service.git
 
 We need to update the vanilla apache-cassandra binary package for following reasons:
 
-1. Make JMX_PORT configurable
-2. Copy reporter-config JARs into lib directory for metric reporting:
+1. Distribute DC/OS seed provider jar
+2. Make JMX_PORT configurable
+3. Copy reporter-config JARs into lib directory for metric reporting:
 
 To generate a new apache-cassandra binary package:
 
