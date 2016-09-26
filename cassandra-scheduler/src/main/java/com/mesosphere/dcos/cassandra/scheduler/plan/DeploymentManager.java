@@ -6,9 +6,12 @@ import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.reconciliation.Reconciler;
+import org.apache.mesos.scheduler.DefaultObservable;
+import org.apache.mesos.scheduler.Observable;
+import org.apache.mesos.scheduler.Observer;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
 
@@ -16,20 +19,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-public class DeploymentManager {
+public class DeploymentManager extends DefaultObservable implements Observer {
 
     public static final DeploymentManager create(
             final PersistentOfferRequirementProvider provider,
             final ConfigurationManager configurationManager,
             final DefaultConfigurationManager defaultConfigurationManager,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final SchedulerClient client,
             final Reconciler reconciler,
             final SeedsManager seeds,
             final ExecutorService executor) throws ConfigStoreException {
         return new DeploymentManager(provider,
                 defaultConfigurationManager,
-                cassandraTasks,
+                cassandraState,
                 client,
                 reconciler,
                 seeds,
@@ -43,19 +46,20 @@ public class DeploymentManager {
     public DeploymentManager(
             final PersistentOfferRequirementProvider provider,
             final DefaultConfigurationManager defaultConfigurationManager,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final SchedulerClient client,
             final Reconciler reconciler,
             final SeedsManager seeds,
             final ExecutorService executor) throws ConfigStoreException {
         this.deploy = CassandraDaemonPhase.create(
-                cassandraTasks,
+                cassandraState,
                 provider,
                 client,
                 defaultConfigurationManager);
         this.reconciliation = ReconciliationPhase.create(reconciler);
-
         this.syncDc = SyncDataCenterPhase.create(seeds, executor);
+
+        this.deploy.subscribe(this);
     }
 
     public List<? extends Phase> getPhases() {
@@ -68,5 +72,10 @@ public class DeploymentManager {
 
     public boolean isComplete() {
         return deploy.isComplete();
+    }
+
+    @Override
+    public void update(Observable observable) {
+        notifyObservers();
     }
 }

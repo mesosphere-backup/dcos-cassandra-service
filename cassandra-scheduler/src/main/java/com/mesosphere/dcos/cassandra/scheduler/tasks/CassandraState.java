@@ -23,6 +23,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
+import org.apache.mesos.state.SchedulerState;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
@@ -33,12 +34,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * TaskStore for Cassandra framework tasks. It manages persisting and
- * retrieving
+ * Cassandra State Store
  */
-public class CassandraTasks implements Managed, TaskStatusProvider {
+public class CassandraState extends SchedulerState implements Managed, TaskStatusProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            CassandraTasks.class);
+            CassandraState.class);
 
     private final ConfigurationManager configuration;
     private final ClusterTaskConfig clusterTaskConfig;
@@ -47,17 +47,16 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     private volatile Map<String, CassandraTask> tasks = Collections.emptyMap();
     // Maps TaskId -> Task Name
     private final Map<String, String> byId = new HashMap<>();
-    private StateStore stateStore;
 
     @Inject
-    public CassandraTasks(
+    public CassandraState(
             final ConfigurationManager configuration,
             final CuratorFrameworkConfig curatorConfig,
             final ClusterTaskConfig clusterTaskConfig,
             final StateStore stateStore) {
+        super(stateStore);
         this.configuration = configuration;
         this.clusterTaskConfig = clusterTaskConfig;
-        this.stateStore = stateStore;
 
         loadTasks();
     }
@@ -68,9 +67,9 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         // client managed objects is called this completes prior to the
         // retrieval of tasks
         try {
-            synchronized (stateStore) {
+            synchronized (getStateStore()) {
                 LOGGER.info("Loading data from persistent store");
-                final Collection<Protos.TaskInfo> taskInfos = stateStore.fetchTasks();
+                final Collection<Protos.TaskInfo> taskInfos = getStateStore().fetchTasks();
 
                 for (Protos.TaskInfo taskInfo : taskInfos) {
                     try {
@@ -97,7 +96,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
 
     private void removeTask(final String name) throws PersistenceException {
-        stateStore.clearTask(name);
+        getStateStore().clearTask(name);
         if (tasks.containsKey(name)) {
             byId.remove(tasks.get(name).getId());
         }
@@ -108,10 +107,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                                 entry -> entry.getKey(),
                                 entry -> entry.getValue())))
                 .build();
-    }
-
-    public StateStore getStateStore() {
-        return stateStore;
     }
 
     public Map<String, CassandraDaemonTask> getDaemons() {
@@ -206,7 +201,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         final CassandraSchedulerConfiguration targetConfig = configuration.getTargetConfig();
         final UUID targetConfigName = configuration.getTargetConfigName();
         final ServiceConfig serviceConfig = targetConfig.getServiceConfig();
-        final String frameworkId = stateStore.fetchFrameworkId().get().getValue();
+        final String frameworkId = getStateStore().fetchFrameworkId().get().getValue();
         return configuration.createDaemon(
             frameworkId,
             name,
@@ -222,7 +217,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
         final ServiceConfig serviceConfig = targetConfig.getServiceConfig();
         CassandraDaemonTask updated = configuration.moveDaemon(
             daemon,
-            stateStore.fetchFrameworkId().get().getValue(),
+            getStateStore().fetchFrameworkId().get().getValue(),
             serviceConfig.getRole(),
             serviceConfig.getPrincipal());
         update(updated);
@@ -232,7 +227,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     private Optional<Protos.TaskInfo> getTemplate(CassandraDaemonTask daemon) {
             String templateTaskName = CassandraTemplateTask.toTemplateTaskName(daemon.getName());
         try {
-            Optional<Protos.TaskInfo> info = stateStore.fetchTask(templateTaskName);
+            Optional<Protos.TaskInfo> info = getStateStore().fetchTask(templateTaskName);
             LOGGER.info("Fetched template task for daemon '{}': {}",
                     daemon.getName(), TextFormat.shortDebugString(info.get()));
             return info;
@@ -418,21 +413,21 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task)
             throws PersistenceException {
-        synchronized (stateStore) {
+        synchronized (getStateStore()) {
             return configuration.replaceDaemon(task);
         }
     }
 
     public CassandraDaemonTask reconfigureDaemon(
             final CassandraDaemonTask daemon) throws PersistenceException, ConfigStoreException {
-        synchronized (stateStore) {
+        synchronized (getStateStore()) {
             return configuration.updateConfig(daemon);
         }
     }
 
     public void update(CassandraTask task) throws PersistenceException {
-        synchronized (stateStore) {
-            stateStore.storeTasks(Arrays.asList(task.getTaskInfo()));
+        synchronized (getStateStore()) {
+            getStateStore().storeTasks(Arrays.asList(task.getTaskInfo()));
             if (tasks.containsKey(task.getName())) {
                 byId.remove(tasks.get(task.getName()).getId());
             }
@@ -453,14 +448,16 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
                     .put(task.getName(), task)
                     .build();
         }
+
+        notifyObservers();
     }
 
     public void update(Protos.TaskInfo taskInfo, Offer offer) throws Exception {
         try {
             final CassandraTask task = CassandraTask.parse(taskInfo);
-            stateStore.storeTasks(Arrays.asList(taskInfo));
+            getStateStore().storeTasks(Arrays.asList(taskInfo));
 
-            synchronized (stateStore) {
+            synchronized (getStateStore()) {
                 update(task.update(offer));
             }
         } catch (Exception e) {
@@ -472,9 +469,9 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     @Subscribe
     public void update(Protos.TaskStatus status) throws IOException {
         LOGGER.info("Received status update: {}", TextFormat.shortDebugString(status));
-        synchronized (stateStore) {
+        synchronized (getStateStore()) {
             try {
-                stateStore.storeStatus(status);
+                getStateStore().storeStatus(status);
                 LOGGER.info("Updated status for task {}", status.getTaskId().getValue());
 
                 if (byId.containsKey(status.getTaskId().getValue())) {
@@ -514,9 +511,9 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     public boolean isTerminated(CassandraTask task) {
         try {
             final String name = task.getName();
-            final Collection<String> taskNames = stateStore.fetchTaskNames();
+            final Collection<String> taskNames = getStateStore().fetchTaskNames();
             if (CollectionUtils.isNotEmpty(taskNames) && taskNames.contains(name)) {
-                final Optional<Protos.TaskStatus> status = stateStore.fetchStatus(name);
+                final Optional<Protos.TaskStatus> status = getStateStore().fetchStatus(name);
                 if (status.isPresent()) {
                     return CassandraDaemonStatus.isTerminated(status.get().getState());
                 } else {
@@ -534,7 +531,7 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
     }
 
     public void remove(String name) throws PersistenceException {
-        synchronized (stateStore) {
+        synchronized (getStateStore()) {
             if (tasks.containsKey(name)) {
                 removeTask(name);
             }
@@ -568,6 +565,6 @@ public class CassandraTasks implements Managed, TaskStatusProvider {
 
     @Override
     public Set<Protos.TaskStatus> getTaskStatuses()  {
-        return new HashSet<>(stateStore.fetchStatuses());
+        return new HashSet<>(getStateStore().fetchStatuses());
     }
 }

@@ -7,7 +7,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,31 +20,31 @@ public class BackupSnapshotBlock extends AbstractClusterTaskBlock<BackupRestoreC
 
     public static BackupSnapshotBlock create(
             final String daemon,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final CassandraOfferRequirementProvider provider,
             final BackupRestoreContext context) {
-        return new BackupSnapshotBlock(daemon, cassandraTasks, provider,
+        return new BackupSnapshotBlock(daemon, cassandraState, provider,
                 context);
     }
 
     public BackupSnapshotBlock(
             final String daemon,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final CassandraOfferRequirementProvider provider,
             final BackupRestoreContext context) {
-        super(daemon, cassandraTasks, provider, context);
+        super(daemon, cassandraState, provider, context);
     }
 
     @Override
     protected Optional<CassandraTask> getOrCreateTask(BackupRestoreContext context)
             throws PersistenceException {
-        CassandraDaemonTask daemonTask = cassandraTasks.getDaemons().get(getDaemon());
+        CassandraDaemonTask daemonTask = cassandraState.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
             setStatus(Status.COMPLETE);
             return Optional.empty();
         }
-        return Optional.of(cassandraTasks.getOrCreateBackupSnapshot(
+        return Optional.of(cassandraState.getOrCreateBackupSnapshot(
                 daemonTask,
                 context));
     }

@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.offer;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.config.ConfigStoreException;
@@ -19,15 +19,15 @@ public class PersistentOfferRequirementProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             PersistentOfferRequirementProvider.class);
     private DefaultConfigurationManager configurationManager;
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     public static final String CONFIG_TARGET_KEY = "config_target";
 
     @Inject
     public PersistentOfferRequirementProvider(
             DefaultConfigurationManager configurationManager,
-            CassandraTasks cassandraTasks) {
+            CassandraState cassandraState) {
         this.configurationManager = configurationManager;
-        this.cassandraTasks = cassandraTasks;
+        this.cassandraState = cassandraState;
     }
 
     public Optional<OfferRequirement> getNewOfferRequirement(CassandraContainer container) {
@@ -37,7 +37,7 @@ public class PersistentOfferRequirementProvider {
         try {
             placementStrategy = PlacementStrategyManager.getPlacementStrategy(
                     configurationManager,
-                    cassandraTasks);
+                    cassandraState);
         } catch (ConfigStoreException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return Optional.empty();

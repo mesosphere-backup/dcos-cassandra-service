@@ -4,7 +4,7 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.testing.junit.ResourceTestRule;
 
 import org.apache.mesos.Protos.TaskState;
@@ -123,7 +123,7 @@ public class ConnectionResourceTest {
         when(mockSchedulerConfig.getServiceConfig()).thenReturn(mockServiceConfig);
         when(mockServiceConfig.getName()).thenReturn(TEST_SERVICE_NAME);
 
-        CassandraTasks mockTasks = Mockito.mock(CassandraTasks.class);
+        CassandraState mockTasks = Mockito.mock(CassandraState.class);
         when(mockTasks.getDaemons()).thenReturn(TEST_TASKS);
 
         Capabilities mockCapabilities = Mockito.mock(Capabilities.class);

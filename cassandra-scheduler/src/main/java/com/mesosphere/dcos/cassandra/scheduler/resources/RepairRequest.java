@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskRequest;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,15 +85,15 @@ public class RepairRequest implements ClusterTaskRequest {
         return JsonUtils.toJsonString(this);
     }
 
-    public RepairContext toContext(CassandraTasks cassandraTasks) {
+    public RepairContext toContext(CassandraState cassandraState) {
         return RepairContext.create(
-                new ArrayList<>(getNodes(cassandraTasks)),
+                new ArrayList<>(getNodes(cassandraState)),
                 getKeySpaces(),
                 getColumnFamiles());
     }
 
-    private Set<String> getNodes(CassandraTasks cassandraTasks) {
-        final Set<String> allDaemons = cassandraTasks.getDaemons().keySet();
+    private Set<String> getNodes(CassandraState cassandraState) {
+        final Set<String> allDaemons = cassandraState.getDaemons().keySet();
         if (getNodes().size() == 1 &&
                 getNodes().get(0).equals(CleanupRequest.ALL)) {
             return allDaemons;

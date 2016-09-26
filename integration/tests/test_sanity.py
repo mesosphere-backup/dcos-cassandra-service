@@ -1,10 +1,12 @@
 import json
 import dcos
 import pytest
-from . import infinity_commons
+import time
 
 import dcos
 import shakedown
+
+from . import infinity_commons
 
 from tests.command import (
     cassandra_api_url,
@@ -124,7 +126,8 @@ def test_nodes_increase_by_one(install_framework):
 
 @pytest.mark.sanity
 def test_nodes_decrease_by_one_should_fail(install_framework):
-    completed_plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
+    completed_plan = infinity_commons.get_and_verify_plan(
+        lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
     mc = dcos.marathon.create_client()
     app = mc.get_app('/cassandra')
     app = infinity_commons.strip_meta(app)
@@ -135,7 +138,9 @@ def test_nodes_decrease_by_one_should_fail(install_framework):
     print("Updated node count: {}".format(app['env']['NODES']))
     print(mc.update_app(app_id='/cassandra', payload=app, force=True))
     check_health()
-    plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.ERROR.value and len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 3)
+    plan = infinity_commons.get_and_verify_plan(
+        lambda p: (p['status'] == infinity_commons.PlanState.ERROR.value and
+                   len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 3))
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.ERROR.value
 
@@ -147,7 +152,9 @@ def test_nodes_decrease_by_one_should_fail(install_framework):
     print("Reverted node count: {}".format(app['env']['NODES']))
     print(mc.update_app(app_id='/cassandra', payload=app, force=True))
     check_health()
-    plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value and len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 3)
+    plan = infinity_commons.get_and_verify_plan(
+        lambda p: (p['status'] == infinity_commons.PlanState.COMPLETE.value) and
+        (len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 3))
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
 
@@ -199,3 +206,11 @@ def test_cpus_increase_slightly(install_framework):
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
 
+
+@pytest.mark.sanity
+def test_is_suppressed(install_framework):
+    infinity_commons.get_and_verify_plan(lambda p: p['status'] == 'COMPLETE')
+    time.sleep(5)
+    response = dcos.http.get(cassandra_api_url('state/properties/suppressed'))
+    response.raise_for_status()
+    assert response.text == "true"

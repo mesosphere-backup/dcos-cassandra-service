@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.config.ServiceConfig;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
 
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.dcos.Capabilities;
@@ -24,16 +24,16 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 public class ConnectionResource {
     private final Capabilities capabilities;
-    private final CassandraTasks tasks;
+    private final CassandraState state;
     private final ConfigurationManager configurationManager;
 
     @Inject
     public ConnectionResource(
             final Capabilities capabilities,
-            final CassandraTasks tasks,
+            final CassandraState state,
             final ConfigurationManager configurationManager) {
         this.capabilities = capabilities;
-        this.tasks = tasks;
+        this.state = state;
         this.configurationManager = configurationManager;
     }
 
@@ -55,14 +55,14 @@ public class ConnectionResource {
     @GET
     @Path("/address")
     public List<String> connectAddress() {
-        return toRunningAddresses(tasks.getDaemons());
+        return toRunningAddresses(state.getDaemons());
     }
 
     @GET
     @Path("/dns")
     public List<String> connectDns() throws ConfigStoreException {
         return toRunningDns(
-                tasks.getDaemons(), configurationManager.getTargetConfig().getServiceConfig());
+                state.getDaemons(), configurationManager.getTargetConfig().getServiceConfig());
     }
 
     private List<String> toRunningAddresses(

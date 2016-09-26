@@ -4,6 +4,7 @@ import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
@@ -14,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-public class SyncDataCenterBlock implements Block, Runnable {
+public class SyncDataCenterBlock extends DefaultObservable implements Block, Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(
             SyncDataCenterBlock.class
@@ -122,6 +123,11 @@ public class SyncDataCenterBlock implements Block, Runnable {
 
     private void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        Status oldStatus = status;
         status = newStatus;
+
+        if (!status.equals(oldStatus)) {
+            notifyObservers();
+        }
     }
 }
