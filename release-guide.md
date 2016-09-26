@@ -31,7 +31,7 @@ To generate a new apache-cassandra binary package:
   ```
 See [build-cassandra-bin.bash](https://github.com/mesosphere/dcos-cassandra-service/blob/master/build-cassandra-bin.bash) for more details on usage.
 2. Upload the `/path/to/dcos-cassandra-service/cassandra-bin-tmp/apache-cassandra-A.B.C-bin-dcos.tar.gz` to the designated release location.
-3. Update the universe `dcos-cassandra-service/universe` with new URL if necessary.
+3. Update the universe's [resource.json](https://github.com/mesosphere/dcos-cassandra-service/blob/master/universe/resource.json) with new URL if necessary.
 
 ## Releasing DC/OS Cassandra service
 
@@ -44,6 +44,6 @@ See [build-cassandra-bin.bash](https://github.com/mesosphere/dcos-cassandra-serv
   git push origin X.Y.Z-A.B.C
   ```
 
-4. Trigger this job: https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/cassandra/job/0-trigger-tag/ with the tag version created in step 3.
-5. Once build job in step 4 finishes successfully, take the stub universe from the 1-build-linux job: https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/cassandra/job/1-build-linux/ 
-6. Use version from step 3 and stub universe URL from step 5 to trigger `release-to-universe` job: https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/infinity-tools/job/release-to-universe/
+4. Trigger the [0-trigger-tag](https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/cassandra/job/0-trigger-tag/) job with the tag version created in step 3.
+5. Once build job in step 4 finishes successfully, take the stub universe from the [1-build-linux](https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/cassandra/job/1-build-linux/) job 
+6. Use version from step 3 and stub universe URL from step 5 to trigger [release-to-universe](https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/infinity-tools/job/release-to-universe/) job.
