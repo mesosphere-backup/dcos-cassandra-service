@@ -5,9 +5,9 @@
 - Protobuf 2.5.0
 - GNU Sed 4.2.2 + (for generating new apache-casssandra package using `build-cassandra-bin.bash`)
 
-## Clone the repo (including sub-modules)
+## Clone the repo
 ```
-$ git clone --recursive git@github.com:mesosphere/dcos-cassandra-service.git
+$ git clone git@github.com:mesosphere/dcos-cassandra-service.git
 ```
 
 ## Build instructions
