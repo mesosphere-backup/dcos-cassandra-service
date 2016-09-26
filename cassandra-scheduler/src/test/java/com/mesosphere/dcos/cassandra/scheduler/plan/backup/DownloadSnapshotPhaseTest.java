@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.junit.Assert;
@@ -23,7 +23,7 @@ public class DownloadSnapshotPhaseTest {
     @Mock
     private ClusterTaskOfferRequirementProvider provider;
     @Mock
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
 
     @Before
     public void beforeEach() {
@@ -34,8 +34,8 @@ public class DownloadSnapshotPhaseTest {
     public void testCreateBlocksEmpty() {
         final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
 
-        when(cassandraTasks.getDaemons()).thenReturn(MapUtils.EMPTY_MAP);
-        final DownloadSnapshotPhase phase = new DownloadSnapshotPhase(context, cassandraTasks, provider);
+        when(cassandraState.getDaemons()).thenReturn(MapUtils.EMPTY_MAP);
+        final DownloadSnapshotPhase phase = new DownloadSnapshotPhase(context, cassandraState, provider);
         final List<DownloadSnapshotBlock> blocks = phase.createBlocks();
 
         Assert.assertNotNull(blocks);
@@ -50,9 +50,9 @@ public class DownloadSnapshotPhaseTest {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put("node-0", daemonTask);
-        when(cassandraTasks.getDaemons()).thenReturn(map);
-        when(cassandraTasks.get("download-node-0")).thenReturn(Optional.of(daemonTask));
-        final DownloadSnapshotPhase phase = new DownloadSnapshotPhase(context, cassandraTasks, provider);
+        when(cassandraState.getDaemons()).thenReturn(map);
+        when(cassandraState.get("download-node-0")).thenReturn(Optional.of(daemonTask));
+        final DownloadSnapshotPhase phase = new DownloadSnapshotPhase(context, cassandraState, provider);
         final List<DownloadSnapshotBlock> blocks = phase.createBlocks();
 
         Assert.assertNotNull(blocks);

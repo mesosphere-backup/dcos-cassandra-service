@@ -4,9 +4,10 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
@@ -17,7 +18,9 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> implements Block {
+public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext>
+        extends DefaultObservable
+        implements Block {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             AbstractClusterTaskBlock.class);
 
@@ -26,7 +29,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     private volatile Status status;
     private final C context;
     private final CassandraOfferRequirementProvider provider;
-    protected final CassandraTasks cassandraTasks;
+    protected final CassandraState cassandraState;
 
     protected abstract Optional<CassandraTask> getOrCreateTask(C context)
             throws PersistenceException;
@@ -62,7 +65,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
         try {
             // Is Daemon task running ?
-            final Optional<Protos.TaskStatus> lastKnownDaemonStatus = cassandraTasks.getStateStore().fetchStatus(getDaemon());
+            final Optional<Protos.TaskStatus> lastKnownDaemonStatus = cassandraState.getStateStore().fetchStatus(getDaemon());
             if (!lastKnownDaemonStatus.isPresent()) {
                 return Optional.empty();
             }
@@ -103,15 +106,15 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     public AbstractClusterTaskBlock(
             final String daemon,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final CassandraOfferRequirementProvider provider,
             final C context) {
         this.daemon = daemon;
         this.provider = provider;
         this.status = Status.PENDING;
         this.context = context;
-        this.cassandraTasks = cassandraTasks;
-        Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
+        this.cassandraState = cassandraState;
+        Optional<CassandraTask> taskOption = cassandraState.get(getName());
         if (taskOption.isPresent()) {
             CassandraTask task = taskOption.get();
             if (Protos.TaskState.TASK_FINISHED.equals(
@@ -134,8 +137,8 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
         }
 
         try {
-            cassandraTasks.update(status);
-            Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
+            cassandraState.update(status);
+            Optional<CassandraTask> taskOption = cassandraState.get(getName());
 
             if (taskOption.isPresent()) {
                 CassandraTask task = taskOption.get();
@@ -145,7 +148,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                     setStatus(Status.IN_PROGRESS);
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
-                    cassandraTasks.remove(getName());
+                    cassandraState.remove(getName());
                     LOGGER.info("Reallocating task {} for block {}",
                             getName(),
                             id);
@@ -217,6 +220,11 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     protected void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        Status oldStatus = status;
         status = newStatus;
+
+        if (oldStatus != status) {
+            notifyObservers();
+        }
     }
 }

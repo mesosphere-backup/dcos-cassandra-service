@@ -8,7 +8,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +21,18 @@ public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
 
     public static CleanupBlock create(
             String daemon,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             CleanupContext context) {
-        return new CleanupBlock(daemon, cassandraTasks, provider, context);
+        return new CleanupBlock(daemon, cassandraState, provider, context);
     }
 
     public CleanupBlock(
             String daemon,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             CleanupContext context) {
-        super(daemon, cassandraTasks, provider, context);
+        super(daemon, cassandraState, provider, context);
     }
 
 
@@ -40,13 +40,13 @@ public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
     protected Optional<CassandraTask> getOrCreateTask(CleanupContext context)
             throws PersistenceException {
         CassandraDaemonTask daemonTask =
-                cassandraTasks.getDaemons().get(getDaemon());
+                cassandraState.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
             setStatus(Status.COMPLETE);
             return Optional.empty();
         }
-        return Optional.of(cassandraTasks.getOrCreateCleanup(
+        return Optional.of(cassandraState.getOrCreateCleanup(
                 daemonTask,
                 context));
     }

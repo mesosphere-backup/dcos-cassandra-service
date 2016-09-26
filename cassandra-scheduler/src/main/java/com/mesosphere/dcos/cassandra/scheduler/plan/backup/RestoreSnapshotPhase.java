@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,18 +18,18 @@ public class RestoreSnapshotPhase extends AbstractClusterTaskPhase<RestoreSnapsh
 
     public RestoreSnapshotPhase(
             BackupRestoreContext context,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             ClusterTaskOfferRequirementProvider provider) {
-        super(context, cassandraTasks, provider);
+        super(context, cassandraState, provider);
     }
 
     protected List<RestoreSnapshotBlock> createBlocks() {
         final List<String> daemons =
-                new ArrayList<>(cassandraTasks.getDaemons().keySet());
+                new ArrayList<>(cassandraState.getDaemons().keySet());
         Collections.sort(daemons);
         return daemons.stream().map(daemon -> RestoreSnapshotBlock.create(
                 daemon,
-                cassandraTasks,
+                cassandraState,
                 provider,
                 context
         )).collect(Collectors.toList());

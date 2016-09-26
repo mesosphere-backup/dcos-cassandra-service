@@ -10,7 +10,7 @@ import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -54,7 +54,7 @@ public class CassandraDaemonBlockTest {
     @Mock
     private PersistentOfferRequirementProvider persistentOfferRequirementProvider;
     @Mock
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     @Mock
     private SchedulerClient client;
     @Mock
@@ -119,7 +119,7 @@ public class CassandraDaemonBlockTest {
                         new ConfigValidator(),
                         stateStore);
 
-        cassandraTasks = new CassandraTasks(
+        cassandraState = new CassandraState(
                 new ConfigurationManager(taskFactory, configurationManager),
                 curatorConfig,
                 clusterTaskConfig,
@@ -134,7 +134,7 @@ public class CassandraDaemonBlockTest {
         when(cassandraContainer.getDaemonTask()).thenReturn(daemonTask);
         when(daemonTask.getName()).thenReturn(EXPECTED_NAME);
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         Assert.assertEquals(EXPECTED_NAME, block.getName());
         Assert.assertEquals(Status.PENDING, Block.getStatus(block));
@@ -144,7 +144,7 @@ public class CassandraDaemonBlockTest {
     public void testStart() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
@@ -158,7 +158,7 @@ public class CassandraDaemonBlockTest {
     public void testStartCompleted() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
@@ -186,7 +186,7 @@ public class CassandraDaemonBlockTest {
     public void testStartCompletedReconcile() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
@@ -213,7 +213,7 @@ public class CassandraDaemonBlockTest {
     public void testStartNeedConfigUpdateNotTerminated1() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
@@ -255,7 +255,7 @@ public class CassandraDaemonBlockTest {
     public void testStartNeedConfigUpdateNotTerminated2() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
@@ -296,7 +296,7 @@ public class CassandraDaemonBlockTest {
     public void testStartNeedConfigUpdateTerminated() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
@@ -325,8 +325,7 @@ public class CassandraDaemonBlockTest {
     public void testStartTerminated() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(EXPECTED_NAME,
-                persistentOfferRequirementProvider, cassandraTasks, client);
-
+                persistentOfferRequirementProvider, cassandraState, client);
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
@@ -352,7 +351,7 @@ public class CassandraDaemonBlockTest {
         OfferRequirement offerRequirement = block.start().get();
         Assert.assertEquals(mockOfferReq, offerRequirement);
 
-        CassandraTemplateTask templateTask = cassandraTasks.getOrCreateTemplateTask(
+        CassandraTemplateTask templateTask = cassandraState.getOrCreateTemplateTask(
                 CassandraTemplateTask.toTemplateTaskName(task.getName()), task);
         ArgumentCaptor<CassandraContainer> containerCaptor = ArgumentCaptor.forClass(CassandraContainer.class);
         verify(persistentOfferRequirementProvider).getReplacementOfferRequirement(containerCaptor.capture());
@@ -363,7 +362,7 @@ public class CassandraDaemonBlockTest {
     public void testStartLaunching() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
@@ -398,7 +397,7 @@ public class CassandraDaemonBlockTest {
     public void testUpdateDataPresent() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
@@ -425,7 +424,7 @@ public class CassandraDaemonBlockTest {
     public void testUpdateDataNotPresent() throws Exception {
         final String EXPECTED_NAME = "node-0";
         CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraTasks, client);
+                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState, client);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(

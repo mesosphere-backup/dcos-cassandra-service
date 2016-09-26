@@ -8,7 +8,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
@@ -30,7 +30,7 @@ public class CleanupBlockTest {
     @Mock
     private ClusterTaskOfferRequirementProvider provider;
     @Mock
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     @Mock
     private SchedulerClient client;
     public static final CleanupContext CONTEXT = CleanupContext.create(Collections.emptyList(),
@@ -43,17 +43,17 @@ public class CleanupBlockTest {
         final Protos.TaskStatus status = TestUtils
                 .generateStatus(TaskUtils.toTaskId("node-0"), Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
         Mockito.when(mockStateStore.fetchStatus("node-0")).thenReturn(Optional.of(status));
-        Mockito.when(cassandraTasks.getStateStore()).thenReturn(mockStateStore);
+        Mockito.when(cassandraState.getStateStore()).thenReturn(mockStateStore);
     }
 
     @Test
     public void testInitial() {
-        Mockito.when(cassandraTasks.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
         final CleanupContext context = CleanupContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
         final CleanupBlock block = CleanupBlock.create(
                 NODE_0,
-                cassandraTasks,
+                cassandraState,
                 provider,
                 context);
         Assert.assertEquals(CLEANUP_NODE_0, block.getName());
@@ -65,13 +65,13 @@ public class CleanupBlockTest {
     public void testComplete() {
         final CassandraTask mockCassandraTask = Mockito.mock(CassandraTask.class);
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        Mockito.when(cassandraTasks.get(CLEANUP_NODE_0))
+        Mockito.when(cassandraState.get(CLEANUP_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final CleanupContext context = CleanupContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
         final CleanupBlock block = CleanupBlock.create(
                 NODE_0,
-                cassandraTasks,
+                cassandraState,
                 provider,
                 context);
         Assert.assertEquals(CLEANUP_NODE_0, block.getName());
@@ -82,22 +82,22 @@ public class CleanupBlockTest {
     @Test
     public void testTaskStartAlreadyCompleted() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraTasks.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
-        Mockito.when(cassandraTasks.getDaemons()).thenReturn(map);
+        Mockito.when(cassandraState.getDaemons()).thenReturn(map);
         final CleanupContext context = CleanupContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
 
         final CleanupTask task = Mockito.mock(CleanupTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito
-                .when(cassandraTasks.getOrCreateCleanup(daemonTask, CONTEXT))
+                .when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT))
                 .thenReturn(task);
 
         final CleanupBlock block = CleanupBlock.create(
                 NODE_0,
-                cassandraTasks,
+                cassandraState,
                 provider,
                 context);
 
@@ -110,20 +110,20 @@ public class CleanupBlockTest {
     @Test
     public void testTaskStart() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraTasks.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
-        Mockito.when(cassandraTasks.getDaemons()).thenReturn(map);
+        Mockito.when(cassandraState.getDaemons()).thenReturn(map);
 
         final CleanupTask task = Mockito.mock(CleanupTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito
-                .when(cassandraTasks.getOrCreateCleanup(daemonTask, CONTEXT))
+                .when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT))
                 .thenReturn(task);
 
         final CleanupBlock block = CleanupBlock.create(
                 NODE_0,
-                cassandraTasks,
+                cassandraState,
                 provider,
                 CONTEXT);
 

@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,18 +17,18 @@ public class UploadBackupPhase extends AbstractClusterTaskPhase<UploadBackupBloc
 
     public UploadBackupPhase(
             BackupRestoreContext context,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             ClusterTaskOfferRequirementProvider provider) {
-        super(context, cassandraTasks, provider);
+        super(context, cassandraState, provider);
     }
 
     protected List<UploadBackupBlock> createBlocks() {
         final List<String> daemons =
-                new ArrayList<>(cassandraTasks.getDaemons().keySet());
+                new ArrayList<>(cassandraState.getDaemons().keySet());
         Collections.sort(daemons);
         return daemons.stream().map(daemon -> UploadBackupBlock.create(
                 daemon,
-                cassandraTasks,
+                cassandraState,
                 provider,
                 context
         )).collect(Collectors.toList());
