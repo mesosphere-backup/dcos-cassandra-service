@@ -10,11 +10,6 @@
 $ git clone git@github.com:mesosphere/dcos-cassandra-service.git
 ```
 
-## Build instructions
-```
-$ ./gradlew clean build
-```
-
 ## Updating apache-cassandra binary package
 
 We need to update the vanilla apache-cassandra binary package for following reasons:
