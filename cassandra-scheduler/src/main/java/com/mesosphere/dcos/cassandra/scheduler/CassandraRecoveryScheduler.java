@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.config.ConfigStoreException;
@@ -11,28 +11,32 @@ import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.OfferRecommendation;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.ChainedObserver;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CassandraRecoveryScheduler {
+public class CassandraRecoveryScheduler extends ChainedObserver {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraRecoveryScheduler.class);
 
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
-    private final CassandraTasks cassandraTasks;
+    private final CassandraState cassandraState;
     private final OfferEvaluator offerEvaluator = new OfferEvaluator();
     private final Random random = new Random();
 
     public CassandraRecoveryScheduler(
             PersistentOfferRequirementProvider requirementProvider,
-            OfferAccepter offerAccepter, CassandraTasks cassandraTasks) {
+            OfferAccepter offerAccepter, CassandraState cassandraState) {
         this.offerAccepter = offerAccepter;
-        this.cassandraTasks = cassandraTasks;
+        this.cassandraState = cassandraState;
         this.offerRequirementProvider = requirementProvider;
+
+        this.cassandraState.subscribe(this);
     }
 
     public boolean hasOperations() {
@@ -49,15 +53,15 @@ public class CassandraRecoveryScheduler {
         if (terminatedOption.isPresent()) {
             try {
                 CassandraDaemonTask terminated = terminatedOption.get();
-                terminated = cassandraTasks.replaceDaemon(terminated);
+                terminated = cassandraState.replaceDaemon(terminated);
 
                 OfferRequirement offerReq;
                 if (terminated.getConfig().getReplaceIp().isEmpty()) {
                     offerReq = offerRequirementProvider.getReplacementOfferRequirement(
-                            cassandraTasks.getOrCreateContainer(terminated.getName())).get();
+                            cassandraState.getOrCreateContainer(terminated.getName())).get();
                 } else {
                     offerReq = offerRequirementProvider.getNewOfferRequirement(
-                            cassandraTasks.createCassandraContainer(terminated)).get();
+                            cassandraState.createCassandraContainer(terminated)).get();
                 }
 
                 List<OfferRecommendation> recommendations =
@@ -83,10 +87,10 @@ public class CassandraRecoveryScheduler {
     private Optional<CassandraDaemonTask> getTerminatedTask(
             final Set<String> ignore) {
         LOGGER.info("Ignoring blocks: {}", ignore);
-        cassandraTasks.refreshTasks();
+        cassandraState.refreshTasks();
         List<CassandraDaemonTask> terminated =
-                cassandraTasks.getDaemons().values().stream()
-                        .filter(task -> cassandraTasks.isTerminated(task))
+                cassandraState.getDaemons().values().stream()
+                        .filter(task -> cassandraState.isTerminated(task))
                         .filter(task -> !ignore.contains(task.getName()))
                         .collect(Collectors.toList());
         LOGGER.info("Terminated tasks size: {}", terminated.size());

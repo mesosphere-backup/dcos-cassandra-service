@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.mesos.scheduler.plan.Block;
@@ -27,7 +27,7 @@ public class BackupSnapshotPhaseTest {
     @Mock
     private ClusterTaskOfferRequirementProvider provider;
     @Mock
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
 
     @Before
     public void beforeEach() {
@@ -38,8 +38,8 @@ public class BackupSnapshotPhaseTest {
     public void testCreateBlocksEmpty() {
         final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
 
-        when(cassandraTasks.getDaemons()).thenReturn(MapUtils.EMPTY_MAP);
-        final BackupSnapshotPhase phase = new BackupSnapshotPhase(context, cassandraTasks, provider);
+        when(cassandraState.getDaemons()).thenReturn(MapUtils.EMPTY_MAP);
+        final BackupSnapshotPhase phase = new BackupSnapshotPhase(context, cassandraState, provider);
         final List<BackupSnapshotBlock> blocks = phase.createBlocks();
 
         Assert.assertNotNull(blocks);
@@ -54,9 +54,9 @@ public class BackupSnapshotPhaseTest {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
-        when(cassandraTasks.getDaemons()).thenReturn(map);
-        when(cassandraTasks.get(SNAPSHOT_NODE_0)).thenReturn(Optional.of(daemonTask));
-        final BackupSnapshotPhase phase = new BackupSnapshotPhase(context, cassandraTasks, provider);
+        when(cassandraState.getDaemons()).thenReturn(map);
+        when(cassandraState.get(SNAPSHOT_NODE_0)).thenReturn(Optional.of(daemonTask));
+        final BackupSnapshotPhase phase = new BackupSnapshotPhase(context, cassandraState, provider);
         final List<? extends Block> blocks = phase.getBlocks();
 
         Assert.assertNotNull(blocks);

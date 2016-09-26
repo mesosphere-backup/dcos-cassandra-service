@@ -8,7 +8,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +21,18 @@ public class RepairBlock extends AbstractClusterTaskBlock<RepairContext> {
 
     public static RepairBlock create(
             String daemon,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             RepairContext context) {
-        return new RepairBlock(daemon, cassandraTasks, provider, context);
+        return new RepairBlock(daemon, cassandraState, provider, context);
     }
 
     public RepairBlock(
             String daemon,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             RepairContext context) {
-        super(daemon, cassandraTasks, provider, context);
+        super(daemon, cassandraState, provider, context);
     }
 
 
@@ -40,13 +40,13 @@ public class RepairBlock extends AbstractClusterTaskBlock<RepairContext> {
     protected Optional<CassandraTask> getOrCreateTask(RepairContext context)
             throws PersistenceException {
         CassandraDaemonTask daemonTask =
-                cassandraTasks.getDaemons().get(getDaemon());
+                cassandraState.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
             setStatus(Status.COMPLETE);
             return Optional.empty();
         }
-        return Optional.of(cassandraTasks.getOrCreateRepair(
+        return Optional.of(cassandraState.getOrCreateRepair(
                 daemonTask,
                 context));
     }

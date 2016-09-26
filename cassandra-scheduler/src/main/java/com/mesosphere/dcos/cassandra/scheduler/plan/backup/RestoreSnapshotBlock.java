@@ -7,7 +7,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +20,10 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<BackupRestore
 
     public static RestoreSnapshotBlock create(
             String daemon,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             BackupRestoreContext context) {
-        return new RestoreSnapshotBlock(daemon, cassandraTasks, provider,
+        return new RestoreSnapshotBlock(daemon, cassandraState, provider,
                 context);
     }
 
@@ -32,13 +32,13 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<BackupRestore
             throws PersistenceException {
 
         CassandraDaemonTask daemonTask =
-                cassandraTasks.getDaemons().get(getDaemon());
+                cassandraState.getDaemons().get(getDaemon());
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon does not exist");
             setStatus(Status.COMPLETE);
             return Optional.empty();
         }
-        return Optional.of(cassandraTasks.getOrCreateRestoreSnapshot(
+        return Optional.of(cassandraState.getOrCreateRestoreSnapshot(
                 daemonTask,
                 context));
 
@@ -46,10 +46,10 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<BackupRestore
 
     public RestoreSnapshotBlock(
             String daemon,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             BackupRestoreContext context) {
-        super(daemon, cassandraTasks, provider, context);
+        super(daemon, cassandraState, provider, context);
     }
 
 
