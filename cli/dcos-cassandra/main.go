@@ -97,13 +97,13 @@ func (cmd *NodeHandler) runList(c *kingpin.ParseContext) error {
 func (cmd *NodeHandler) runReplace(c *kingpin.ParseContext) error {
 	query := url.Values{}
 	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId))
-	cli.PrintJSON(cli.HTTPGetQuery("v1/nodes/replace", query.Encode()))
+	cli.PrintJSON(cli.HTTPPutQuery("v1/nodes/replace", query.Encode()))
 	return nil
 }
 func (cmd *NodeHandler) runRestart(c *kingpin.ParseContext) error {
 	query := url.Values{}
 	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId))
-	cli.PrintJSON(cli.HTTPGetQuery("v1/nodes/restart", query.Encode()))
+	cli.PrintJSON(cli.HTTPPutQuery("v1/nodes/restart", query.Encode()))
 	return nil
 }
 func (cmd *NodeHandler) runStatus(c *kingpin.ParseContext) error {
