@@ -75,6 +75,12 @@
 					"id": "http://cassandra/docs/mesosphere.com/service/data_center_url",
 					"type": "string",
 					"description": "A comma separated list of the URLs from which this service instance retrieve data center info to form a cluster spanning multiple data centers."
+				},
+				"mesos_refuse_seconds": {
+					"id": "http://cassandra/docs/mesosphere.com/service/mesos_refuse_seconds",
+					"type": "integer",
+					"description": "Configures the number of seconds for which a declined offer shouldn't be offered back to the scheduler.",
+					"default": 5
 				}
 			},
 			"additionalProperties": false,
