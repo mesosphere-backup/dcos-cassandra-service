@@ -42,6 +42,8 @@ public class CassandraDaemonTaskTest {
                 256,
                 500,
                 1000,
+                "host",
+                "dcos",
                 "java-home",
                 new URI("http://jre-location"),
                 new URI("http://executor-location"),

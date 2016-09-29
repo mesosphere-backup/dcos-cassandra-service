@@ -571,6 +571,18 @@
 					"type": "integer",
 					"description": "The port that the Cassandra executor API will accept on.",
 					"default": 9001
+				},
+				"network_mode" : {
+					"id": "http://cassandra/docs/mesosphere.com/executor/network_mode",
+					"type": "string",
+					"description": "Use host or CNI networking.",
+					"default": "host"
+				},
+				"cni_network" : {
+					"id": "http://cassandra/docs/mesosphere.com/executor/cni_network",
+					"type": "string",
+					"description": "The CNI network name to use if network_mode is set to CNI.",
+					"default": "dcos"
 				}
 			},
 			"additionalProperties": false,

@@ -5,6 +5,8 @@ executor:
   memory_mb : ${EXECUTOR_MEMORY_MB:-768}
   heap_mb : ${EXECUTOR_HEAP_MB:-512}
   api_port : ${EXECUTOR_API_PORT:-9000}
+  network_mode : ${EXECUTOR_NETWORK_MODE:-"host"}
+  cni_network : ${EXECUTOR_CNI_NETWORK:-"dcos"}
   java_home : ${EXECUTOR_JAVA_HOME:-"./jre"}
   jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
