@@ -6,7 +6,7 @@ import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProv
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.StateStore;

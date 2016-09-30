@@ -3,8 +3,6 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
-import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
@@ -19,7 +17,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletionStage;
 
 public class CassandraDaemonBlock extends DefaultObservable implements Block {
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -73,7 +70,8 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
         return cassandraState.needsConfigUpdate(task);
     }
 
-    private Optional<OfferRequirement> reconfigureTask(final CassandraDaemonTask task) throws ConfigStoreException {
+    private Optional<OfferRequirement> reconfigureTask(final CassandraDaemonTask task)
+            throws ConfigStoreException, PersistenceException {
         final CassandraTemplateTask templateTask = cassandraState
                 .getOrCreateTemplateTask(CassandraTemplateTask
                 .toTemplateTaskName(task.getName()), task);
@@ -81,7 +79,7 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
                 cassandraState.createCassandraContainer(cassandraState.reconfigureDaemon(task), templateTask));
     }
 
-    private Optional<OfferRequirement> replaceTask(final CassandraDaemonTask task) {
+    private Optional<OfferRequirement> replaceTask(final CassandraDaemonTask task) throws PersistenceException {
         String templateTaskName = CassandraTemplateTask.toTemplateTaskName(task.getName());
         CassandraTemplateTask templateTask = cassandraState.getOrCreateTemplateTask(templateTaskName, task);
         return provider.getReplacementOfferRequirement(
@@ -91,21 +89,18 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
     public static CassandraDaemonBlock create(
             final String name,
             final PersistentOfferRequirementProvider provider,
-            final CassandraState cassandraState,
-            final SchedulerClient client) throws PersistenceException, IOException {
+            final CassandraState cassandraState) throws IOException {
 
         return new CassandraDaemonBlock(
                 name,
                 provider,
-                cassandraState,
-                client);
+                cassandraState);
     }
 
     public CassandraDaemonBlock(
             final String name,
             final PersistentOfferRequirementProvider provider,
-            final CassandraState cassandraState,
-            final SchedulerClient client) throws PersistenceException, IOException {
+            final CassandraState cassandraState) throws IOException {
         this.cassandraState = cassandraState;
         this.name = name;
         this.provider = provider;
@@ -159,7 +154,6 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
                 LOGGER.info("Block {} - Task requires config update: id = {}",
                         getName(),
                         container.getId());
-                final String name = container.getDaemonTask().getName();
                 return reconfigureTask(container.getDaemonTask());
             } else if (container.isTerminated() || container.isLaunching()) {
                 LOGGER.info("Block {} - Replacing container : id = {}",

@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.config.ServiceConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.dcos.Capabilities;

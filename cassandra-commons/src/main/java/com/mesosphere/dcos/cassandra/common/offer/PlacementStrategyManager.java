@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.common.offer;
 
 import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.AnyPlacementStrategy;

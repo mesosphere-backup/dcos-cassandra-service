@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.config.ConfigStoreException;
@@ -57,10 +57,10 @@ public class CassandraRecoveryScheduler extends ChainedObserver {
                 Optional<OfferRequirement> offerReq;
                 if (terminated.getConfig().getReplaceIp().isEmpty()) {
                     offerReq = offerRequirementProvider.getReplacementOfferRequirement(
-                            cassandraState.getOrCreateContainer(terminated.getName())).get();
+                            cassandraState.getOrCreateContainer(terminated.getName()));
                 } else {
                     offerReq = offerRequirementProvider.getNewOfferRequirement(
-                            cassandraState.createCassandraContainer(terminated)).get();
+                            cassandraState.createCassandraContainer(terminated));
                 }
 
                 if (offerReq.isPresent()) {

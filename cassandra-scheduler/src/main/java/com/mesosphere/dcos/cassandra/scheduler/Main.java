@@ -8,7 +8,7 @@ import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
 import com.mesosphere.dcos.cassandra.scheduler.resources.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
 import io.dropwizard.configuration.SubstitutingSourceProvider;

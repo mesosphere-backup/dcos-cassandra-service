@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.dcos.Capabilities;

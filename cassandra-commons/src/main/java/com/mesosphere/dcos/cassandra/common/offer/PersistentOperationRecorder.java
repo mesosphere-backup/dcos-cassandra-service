@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.common.offer;
 
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.offer.OperationRecorder;

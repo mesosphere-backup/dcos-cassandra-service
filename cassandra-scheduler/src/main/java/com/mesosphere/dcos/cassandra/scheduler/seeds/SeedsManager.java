@@ -13,7 +13,7 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfigurati
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.SeedsResponse;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;

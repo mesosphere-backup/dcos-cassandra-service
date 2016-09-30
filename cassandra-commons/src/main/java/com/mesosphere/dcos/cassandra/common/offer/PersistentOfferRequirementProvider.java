@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.common.offer;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.config.ConfigStoreException;
