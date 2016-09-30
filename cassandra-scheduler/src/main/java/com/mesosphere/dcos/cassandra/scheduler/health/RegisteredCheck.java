@@ -4,7 +4,8 @@ import com.codahale.metrics.health.HealthCheck;
 import com.google.inject.Inject;
 import org.apache.mesos.Protos;
 import org.apache.mesos.state.StateStore;
-import org.apache.mesos.state.StateStoreException;
+
+import java.util.Optional;
 
 
 public class RegisteredCheck extends HealthCheck {
@@ -18,14 +19,18 @@ public class RegisteredCheck extends HealthCheck {
 
     protected Result check() throws Exception {
         try {
-            final Protos.FrameworkID frameworkID = stateStore.fetchFrameworkId().get();
-            String id = frameworkID.getValue();
-            if (!id.isEmpty()) {
-                return Result.healthy("Framework registered with id = " + id);
+            final Result unhealthyResult = Result.unhealthy("Framework is not yet registered");
+            final Optional<Protos.FrameworkID> frameworkID = stateStore.fetchFrameworkId();
+            if (frameworkID.isPresent()) {
+                String id = frameworkID.get().getValue();
+                if (!id.isEmpty()) {
+                    return Result.healthy("Framework registered with id = " + id);
+                } else {
+                    return unhealthyResult;
+                }
+            } else {
+                return unhealthyResult;
             }
-            return Result.unhealthy("Framework is not yet registered");
-        } catch (StateStoreException e) {
-            return Result.unhealthy("Framework is not yet registered");
         } catch (Throwable t) {
             throw t;
         }

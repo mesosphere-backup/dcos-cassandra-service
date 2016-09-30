@@ -1,9 +1,8 @@
 package com.mesosphere.dcos.cassandra.common.offer;
 
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.config.ConfigStoreException;
@@ -19,15 +18,15 @@ public class PersistentOfferRequirementProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             PersistentOfferRequirementProvider.class);
     private DefaultConfigurationManager configurationManager;
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     public static final String CONFIG_TARGET_KEY = "config_target";
 
     @Inject
     public PersistentOfferRequirementProvider(
             DefaultConfigurationManager configurationManager,
-            CassandraTasks cassandraTasks) {
+            CassandraState cassandraState) {
         this.configurationManager = configurationManager;
-        this.cassandraTasks = cassandraTasks;
+        this.cassandraState = cassandraState;
     }
 
     public Optional<OfferRequirement> getNewOfferRequirement(CassandraContainer container) {
@@ -37,7 +36,7 @@ public class PersistentOfferRequirementProvider {
         try {
             placementStrategy = PlacementStrategyManager.getPlacementStrategy(
                     configurationManager,
-                    cassandraTasks);
+                    cassandraState);
         } catch (ConfigStoreException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return Optional.empty();
@@ -79,6 +78,7 @@ public class PersistentOfferRequirementProvider {
 
     private Protos.TaskInfo updateConfigLabel(String configName, Protos.TaskInfo taskInfo) {
         final Protos.Labels.Builder labelsBuilder = Protos.Labels.newBuilder();
+
         final Protos.Labels labels = taskInfo.getLabels();
         for (Protos.Label label : labels.getLabelsList()) {
             final String key = label.getKey();
@@ -87,11 +87,9 @@ public class PersistentOfferRequirementProvider {
             }
         }
 
-        final Protos.Label configTargetLabel = Protos.Label.newBuilder()
+        labelsBuilder.addLabels(Protos.Label.newBuilder()
                 .setKey(CONFIG_TARGET_KEY)
-                .setValue(configName).build();
-
-        labelsBuilder.addLabels(configTargetLabel);
+                .setValue(configName));
         return Protos.TaskInfo.newBuilder(taskInfo)
                 .clearLabels()
                 .setLabels(labelsBuilder.build())

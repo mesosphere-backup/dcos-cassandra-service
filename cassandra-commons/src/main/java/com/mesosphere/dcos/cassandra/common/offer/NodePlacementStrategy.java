@@ -1,7 +1,6 @@
 package com.mesosphere.dcos.cassandra.common.offer;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.PlacementStrategy;
@@ -17,10 +16,10 @@ public class NodePlacementStrategy implements PlacementStrategy {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             NodePlacementStrategy.class);
 
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
 
-    public NodePlacementStrategy(CassandraTasks cassandraTasks) {
-        this.cassandraTasks = cassandraTasks;
+    public NodePlacementStrategy(CassandraState cassandraState) {
+        this.cassandraState = cassandraState;
     }
 
     @Override
@@ -45,7 +44,7 @@ public class NodePlacementStrategy implements PlacementStrategy {
     private List<Protos.TaskInfo> getOtherTaskInfos(Protos.TaskInfo thisTaskInfo) {
         final Protos.TaskID taskId = thisTaskInfo.getTaskId();
         final String taskIdValue = taskId.getValue();
-        final Map<String, CassandraDaemonTask> daemons = cassandraTasks.getDaemons();
+        final Map<String, CassandraDaemonTask> daemons = cassandraState.getDaemons();
 
         final List<Protos.TaskInfo> others = daemons.values().stream()
                 .filter(task -> !task.getId().equals(taskIdValue))

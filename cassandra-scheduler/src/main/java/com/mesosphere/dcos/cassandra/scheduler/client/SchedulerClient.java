@@ -123,9 +123,8 @@ public class SchedulerClient {
                 boolean successful = isSuccessful(response);
                 if (!successful) {
                     LOGGER.error("Delete request failed :url = {}, " +
-                                    "status = {}", url,
+                            "status = {}", url,
                             response.getStatusLine().getStatusCode());
-
                 }
                 promise.complete(successful);
             } catch (Throwable t) {
@@ -142,11 +141,12 @@ public class SchedulerClient {
 
     private CompletionStage<Boolean> delete(String host, String path) {
         try {
-            return delete(new URIBuilder()
-                    .setScheme(SCHEME)
-                    .setHost(host)
-                    .setPath(path)
-                    .build().toString());
+            return delete(
+                    new URIBuilder()
+                            .setScheme(SCHEME)
+                            .setHost(host)
+                            .setPath(path)
+                            .build().toString());
         } catch (Throwable t) {
             LOGGER.error(String.format(
                     "Delete request failed: host = %s, path = %s",

@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import java.util.List;
 
+import org.apache.mesos.scheduler.plan.Completable;
 import org.apache.mesos.scheduler.plan.Phase;
 
 /**
@@ -9,7 +10,7 @@ import org.apache.mesos.scheduler.plan.Phase;
  *
  * @param <Context> the {@link ClusterTaskContext} used by the implementing manager
  */
-public interface ClusterTaskManager<R extends ClusterTaskRequest> {
+public interface ClusterTaskManager<R extends ClusterTaskRequest> extends Completable {
 
     public static boolean canStart(ClusterTaskManager<?> manager) {
         return !manager.isInProgress();

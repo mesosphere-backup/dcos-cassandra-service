@@ -1,10 +1,10 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.DefaultObservable;
@@ -27,7 +27,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
     private volatile Status status;
     private final C context;
     private final CassandraOfferRequirementProvider provider;
-    protected final CassandraTasks cassandraTasks;
+    protected final CassandraState cassandraState;
 
     protected abstract Optional<CassandraTask> getOrCreateTask(C context)
             throws PersistenceException;
@@ -63,12 +63,17 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
 
         try {
             // Is Daemon task running ?
-            final Protos.TaskStatus lastKnownDaemonStatus =
-                    cassandraTasks.getStateStore().fetchStatus(getDaemon()).get();
-            if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus)) {
-                LOGGER.info("Daemon is not running.");
+            final Optional<Protos.TaskStatus> lastKnownDaemonStatus = cassandraState.getStateStore().fetchStatus(getDaemon());
+            if (!lastKnownDaemonStatus.isPresent()) {
+                LOGGER.info("Daemon is not present in StateStore.");
                 return Optional.empty();
             }
+
+            if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus.get())) {
+                LOGGER.info("Daemon block is not complete.");
+                return Optional.empty();
+            }
+
             Optional<CassandraTask> task = getOrCreateTask(context);
             if (task.isPresent()) {
                 if (isComplete() || isInProgress()) {
@@ -82,6 +87,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
             if (!task.isPresent()) {
                 LOGGER.info("Block has no task: name = {}, id = {}",
                         getName(), getId());
+
                 return Optional.empty();
             } else {
                 LOGGER.info("Block has task: " + task);
@@ -100,15 +106,15 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
 
     public AbstractClusterTaskBlock(
             final String daemon,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final CassandraOfferRequirementProvider provider,
             final C context) {
         this.daemon = daemon;
         this.provider = provider;
         this.status = Status.PENDING;
         this.context = context;
-        this.cassandraTasks = cassandraTasks;
-        Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
+        this.cassandraState = cassandraState;
+        Optional<CassandraTask> taskOption = cassandraState.get(getName());
         if (taskOption.isPresent()) {
             CassandraTask task = taskOption.get();
             if (Protos.TaskState.TASK_FINISHED.equals(
@@ -131,8 +137,8 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
         }
 
         try {
-            cassandraTasks.update(status);
-            Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
+            cassandraState.update(status);
+            Optional<CassandraTask> taskOption = cassandraState.get(getName());
 
             if (taskOption.isPresent()) {
                 CassandraTask task = taskOption.get();
@@ -142,7 +148,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
                     setStatus(Status.IN_PROGRESS);
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
-                    cassandraTasks.remove(getName());
+                    cassandraState.remove(getName());
                     LOGGER.info("Reallocating task {} for block {}",
                             getName(),
                             id);
@@ -214,6 +220,11 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
 
     protected void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        Status oldStatus = status;
         status = newStatus;
+
+        if (oldStatus != status) {
+            notifyObservers();
+        }
     }
 }

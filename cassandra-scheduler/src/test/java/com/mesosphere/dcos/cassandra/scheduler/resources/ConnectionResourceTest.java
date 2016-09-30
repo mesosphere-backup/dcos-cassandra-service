@@ -2,20 +2,20 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.testing.junit.ResourceTestRule;
-
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.dcos.Capabilities;
-import org.junit.*;
+import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mockito;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 public class ConnectionResourceTest {
     private static final String TEST_SERVICE_NAME = "testService";
@@ -121,7 +121,7 @@ public class ConnectionResourceTest {
         when(mockSchedulerConfig.getServiceConfig()).thenReturn(mockServiceConfig);
         when(mockServiceConfig.getName()).thenReturn(TEST_SERVICE_NAME);
 
-        CassandraTasks mockTasks = Mockito.mock(CassandraTasks.class);
+        CassandraState mockTasks = Mockito.mock(CassandraState.class);
         when(mockTasks.getDaemons()).thenReturn(TEST_TASKS);
 
         Capabilities mockCapabilities = Mockito.mock(Capabilities.class);

@@ -21,9 +21,9 @@ import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import com.mesosphere.dcos.cassandra.scheduler.CassandraScheduler;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.dcos.Capabilities;
 import org.glassfish.jersey.server.ManagedAsync;
@@ -44,18 +44,18 @@ public class TasksResource {
     private static final Logger LOGGER = LoggerFactory.getLogger
             (TasksResource.class);
     private final Capabilities capabilities;
-    private final CassandraTasks tasks;
+    private final CassandraState state;
     private final SchedulerClient client;
     private final ConfigurationManager configurationManager;
 
     @Inject
     public TasksResource(
             final Capabilities capabilities,
-            final CassandraTasks tasks,
+            final CassandraState state,
             final SchedulerClient client,
             final ConfigurationManager configurationManager) {
         this.capabilities = capabilities;
-        this.tasks = tasks;
+        this.state = state;
         this.client = client;
         this.configurationManager = configurationManager;
     }
@@ -63,7 +63,7 @@ public class TasksResource {
     @GET
     @Path("/list")
     public List<String> list() {
-        return new ArrayList<>(tasks.getDaemons().keySet());
+        return new ArrayList<>(state.getDaemons().keySet());
     }
 
     @GET
@@ -74,7 +74,7 @@ public class TasksResource {
         @Suspended final AsyncResponse response) {
 
         Optional<CassandraDaemonTask> taskOption =
-            Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(state.getDaemons().get(name));
         if (!taskOption.isPresent()) {
             response.resume(
                 Response.status(Response.Status.NOT_FOUND));
@@ -96,7 +96,7 @@ public class TasksResource {
     public DaemonInfo getInfo(@PathParam("name") final String name) {
 
         Optional<CassandraDaemonTask> taskOption =
-            Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(state.getDaemons().get(name));
         if (taskOption.isPresent()) {
             return DaemonInfo.create(taskOption.get());
         } else {
@@ -108,7 +108,7 @@ public class TasksResource {
     @Path("/restart")
     public Response restart(@QueryParam("node") final String name) {
         Optional<CassandraDaemonTask> taskOption =
-            Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(state.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
             CassandraScheduler.getTaskKiller().killTask(task.getName(), false);
@@ -123,10 +123,10 @@ public class TasksResource {
     public Response replace(@QueryParam("node") final String name)
         throws Exception {
         Optional<CassandraDaemonTask> taskOption =
-            Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(state.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
-            final CassandraContainer movedContainer = tasks.moveCassandraContainer(task);
+            final CassandraContainer movedContainer = state.moveCassandraContainer(task);
             LOGGER.info("Moved container ExecutorInfo: {}",
                     TextFormat.shortDebugString(movedContainer.getExecutorInfo()));
             CassandraScheduler.getTaskKiller().killTask(task.getName(), true);
@@ -144,7 +144,7 @@ public class TasksResource {
     @Deprecated
     public Map<String, Object> connect() throws ConfigStoreException {
         final ConnectionResource connectionResource =
-                new ConnectionResource(capabilities, tasks, configurationManager);
+                new ConnectionResource(capabilities, state, configurationManager);
         return connectionResource.connect();
     }
 
@@ -156,7 +156,7 @@ public class TasksResource {
     @Deprecated
     public List<String> connectAddress() {
         final ConnectionResource connectionResource =
-                new ConnectionResource(capabilities, tasks, configurationManager);
+                new ConnectionResource(capabilities, state, configurationManager);
         return connectionResource.connectAddress();
     }
 
@@ -168,7 +168,7 @@ public class TasksResource {
     @Deprecated
     public List<String> connectDns() throws ConfigStoreException {
         final ConnectionResource connectionResource =
-                new ConnectionResource(capabilities, tasks, configurationManager);
+                new ConnectionResource(capabilities, state, configurationManager);
         return connectionResource.connectDns();
     }
 

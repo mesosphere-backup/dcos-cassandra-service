@@ -63,7 +63,6 @@ public class SyncDataCenterBlock extends DefaultObservable implements Block, Run
 
     @Override
     public Optional<OfferRequirement> start() {
-
         Optional<DataCenterInfo> dc = byUrl();
         if (dc.isPresent() && dc.get().getSeeds().size() > 0) {
             LOGGER.info("Block {} : Data center synced {}", getName(),
@@ -125,6 +124,11 @@ public class SyncDataCenterBlock extends DefaultObservable implements Block, Run
 
     private void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        Status oldStatus = status;
         status = newStatus;
+
+        if (!status.equals(oldStatus)) {
+            notifyObservers();
+        }
     }
 }

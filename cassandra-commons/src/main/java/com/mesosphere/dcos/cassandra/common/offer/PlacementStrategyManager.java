@@ -2,7 +2,6 @@ package com.mesosphere.dcos.cassandra.common.offer;
 
 import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.AnyPlacementStrategy;
@@ -16,7 +15,7 @@ public class PlacementStrategyManager {
 
     public static PlacementStrategy getPlacementStrategy(
             DefaultConfigurationManager configurationManager,
-            CassandraTasks cassandraTasks) throws ConfigStoreException {
+            CassandraState cassandraState) throws ConfigStoreException {
         String placementStrategy = StringUtils.upperCase(
                 ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getPlacementStrategy());
 
@@ -28,7 +27,7 @@ public class PlacementStrategyManager {
                 return new AnyPlacementStrategy();
             case "NODE":
                 LOGGER.info("Returning NODE strategy");
-                return new NodePlacementStrategy(cassandraTasks);
+                return new NodePlacementStrategy(cassandraState);
             default:
                 LOGGER.info("Returning DEFAULT strategy");
                 return new AnyPlacementStrategy();

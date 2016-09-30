@@ -1,13 +1,15 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.collect.ImmutableList;
-import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
-import org.apache.mesos.scheduler.ChainedObserver;
+import org.apache.mesos.scheduler.DefaultObservable;
+import org.apache.mesos.scheduler.Observable;
+import org.apache.mesos.scheduler.Observer;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Plan;
 
@@ -15,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CassandraPlan extends ChainedObserver implements Plan {
+public class CassandraPlan extends DefaultObservable implements Plan, Observer {
 
     public static final CassandraPlan create(
             final DefaultConfigurationManager defaultConfigurationManager,
@@ -50,6 +52,11 @@ public class CassandraPlan extends ChainedObserver implements Plan {
         this.deployment = deployment;
         // Note: This ordering defines the ordering of the phases below:
         this.managers = Arrays.asList(backup, restore, cleanup, repair);
+
+        this.deployment.subscribe(this);
+        for (ClusterTaskManager<?> manager: this.managers) {
+            manager.subscribe(this);
+        }
     }
 
     @Override
@@ -74,7 +81,6 @@ public class CassandraPlan extends ChainedObserver implements Plan {
                 .build();
     }
 
-
     @Override
     public boolean isComplete() {
         if (!deployment.isComplete()) {
@@ -86,7 +92,6 @@ public class CassandraPlan extends ChainedObserver implements Plan {
             }
         }
         return true;
-
     }
 
     public void update() {
@@ -95,5 +100,10 @@ public class CassandraPlan extends ChainedObserver implements Plan {
                 manager.stop();
             }
         }
+    }
+
+    @Override
+    public void update(Observable observable) {
+        notifyObservers();
     }
 }
