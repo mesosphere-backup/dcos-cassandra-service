@@ -159,7 +159,12 @@ public class CassandraDaemonBlockTest {
 
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 String.valueOf(configurationManager.getTargetName()),
-                CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
+                CassandraTaskExecutor.create(
+                        configurationManager.getTargetName().toString(),
+                        EXPECTED_NAME,
+                        "cassandra-role",
+                        "cassandra-principal",
+                        config.getExecutorConfig()),
                 config.getCassandraConfig());
         Protos.TaskInfo taskInfo = task.getTaskInfo();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
@@ -170,36 +175,6 @@ public class CassandraDaemonBlockTest {
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
         stateStore.storeStatus(status);
 
-        Assert.assertTrue(!block.start().isPresent());
-    }
-
-    @Test
-    public void testStartCompletedReconcile() throws Exception {
-        final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
-                EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
-
-        final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
-        when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
-                Optional.of(mockOfferReq));
-
-        Assert.assertTrue(block.start().isPresent());
-
-        final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
-                "abc",
-                CassandraTaskExecutor.create("1234", EXPECTED_NAME, "cassandra-role", "cassandra-principal", config.getExecutorConfig()),
-                config.getCassandraConfig());
-        Protos.TaskInfo taskInfo = task.getTaskInfo();
-        taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
-                .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
-        stateStore.storeTasks(Arrays.asList(taskInfo));
-
-        final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(), Protos.TaskState.TASK_RUNNING);
-        stateStore.storeStatus(status);
-
-        //when(persistentOfferRequirementProvider.getReplacementOfferRequirement(Mockito.any()))
-                //.thenReturn(Optional.empty());
-        //Optional<OfferRequirement> offerRequirementOptional = block.start();
         Assert.assertTrue(!block.start().isPresent());
     }
 
