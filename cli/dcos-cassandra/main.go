@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -82,12 +84,33 @@ func handleCustomConnectionCommand(app *kingpin.Application, serviceName string)
 	connection.Flag("dns", fmt.Sprintf("Provide dns names of the %s nodes", serviceName)).BoolVar(&cmd.showDns)
 }
 
+// Supports either '1234' OR 'node-1234', converting both to 1234.
+type NodeValue struct {
+	val int
+}
+func (v *NodeValue) Set(value string) error {
+	re := regexp.MustCompile("^(node-)?([0-9]+)$")
+	vals := re.FindStringSubmatch(value)
+	if len(vals) == 0 {
+		return fmt.Errorf("Provided node value could not be parsed. Expected either 'node-NUM' or 'NUM' where NUM is an integer: %s", value)
+	}
+	var err error
+	v.val, err = strconv.Atoi(vals[2])
+	if err != nil {
+		return fmt.Errorf("Internal error: Can't convert %s to an int value: %s", vals[2], err)
+	}
+	return nil
+}
+func (v *NodeValue) String() string {
+	return ""
+}
+
 
 type NodeHandler struct {
-	nodeId int
+	nodeId NodeValue
 }
 func (cmd *NodeHandler) runDescribe(c *kingpin.ParseContext) error {
-	cli.PrintJSON(cli.HTTPGet(fmt.Sprintf("v1/nodes/node-%d/info", cmd.nodeId)))
+	cli.PrintJSON(cli.HTTPGet(fmt.Sprintf("v1/nodes/node-%d/info", cmd.nodeId.val)))
 	return nil
 }
 func (cmd *NodeHandler) runList(c *kingpin.ParseContext) error {
@@ -96,18 +119,18 @@ func (cmd *NodeHandler) runList(c *kingpin.ParseContext) error {
 }
 func (cmd *NodeHandler) runReplace(c *kingpin.ParseContext) error {
 	query := url.Values{}
-	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId))
+	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId.val))
 	cli.PrintJSON(cli.HTTPPutQuery("v1/nodes/replace", query.Encode()))
 	return nil
 }
 func (cmd *NodeHandler) runRestart(c *kingpin.ParseContext) error {
 	query := url.Values{}
-	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId))
+	query.Set("node", fmt.Sprintf("node-%d", cmd.nodeId.val))
 	cli.PrintJSON(cli.HTTPPutQuery("v1/nodes/restart", query.Encode()))
 	return nil
 }
 func (cmd *NodeHandler) runStatus(c *kingpin.ParseContext) error {
-	cli.PrintJSON(cli.HTTPGet(fmt.Sprintf("v1/nodes/node-%d/status", cmd.nodeId)))
+	cli.PrintJSON(cli.HTTPGet(fmt.Sprintf("v1/nodes/node-%d/status", cmd.nodeId.val)))
 	return nil
 }
 func handleNodeSection(app *kingpin.Application, serviceName string) {
@@ -115,18 +138,18 @@ func handleNodeSection(app *kingpin.Application, serviceName string) {
 	connection := app.Command("node", fmt.Sprintf("Manage %s nodes", serviceName))
 
 	describe := connection.Command("describe", "Describes a single node").Action(cmd.runDescribe)
-	describe.Arg("node_id", "The node id to describe").IntVar(&cmd.nodeId)
+	describe.Arg("node_id", "The node id to describe").SetValue(&cmd.nodeId)
 
 	connection.Command("list", "Lists all nodes").Action(cmd.runList)
 
 	replace := connection.Command("replace", "Replaces a single node job, moving it to a different agent").Action(cmd.runReplace)
-	replace.Arg("node_id", "The node id to replace").IntVar(&cmd.nodeId)
+	replace.Arg("node_id", "The node id to replace").SetValue(&cmd.nodeId)
 
 	restart := connection.Command("restart", "Restarts a single node job, keeping it on the same agent").Action(cmd.runRestart)
-	restart.Arg("node_id", "The node id to restart").IntVar(&cmd.nodeId)
+	restart.Arg("node_id", "The node id to restart").SetValue(&cmd.nodeId)
 
 	status := connection.Command("status", "Gets the status of a single node").Action(cmd.runStatus)
-	status.Arg("node_id", "The node id to check").IntVar(&cmd.nodeId)
+	status.Arg("node_id", "The node id to check").SetValue(&cmd.nodeId)
 }
 
 // Reuse same struct for both 'backup start' and 'restore start' (same args)
