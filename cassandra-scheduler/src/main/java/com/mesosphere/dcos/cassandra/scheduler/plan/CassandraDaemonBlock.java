@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.state.StateStoreException;
@@ -19,7 +20,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public class CassandraDaemonBlock implements Block {
+public class CassandraDaemonBlock extends DefaultObservable implements Block {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraDaemonBlock.class);
 

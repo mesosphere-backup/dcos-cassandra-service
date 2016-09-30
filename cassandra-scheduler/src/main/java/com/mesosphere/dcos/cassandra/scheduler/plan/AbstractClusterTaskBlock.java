@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> implements Block {
+public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> extends DefaultObservable implements Block {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             AbstractClusterTaskBlock.class);
 
@@ -65,13 +66,15 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
             final Protos.TaskStatus lastKnownDaemonStatus =
                     cassandraTasks.getStateStore().fetchStatus(getDaemon()).get();
             if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus)) {
-                return null;
+                LOGGER.info("Daemon is not running.");
+                return Optional.empty();
             }
             Optional<CassandraTask> task = getOrCreateTask(context);
             if (task.isPresent()) {
                 update(task.get().getCurrentStatus());
                 if (isComplete() || isInProgress()) {
-                    return null;
+                    LOGGER.info("No requirement because block is: ", status);
+                    return Optional.empty();
                 } else {
                     setStatus(Status.PENDING);
                 }
@@ -80,8 +83,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
             if (!task.isPresent()) {
                 LOGGER.info("Block has no task: name = {}, id = {}",
                         getName(), getId());
-
-                return null;
+                return Optional.empty();
             } else {
                 LOGGER.info("Block has task: " + task);
                 return Optional.of(getOfferRequirement(task.get()));
@@ -93,7 +95,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                     getName(),
                     getId()), ex);
 
-            return null;
+            return Optional.empty();
         }
     }
 

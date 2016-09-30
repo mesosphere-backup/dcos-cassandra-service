@@ -4,13 +4,14 @@ import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.mesos.scheduler.ChainedObserver;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
 
 import java.util.List;
 import java.util.UUID;
 
-public abstract class AbstractClusterTaskPhase<B extends Block, C extends ClusterTaskContext> implements Phase {
+public abstract class AbstractClusterTaskPhase<B extends Block, C extends ClusterTaskContext> extends ChainedObserver implements Phase {
 
     protected final UUID id = UUID.randomUUID();
     protected final C context;

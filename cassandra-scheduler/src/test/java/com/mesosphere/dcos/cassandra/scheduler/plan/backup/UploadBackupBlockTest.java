@@ -97,7 +97,7 @@ public class UploadBackupBlockTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
-        Assert.assertNull(block.start());
+        Assert.assertEquals(Optional.empty(), block.start());
         Assert.assertTrue(block.isComplete());
     }
 

@@ -5,12 +5,9 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTemplateTask;
-import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
+import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
@@ -18,7 +15,6 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -33,12 +29,10 @@ import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.scheduler.DefaultTaskKiller;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
-import org.apache.mesos.scheduler.recovery.DefaultTaskFailureListener;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.testing.QueuedSchedulerDriver;
 import org.junit.After;
@@ -175,13 +169,12 @@ public class CassandraSchedulerTest {
                 seeds,
                 executorService,
                 stateStore,
-                new DefaultTaskKiller(stateStore, new DefaultTaskFailureListener(stateStore)),
                 defaultConfigurationManager);
 
         masterInfo = TestUtils.generateMasterInfo();
 
-        scheduler.registered(null, frameworkId, masterInfo);
         driver = new QueuedSchedulerDriver();
+        scheduler.registered(driver, frameworkId, masterInfo);
     }
 
     @Test

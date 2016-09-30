@@ -99,7 +99,7 @@ public class DownloadSnapshotBlockTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
-        Assert.assertNull(backupSnapshotBlock.start());
+        Assert.assertEquals(Optional.empty(), backupSnapshotBlock.start());
         Assert.assertEquals(Status.COMPLETE, Block.getStatus(backupSnapshotBlock));
     }
 

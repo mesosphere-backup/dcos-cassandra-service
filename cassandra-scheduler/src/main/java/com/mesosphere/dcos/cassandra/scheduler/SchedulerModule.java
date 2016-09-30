@@ -38,11 +38,8 @@ import org.apache.mesos.dcos.DcosCluster;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.reconciliation.TaskStatusProvider;
-import org.apache.mesos.scheduler.DefaultTaskKiller;
-import org.apache.mesos.scheduler.TaskKiller;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.PlanManager;
-import org.apache.mesos.scheduler.recovery.DefaultTaskFailureListener;
 import org.apache.mesos.state.StateStore;
 
 import java.util.List;
@@ -89,11 +86,6 @@ public class SchedulerModule extends AbstractModule {
                 curatorConfig.getServers(),
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
-
-        TaskKiller taskKiller = new DefaultTaskKiller(
-                curatorStateStore,
-                new DefaultTaskFailureListener(curatorStateStore));
-        bind(TaskKiller.class).toInstance(taskKiller);
 
         Capabilities capabilities = new Capabilities(new DcosCluster());
         bind(Capabilities.class).toInstance(capabilities);

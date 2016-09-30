@@ -26,12 +26,14 @@ import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.ResourceCleaner;
 import org.apache.mesos.offer.ResourceCleanerScheduler;
 import org.apache.mesos.reconciliation.Reconciler;
+import org.apache.mesos.scheduler.DefaultTaskKiller;
 import org.apache.mesos.scheduler.SchedulerDriverFactory;
 import org.apache.mesos.scheduler.TaskKiller;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.DefaultPlanScheduler;
 import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.scheduler.plan.PlanScheduler;
+import org.apache.mesos.scheduler.recovery.DefaultTaskFailureListener;
 import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,14 +44,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 public class CassandraScheduler implements Scheduler, Managed {
-    private final static Logger LOGGER = LoggerFactory.getLogger(
-            CassandraScheduler.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(CassandraScheduler.class);
+    private static TaskKiller taskKiller;
 
     private SchedulerDriver driver;
     private final ConfigurationManager configurationManager;
     private final MesosConfig mesosConfig;
     private final PlanManager planManager;
-    private final PlanScheduler planScheduler;
     private final CassandraRepairScheduler repairScheduler;
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
@@ -66,7 +67,7 @@ public class CassandraScheduler implements Scheduler, Managed {
     private final StateStore stateStore;
     private final DefaultConfigurationManager defaultConfigurationManager;
     private final Protos.Filters offerFilters;
-    private final TaskKiller taskKiller;
+    private PlanScheduler planScheduler;
 
     @Inject
     public CassandraScheduler(
@@ -85,7 +86,6 @@ public class CassandraScheduler implements Scheduler, Managed {
             final SeedsManager seeds,
             final ExecutorService executor,
             final StateStore stateStore,
-            final TaskKiller taskKiller,
             final DefaultConfigurationManager defaultConfigurationManager) {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
@@ -107,10 +107,6 @@ public class CassandraScheduler implements Scheduler, Managed {
         this.seeds = seeds;
         this.executor = executor;
         this.stateStore = stateStore;
-        this.taskKiller = taskKiller;
-        planScheduler = new DefaultPlanScheduler(
-                offerAccepter,
-                taskKiller);
         this.defaultConfigurationManager = defaultConfigurationManager;
         this.offerFilters = Protos.Filters.newBuilder().setRefuseSeconds(mesosConfig.getRefuseSeconds()).build();
         LOGGER.info("Creating an offer filter with refuse_seconds = {}", mesosConfig.getRefuseSeconds());
@@ -139,6 +135,13 @@ public class CassandraScheduler implements Scheduler, Managed {
         final String frameworkIdValue = frameworkId.getValue();
         LOGGER.info("Framework registered : id = {}", frameworkIdValue);
         try {
+            this.taskKiller = new DefaultTaskKiller(
+                    stateStore,
+                    new DefaultTaskFailureListener(stateStore),
+                    driver);
+            this.planScheduler = new DefaultPlanScheduler(
+                    offerAccepter,
+                    taskKiller);
             stateStore.storeFrameworkId(frameworkId);
             planManager.setPlan(CassandraPlan.create(
                     defaultConfigurationManager,
@@ -214,7 +217,6 @@ public class CassandraScheduler implements Scheduler, Managed {
             }
 
             declineOffers(driver, acceptedOffers, offers);
-            taskKiller.process(driver);
         } catch (Throwable t){
             LOGGER.error("Error in offer acceptance cycle", t);
         }
@@ -370,5 +372,9 @@ public class CassandraScheduler implements Scheduler, Managed {
         Protos.OfferID offerId = offer.getId();
         LOGGER.info("Scheduler declining offer: {}", offerId);
         driver.declineOffer(offerId, offerFilters);
+    }
+
+    public static TaskKiller getTaskKiller() {
+        return taskKiller;
     }
 }
