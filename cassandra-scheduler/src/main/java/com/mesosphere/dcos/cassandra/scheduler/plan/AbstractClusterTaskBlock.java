@@ -71,7 +71,6 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
             }
             Optional<CassandraTask> task = getOrCreateTask(context);
             if (task.isPresent()) {
-                update(task.get().getCurrentStatus());
                 if (isComplete() || isInProgress()) {
                     LOGGER.info("No requirement because block is: ", status);
                     return Optional.empty();
