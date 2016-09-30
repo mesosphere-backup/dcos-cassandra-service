@@ -1,4 +1,4 @@
-package com.mesosphere.dcos.cassandra.scheduler.tasks;
+package com.mesosphere.dcos.cassandra.common.tasks;
 
 
 import com.google.common.collect.ImmutableMap;
@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
