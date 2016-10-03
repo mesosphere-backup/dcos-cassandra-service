@@ -46,7 +46,6 @@ public class CassandraState extends SchedulerState implements Managed, TaskStatu
     @Inject
     public CassandraState(
             final ConfigurationManager configuration,
-            final CuratorFrameworkConfig curatorConfig,
             final ClusterTaskConfig clusterTaskConfig,
             final StateStore stateStore) {
         super(stateStore);

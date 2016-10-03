@@ -112,7 +112,6 @@ public class CassandraDaemonBlockTest {
 
         cassandraState = new CassandraState(
                 new ConfigurationManager(taskFactory, configurationManager),
-                curatorConfig,
                 clusterTaskConfig,
                 stateStore);
     }

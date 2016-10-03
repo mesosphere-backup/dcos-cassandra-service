@@ -111,7 +111,6 @@ public class CassandraStateTest {
 
         cassandraState = new CassandraState(
                 configuration,
-                curatorConfig,
                 clusterTaskConfig,
                 stateStore);
     }

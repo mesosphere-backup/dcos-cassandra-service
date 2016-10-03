@@ -6,7 +6,7 @@ import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -47,7 +47,7 @@ public class CassandraTaskFactoryTest {
     private static ConfigurationManager configuration;
     private static ClusterTaskConfig clusterTaskConfig;
     private static String testDaemonName = "test-daemon-name";
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     private static StateStore stateStore;
 
     @Mock ExecutorDriver executorDriver;
@@ -111,9 +111,8 @@ public class CassandraTaskFactoryTest {
                 new CassandraDaemonTask.Factory(mockCapabilities),
                 configurationManager);
 
-        cassandraTasks = new CassandraTasks(
+        cassandraState = new CassandraState(
                 configuration,
-                curatorConfig,
                 clusterTaskConfig,
                 stateStore);
 
@@ -128,7 +127,7 @@ public class CassandraTaskFactoryTest {
 
     @Test
     public void testCreateDaemonTask() throws ConfigStoreException, PersistenceException, ExecutorTaskException {
-        CassandraDaemonTask daemonTask = cassandraTasks.createDaemon(testDaemonName);
+        CassandraDaemonTask daemonTask = cassandraState.createDaemon(testDaemonName);
         ExecutorTask executorTask = taskFactory.createTask(daemonTask.getTaskInfo(), executorDriver);
         Assert.assertNotNull(executorTask);
 

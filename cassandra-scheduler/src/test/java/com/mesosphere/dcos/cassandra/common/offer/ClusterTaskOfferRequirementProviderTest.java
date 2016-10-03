@@ -25,18 +25,16 @@ import org.apache.mesos.state.StateStore;
 import org.junit.*;
 import org.mockito.Mockito;
 
-import static org.mockito.Mockito.when;
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+
+import static org.mockito.Mockito.when;
 
 public class ClusterTaskOfferRequirementProviderTest {
     private static TestingServer server;
     private static CassandraSchedulerConfiguration config;
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
-    private static CuratorFrameworkConfig curatorConfig;
     private static ClusterTaskConfig clusterTaskConfig;
     private static CassandraState cassandraState;
     private static ClusterTaskOfferRequirementProvider provider;
@@ -56,7 +54,6 @@ public class ClusterTaskOfferRequirementProviderTest {
     public void beforeEach() throws Exception {
         cassandraState = new CassandraState(
                 configuration,
-                curatorConfig,
                 clusterTaskConfig,
                 stateStore);
 
@@ -123,12 +120,6 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         config = mutable.createConfig();
         ServiceConfig initial = config.getServiceConfig();
-
-        curatorConfig = CuratorFrameworkConfig.create(server.getConnectString(),
-                10000L,
-                10000L,
-                Optional.empty(),
-                250L);
 
         clusterTaskConfig = config.getClusterTaskConfig();
 

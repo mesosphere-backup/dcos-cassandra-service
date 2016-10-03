@@ -145,7 +145,6 @@ public class CassandraSchedulerTest {
         final ClusterTaskConfig clusterTaskConfig = configurationManager.getTargetConfig().getClusterTaskConfig();
         cassandraState = new CassandraState(
                 configurationManager,
-                curatorConfig,
                 clusterTaskConfig,
                 stateStore);
         reconciler = new DefaultReconciler(cassandraState);
