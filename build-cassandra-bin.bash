@@ -56,14 +56,19 @@ function _package_github {
     fi
 }
 
-mkdir -p "cassandra-bin-tmp"
-cd "cassandra-bin-tmp"
-
 ###
 # Build seedprovider jar
 ###
 
+echo "##### Build seedprovider jar #####"
 ./gradlew :seedprovider:jar
+
+###
+# Go into tmp dir
+###
+
+mkdir -p "cassandra-bin-tmp"
+cd "cassandra-bin-tmp"
 
 ###
 # Download and unpack stock cassandra-bin and verify with downloaded sha1 file
