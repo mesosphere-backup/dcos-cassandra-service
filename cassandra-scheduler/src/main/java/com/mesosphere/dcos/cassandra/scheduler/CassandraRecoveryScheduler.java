@@ -64,6 +64,7 @@ public class CassandraRecoveryScheduler extends ChainedObserver {
                 }
 
                 if (offerReq.isPresent()) {
+                    LOGGER.info("Attempting to satisfy OfferRequirement: " + offerReq.get());
                     List<OfferRecommendation> recommendations =
                             offerEvaluator.evaluate(offerReq.get(), offers);
                     LOGGER.debug(

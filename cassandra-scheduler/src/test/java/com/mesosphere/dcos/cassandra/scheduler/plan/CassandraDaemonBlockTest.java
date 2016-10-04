@@ -21,6 +21,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.state.StateStore;
@@ -168,7 +169,7 @@ public class CassandraDaemonBlockTest {
         Protos.TaskInfo taskInfo = task.getTaskInfo();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
-        stateStore.storeTasks(Arrays.asList(taskInfo));
+        stateStore.storeTasks(Arrays.asList(TaskUtils.packTaskInfo(taskInfo)));
 
         final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
@@ -196,7 +197,7 @@ public class CassandraDaemonBlockTest {
         Protos.TaskInfo taskInfo = task.getTaskInfo();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
-        stateStore.storeTasks(Arrays.asList(taskInfo));
+        stateStore.storeTasks(Arrays.asList(TaskUtils.packTaskInfo(taskInfo)));
 
         Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
@@ -237,7 +238,7 @@ public class CassandraDaemonBlockTest {
         Protos.TaskInfo taskInfo = task.getTaskInfo();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
-        stateStore.storeTasks(Arrays.asList(taskInfo));
+        stateStore.storeTasks(Arrays.asList(TaskUtils.packTaskInfo(taskInfo)));
 
         Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
@@ -277,7 +278,7 @@ public class CassandraDaemonBlockTest {
         Protos.TaskInfo taskInfo = task.getTaskInfo();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
-        stateStore.storeTasks(Arrays.asList(taskInfo));
+        stateStore.storeTasks(Arrays.asList(TaskUtils.packTaskInfo(taskInfo)));
 
         final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_FINISHED);
@@ -307,7 +308,7 @@ public class CassandraDaemonBlockTest {
         Protos.TaskInfo taskInfo = task.getTaskInfo();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
-        stateStore.storeTasks(Arrays.asList(taskInfo));
+        stateStore.storeTasks(Arrays.asList(TaskUtils.packTaskInfo(taskInfo)));
 
         final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_FAILED);
@@ -343,7 +344,7 @@ public class CassandraDaemonBlockTest {
         Protos.TaskInfo taskInfo = task.getTaskInfo();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
-        stateStore.storeTasks(Arrays.asList(taskInfo));
+        stateStore.storeTasks(Arrays.asList(TaskUtils.packTaskInfo(taskInfo)));
 
         final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_STAGING);
