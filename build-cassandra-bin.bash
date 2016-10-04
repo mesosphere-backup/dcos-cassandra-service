@@ -60,6 +60,12 @@ mkdir -p "cassandra-bin-tmp"
 cd "cassandra-bin-tmp"
 
 ###
+# Build seedprovider jar
+###
+
+./gradlew :seedprovider:jar
+
+###
 # Download and unpack stock cassandra-bin and verify with downloaded sha1 file
 ###
 
