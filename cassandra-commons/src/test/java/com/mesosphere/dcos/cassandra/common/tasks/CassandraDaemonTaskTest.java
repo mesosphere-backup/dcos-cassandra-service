@@ -31,7 +31,10 @@ public class CassandraDaemonTaskTest {
     private CassandraTaskExecutor testTaskExecutor;
 
     @Before
-    public void beforeEach()  {
+    public void beforeEach() throws IOException, URISyntaxException {
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        testTaskFactory = new CassandraDaemonTask.Factory(mockCapabilities);
         testExecutorConfig = ExecutorConfig.create(
                 "test-cmd",
                 Arrays.asList("arg0"),
