@@ -1,13 +1,42 @@
 apply plugin: 'application'
+apply plugin: 'maven-publish'
 mainClassName = 'com.mesosphere.dcos.cassandra.scheduler.Main'
 
 dependencies {
     compile project(':cassandra-commons')
 }
 
-distributions {
-    main {
-        baseName = 'scheduler'
-        version = ""
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact("$buildDir/distributions/${project.name}-${project.version}.zip") {
+                extension 'zip'
+            }
+        }
     }
 }
+
+// build.sh needs scheduler.zip for ci_upload.py
+task copyDist(type: Copy) {
+    dependsOn distTar, distZip
+    from "$buildDir/distributions/"
+    into "$buildDir/distributions/"
+    rename("${project.name}-${project.version}", "scheduler")
+}
+
+publishing {
+    repositories {
+        maven {
+            credentials {
+                username System.getenv('REPOSITORY_USERNAME')
+                password System.getenv('REPOSITORY_PASSWORD')
+            }
+            url System.getenv('REPOSITORY_URL') ?: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        }
+    }
+}
+
+publishToMavenLocal.dependsOn(build)
+publish.dependsOn(build)
+
+build.dependsOn(copyDist)

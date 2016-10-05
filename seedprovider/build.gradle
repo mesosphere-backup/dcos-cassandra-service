@@ -1,3 +1,24 @@
+apply plugin: 'maven-publish'
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
 
+publishing {
+    repositories {
+        maven {
+            credentials {
+                username System.getenv('REPOSITORY_USERNAME')
+                password System.getenv('REPOSITORY_PASSWORD')
+            }
+            url System.getenv('REPOSITORY_URL') ?: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        }
+    }
+}
 
+publishToMavenLocal.dependsOn(build)
+publish.dependsOn(build)

@@ -1,4 +1,5 @@
 apply plugin: 'application'
+apply plugin: 'maven-publish'
 mainClassName = 'com.mesosphere.dcos.cassandra.executor.Main'
 
 ext {
@@ -24,9 +25,37 @@ dependencies {
     testCompile "junit:junit:${junitVer}"
 }
 
-distributions {
-    main {
-        baseName = 'executor'
-        version = ""
+// build.sh needs executor.zip for ci_upload.py
+task copyDist(type: Copy) {
+    dependsOn distTar, distZip
+    from "$buildDir/distributions/"
+    into "$buildDir/distributions/"
+    rename("${project.name}-${project.version}", "executor")
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact("$buildDir/distributions/${project.name}-${project.version}.zip") {
+                extension 'zip'
+            }
+        }
     }
 }
+
+publishing {
+    repositories {
+        maven {
+            credentials {
+                username System.getenv('REPOSITORY_USERNAME')
+                password System.getenv('REPOSITORY_PASSWORD')
+            }
+            url System.getenv('REPOSITORY_URL') ?: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        }
+    }
+}
+
+publishToMavenLocal.dependsOn(build)
+publish.dependsOn(build)
+
+build.dependsOn(copyDist)
