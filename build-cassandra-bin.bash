@@ -56,6 +56,17 @@ function _package_github {
     fi
 }
 
+###
+# Build seedprovider jar
+###
+
+echo "##### Build seedprovider jar #####"
+./gradlew :seedprovider:jar
+
+###
+# Go into tmp dir
+###
+
 mkdir -p "cassandra-bin-tmp"
 cd "cassandra-bin-tmp"
 
