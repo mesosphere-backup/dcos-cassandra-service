@@ -1295,7 +1295,7 @@ capable of dealing with topology changes. However, the application's
 configuration should be pointed to the new address the next time the application is
 restarted.
 
-If DNS ames are used, the DNS name will always resolve to correct IP address of the node.
+If DNS names are used, the DNS name will always resolve to correct IP address of the node.
 This is true, even if the node is moved to a new IP address. However, it is important to
 understand the DNS caching behavior of your application. For a Java application using
 the CQL driver, if a SecurityManager is installed the default behavior is to cache a
