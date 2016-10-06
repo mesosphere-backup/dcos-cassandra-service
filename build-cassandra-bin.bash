@@ -14,6 +14,13 @@
 
 set -o errexit -o nounset -o pipefail
 
+# Check to see if we should use gsed or sed
+SED=$([ "$(uname)" == "Darwin" ] && echo "$(which gsed)" || echo "$(which sed)")
+if [ -z "$SED" ]; then
+    echo "Please install GNU sed by running brew install gnu-sed"
+    exit 1
+fi
+
 # VERSION SETTINGS
 CASSANDRA_VERSION="3.0.8"
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
@@ -106,7 +113,7 @@ rm -v "${CONF_DIR}"/cassandra-topology.properties
 echo "##### Disable JMX_PORT in cassandra-env.sh #####"
 
 # "JMX_PORT=???" => "#DISABLED FOR DC/OS\n#JMX_PORT=???"
-sed -i "s/\(^JMX_PORT=.*\)/#DISABLED FOR DC\/OS:\n#\1/g" "${CONF_DIR}"/cassandra-env.sh
+$SED -i "s/\(^JMX_PORT=.*\)/#DISABLED FOR DC\/OS:\n#\1/g" "${CONF_DIR}"/cassandra-env.sh
 
 _sha1sum "${CONF_DIR}"/* &> confdir-after.txt || true
 
