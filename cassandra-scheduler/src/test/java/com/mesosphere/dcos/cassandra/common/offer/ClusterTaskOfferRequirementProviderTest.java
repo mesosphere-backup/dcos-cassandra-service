@@ -228,7 +228,7 @@ public class ClusterTaskOfferRequirementProviderTest {
         Assert.assertEquals("resource_id", portsResource.getReservation().getLabels().getLabelsList().get(0).getKey());
         Assert.assertEquals(testResourceId, portsResource.getReservation().getLabels().getLabelsList().get(0).getValue());
 
-        final Protos.ExecutorInfo executorInfo = requirement.getExecutorRequirement().getExecutorInfo();
+        final Protos.ExecutorInfo executorInfo = requirement.getExecutorRequirementOptional().get().getExecutorInfo();
 
         Protos.CommandInfo cmd = executorInfo.getCommand();
         Assert.assertEquals(3, cmd.getUrisList().size());

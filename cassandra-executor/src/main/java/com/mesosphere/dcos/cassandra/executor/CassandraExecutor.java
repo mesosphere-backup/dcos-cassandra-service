@@ -102,7 +102,7 @@ public class CassandraExecutor implements Executor {
 
     @Override
     public void error(ExecutorDriver driver, String message) {
-        LOGGER.error("Error {}", message);
+        customExecutor.error(driver, message);
     }
 
     public Optional<CassandraDaemonProcess> getCassandraDaemon() {
