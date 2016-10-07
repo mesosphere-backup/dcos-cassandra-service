@@ -247,7 +247,8 @@ public class CassandraDaemonProcess {
 
 
     private final CassandraDaemonTask task;
-    private final CassandraPaths paths;
+    private final ScheduledExecutorService executor;
+    private final DsePaths paths;
     private final Process process;
     private final AtomicBoolean open = new AtomicBoolean(true);
     private final AtomicReference<CassandraMode> mode;
@@ -270,11 +271,13 @@ public class CassandraDaemonProcess {
     private Process createDaemon() throws IOException {
 
         final ProcessBuilder builder = new ProcessBuilder(
-            paths.cassandraRun().toString(),
-            getReplaceIp(),
-            "-f")
-            .inheritIO()
-            .directory(new File(System.getProperty("user.dir")));
+                paths.dseRun().toString(),
+                "cassandra",
+                "-f",
+                getReplaceIp())
+                .directory(new File(System.getProperty("user.dir")))
+                .redirectOutput(new File("cassandra-stdout.log"))
+                .redirectError(new File("cassandra-stderr.log"));
         builder.environment().put(
                 "JMX_PORT",
                 Integer.toString(task.getConfig().getJmxPort()));
@@ -331,20 +334,25 @@ public class CassandraDaemonProcess {
             throws IOException {
 
         this.task = task;
-        this.paths = CassandraPaths.create(
-                task.getConfig().getVersion());
+        this.executor = executor;
+        this.paths = DsePaths.create(task.getConfig().getVersion());
         task.getConfig().getLocation().writeProperties(
-                paths.cassandraLocation());
+                paths.cassandra().cassandraLocation());
 
         task.getConfig().getApplication().toBuilder()
-            .setListenAddress(getListenAddress())
-            .setRpcAddress(getListenAddress())
-            .build().writeDaemonConfiguration(paths.cassandraConfig());
+                .setPersistentVolume(Paths.get("").resolve(task.getVolumePath())
+                        .toAbsolutePath().toString())
+                .setListenAddress(getListenAddress())
+                .setRpcAddress(getListenAddress())
+                .build().writeDaemonConfiguration(paths.cassandra().cassandraConfig());
+        task.getConfig().getDse().writeYaml(paths.dseConfig());
 
-        task.getConfig().getHeap().writeHeapSettings(paths.heapConfig());
+        task.getConfig().getHeap().writeHeapSettings(
+          paths.cassandra().heapConfig());
 
         if (metricsEnabled) {
-            metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());
+            metricsEnabled = MetricsConfig.writeMetricsConfig(
+              paths.cassandra().conf());
         }
 
         process = createDaemon();
@@ -534,9 +542,7 @@ public class CassandraDaemonProcess {
      */
     public void cleanup()
             throws InterruptedException, ExecutionException, IOException {
-        for (String keyspace : getNonSystemKeySpaces()) {
-            cleanup(keyspace, Collections.emptyList());
-        }
+        this.probe.forceKeyspaceCleanup(null);
     }
 
     /**
@@ -616,10 +622,6 @@ public class CassandraDaemonProcess {
      */
     public void upgradeTables()
             throws InterruptedException, ExecutionException, IOException {
-        for (String keyspace : getNonSystemKeySpaces()) {
-            this.probe.forceKeyspaceCleanup(0, keyspace);
-        }
+        this.probe.upgradeSSTables(null, true);
     }
-
-
 }
