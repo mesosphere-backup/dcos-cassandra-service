@@ -96,7 +96,7 @@ public class UploadBackupBlockTest {
                 context);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!block.start().isPresent());
         Assert.assertTrue(block.isComplete());
     }
@@ -112,6 +112,7 @@ public class UploadBackupBlockTest {
 
         final BackupUploadTask task = Mockito.mock(BackupUploadTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
+        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.BACKUP_UPLOAD);
         Mockito
                 .when(cassandraState.getOrCreateBackupUpload(daemonTask, context))
                 .thenReturn(task);
@@ -123,7 +124,7 @@ public class UploadBackupBlockTest {
                 context);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(block.start().isPresent());
         Assert.assertTrue(block.isInProgress());
     }

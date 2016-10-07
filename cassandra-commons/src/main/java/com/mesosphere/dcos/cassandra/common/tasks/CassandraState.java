@@ -18,7 +18,6 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.TaskUtils;
-import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.state.SchedulerState;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
@@ -32,7 +31,7 @@ import java.util.stream.Collectors;
 /**
  * Cassandra State Store
  */
-public class CassandraState extends SchedulerState implements Managed, TaskStatusProvider {
+public class CassandraState extends SchedulerState implements Managed {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             CassandraState.class);
 
@@ -69,7 +68,8 @@ public class CassandraState extends SchedulerState implements Managed, TaskStatu
                 for (Protos.TaskInfo taskInfo : taskInfos) {
                     try {
                         final CassandraTask cassandraTask = CassandraTask.parse(TaskUtils.unpackTaskInfo(taskInfo));
-                        LOGGER.info("Loaded task: {}", cassandraTask.getName());
+                        LOGGER.info("Loaded task: {}, type: {}, hostname: {}",
+                                cassandraTask.getName(), cassandraTask.getType().name(), cassandraTask.getHostname());
                         builder.put(cassandraTask.getName(), cassandraTask);
                     } catch (IOException e) {
                         LOGGER.error("Error parsing task: {}. Reason: {}", TextFormat.shortDebugString(taskInfo), e);
@@ -456,8 +456,10 @@ public class CassandraState extends SchedulerState implements Managed, TaskStatu
 
     public void update(Protos.TaskInfo taskInfo, Offer offer) throws Exception {
         try {
-            final CassandraTask task = CassandraTask.parse(taskInfo);
-            update(task.update(offer));
+            CassandraTask task = CassandraTask.parse(taskInfo);
+            task = task.update(offer);
+            getStateStore().storeTasks(Arrays.asList(TaskUtils.packTaskInfo(task.getTaskInfo())));
+            update(task);
         } catch (Exception e) {
             LOGGER.error("Error storing task: {}, reason: {}", taskInfo, e);
             throw e;
@@ -470,10 +472,8 @@ public class CassandraState extends SchedulerState implements Managed, TaskStatu
         synchronized (getStateStore()) {
             try {
                 getStateStore().storeStatus(status);
-                LOGGER.info("Updated status for task {}", status.getTaskId().getValue());
 
                 if (byId.containsKey(status.getTaskId().getValue())) {
-                    CassandraTask updated;
 
                     CassandraTask cassandraTask = tasks.get(byId.get(status.getTaskId().getValue()));
                     if (cassandraTask.getState().equals(Protos.TaskState.TASK_FINISHED)
@@ -483,17 +483,13 @@ public class CassandraState extends SchedulerState implements Managed, TaskStatu
                     }
 
                     if (status.hasData()) {
-                        updated = tasks.get(
-                                byId.get(status.getTaskId().getValue())).update(
-                                CassandraTaskStatus.parse(status));
+                        cassandraTask = cassandraTask.update(CassandraTaskStatus.parse(status));
                     } else {
-                        updated = tasks.get(
-                                byId.get(status.getTaskId().getValue())).update(
-                                status.getState());
+                        cassandraTask = cassandraTask.update(status.getState());
                     }
-                    update(updated);
 
-                    LOGGER.info("Updated task {}", updated);
+                    update(cassandraTask);
+                    LOGGER.info("Updated status for task {}", status.getTaskId().getValue());
                 } else {
                     LOGGER.info("Received status update for unrecorded task: " +
                             "status = {}", status);
@@ -561,7 +557,6 @@ public class CassandraState extends SchedulerState implements Managed, TaskStatu
 
     }
 
-    @Override
     public Set<Protos.TaskStatus> getTaskStatuses()  {
         return new HashSet<>(getStateStore().fetchStatuses());
     }

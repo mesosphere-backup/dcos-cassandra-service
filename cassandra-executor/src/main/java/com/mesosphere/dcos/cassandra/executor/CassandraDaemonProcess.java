@@ -106,7 +106,7 @@ public class CassandraDaemonProcess extends ProcessTask {
                                     mode.get(),
                                     Optional.of("Cassandra Daemon running."));
                     driver.sendStatusUpdate(daemonStatus.getTaskStatus());
-                    LOGGER.debug("Sent status update = {} ", daemonStatus);
+                    LOGGER.info("Sent status update = {} ", daemonStatus);
                 }
             }
         }

@@ -9,7 +9,7 @@ import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.offer.PlacementStrategy;
+import org.apache.mesos.offer.constrain.PlacementRuleGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +33,13 @@ public class PersistentOfferRequirementProvider {
     public Optional<OfferRequirement> getNewOfferRequirement(CassandraContainer container) {
         // TODO: Should we version configs ?
         LOGGER.info("Getting new offer requirement for: ", container.getId());
-        PlacementStrategy placementStrategy;
+
+        Protos.TaskInfo daemonTaskInfo = container.getDaemonTask().getTaskInfo();
+
+        Optional<PlacementRuleGenerator> placement = Optional.empty();
         try {
-            placementStrategy = PlacementStrategyManager.getPlacementStrategy(
+            placement = PlacementStrategyManager.getPlacementStrategy(
+                    daemonTaskInfo,
                     configurationManager,
                     cassandraState);
         } catch (ConfigStoreException e) {
@@ -43,25 +47,16 @@ public class PersistentOfferRequirementProvider {
             return Optional.empty();
         }
 
-        Protos.TaskInfo daemonTaskInfo = container.getDaemonTask().getTaskInfo();
-        final List<Protos.SlaveID> agentsToAvoid =
-                placementStrategy.getAgentsToAvoid(daemonTaskInfo);
-        final List<Protos.SlaveID> agentsToColocate =
-                placementStrategy.getAgentsToColocate(daemonTaskInfo);
-
-        LOGGER.info("Avoiding agents: {}", agentsToAvoid);
-        LOGGER.info("Colocating with agents: {}", agentsToColocate);
-
         try {
             final Collection<Protos.TaskInfo> taskInfos = container.getTaskInfos();
             final UUID targetName = configurationManager.getTargetName();
             final Collection<Protos.TaskInfo> updatedTaskInfos = updateConfigLabel(taskInfos, targetName.toString());
 
             return Optional.of(new OfferRequirement(
+                    container.getDaemonTask().getType().name(),
                     clearTaskIds(updatedTaskInfos),
                     Optional.of(clearExecutorId(container.getExecutorInfo())),
-                    agentsToAvoid,
-                    agentsToColocate));
+                    placement));
         } catch (InvalidRequirementException | ConfigStoreException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return Optional.empty();
@@ -101,22 +96,21 @@ public class PersistentOfferRequirementProvider {
         LOGGER.info("Getting replacement requirement for task: {}", container.getId());
         try {
             return Optional.of(new OfferRequirement(
+                    container.getDaemonTask().getType().name(),
                     clearTaskIds(container.getTaskInfos()),
                     Optional.of(clearExecutorId(container.getExecutorInfo())),
-                    null,
-                    null));
+                    Optional.empty()));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return Optional.empty();
         }
     }
 
-    public OfferRequirement getUpdateOfferRequirement(Protos.TaskInfo taskInfo) {
+    public OfferRequirement getUpdateOfferRequirement(String type, Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting updated requirement for task: {}", taskInfo.getTaskId());
         try {
-            taskInfo = updateConfigLabel(configurationManager
-                    .getTargetName().toString(), taskInfo);
-            return getExistingOfferRequirement(taskInfo);
+            taskInfo = updateConfigLabel(configurationManager.getTargetName().toString(), taskInfo);
+            return getExistingOfferRequirement(type, taskInfo);
         } catch (ConfigStoreException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
@@ -140,8 +134,7 @@ public class PersistentOfferRequirementProvider {
                 .build();
     }
 
-    private OfferRequirement getExistingOfferRequirement(
-            Protos.TaskInfo taskInfo) {
+    private OfferRequirement getExistingOfferRequirement(String type, Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
 
         ExecutorInfo execInfo = clearExecutorId(taskInfo.getExecutor());
@@ -150,10 +143,10 @@ public class PersistentOfferRequirementProvider {
 
         try {
             return new OfferRequirement(
+                    type,
                     Arrays.asList(taskInfo),
                     Optional.of(execInfo),
-                    null,
-                    null);
+                    Optional.empty());
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;

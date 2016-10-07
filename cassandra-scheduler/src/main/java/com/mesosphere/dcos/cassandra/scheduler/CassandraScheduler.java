@@ -23,8 +23,10 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.offer.OfferAccepter;
+import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.ResourceCleaner;
 import org.apache.mesos.offer.ResourceCleanerScheduler;
+import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.DefaultTaskKiller;
 import org.apache.mesos.scheduler.Observable;
@@ -75,7 +77,6 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             final PersistentOfferRequirementProvider offerRequirementProvider,
             final PlanManager planManager,
             final CassandraState cassandraState,
-            final Reconciler reconciler,
             final SchedulerClient client,
             final EventBus eventBus,
             final BackupManager backup,
@@ -89,6 +90,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
         this.cassandraState = cassandraState;
+        this.reconciler = new DefaultReconciler(cassandraState.getStateStore());
         this.configurationManager = configurationManager;
         this.offerRequirementProvider = offerRequirementProvider;
         offerAccepter = new OfferAccepter(Arrays.asList(
@@ -101,7 +103,6 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         recoveryScheduler.subscribe(this);
         this.client = client;
         this.planManager = planManager;
-        this.reconciler = reconciler;
         this.backup = backup;
         this.restore = restore;
         this.cleanup = cleanup;
@@ -144,6 +145,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                     driver);
             this.planScheduler = new DefaultPlanScheduler(
                     offerAccepter,
+                    new OfferEvaluator(cassandraState.getStateStore()),
                     taskKiller);
             stateStore.storeFrameworkId(frameworkId);
             Plan plan = CassandraPlan.create(

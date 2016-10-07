@@ -151,6 +151,10 @@ public class SeedsManager implements Runnable {
                 .filter(daemon -> daemon.getMode() == CassandraMode.NORMAL && daemon.getHostname().isEmpty() == false)
                 .collect(Collectors.toList());
 
+        for (CassandraDaemonTask daemonTask: tasks.getDaemons().values()) {
+           LOGGER.info("DaemonTask mode: {}, hostname: {}", daemonTask.getMode(), daemonTask.getHostname());
+        }
+
         final int seedCount = getConfiguredSeedsCount();
         final List<String> seeds = new ArrayList<>(active.size());
 

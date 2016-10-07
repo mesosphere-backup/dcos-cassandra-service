@@ -5,9 +5,9 @@ import org.apache.mesos.offer.OfferRequirement;
 
 public interface CassandraOfferRequirementProvider {
 
-    OfferRequirement getNewOfferRequirement(Protos.TaskInfo taskInfo);
+    OfferRequirement getNewOfferRequirement(String type, Protos.TaskInfo taskInfo);
 
-    OfferRequirement getReplacementOfferRequirement(Protos.TaskInfo taskInfo);
+    OfferRequirement getReplacementOfferRequirement(String type, Protos.TaskInfo taskInfo);
 
-    OfferRequirement getUpdateOfferRequirement(Protos.TaskInfo info);
+    OfferRequirement getUpdateOfferRequirement(String type, Protos.TaskInfo info);
 }

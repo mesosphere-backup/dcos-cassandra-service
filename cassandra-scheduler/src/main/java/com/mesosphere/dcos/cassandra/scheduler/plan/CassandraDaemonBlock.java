@@ -46,8 +46,9 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
         if (status.get().hasData()) {
             final CassandraData data = CassandraData.parse(status.get().getData());
             final CassandraMode mode = data.getMode();
+            String hostName = data.getHostname();
             final boolean isModeNormal = CassandraMode.NORMAL.equals(mode);
-            LOGGER.info("isRunning: {} isModeNormal: {}", isRunning, isModeNormal);
+            LOGGER.info("isRunning: {} isModeNormal: {} hostName: {}", isRunning, isModeNormal, hostName);
             return (isRunning) && isModeNormal;
         } else {
             // Handle reconcile messages

@@ -8,8 +8,6 @@ import org.apache.mesos.offer.TaskUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-
 public class PersistentOperationRecorder implements OperationRecorder {
     private final static Logger LOGGER = LoggerFactory.getLogger(
             PersistentOperationRecorder.class);
@@ -28,7 +26,6 @@ public class PersistentOperationRecorder implements OperationRecorder {
                 LOGGER.debug("Recording operation: {} for task: {}", operation, taskInfo);
                 try {
                     cassandraState.update(TaskUtils.unpackTaskInfo(taskInfo), offer);
-                    cassandraState.getStateStore().storeTasks(Arrays.asList(taskInfo));
                 } catch (Exception e) {
                     LOGGER.error("Error updating task in recorder with exception: ", e);
                     throw e;

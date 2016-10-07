@@ -6,6 +6,7 @@ import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -176,13 +177,15 @@ public class ClusterTaskOfferRequirementProviderTest {
         CassandraDaemonTask task = cassandraState.createDaemon("test-daemon");
         Protos.TaskInfo taskInfo = task.getTaskInfo();
 
-        OfferRequirement requirement = provider.getNewOfferRequirement(taskInfo);
+        OfferRequirement requirement = provider.getNewOfferRequirement(task.getType().name(), taskInfo);
         Assert.assertNotNull(requirement);
     }
 
     @Test
     public void testGetNewOfferRequirement() throws Exception {
-        OfferRequirement requirement = provider.getNewOfferRequirement(testTaskInfo);
+        OfferRequirement requirement = provider.getNewOfferRequirement(
+                CassandraTask.TYPE.CASSANDRA_DAEMON.name(),
+                testTaskInfo);
         Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();
         Assert.assertEquals(taskInfo.getName(), "test-daemon");
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));
@@ -245,7 +248,9 @@ public class ClusterTaskOfferRequirementProviderTest {
 
     @Test
     public void testGetUpdateOfferRequirement() throws Exception {
-        OfferRequirement requirement = provider.getUpdateOfferRequirement(testTaskInfo);
+        OfferRequirement requirement = provider.getNewOfferRequirement(
+                CassandraTask.TYPE.CASSANDRA_DAEMON.name(),
+                testTaskInfo);
         Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();
         Assert.assertEquals(taskInfo.getName(), "test-daemon");
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));
@@ -274,7 +279,9 @@ public class ClusterTaskOfferRequirementProviderTest {
 
     @Test
     public void testGetReplacementOfferRequirement() throws Exception {
-        OfferRequirement requirement = provider.getReplacementOfferRequirement(testTaskInfo);
+        OfferRequirement requirement = provider.getNewOfferRequirement(
+                CassandraTask.TYPE.CASSANDRA_DAEMON.name(),
+                testTaskInfo);
         Protos.TaskInfo taskInfo = requirement.getTaskRequirements().iterator().next().getTaskInfo();
         Assert.assertEquals(taskInfo.getName(), "test-daemon");
         Assert.assertTrue(taskInfo.getTaskId().getValue().contains("test-daemon"));

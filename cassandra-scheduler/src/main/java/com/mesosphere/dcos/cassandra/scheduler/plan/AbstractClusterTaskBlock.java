@@ -47,10 +47,10 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> ext
             //we have not yet been assigned a slave id - This means that the
             //the task has never been launched
             setStatus(Status.IN_PROGRESS);
-            return provider.getNewOfferRequirement(task.getTaskInfo());
+            return provider.getNewOfferRequirement(task.getType().name(), task.getTaskInfo());
         } else {
             setStatus(Status.IN_PROGRESS);
-            return provider.getUpdateOfferRequirement(task.getTaskInfo());
+            return provider.getUpdateOfferRequirement(task.getType().name(), task.getTaskInfo());
 
         }
     }

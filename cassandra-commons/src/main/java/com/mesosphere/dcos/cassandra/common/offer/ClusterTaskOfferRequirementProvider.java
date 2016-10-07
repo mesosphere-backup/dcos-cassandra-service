@@ -5,16 +5,13 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.offer.PlacementStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
-public class ClusterTaskOfferRequirementProvider
-        implements CassandraOfferRequirementProvider {
+public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequirementProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             ClusterTaskOfferRequirementProvider.class);
 
@@ -23,31 +20,24 @@ public class ClusterTaskOfferRequirementProvider
     }
 
     @Override
-    public OfferRequirement getNewOfferRequirement(Protos.TaskInfo taskInfo) {
+    public OfferRequirement getNewOfferRequirement(String type, Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting new offer requirement for nodeId: {}",
                 taskInfo.getTaskId());
-        return getCreateOfferRequirement(taskInfo);
+        return getCreateOfferRequirement(type, taskInfo);
     }
 
-    private OfferRequirement getCreateOfferRequirement(Protos.TaskInfo taskInfo) {
-        final PlacementStrategy placementStrategy = new ClusterTaskPlacementStrategy();
-        final List<Protos.SlaveID> agentsToAvoid =
-                placementStrategy.getAgentsToAvoid(taskInfo);
-        final List<Protos.SlaveID> agentsToColocate =
-                placementStrategy.getAgentsToColocate(taskInfo);
-
-        LOGGER.info("Avoiding agents: {}", agentsToAvoid);
-        LOGGER.info("Colocating with agents: {}", agentsToColocate);
-
+    private OfferRequirement getCreateOfferRequirement(String type, Protos.TaskInfo taskInfo) {
         ExecutorInfo execInfo = taskInfo.getExecutor();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
             return new OfferRequirement(
+                    type,
                     Arrays.asList(taskInfo),
                     Optional.of(execInfo),
-                    agentsToAvoid,
-                    agentsToColocate);
+                    PlacementStrategyManager.getPlacement(
+                            ClusterTaskPlacementStrategy.getAgentsToAvoid(taskInfo),
+                            ClusterTaskPlacementStrategy.getAgentsToColocate(taskInfo)));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
@@ -55,22 +45,21 @@ public class ClusterTaskOfferRequirementProvider
     }
 
     @Override
-    public OfferRequirement getReplacementOfferRequirement(
-            Protos.TaskInfo taskInfo) {
+    public OfferRequirement getReplacementOfferRequirement(String type, Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting replacement requirement for task: {}",
                 taskInfo.getTaskId().getValue());
-        final PlacementStrategy placementStrategy =
-                new ClusterTaskPlacementStrategy();
 
         ExecutorInfo execInfo = taskInfo.getExecutor();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
             return new OfferRequirement(
+                    type,
                     Arrays.asList(taskInfo),
                     Optional.of(execInfo),
-                    placementStrategy.getAgentsToAvoid(taskInfo),
-                    placementStrategy.getAgentsToColocate(taskInfo));
+                    PlacementStrategyManager.getPlacement(
+                            ClusterTaskPlacementStrategy.getAgentsToAvoid(taskInfo),
+                            ClusterTaskPlacementStrategy.getAgentsToColocate(taskInfo)));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
@@ -79,23 +68,18 @@ public class ClusterTaskOfferRequirementProvider
     }
 
     @Override
-    public OfferRequirement getUpdateOfferRequirement(Protos.TaskInfo taskInfo) {
-        return getExistingOfferRequirement(taskInfo);
+    public OfferRequirement getUpdateOfferRequirement(String type, Protos.TaskInfo taskInfo) {
+        return getExistingOfferRequirement(type, taskInfo);
     }
 
-    private OfferRequirement getExistingOfferRequirement(
-            Protos.TaskInfo taskInfo) {
+    private OfferRequirement getExistingOfferRequirement(String type, Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting existing OfferRequirement for task: {}", taskInfo);
 
         ExecutorInfo execInfo = taskInfo.getExecutor();
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
-            return new OfferRequirement(
-                    Arrays.asList(taskInfo),
-                    Optional.of(execInfo),
-                    null,
-                    null);
+            return new OfferRequirement(type, Arrays.asList(taskInfo), Optional.of(execInfo));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;

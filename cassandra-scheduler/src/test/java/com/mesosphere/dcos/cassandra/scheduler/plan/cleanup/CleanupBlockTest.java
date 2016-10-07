@@ -102,7 +102,7 @@ public class CleanupBlockTest {
                 context);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!block.start().isPresent());
         Assert.assertTrue(block.isComplete());
     }
@@ -117,6 +117,7 @@ public class CleanupBlockTest {
 
         final CleanupTask task = Mockito.mock(CleanupTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
+        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.CLEANUP);
         Mockito
                 .when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT))
                 .thenReturn(task);
@@ -128,7 +129,7 @@ public class CleanupBlockTest {
                 CONTEXT);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(block.start().isPresent());
         Assert.assertTrue(block.isInProgress());
     }

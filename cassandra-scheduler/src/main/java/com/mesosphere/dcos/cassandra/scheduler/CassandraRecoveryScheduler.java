@@ -25,7 +25,7 @@ public class CassandraRecoveryScheduler extends ChainedObserver {
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraState cassandraState;
-    private final OfferEvaluator offerEvaluator = new OfferEvaluator();
+    private final OfferEvaluator offerEvaluator;
     private final Random random = new Random();
 
     public CassandraRecoveryScheduler(
@@ -34,6 +34,7 @@ public class CassandraRecoveryScheduler extends ChainedObserver {
         this.offerAccepter = offerAccepter;
         this.cassandraState = cassandraState;
         this.offerRequirementProvider = requirementProvider;
+        this.offerEvaluator = new OfferEvaluator(cassandraState.getStateStore());
 
         this.cassandraState.subscribe(this);
     }

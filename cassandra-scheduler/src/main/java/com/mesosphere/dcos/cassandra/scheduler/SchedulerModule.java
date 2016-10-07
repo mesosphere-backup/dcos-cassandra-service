@@ -10,6 +10,7 @@ import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProv
 import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
@@ -23,7 +24,6 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.setup.Environment;
@@ -35,9 +35,6 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.dcos.DcosCluster;
-import org.apache.mesos.reconciliation.DefaultReconciler;
-import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.state.StateStore;
@@ -202,15 +199,9 @@ public class SchedulerModule extends AbstractModule {
         bind(ConfigurationManager.class).asEagerSingleton();
         bind(PersistentOfferRequirementProvider.class);
         bind(CassandraState.class).asEagerSingleton();
-        bind(TaskStatusProvider.class).to(CassandraState.class);
         bind(EventBus.class).asEagerSingleton();
         bind(BackupManager.class).asEagerSingleton();
         bind(ClusterTaskOfferRequirementProvider.class);
-        try {
-            bind(Reconciler.class).toConstructor(DefaultReconciler.class.getConstructor(TaskStatusProvider.class));
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
         bind(RestoreManager.class).asEagerSingleton();
         bind(CleanupManager.class).asEagerSingleton();
         bind(RepairManager.class).asEagerSingleton();

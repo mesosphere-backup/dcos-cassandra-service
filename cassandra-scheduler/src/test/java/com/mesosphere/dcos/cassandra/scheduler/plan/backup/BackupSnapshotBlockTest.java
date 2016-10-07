@@ -97,7 +97,7 @@ public class BackupSnapshotBlockTest {
                 backupRestoreContext);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!backupSnapshotBlock.start().isPresent());
         Assert.assertEquals(Status.COMPLETE, Block.getStatus(backupSnapshotBlock));
     }
@@ -113,6 +113,7 @@ public class BackupSnapshotBlockTest {
 
         final BackupSnapshotTask snapshotTask = Mockito.mock(BackupSnapshotTask.class);
         Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
+        Mockito.when(snapshotTask.getType()).thenReturn(CassandraTask.TYPE.BACKUP_SNAPSHOT);
         Mockito
                 .when(cassandraState.getOrCreateBackupSnapshot(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
@@ -124,7 +125,7 @@ public class BackupSnapshotBlockTest {
                 backupRestoreContext);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertNotNull(backupSnapshotBlock.start());
         Assert.assertEquals(Status.IN_PROGRESS, Block.getStatus(backupSnapshotBlock));
     }

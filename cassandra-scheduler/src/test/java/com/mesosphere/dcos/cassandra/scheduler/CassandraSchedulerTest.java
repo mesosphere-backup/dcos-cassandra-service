@@ -147,7 +147,7 @@ public class CassandraSchedulerTest {
                 configurationManager,
                 clusterTaskConfig,
                 stateStore);
-        reconciler = new DefaultReconciler(cassandraState);
+        reconciler = new DefaultReconciler(cassandraState.getStateStore());
 
         offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager, cassandraState);
         scheduler = new CassandraScheduler(
@@ -156,7 +156,6 @@ public class CassandraSchedulerTest {
                 offerRequirementProvider,
                 planManager,
                 cassandraState,
-                reconciler,
                 client,
                 eventBus,
                 backup,
