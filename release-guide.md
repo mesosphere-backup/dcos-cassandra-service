@@ -20,27 +20,27 @@ We need to update the vanilla apache-cassandra binary package for following reas
 
 To generate a new apache-cassandra binary package:
 
-- **Option A:** Manual build/upload
+- **Option A:** Jenkins-based build/upload
 
-0. Make any needed changes to [build-cassandra-bin.bash](https://github.com/mesosphere/dcos-cassandra-service/blob/master/build-cassandra-bin.bash), eg version bumps.
+0. Make any needed changes to [build-cassandra-bin.bash](build-cassandra-bin.bash), eg version bumps.
+1. Execute the [cassandra/build-upload-dist](https://jenkins.mesosphere.com/service/jenkins/view/Infinity/job/cassandra/job/build-upload-dist/) job in Jenkins. Note that this will refuse to overwrite a file that already exists, but that shouldn't be a problem if a new version of Cassandra is being built, in which case the new filename would be different.
+2. Update the universe's [resource.json](universe/resource.json) with new URL if necessary.
+
+- **Option B:** Manual build/upload
+
+0. Make any needed changes to [build-cassandra-bin.bash](build-cassandra-bin.bash), eg version bumps.
 1. Execute the following
 
   ```bash
   $ ./build-cassandra-bin.bash
   ```
-See [build-cassandra-bin.bash](https://github.com/mesosphere/dcos-cassandra-service/blob/master/build-cassandra-bin.bash) for more details on usage.
+See [build-cassandra-bin.bash](build-cassandra-bin.bash) for more details on usage.
 2. Upload the `/path/to/dcos-cassandra-service/cassandra-bin-tmp/apache-cassandra-A.B.C-bin-dcos.tar.gz` to the designated release location.
-3. Update the universe's [resource.json](https://github.com/mesosphere/dcos-cassandra-service/blob/master/universe/resource.json) with new URL if necessary.
-
-- **Option B:** Jenkins-based build/upload
-
-0. Make any needed changes to [build-cassandra-bin.bash](https://github.com/mesosphere/dcos-cassandra-service/blob/master/build-cassandra-bin.bash), eg version bumps.
-1. Execute the `cassandra/build-upload-dist` job in Jenkins. Note that this will refuse to overwrite a file that already exists, but that shouldn't be a problem if a new version of Cassandra is being built, in which case the new filename would be different.
-2. Update the universe's [resource.json](https://github.com/mesosphere/dcos-cassandra-service/blob/master/universe/resource.json) with new URL if necessary.
+3. Update the universe's [resource.json](universe/resource.json) with new URL if necessary.
 
 ## Releasing DC/OS Cassandra service
 
-1. Make necessary chanages to [dcos-cassandra-service/universe](https://github.com/mesosphere/dcos-cassandra-service/tree/master/universe)
+1. Make necessary chanages to [dcos-cassandra-service/universe](universe)
 2. Prepare RELEASE NOTES
 3. Cut a tag with following format: `X.Y.Z-A.B.C`, where `X.Y.Z` is the version of service and `A.B.C` is the version of underlying Cassandra
 
