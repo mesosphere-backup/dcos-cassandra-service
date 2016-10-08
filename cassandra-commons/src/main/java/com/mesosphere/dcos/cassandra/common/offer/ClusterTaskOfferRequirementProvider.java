@@ -34,10 +34,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
             return new OfferRequirement(
                     type,
                     Arrays.asList(taskInfo),
-                    Optional.of(execInfo),
-                    PlacementStrategyManager.getPlacement(
-                            ClusterTaskPlacementStrategy.getAgentsToAvoid(taskInfo),
-                            ClusterTaskPlacementStrategy.getAgentsToColocate(taskInfo)));
+                    Optional.of(execInfo));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
@@ -56,10 +53,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
             return new OfferRequirement(
                     type,
                     Arrays.asList(taskInfo),
-                    Optional.of(execInfo),
-                    PlacementStrategyManager.getPlacement(
-                            ClusterTaskPlacementStrategy.getAgentsToAvoid(taskInfo),
-                            ClusterTaskPlacementStrategy.getAgentsToColocate(taskInfo)));
+                    Optional.of(execInfo));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
