@@ -66,10 +66,6 @@
 "DCOS_SERVICE_ACCOUNT_CREDENTIAL": { "secret": "serviceCredential" },
 "MESOS_MODULES": "file:///opt/mesosphere/etc/mesos-scheduler-modules/dcos_authenticatee_module.json",
 "MESOS_AUTHENTICATEE": "com_mesosphere_dcos_ClassicRPCAuthenticatee",
-"SSL_CERT_FILE": "/run/dcos/pki/tls/certs/scheduler.crt",
-"SSL_KEY_FILE": "/run/dcos/pki/tls/private/scheduler.key",
-"SSL_CA_FILE": "/run/dcos/pki/CA/certs/ca.crt",
-"SSL_ENABLED": "true",
 {{/service.secret_name}}
 "JAVA_HOME":"./jre"
 ,"JAVA_OPTS":"-Xmx{{service.heap}}M"
