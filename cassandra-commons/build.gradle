@@ -7,6 +7,9 @@ dependencies {
     compile 'org.apache.cassandra:cassandra-all:2.2.4'
 }
 protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:2.5.0'
+    }
     generatedFilesBaseDir = "$projectDir/src/generated"
 }
 idea.module {
