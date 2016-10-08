@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.health;
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,10 +11,10 @@ import java.util.stream.Collectors;
 public class ServersCheck extends HealthCheck {
     public static final String NAME = "serverCount";
 
-    private CassandraTasks tasks;
+    private CassandraState tasks;
 
     @Inject
-    public ServersCheck(final CassandraTasks tasks) {
+    public ServersCheck(final CassandraState tasks) {
         this.tasks = tasks;
     }
 

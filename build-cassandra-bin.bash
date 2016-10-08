@@ -14,15 +14,21 @@
 
 set -o errexit -o nounset -o pipefail
 
+# Check to see if we should use gsed or sed
+SED=$([ "$(uname)" == "Darwin" ] && echo "$(which gsed)" || echo "$(which sed)")
+if [ -z "$SED" ]; then
+    echo "Please install GNU sed by running brew install gnu-sed"
+    exit 1
+fi
+
 # VERSION SETTINGS
 CASSANDRA_VERSION="3.0.8"
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
 STATSD_REPORTER_VERSION="4.1.2"
-REPORTER_CONFIG_VERSION_IN="3.0.3-SNAPSHOT"
-REPORTER_CONFIG_SHA1="595b3c239e2c4764c66d214837005a8e0fe01d99"
-REPORTER_CONFIG_VERSION_OUT="3.0.3-${REPORTER_CONFIG_SHA1:0:8}" # get first 8 chars of sha
+REPORTER_CONFIG_VERSION="3.0.3"
 SEED_PROVIDER_VERSION="1.0.16"
 READYTALK_MVN_REPO_DOWNLOAD_URL="https://dl.bintray.com/readytalk/maven/com/readytalk"
+MVN_CENTRAL_DOWNLOAD_URL="https://repo1.maven.org/maven2"
 
 # PATHS AND FILENAME SETTINGS
 CASSANDRA_DIST_NAME="apache-cassandra-${CASSANDRA_VERSION}"
@@ -56,6 +62,17 @@ function _package_github {
         cd ..
     fi
 }
+
+###
+# Build seedprovider jar
+###
+
+echo "##### Build seedprovider jar #####"
+./gradlew :seedprovider:jar
+
+###
+# Go into tmp dir
+###
 
 mkdir -p "cassandra-bin-tmp"
 cd "cassandra-bin-tmp"
@@ -95,6 +112,8 @@ rm -v "${CONF_DIR}"/cassandra-topology.properties
 
 echo "##### Disable JMX_PORT in cassandra-env.sh #####"
 
+# "JMX_PORT=???" => "#DISABLED FOR DC/OS\n#JMX_PORT=???"
+$SED -i "s/\(^JMX_PORT=.*\)/#DISABLED FOR DC\/OS:\n#\1/g" "${CONF_DIR}"/cassandra-env.sh
 
 _sha1sum "${CONF_DIR}"/* &> confdir-after.txt || true
 
@@ -118,15 +137,17 @@ cp -v "metrics${METRICS_INTERFACE_VERSION}-statsd-${STATSD_REPORTER_VERSION}.jar
 _download "${READYTALK_MVN_REPO_DOWNLOAD_URL}/metrics-statsd-common/${STATSD_REPORTER_VERSION}/metrics-statsd-common-${STATSD_REPORTER_VERSION}.jar" "metrics-statsd-common-${STATSD_REPORTER_VERSION}.jar"
 cp -v "metrics-statsd-common-${STATSD_REPORTER_VERSION}.jar" ${LIB_DIR}
 
-# Metrics Config Parser library: build custom version with added statsd support (replaces cassandra-bin's version which currently lacks statsd)
-_package_github "addthis/metrics-reporter-config" "${REPORTER_CONFIG_SHA1}" "reporter-config${METRICS_INTERFACE_VERSION}/target/reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION_IN}.jar"
+_download "${MVN_CENTRAL_DOWNLOAD_URL}/com/addthis/metrics/reporter-config${METRICS_INTERFACE_VERSION}/${REPORTER_CONFIG_VERSION}/reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION}.jar" "reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION}.jar"
+
+_download "${MVN_CENTRAL_DOWNLOAD_URL}/com/addthis/metrics/reporter-config-base/${REPORTER_CONFIG_VERSION}/reporter-config-base-${REPORTER_CONFIG_VERSION}.jar" "reporter-config-base-${REPORTER_CONFIG_VERSION}.jar"
+
 rm -vf "${LIB_DIR}"/reporter-config*.jar
 cp -v \
-   "metrics-reporter-config/reporter-config-base/target/reporter-config-base-${REPORTER_CONFIG_VERSION_IN}.jar" \
-   "${LIB_DIR}/reporter-config-base-${REPORTER_CONFIG_VERSION_OUT}.jar"
+   "reporter-config-base-${REPORTER_CONFIG_VERSION}.jar" \
+   "${LIB_DIR}/reporter-config-base-${REPORTER_CONFIG_VERSION}.jar"
 cp -v \
-   "metrics-reporter-config/reporter-config${METRICS_INTERFACE_VERSION}/target/reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION_IN}.jar" \
-   "${LIB_DIR}/reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION_OUT}.jar"
+   "reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION}.jar" \
+   "${LIB_DIR}/reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION}.jar"
 
 _sha1sum "${LIB_DIR}"/*.jar &> libdir-after.txt || true
 

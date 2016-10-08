@@ -18,6 +18,7 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
@@ -26,15 +27,18 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 
 /**
- * This class tests the CassandraTasks class.
+ * This class tests the CassandraState class.
  */
-public class CassandraTasksTest {
+public class CassandraStateTest {
     private static TestingServer server;
     private static MutableSchedulerConfiguration config;
     private static IdentityManager identity;
@@ -43,7 +47,7 @@ public class CassandraTasksTest {
     private static String testDaemonName = "test-daemon-name";
     private static String testHostName = "test-host-name";
     private static String testTaskId = "test-task-id__1234";
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     private static StateStore stateStore;
 
     @Before
@@ -100,9 +104,13 @@ public class CassandraTasksTest {
                 new ConfigValidator(),
                 stateStore);
 
-        configuration = new ConfigurationManager(configurationManager);
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        configuration = new ConfigurationManager(
+                new CassandraDaemonTask.Factory(mockCapabilities),
+                configurationManager);
 
-        cassandraTasks = new CassandraTasks(
+        cassandraState = new CassandraState(
                 configuration,
                 curatorConfig,
                 clusterTaskConfig,
@@ -146,18 +154,18 @@ public class CassandraTasksTest {
 
     @Test
     public void testGetOrCreateCassandraContainer() throws Exception {
-        CassandraContainer cassandraContainer = cassandraTasks.getOrCreateContainer(testDaemonName);
+        CassandraContainer cassandraContainer = cassandraState.getOrCreateContainer(testDaemonName);
         validateDaemonTaskInfo(cassandraContainer.getDaemonTask().getTaskInfo());
         validateDaemonExecutorInfo(cassandraContainer.getExecutorInfo());
     }
 
     @Test
     public void testMoveDaemon() throws Exception {
-        CassandraDaemonTask originalDaemonTask = cassandraTasks.createDaemon(testDaemonName);
+        CassandraDaemonTask originalDaemonTask = cassandraState.createDaemon(testDaemonName);
         originalDaemonTask = originalDaemonTask.update(getTestOffer());
         Assert.assertEquals(testHostName, originalDaemonTask.getHostname());
 
-        CassandraDaemonTask movedDaemonTask = cassandraTasks.moveDaemon(originalDaemonTask);
+        CassandraDaemonTask movedDaemonTask = cassandraState.moveDaemon(originalDaemonTask);
         CassandraData movedData = CassandraData.parse(movedDaemonTask.getTaskInfo().getData());
         String movedReplaceIp = movedData.getConfig().getReplaceIp();
         Assert.assertEquals(originalDaemonTask.getHostname(), movedReplaceIp);
@@ -166,20 +174,22 @@ public class CassandraTasksTest {
     @Test
     public void testUpdateTaskStatus() throws Exception {
         // Test that updating an empty StateStore doesn't have any ill effects
-        Assert.assertEquals(0, cassandraTasks.getDaemons().size());
-        cassandraTasks.update(getTestTaskStatus());
-        Assert.assertEquals(0, cassandraTasks.getDaemons().size());
+        Assert.assertEquals(0, cassandraState.getDaemons().size());
+        cassandraState.update(getTestTaskStatus());
+        Assert.assertEquals(0, cassandraState.getDaemons().size());
 
         // Initial update should result in STAGING state
-        CassandraDaemonTask daemonTask = cassandraTasks.createDaemon(testDaemonName);
-        cassandraTasks.update(daemonTask.getTaskInfo(), getTestOffer());
-        Assert.assertEquals(1, cassandraTasks.getDaemons().size());
-        CassandraDaemonTask updatedDaemonTask = cassandraTasks.getDaemons().entrySet().iterator().next().getValue();
+        CassandraDaemonTask daemonTask = cassandraState.createDaemon(testDaemonName);
+        cassandraState.update(daemonTask.getTaskInfo(), getTestOffer());
+        Assert.assertEquals(1, cassandraState.getDaemons().size());
+        CassandraDaemonTask updatedDaemonTask = cassandraState.getDaemons().entrySet().iterator().next().getValue();
         Assert.assertEquals(Protos.TaskState.TASK_STAGING, updatedDaemonTask.getState());
 
         // TaskStatus update with RUNNING should result in RUNNING state.
-        cassandraTasks.update(getTestTaskStatus(daemonTask));
-        Assert.assertEquals(Protos.TaskState.TASK_RUNNING, stateStore.fetchStatus(updatedDaemonTask.getName()).getState());
+        cassandraState.update(getTestTaskStatus(daemonTask));
+        Assert.assertEquals(
+                Protos.TaskState.TASK_RUNNING,
+                stateStore.fetchStatus(updatedDaemonTask.getName()).get().getState());
     }
 
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) throws TaskException {
@@ -200,8 +210,8 @@ public class CassandraTasksTest {
     }
 
     private CassandraContainer getTestCassandraContainer() throws Exception{
-        CassandraDaemonTask daemonTask = cassandraTasks.createDaemon(testDaemonName);
-        return cassandraTasks.createCassandraContainer(daemonTask);
+        CassandraDaemonTask daemonTask = cassandraState.createDaemon(testDaemonName);
+        return cassandraState.createCassandraContainer(daemonTask);
     }
 
     private Protos.Offer getTestOffer() {

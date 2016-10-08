@@ -2,10 +2,10 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraData;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDaemonBlock;
 import org.apache.mesos.Protos;
-import org.apache.mesos.protobuf.ResourceBuilder;
+import org.apache.mesos.offer.ResourceUtils;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 public class TestUtils {
@@ -55,16 +55,19 @@ public class TestUtils {
             int disk,
             String slaveId,
             String offerUUID) {
+
         return Protos.Offer
                 .newBuilder()
                 .setId(Protos.OfferID.newBuilder().setValue(offerUUID))
                 .setFrameworkId(Protos.FrameworkID.newBuilder().setValue(frameworkId))
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue(slaveId))
                 .setHostname("127.0.0.1")
-                .addResources(ResourceBuilder.cpus(cpu))
-                .addResources(ResourceBuilder.mem(memory))
-                .addResources(ResourceBuilder.disk(disk))
-                .addResources(ResourceBuilder.ports(5000, 40000))
+                .addResources(ResourceUtils.getUnreservedScalar("cpus", cpu))
+                .addResources(ResourceUtils.getUnreservedScalar("mem", memory))
+                .addResources(ResourceUtils.getUnreservedScalar("disk", disk))
+                .addResources(ResourceUtils.getUnreservedRanges(
+                        "ports",
+                        Arrays.asList(Protos.Value.Range.newBuilder().setBegin(5000).setEnd(40000).build())))
                 .build();
     }
 
@@ -102,9 +105,9 @@ public class TestUtils {
                 .addAllResources(taskInfo.getResourcesList())
                 .addAllResources(taskInfo.getExecutor().getResourcesList())
                 .addAllResources(templateTaskInfo.getResourcesList())
-                .addResources(ResourceBuilder.cpus(cpu))
-                .addResources(ResourceBuilder.mem(memory))
-                .addResources(ResourceBuilder.disk(disk))
+                .addResources(ResourceUtils.getUnreservedScalar("cpus", cpu))
+                .addResources(ResourceUtils.getUnreservedScalar("mem", memory))
+                .addResources(ResourceUtils.getUnreservedScalar("disk", disk))
                 .build();
     }
 

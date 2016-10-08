@@ -3,15 +3,18 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.Block;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
  * EmptyBlock is an immutable singleton Block that performs no action and
  * is always complete.
  */
-public class EmptyBlock implements Block {
+public class EmptyBlock extends DefaultObservable implements Block {
 
     private static final EmptyBlock instance = new EmptyBlock();
     private static final UUID emptyId = UUID.fromString
@@ -35,8 +38,8 @@ public class EmptyBlock implements Block {
     }
 
     @Override
-    public OfferRequirement start() {
-        return null;
+    public Optional<OfferRequirement> start() {
+        return Optional.empty();
     }
 
     @Override
@@ -65,7 +68,7 @@ public class EmptyBlock implements Block {
     }
 
     @Override
-    public void updateOfferStatus(boolean accepted) {
+    public void updateOfferStatus(Collection<Protos.Offer.Operation> operations) {
         // no-op
     }
 

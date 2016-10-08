@@ -16,15 +16,15 @@
 
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
+import org.apache.mesos.dcos.Capabilities;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,15 +44,19 @@ import java.util.Optional;
 public class TasksResource {
     private static final Logger LOGGER = LoggerFactory.getLogger
             (TasksResource.class);
-    private final CassandraTasks tasks;
+    private final Capabilities capabilities;
+    private final CassandraState state;
     private final SchedulerClient client;
     private final ConfigurationManager configurationManager;
 
     @Inject
-    public TasksResource(final CassandraTasks tasks,
-                         final SchedulerClient client,
-                         final ConfigurationManager configurationManager) {
-        this.tasks = tasks;
+    public TasksResource(
+            final Capabilities capabilities,
+            final CassandraState state,
+            final SchedulerClient client,
+            final ConfigurationManager configurationManager) {
+        this.capabilities = capabilities;
+        this.state = state;
         this.client = client;
         this.configurationManager = configurationManager;
     }
@@ -60,7 +64,7 @@ public class TasksResource {
     @GET
     @Path("/list")
     public List<String> list() {
-        return new ArrayList<>(tasks.getDaemons().keySet());
+        return new ArrayList<>(state.getDaemons().keySet());
     }
 
     @GET
@@ -71,7 +75,7 @@ public class TasksResource {
         @Suspended final AsyncResponse response) {
 
         Optional<CassandraDaemonTask> taskOption =
-            Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(state.getDaemons().get(name));
         if (!taskOption.isPresent()) {
             response.resume(
                 Response.status(Response.Status.NOT_FOUND));
@@ -93,7 +97,7 @@ public class TasksResource {
     public DaemonInfo getInfo(@PathParam("name") final String name) {
 
         Optional<CassandraDaemonTask> taskOption =
-            Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(state.getDaemons().get(name));
         if (taskOption.isPresent()) {
             return DaemonInfo.create(taskOption.get());
         } else {
@@ -105,7 +109,7 @@ public class TasksResource {
     @Path("/restart")
     public void restart(@QueryParam("node") final String name) {
         Optional<CassandraDaemonTask> taskOption =
-            Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(state.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
             client.shutdown(task.getHostname(),
@@ -120,10 +124,10 @@ public class TasksResource {
     public void replace(@QueryParam("node") final String name)
         throws Exception {
         Optional<CassandraDaemonTask> taskOption =
-            Optional.ofNullable(tasks.getDaemons().get(name));
+            Optional.ofNullable(state.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
-            final CassandraContainer movedContainer = tasks.moveCassandraContainer(task);
+            final CassandraContainer movedContainer = state.moveCassandraContainer(task);
             LOGGER.info("Moved container ExecutorInfo: {}",
                     TextFormat.shortDebugString(movedContainer.getExecutorInfo()));
             if (!task.isTerminated()) {
@@ -141,8 +145,9 @@ public class TasksResource {
     @GET
     @Path("connect")
     @Deprecated
-    public Map<String, List<String>> connect() throws ConfigStoreException {
-        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+    public Map<String, Object> connect() throws ConfigStoreException {
+        final ConnectionResource connectionResource =
+                new ConnectionResource(capabilities, state, configurationManager);
         return connectionResource.connect();
     }
 
@@ -153,7 +158,8 @@ public class TasksResource {
     @Path("connect/address")
     @Deprecated
     public List<String> connectAddress() {
-        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        final ConnectionResource connectionResource =
+                new ConnectionResource(capabilities, state, configurationManager);
         return connectionResource.connectAddress();
     }
 
@@ -164,7 +170,8 @@ public class TasksResource {
     @Path("connect/dns")
     @Deprecated
     public List<String> connectDns() throws ConfigStoreException {
-        final ConnectionResource connectionResource = new ConnectionResource(tasks, configurationManager);
+        final ConnectionResource connectionResource =
+                new ConnectionResource(capabilities, state, configurationManager);
         return connectionResource.connectDns();
     }
 }

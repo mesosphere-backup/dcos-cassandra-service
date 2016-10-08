@@ -8,7 +8,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
@@ -36,7 +36,7 @@ public class BackupManagerTest {
     private static final String NODE_0 = "node-0";
 
     @Mock private ClusterTaskOfferRequirementProvider mockProvider;
-    @Mock private CassandraTasks mockCassandraTasks;
+    @Mock private CassandraState mockCassandraState;
     @Mock private StateStore mockState;
 
     @Before
@@ -48,7 +48,7 @@ public class BackupManagerTest {
     public void testInitialNoState() {
         when(mockState.fetchProperty(BackupManager.BACKUP_KEY)).thenThrow(
                 new StateStoreException("no state found"));
-        BackupManager manager = new BackupManager(mockCassandraTasks, mockProvider, mockState);
+        BackupManager manager = new BackupManager(mockCassandraState, mockProvider, mockState);
         assertFalse(manager.isComplete());
         assertFalse(manager.isInProgress());
         assertTrue(manager.getPhases().isEmpty());
@@ -59,7 +59,7 @@ public class BackupManagerTest {
         final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
         when(mockState.fetchProperty(BackupManager.BACKUP_KEY)).thenReturn(
                 BackupRestoreContext.JSON_SERIALIZER.serialize(context));
-        BackupManager manager = new BackupManager(mockCassandraTasks, mockProvider, mockState);
+        BackupManager manager = new BackupManager(mockCassandraState, mockProvider, mockState);
         assertTrue(manager.isComplete());
         assertFalse(manager.isInProgress());
         assertEquals(2, manager.getPhases().size());
@@ -69,15 +69,15 @@ public class BackupManagerTest {
     public void testStartCompleteStop() throws PersistenceException {
         when(mockState.fetchProperty(BackupManager.BACKUP_KEY)).thenThrow(
                 new StateStoreException("no state found"));
-        BackupManager manager = new BackupManager(mockCassandraTasks, mockProvider, mockState);
+        BackupManager manager = new BackupManager(mockCassandraState, mockProvider, mockState);
 
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_RUNNING);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
-        when(mockCassandraTasks.getDaemons()).thenReturn(map);
-        when(mockCassandraTasks.get(SNAPSHOT_NODE_0)).thenReturn(Optional.of(daemonTask));
-        when(mockCassandraTasks.get(UPLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.getDaemons()).thenReturn(map);
+        when(mockCassandraState.get(SNAPSHOT_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.get(UPLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
 
         manager.start(emptyRequest());
 
@@ -108,15 +108,15 @@ public class BackupManagerTest {
     public void testStartCompleteStart() throws PersistenceException {
         when(mockState.fetchProperty(BackupManager.BACKUP_KEY)).thenThrow(
                 new StateStoreException("no state found"));
-        BackupManager manager = new BackupManager(mockCassandraTasks, mockProvider, mockState);
+        BackupManager manager = new BackupManager(mockCassandraState, mockProvider, mockState);
 
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_RUNNING);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
-        when(mockCassandraTasks.getDaemons()).thenReturn(map);
-        when(mockCassandraTasks.get(SNAPSHOT_NODE_0)).thenReturn(Optional.of(daemonTask));
-        when(mockCassandraTasks.get(UPLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.getDaemons()).thenReturn(map);
+        when(mockCassandraState.get(SNAPSHOT_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.get(UPLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
 
         manager.start(emptyRequest());
 
@@ -142,13 +142,13 @@ public class BackupManagerTest {
         Map<String, BackupSnapshotTask> previousBackupTasks =
                 new HashMap<String, BackupSnapshotTask>();
         previousBackupTasks.put("hi", BackupSnapshotTask.parse(TaskInfo.getDefaultInstance()));
-        when(mockCassandraTasks.getBackupUploadTasks()).thenReturn(previousUploadTasks);
-        when(mockCassandraTasks.getBackupSnapshotTasks()).thenReturn(previousBackupTasks);
+        when(mockCassandraState.getBackupUploadTasks()).thenReturn(previousUploadTasks);
+        when(mockCassandraState.getBackupSnapshotTasks()).thenReturn(previousBackupTasks);
 
         manager.start(emptyRequest());
 
-        verify(mockCassandraTasks).remove("hi");
-        verify(mockCassandraTasks).remove("hey");
+        verify(mockCassandraState).remove("hi");
+        verify(mockCassandraState).remove("hey");
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());
@@ -159,15 +159,15 @@ public class BackupManagerTest {
     public void testStartStop() {
         when(mockState.fetchProperty(BackupManager.BACKUP_KEY)).thenThrow(
                 new StateStoreException("no state found"));
-        BackupManager manager = new BackupManager(mockCassandraTasks, mockProvider, mockState);
+        BackupManager manager = new BackupManager(mockCassandraState, mockProvider, mockState);
 
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_RUNNING);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
-        when(mockCassandraTasks.getDaemons()).thenReturn(map);
-        when(mockCassandraTasks.get(SNAPSHOT_NODE_0)).thenReturn(Optional.of(daemonTask));
-        when(mockCassandraTasks.get(UPLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.getDaemons()).thenReturn(map);
+        when(mockCassandraState.get(SNAPSHOT_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.get(UPLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
 
         manager.start(emptyRequest());
 

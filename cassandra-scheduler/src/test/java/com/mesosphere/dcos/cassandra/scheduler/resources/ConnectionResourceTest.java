@@ -1,117 +1,137 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.CassandraApplicationConfig;
+import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
-import io.dropwizard.configuration.ConfigurationFactory;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.FileConfigurationSourceProvider;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.jackson.Jackson;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.testing.junit.ResourceTestRule;
-import io.dropwizard.validation.BaseValidator;
-import org.apache.curator.RetryPolicy;
-import org.apache.curator.retry.RetryForever;
-import org.apache.curator.retry.RetryUntilElapsed;
-import org.apache.curator.test.TestingServer;
-import org.apache.mesos.curator.CuratorStateStore;
-import org.apache.mesos.state.StateStore;
+
+import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.dcos.Capabilities;
 import org.junit.*;
+import org.mockito.Mockito;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class ConnectionResourceTest {
-    private static TestingServer server;
+    private static final String TEST_SERVICE_NAME = "testService";
 
-    private static CassandraSchedulerConfiguration config;
-
-    private static DefaultConfigurationManager configurationManager;
-
-    private static CassandraTasks cassandraTasks;
-    private static ConfigurationManager configuration;
+    private static final CassandraDaemonTask TEST_TASK_1 = getMockTask("fooname", "foo.com", 1235);
+    private static final CassandraDaemonTask TEST_TASK_2 = getMockTask("barname", "bar.com", 1234);
+    private static final Map<String, CassandraDaemonTask> TEST_TASKS;
+    static {
+        TEST_TASKS = new TreeMap<>(); // keep consistent order
+        TEST_TASKS.put("foo", TEST_TASK_1);
+        TEST_TASKS.put("bar", TEST_TASK_2);
+    }
 
     @Rule
-    public final ResourceTestRule resources = ResourceTestRule.builder()
-            .addResource(new ConnectionResource(cassandraTasks, configuration)).build();
+    public final ResourceTestRule resourceWithVips = ResourceTestRule.builder()
+            .addResource(getConnectionResource(true)).build();
+    @Rule
+    public final ResourceTestRule resourceWithoutVips = ResourceTestRule.builder()
+            .addResource(getConnectionResource(false)).build();
 
-    @BeforeClass
-    public static void beforeAll() throws Exception {
-        server = new TestingServer();
-        server.start();
-        final ConfigurationFactory<MutableSchedulerConfiguration> factory =
-                new ConfigurationFactory<>(
-                        MutableSchedulerConfiguration.class,
-                        BaseValidator.newValidator(),
-                        Jackson.newObjectMapper().registerModule(
-                                new GuavaModule())
-                                .registerModule(new Jdk8Module()),
-                        "dw");
-        MutableSchedulerConfiguration mutable = factory.build(
-                new SubstitutingSourceProvider(
-                        new FileConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(false, true)),
-                Resources.getResource("scheduler.yml").getFile());
-        config = mutable.createConfig();
-
-        final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
-        RetryPolicy retryPolicy =
-                (curatorConfig.getOperationTimeout().isPresent()) ?
-                        new RetryUntilElapsed(
-                                curatorConfig.getOperationTimeoutMs()
-                                        .get()
-                                        .intValue()
-                                , (int) curatorConfig.getBackoffMs()) :
-                        new RetryForever((int) curatorConfig.getBackoffMs());
-
-        StateStore stateStore = new CuratorStateStore(
-                config.getServiceConfig().getName(),
-                server.getConnectString(),
-                retryPolicy);
-        configurationManager =
-                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
-                        config.getServiceConfig().getName(),
-                        server.getConnectString(),
-                        config,
-                        new ConfigValidator(),
-                        stateStore);
-        config = (CassandraSchedulerConfiguration) configurationManager.getTargetConfig();
-        configuration = new ConfigurationManager(configurationManager);
-        ClusterTaskConfig clusterTaskConfig = config.getClusterTaskConfig();
-        cassandraTasks = new CassandraTasks(
-                configuration,
-                curatorConfig,
-                clusterTaskConfig,
-                stateStore);
-    }
-
-    @AfterClass
-    public static void afterAll() throws Exception {
-        server.close();
-        server.stop();
-    }
-
+    @SuppressWarnings("unchecked")
     @Test
-    public void testGetConnectEmpty() throws Exception {
-        final Map map = resources.client().target("/v1/connection").request().get(Map.class);
-        final Object address = map.get("address");
-        final Object dns = map.get("dns");
-        Assert.assertNotNull(address);
-        Assert.assertNotNull(dns);
+    public void testGetConnectWithVips() throws Exception {
+        final Map<String, Object> map = (Map<String, Object>) resourceWithVips.client()
+                .target("/v1/connection").request().get(Map.class);
+        assertEquals(3, map.size());
+
+        final List<String> address = (List<String>) map.get("address");
+        assertEquals(map.toString(), 2, address.size());
+        assertEquals("bar.com:1234", address.get(0));
+        assertEquals("foo.com:1235", address.get(1));
+
+        final List<String> dns = (List<String>) map.get("dns");
+        assertEquals(2, dns.size());
+        assertEquals("barname.testService.mesos:1234", dns.get(0));
+        assertEquals("fooname.testService.mesos:1235", dns.get(1));
+
+        String vip = map.get("vip").toString();
+        assertEquals("node.testService.l4lb.thisdcos.directory:9042", vip);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testGetAddressEmpty() throws Exception {
-        final List address = resources.client().target("/v1/connection/address").request().get(List.class);
-        Assert.assertNotNull(address);
+    public void testGetConnectWithoutVips() throws Exception {
+        final Map<String, Object> map = (Map<String, Object>) resourceWithoutVips.client()
+                .target("/v1/connection").request().get(Map.class);
+        assertEquals(2, map.size());
+
+        final List<String> address = (List<String>) map.get("address");
+        assertEquals(2, address.size());
+        assertEquals("bar.com:1234", address.get(0));
+        assertEquals("foo.com:1235", address.get(1));
+
+        final List<String> dns = (List<String>) map.get("dns");
+        assertEquals(2, dns.size());
+        assertEquals("barname.testService.mesos:1234", dns.get(0));
+        assertEquals("fooname.testService.mesos:1235", dns.get(1));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testGetDnsEmpty() throws Exception {
-        final List dns = resources.client().target("/v1/connection/dns").request().get(List.class);
-        Assert.assertNotNull(dns);
+    public void testGetAddress() throws Exception {
+        final List<String> address = (List<String>) resourceWithVips.client()
+                .target("/v1/connection/address").request().get(List.class);
+        assertEquals(2, address.size());
+        assertEquals("bar.com:1234", address.get(0));
+        assertEquals("foo.com:1235", address.get(1));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testGetDns() throws Exception {
+        final List<String> dns = (List<String>) resourceWithVips.client()
+                .target("/v1/connection/dns").request().get(List.class);
+        assertEquals(2, dns.size());
+        assertEquals("barname.testService.mesos:1234", dns.get(0));
+        assertEquals("fooname.testService.mesos:1235", dns.get(1));
+    }
+
+    private static CassandraDaemonTask getMockTask(String name, String hostname, int nativePort) {
+        CassandraDaemonTask mockTask = Mockito.mock(CassandraDaemonTask.class);
+        when(mockTask.getState()).thenReturn(TaskState.TASK_RUNNING);
+        when(mockTask.getName()).thenReturn(name);
+        when(mockTask.getHostname()).thenReturn(hostname);
+        CassandraConfig cassConf = Mockito.mock(CassandraConfig.class);
+        when(mockTask.getConfig()).thenReturn(cassConf);
+        CassandraApplicationConfig appConf = Mockito.mock(CassandraApplicationConfig.class);
+        when(cassConf.getApplication()).thenReturn(appConf);
+        when(appConf.getNativeTransportPort()).thenReturn(nativePort);
+        return mockTask;
+    }
+
+    private ConnectionResource getConnectionResource(boolean withVips) {
+        ConfigurationManager mockConfigManager = Mockito.mock(ConfigurationManager.class);
+        CassandraSchedulerConfiguration mockSchedulerConfig = Mockito.mock(CassandraSchedulerConfiguration.class);
+        try {
+            when(mockConfigManager.getTargetConfig()).thenReturn(mockSchedulerConfig);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        ServiceConfig mockServiceConfig = Mockito.mock(ServiceConfig.class);
+        when(mockSchedulerConfig.getServiceConfig()).thenReturn(mockServiceConfig);
+        when(mockServiceConfig.getName()).thenReturn(TEST_SERVICE_NAME);
+
+        CassandraState mockTasks = Mockito.mock(CassandraState.class);
+        when(mockTasks.getDaemons()).thenReturn(TEST_TASKS);
+
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        try {
+            when(mockCapabilities.supportsNamedVips()).thenReturn(withVips);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+        return new ConnectionResource(mockCapabilities, mockTasks, mockConfigManager);
     }
 }
