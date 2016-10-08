@@ -43,17 +43,21 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
 
         final boolean isRunning = Protos.TaskState.TASK_RUNNING.equals(status.get().getState());
 
+        if (!isRunning) {
+            return false;
+        }
+
         if (status.get().hasData()) {
             final CassandraData data = CassandraData.parse(status.get().getData());
             final CassandraMode mode = data.getMode();
             String hostName = data.getHostname();
             final boolean isModeNormal = CassandraMode.NORMAL.equals(mode);
             LOGGER.info("isRunning: {} isModeNormal: {} hostName: {}", isRunning, isModeNormal, hostName);
-            return (isRunning) && isModeNormal;
-        } else {
-            // Handle reconcile messages
-            return isRunning;
+            return isModeNormal;
         }
+
+        LOGGER.info("Status does not yet indicate mode NORMAL");
+        return false;
     }
 
     private boolean isComplete(final CassandraContainer container) throws IOException {
