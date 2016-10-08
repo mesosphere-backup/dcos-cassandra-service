@@ -61,7 +61,7 @@ $ dcos cassandra connection
 }
 ```
 
-* Step 3. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/sshcluster/):
+* Step 3. [SSH into a DC/OS node](https://docs.mesosphere.com/administration/access-node/sshcluster/):
 
 ```
 $ dcos node ssh --master-proxy --leader
@@ -73,7 +73,7 @@ Now that you are inside your DC/OS cluster, you can connect to your Cassandra cl
 * Step 4. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
 
 ```
-core@ip-10-0-6-153 ~ $ docker run -ti cassandra:3.0.7 cqlsh node-0.cassandra.mesos
+core@ip-10-0-6-153 ~ $ docker run -ti cassandra:3.0.7 cqlsh --cqlversion="3.4.0" 10.0.2.136
 cqlsh>
 ```
 
@@ -200,7 +200,7 @@ In order to avoid port conflicts, by default you cannot collocate more than one 
 
 ### Installation Plan
 
-When the DC/OS Apache Cassandra service is initially installed it will generate an installation plan as shown below.
+When the DC/OS Cassandra service is initially installed it will generate an installation plan as shown below. You can view, pause, and resume installation via the REST API. See [REST API authentication][#rest-auth] for information on how this request must be authenticated.
 
 ```
 {
@@ -263,13 +263,7 @@ When the DC/OS Apache Cassandra service is initially installed it will generate 
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
 ```
-$ curl http://<dcos_url>/service/cassandra/v1/plan
-```
-
-If you are using the Enterprise Edition of DC/OS with Authentication enabled you will need to include the token in the GET command.
-
-```
-curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" http://<dcos_url>/service/cassandra/v1/plan
+$ curl -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan
 ```
 
 #### Plan Errors
@@ -285,26 +279,15 @@ The second phase of the installation is the deploy phase. This phase will deploy
 In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
-If you are using the Enterprise Edition of DC/OS with Authentication enabled you will need to include the token in the POST command.
-
-```
-curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POST http://<dcos_url>/service/cassandra/v1/plan/interrupt
-```
 
 #### Resuming Installation
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
-```
-
-If you are using the Enterprise Edition of DC/OS with Authentication enabled you will need to include the token in the POST command.
-
-```
-curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
+$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 # Upgrade
@@ -323,7 +306,7 @@ curl -v -H "Authorization: token=$(dcos config show core.dcos_acs_token)" -X POS
 1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Please make a note of the backup name and backup location.
 2. [Install a new Cassandra Service](https://github.com/mesosphere/dcos-cassandra-service#multiple-cassandra-cluster-installation) instance.
 3. Perform [Restore operation](https://github.com/mesosphere/dcos-cassandra-service#restore) on the new cluster created in Step #2
-4. Once the restore operation is finished, please check if the data is restored correctly.
+4. Once the restore operation is finished, check if the data is restored correctly.
 5. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
 
 # Uninstall
@@ -349,7 +332,7 @@ These values may vary if you had customized them during installation.
 - All DC/OS Apache Cassandra deployments participating in the cluster MUST be configured to belong to the same cluster.
 - Each DC/OS Apache Cassandra deployment participating in the cluster MUST be configured to belong to different datacenters.
 
-##Installing the Initial datacenter
+## Installing the Initial Datacenter
 
 Install the cluster as described in the [Installation](#installation) section. If all virtual datacenters in the Cassandra cluster will reside in the same DC/OS cluster, no additional configuration is necessary.
 
@@ -447,14 +430,14 @@ The Cassandra scheduler runs as a Marathon process and can be reconfigured by ch
 Configuration updates are rolled out through execution of Update Plans. You can configure the way these plans are executed.
 
 #### Configuration Update Plans
-This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration. However, the default strategy can be overridden by a strategy the user provides.
+This configuration update strategy is analogous to the installation procedure above. If the configuration update is accepted, there will be no errors in the generated plan, and a rolling restart will be performed on all nodes to apply the updated configuration.
 
 ## Configuration Update
 
 Make the REST request below to view the current plan:
 
 ```
-$ curl -v http://<dcos_url>/service/cassandra/v1/plan
+$ curl -H "Authorization: token=$AUTH_TOKEN" -v http://<dcos_url>/service/cassandra/v1/plan
 ```
 
 The response will look similar to this:
@@ -519,7 +502,7 @@ The response will look similar to this:
 If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
 
 ```
-$ curl -X POST http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 
@@ -587,7 +570,7 @@ If you query the plan again, the response will look like this (notice `status: "
 Enter the `continue` command to resume the update process.
 
 ```
-$ curl -X POST http://<dcos_url>/service/cassandra/v1/plan/continue
+$ curl -X -H "Authorization: token=$AUTH_TOKEN" POST http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 After you execute the continue operation, the plan will look like this:
@@ -655,7 +638,7 @@ The following describes the most commonly used features of DC/OS Apache Cassandr
 
 ### Service Configuration
 
-The service configuration object contains properties that MUST be specified during installation and CANNOT be modified after installation is in progress. This configuration object is similar across all DC/OS Infinity services. Service configuration example:
+The service configuration object contains properties that MUST be specified during installation and CANNOT be modified after installation is in progress. Service configuration example:
 
 ```
 {
@@ -912,6 +895,7 @@ Example executor configuration:
     </tr>
 
 </table>
+
 ### Task Configuration
 The task configuration object allows you to modify the resources associated with management operations.  Again, These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
 Example executor configuration:
@@ -940,6 +924,7 @@ Example executor configuration:
       <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service tasks.</td>
     </tr>
 </table>
+
 ### Cassandra Application Configuration
 
 The Cassandra application is configured via the Cassandra JSON object. **You should not modify these settings without strong reason and an advanced knowledge of Cassandra internals and cluster operations.** The available configuration items are included for advanced users who need to tune the default configuration for specific workloads.
@@ -1288,8 +1273,8 @@ reasons, it is best to specify multiple nodes in the configuration of the CQL Dr
 by the application.
 
 If IP addresses are used, and a Cassandra node is moved to a different IP
-address, the address in the list passed to the Cluster configuration of the application
-should be changed. Note that, once the application is connected to the Cluster, moving a
+address, the address in the list passed to the cluster configuration of the application
+should be changed. Once the application is connected to the cluster, moving a
 node to a new IP address will not result in a loss of connectivity. The CQL Driver is
 capable of dealing with topology changes. However, the application's
 configuration should be pointed to the new address the next time the application is
@@ -1321,7 +1306,7 @@ connected even if a node moves.
 The snippet above is the correct dependency for CQL driver to use with the DC/OS Apache Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
 
 #### Connecting the CQL Driver.
-The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query.
+The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query. Run this script from anywhere where the private IP addresses of your nodes are reachable. Find the IP addresses of your nodes by running the `dcos cassandra connection` command from the DC/OS CLI.
 
 ```
 Cluster cluster = null;
@@ -1456,7 +1441,7 @@ Result:
 
 ### Node Info
 
-To view general information about a node, the following command my be run from the CLI.
+To view general information about a node, run the following command from the CLI.
 ```
 $ dcos cassandra --name=<service-name> node describe <nodeid>
 ```
@@ -1523,7 +1508,7 @@ Result:
 </table>
 
 ## Maintenance
-Cassandra supports several maintenance operations including Cleanup, Repair, Backup, and Restore.  In general, attempting to run multiple maintenance operations simultaneously (e.g. Repair and Backup) against a single cluster is not recommended.  Likewise, running maintenance operations against multiple Cassandra clusters linked in a multi-datacenter configuration is not recommended.
+Cassandra supports several maintenance operations including Cleanup, Repair, Backup, and Restore.  In general, attempting to run multiple maintenance operations simultaneously (e.g. Repair and Backup) against a single cluster is not recommended. Likewise, running maintenance operations against multiple Cassandra clusters linked in a multi-datacenter configuration is not recommended.
 
 ### Cleanup
 
@@ -1754,7 +1739,7 @@ $ dcos cassandra --name=cassandra node replace 0
 
 Via API:
 ```
-$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "$DCOS_URI/service/cassandra/v1/nodes/replace?node=node-0"
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/replace?node=node-0"
 ```
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
@@ -1769,7 +1754,7 @@ $ dcos cassandra --name=cassandra node restart 0
 
 API:
 ```
-$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "$DCOS_URI/service/cassandra/v1/nodes/restart?node=node-0"
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/restart?node=node-0"
 ```
 
 This will restart the node with the same name running on the same server.
@@ -1778,18 +1763,35 @@ This will restart the node with the same name running on the same server.
 The DC/OS Apache Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DC/OS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.
 The <dcos_url> parameter referenced below indicates the base URL of the DC/OS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
 
+<a name="#rest-auth"></a>
+## REST API Authentication
+
+Rest API requests must be authenticated. This authentication is only applicable for interacting with the Cassandra REST API directly. You do not need the token to access the Cassandra nodes themselves.
+ 
+If you are using Enterprise DC/OS, follow these instructions to [create a service account and an authentication token](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/custom-service-auth/). You can then configure your service to automatically refresh the authentication token when it expires. To get started more quickly, you can also [get the authentication token without a service account](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/iam-api/), but you will need to manually refresh the token.
+
+If you are using open source DC/OS, follow these instructions to [pass your HTTP API token to the DC/OS endpoint](https://dcos.io/docs/1.8/administration/id-and-access-mgt/auth-api/#passing-your-http-api-token-to-dc-os-endpoints). 
+
+Once you have the authentication token, you can store it in an environment variable and reference it in your REST API calls:
+
+```
+$ export AUTH_TOKEN=uSeR_t0k3n
+```
+
+The `curl` examples in this document assume that an auth token has been stored in an environment variable named `AUTH_TOKEN`.
+
 ## Configuration
 
 ### View the Installation Plan
 
 ```
-$ curl -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan
+$ curl -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/plan
 ```
 
 ### Retrieve Connection Info
 
 ```
-$ curl -H "Authorization:token=<auth_token>" <dcos_url>/cassandra/v1/connection
+$ curl -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/cassandra/v1/connection
 ```
 
 You will see a response similar to the following:
@@ -1811,7 +1813,7 @@ This JSON array contains a list of valid nodes that the client can use to connec
 The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X POST -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
+$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/plan?cmd=interrupt
 ```
 
 ### Resume Installation
@@ -1819,7 +1821,7 @@ $ curl -X POST -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandr
 The REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 ```
 
 ## Managing
@@ -1828,14 +1830,14 @@ $ curl -X PUT <dcos_surl>/service/cassandra/v1/plan?cmd=proceed
 Retrieve the status of a node by sending a GET request to `/v1/nodes/<node-#>/status`:
 
 ```
-$ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/nodes/<node-#>/status
+$ curl -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/nodes/<node-#>/status
 ```
 
 ### Node Info
 Retrieve node information by sending a GET request to `/v1/nodes/<node-#>/info`:
 
 ```
-$ curl  -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/nodes/</node-#>/info
+$ curl -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/nodes/</node-#>/info
 ```
 ### Cleanup
 
@@ -1849,7 +1851,7 @@ First, create the request payload, for example, in a file `cleanup.json`:
 }
 ```
 
-In the above, the nodes list indicates the nodes on which cleanup will be performed. The value [*], indicates to perform the cleanup cluster wide. key_spaces and column_families indicate the key spaces and column families on which cleanup will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The json below shows the request payload for a cluster wide cleanup operation of all key spaces and column families.
+In the above, the nodes list indicates the nodes on which cleanup will be performed. The value [*], indicates to perform the cleanup cluster wide. key_spaces and column_families indicate the key spaces and column families on which cleanup will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The JSON below shows the request payload for a cluster wide cleanup operation of all key spaces and column families.
 
 ```
 {
@@ -1858,7 +1860,7 @@ In the above, the nodes list indicates the nodes on which cleanup will be perfor
 ```
 
 ```
-$ curl -X PUT -H "Content-Type:application/json" -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type:application/json" <dcos_url>/service/cassandra/v1/cleanup/start --data @cleanup.json
 ```
 
 ### Repair
@@ -1872,7 +1874,7 @@ First, create the request payload, for example, in a file `repair.json`:
     "column_families":["my_cf_1", "my_cf_w"]
 }
 ```
-In the above, the nodes list indicates the nodes on which the repair will be performed. The value [*], indicates to perform the repair cluster wide. key_spaces and column_families indicate the key spaces and column families on which repair will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The json below shows the request payload for a cluster wide repair operation of all key spaces and column families.
+In the above, the nodes list indicates the nodes on which the repair will be performed. The value [*], indicates to perform the repair cluster wide. key_spaces and column_families indicate the key spaces and column families on which repair will be performed. These may be ommitted if all key spaces and/or all column families should be targeted. The JSON below shows the request payload for a cluster wide repair operation of all key spaces and column families.
 
 ```
 {
@@ -1881,7 +1883,7 @@ In the above, the nodes list indicates the nodes on which the repair will be per
 ```
 
 ```
-curl -X PUT -H "Content-Type:application/json" -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/repair/start --data @repair.json
+curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type:application/json" <dcos_url>/service/cassandra/v1/repair/start --data @repair.json
 ```
 
 ### Backup
@@ -1900,14 +1902,14 @@ First, create the request payload, for example, in a file `backup.json`:
 Then, submit the request payload via `PUT` request to `/v1/backup/start`
 
 ```
-$ curl -X PUT -H "Content-Type: application/json" -H "Authorization:token=<auth_token>" -d @backup.json <dcos_url>/service/cassandra/v1/backup/start
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type: application/json" -d @backup.json <dcos_url>/service/cassandra/v1/backup/start
 {"status":"started", message:""}
 ```
 
 Check status of the backup:
 
 ```
-$ curl -X GET http://cassandra.marathon.mesos:9000/v1/backup/status
+$ curl -X GET -H "Authorization: token=$AUTH_TOKEN" http://cassandra.marathon.mesos:9000/v1/backup/status
 ```
 
 ### Restore
@@ -1928,14 +1930,14 @@ Next, create the request payload, for example, in a file `restore.json`:
 Next, submit the request payload via `PUT` request to `/v1/restore/start`
 
 ```
-$ curl -X PUT -H "Content-Type: application/json" -H "Authorization:token=<auth_token>" -d @restore.json <dcos_url>/service/cassandra/v1/restore/start
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type: application/json" -d @restore.json <dcos_url>/service/cassandra/v1/restore/start
 {"status":"started", message:""}
 ```
 
 Check status of the restore:
 
 ```
-$ curl -X -H "Authorization:token=<auth_token>" <dcos_url>/service/cassandra/v1/restore/status
+$ curl -X -H "Authorization: token=$AUTH_TOKEN" <dcos_url>/service/cassandra/v1/restore/status
 ```
 
 # Limitations
