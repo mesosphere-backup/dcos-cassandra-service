@@ -158,8 +158,10 @@ public class ConfigurationManagerTest {
                 901,
                 17,
                 "/java/home",
-                URI.create("/jre/location"), URI.create("/executor/location"),
-                URI.create("/cassandra/location"));
+                "/jre/location",
+                "/executor/location",
+                "/cassandra/location",
+                "");
         int updatedServers = original.getServers() + 10;
         int updatedSeeds = original.getSeeds() + 5;
 
