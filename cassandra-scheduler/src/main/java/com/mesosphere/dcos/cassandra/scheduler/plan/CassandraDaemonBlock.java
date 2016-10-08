@@ -27,6 +27,7 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
     private final PersistentOfferRequirementProvider provider;
     private final String name;
     private volatile Status status = Status.PENDING;
+    private volatile CassandraMode mode = CassandraMode.UNKNOWN;
 
     private CassandraContainer getTask() throws PersistenceException, ConfigStoreException {
         return cassandraState.getOrCreateContainer(name);
@@ -64,7 +65,7 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
         final String name = container.getDaemonTask().getName();
         final Optional<Protos.TaskStatus> storedStatus = cassandraState.getStateStore().fetchStatus(name);
         if (storedStatus.isPresent()) {
-            final boolean needsConfigUpdate = cassandraState.needsConfigUpdate(container.getDaemonTask());
+            final boolean needsConfigUpdate = needsConfigUpdate(container.getDaemonTask());
             return isComplete(storedStatus.get()) && !needsConfigUpdate;
         } else {
             return false;
@@ -194,6 +195,7 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
             }
             if (status.hasData()) {
                 final CassandraData cassandraData = CassandraData.parse(status.getData());
+                mode = cassandraData.getMode();
                 LOGGER.info("{} Block: {} received status: {} with mode: {}",
                         Block.getStatus(this), getName(), status, cassandraData.getMode());
             } else {
@@ -248,7 +250,7 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
 
     @Override
     public String getMessage() {
-        return "Deploying Cassandra node " + getName();
+        return "Deploying Cassandra node " + getName() + " mode: " + mode.name();
     }
 
 

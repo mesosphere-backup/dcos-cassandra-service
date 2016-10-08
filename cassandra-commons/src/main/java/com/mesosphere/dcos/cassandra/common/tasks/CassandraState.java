@@ -5,7 +5,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
-import com.mesosphere.dcos.cassandra.common.config.*;
+import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.config.ServiceConfig;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
@@ -17,6 +20,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.config.ConfigStoreException;
+import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.state.SchedulerState;
 import org.apache.mesos.state.StateStore;
@@ -471,7 +475,24 @@ public class CassandraState extends SchedulerState implements Managed {
         LOGGER.info("Received status update: {}", TextFormat.shortDebugString(status));
         synchronized (getStateStore()) {
             try {
-                getStateStore().storeStatus(status);
+                if (status.hasData()) {
+                    getStateStore().storeStatus(status);
+                } else {
+                    Optional<Protos.TaskStatus> taskStatusOptional =
+                            getStateStore().fetchStatus(TaskUtils.toTaskName(status.getTaskId()));
+
+                    if (taskStatusOptional.isPresent()) {
+                        if (taskStatusOptional.get().hasData()) {
+                            getStateStore().storeStatus(Protos.TaskStatus.newBuilder(status)
+                                    .setData(taskStatusOptional.get().getData())
+                                    .build());
+                        } else {
+                            getStateStore().storeStatus(status);
+                        }
+                    } else {
+                        getStateStore().storeStatus(status);
+                    }
+                }
 
                 if (byId.containsKey(status.getTaskId().getValue())) {
 
@@ -496,7 +517,7 @@ public class CassandraState extends SchedulerState implements Managed {
                     LOGGER.info("Tasks = {}", tasks);
                     LOGGER.info("Ids = {}", byId);
                 }
-            } catch (StateStoreException e) {
+            } catch (StateStoreException | TaskException e) {
                 LOGGER.info("Unable to store status. Reason: ", e);
             }
         }
