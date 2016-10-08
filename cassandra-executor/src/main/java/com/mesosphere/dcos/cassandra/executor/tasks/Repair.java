@@ -52,9 +52,7 @@ public class Repair implements Runnable {
         return task.getRepairContext().getColumnFamilies();
     }
 
-    private void repairKeyspace(String keyspace, List<String> columnFamilies)
-        throws
-        Exception {
+    private void repairKeyspace(String keyspace, List<String> columnFamilies) throws Exception {
         LOGGER.info("Starting repair : keySpace = {}, columnFamilies = {}",
             keyspace, columnFamilies);
 
@@ -64,7 +62,7 @@ public class Repair implements Runnable {
             String.join(",", columnFamilies));
         options.put(RepairOption.PARALLELISM_KEY,
             RepairParallelism.SEQUENTIAL.getName());
-        options.put(RepairOption.INCREMENTAL_KEY, "false");
+        options.put(RepairOption.INCREMENTAL_KEY, "true");
 
         String result = daemon.repair(keyspace, options);
 
