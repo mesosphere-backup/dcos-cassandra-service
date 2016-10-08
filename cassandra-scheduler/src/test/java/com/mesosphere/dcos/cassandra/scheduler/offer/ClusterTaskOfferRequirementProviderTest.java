@@ -6,7 +6,7 @@ import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -19,11 +19,14 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.protobuf.ResourceBuilder;
-import org.apache.mesos.protobuf.TaskInfoBuilder;
+import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.state.StateStore;
 import org.junit.*;
+import org.mockito.Mockito;
+
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +39,7 @@ public class ClusterTaskOfferRequirementProviderTest {
     private static ConfigurationManager configuration;
     private static CuratorFrameworkConfig curatorConfig;
     private static ClusterTaskConfig clusterTaskConfig;
-    private static CassandraTasks cassandraTasks;
+    private static CassandraState cassandraState;
     private static ClusterTaskOfferRequirementProvider provider;
     private static Protos.TaskInfo testTaskInfo;
 
@@ -52,31 +55,49 @@ public class ClusterTaskOfferRequirementProviderTest {
 
     @Before
     public void beforeEach() throws Exception {
-        cassandraTasks = new CassandraTasks(
+        cassandraState = new CassandraState(
                 configuration,
                 curatorConfig,
                 clusterTaskConfig,
                 stateStore);
 
-        CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
+        CassandraDaemonTask task = cassandraState.createDaemon("test-daemon");
         Protos.TaskInfo initTaskInfo = task.getTaskInfo();
 
-        TaskInfoBuilder builder = new TaskInfoBuilder(
-            initTaskInfo.getTaskId().getValue(),
-            initTaskInfo.getName(),
-            initTaskInfo.getSlaveId().getValue());
-        Protos.Resource cpu = ResourceBuilder.reservedCpus(
-            testCpus, testRole, testPrincipal, testResourceId);
-        Protos.Resource mem = ResourceBuilder.reservedMem(
-            testMem, testRole, testPrincipal, testResourceId);
-        Protos.Resource disk = ResourceBuilder.reservedDisk(
-            testDisk, testRole, testPrincipal, testResourceId);
-        Protos.Resource ports = ResourceBuilder.reservedPorts(
-            testPortBegin, testPortEnd, testRole, testPrincipal, testResourceId);
-        builder.addAllResources(Arrays.asList(cpu, mem, disk, ports));
-        builder.setExecutorInfo(initTaskInfo.getExecutor());
+        Protos.Resource cpu = ResourceUtils.getExpectedScalar(
+                "cpus",
+                testCpus,
+                testResourceId,
+                testRole,
+                testPrincipal);
+        Protos.Resource mem = ResourceUtils.getExpectedScalar(
+                "mem",
+                testMem,
+                testResourceId,
+                testRole,
+                testPrincipal);
+        Protos.Resource disk = ResourceUtils.getExpectedScalar(
+                "disk",
+                testDisk,
+                testResourceId,
+                testRole,
+                testPrincipal);
 
-        testTaskInfo = builder.build();
+        Protos.Value.Range range = Protos.Value.Range.newBuilder().setBegin(testPortBegin).setEnd(testPortEnd).build();
+        Protos.Resource ports = ResourceUtils.getExpectedRanges(
+                "ports",
+                Arrays.asList(range),
+                testResourceId,
+                testRole,
+                testPrincipal);
+
+        testTaskInfo = Protos.TaskInfo.newBuilder()
+                .setTaskId(initTaskInfo.getTaskId())
+                .setName(initTaskInfo.getName())
+                .setSlaveId(initTaskInfo.getSlaveId())
+                .addAllResources(Arrays.asList(cpu, mem, disk, ports))
+                .setExecutor(initTaskInfo.getExecutor())
+                .build();
     }
 
     @BeforeClass
@@ -140,7 +161,11 @@ public class ClusterTaskOfferRequirementProviderTest {
                 config,
                 new ConfigValidator(),
                 stateStore);
-        configuration = new ConfigurationManager(configurationManager);
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        configuration = new ConfigurationManager(
+                new CassandraDaemonTask.Factory(mockCapabilities),
+                configurationManager);
 
         provider = new ClusterTaskOfferRequirementProvider();
     }
@@ -158,7 +183,7 @@ public class ClusterTaskOfferRequirementProviderTest {
     @Test
     public void testConstructor() throws Exception {
         ClusterTaskOfferRequirementProvider provider = new ClusterTaskOfferRequirementProvider();
-        CassandraDaemonTask task = cassandraTasks.createDaemon("test-daemon");
+        CassandraDaemonTask task = cassandraState.createDaemon("test-daemon");
         Protos.TaskInfo taskInfo = task.getTaskInfo();
 
         OfferRequirement requirement = provider.getNewOfferRequirement(taskInfo);

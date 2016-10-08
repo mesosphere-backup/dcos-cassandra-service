@@ -5,6 +5,8 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -16,27 +18,33 @@ import org.apache.curator.retry.RetryForever;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.state.StateStore;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.net.URI;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 public class ConfigurationManagerTest {
     private static TestingServer server;
-    private static ConfigurationFactory<MutableSchedulerConfiguration> factory;
+    private static CassandraDaemonTask.Factory taskFactory;
+    private static ConfigurationFactory<MutableSchedulerConfiguration> configurationFactory;
     private static String connectString;
 
     @Before
     public void beforeAll() throws Exception {
         server = new TestingServer();
         server.start();
-        factory = new ConfigurationFactory<>(
+        Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
+        when(mockCapabilities.supportsNamedVips()).thenReturn(true);
+        taskFactory = new CassandraDaemonTask.Factory(mockCapabilities);
+        configurationFactory = new ConfigurationFactory<>(
                         MutableSchedulerConfiguration.class,
                         BaseValidator.newValidator(),
                         Jackson.newObjectMapper()
@@ -55,7 +63,7 @@ public class ConfigurationManagerTest {
     @Test
     public void loadAndPersistConfiguration() throws Exception {
         final String configFilePath = Resources.getResource("scheduler.yml").getFile();
-        MutableSchedulerConfiguration mutableConfig = factory.build(
+        MutableSchedulerConfiguration mutableConfig = configurationFactory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
@@ -82,7 +90,7 @@ public class ConfigurationManagerTest {
                 original,
                 new ConfigValidator(),
                 stateStore);
-        ConfigurationManager manager = new ConfigurationManager(configurationManager);
+        ConfigurationManager manager = new ConfigurationManager(taskFactory, configurationManager);
         CassandraSchedulerConfiguration targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
         assertEquals("cassandra", original.getServiceConfig().getName());
         assertEquals("cassandra-role", original.getServiceConfig().getRole());
@@ -102,7 +110,7 @@ public class ConfigurationManagerTest {
 
     @Test
     public void applyConfigUpdate() throws Exception {
-        MutableSchedulerConfiguration mutable = factory.build(
+        MutableSchedulerConfiguration mutable = configurationFactory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
@@ -129,7 +137,7 @@ public class ConfigurationManagerTest {
                 original,
                 new ConfigValidator(),
                 stateStore);
-        ConfigurationManager manager = new ConfigurationManager(configurationManager);
+        ConfigurationManager manager = new ConfigurationManager(taskFactory, configurationManager);
         CassandraSchedulerConfiguration targetConfig =
           (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
@@ -157,7 +165,7 @@ public class ConfigurationManagerTest {
         int updatedServers = original.getServers() + 10;
         int updatedSeeds = original.getSeeds() + 5;
 
-        mutable = factory.build(
+        mutable = configurationFactory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
@@ -182,7 +190,7 @@ public class ConfigurationManagerTest {
                 new ConfigValidator(),
                 stateStore);
         configurationManager.store(updated);
-        manager = new ConfigurationManager(configurationManager);
+        manager = new ConfigurationManager(taskFactory, configurationManager);
         targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
         manager.start();
@@ -198,7 +206,7 @@ public class ConfigurationManagerTest {
 
     @Test
     public void failOnBadServersCount() throws Exception {
-        MutableSchedulerConfiguration mutable = factory.build(
+        MutableSchedulerConfiguration mutable = configurationFactory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
@@ -225,7 +233,7 @@ public class ConfigurationManagerTest {
                 originalConfig,
                 new ConfigValidator(),
                 stateStore);
-        ConfigurationManager manager = new ConfigurationManager(configurationManager);
+        ConfigurationManager manager = new ConfigurationManager(taskFactory, configurationManager);
         CassandraSchedulerConfiguration targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
         manager.start();
@@ -247,7 +255,7 @@ public class ConfigurationManagerTest {
                 mutable.createConfig(),
                 new ConfigValidator(),
                 stateStore);
-        manager = new ConfigurationManager(configurationManager);
+        manager = new ConfigurationManager(taskFactory, configurationManager);
 
         manager.start();
 
@@ -256,7 +264,7 @@ public class ConfigurationManagerTest {
 
     @Test
     public void failOnBadSeedsCount() throws Exception {
-        MutableSchedulerConfiguration mutableSchedulerConfiguration = factory.build(
+        MutableSchedulerConfiguration mutableSchedulerConfiguration = configurationFactory.build(
                 new SubstitutingSourceProvider(
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
@@ -283,7 +291,7 @@ public class ConfigurationManagerTest {
                 originalConfig,
                 new ConfigValidator(),
                 stateStore);
-        ConfigurationManager manager = new ConfigurationManager(configurationManager);
+        ConfigurationManager manager = new ConfigurationManager(taskFactory, configurationManager);
         CassandraSchedulerConfiguration targetConfig = (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
         manager.start();
@@ -305,7 +313,7 @@ public class ConfigurationManagerTest {
                 mutableSchedulerConfiguration.createConfig(),
                 new ConfigValidator(),
                 stateStore);
-        manager = new ConfigurationManager(configurationManager);
+        manager = new ConfigurationManager(taskFactory, configurationManager);
         manager.start();
         assertEquals(1, configurationManager.getErrors().size());
     }

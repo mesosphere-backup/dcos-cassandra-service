@@ -17,14 +17,16 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class ConfigurationManager implements Managed {
-    private static final Logger LOGGER =
-        LoggerFactory.getLogger(ConfigurationManager.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationManager.class);
 
+    private final CassandraDaemonTask.Factory cassandraDaemonTaskFactory;
     private final DefaultConfigurationManager configurationManager;
 
     @Inject
     public ConfigurationManager(
-        DefaultConfigurationManager configurationManager) {
+            CassandraDaemonTask.Factory cassandraDaemonTaskFactory,
+            DefaultConfigurationManager configurationManager) {
+        this.cassandraDaemonTaskFactory = cassandraDaemonTaskFactory;
         this.configurationManager = configurationManager;
     }
 
@@ -48,7 +50,7 @@ public class ConfigurationManager implements Managed {
                                             String configName) throws ConfigStoreException {
         final CassandraSchedulerConfiguration targetConfig = getTargetConfig();
         final CassandraConfig cassandraConfig = targetConfig.getCassandraConfig();
-        return CassandraDaemonTask.create(
+        return cassandraDaemonTaskFactory.create(
             name,
             configName,
             createExecutor(frameworkId, name + "_executor", role, principal),
@@ -61,7 +63,7 @@ public class ConfigurationManager implements Managed {
             String role,
             String principal) throws ConfigStoreException {
         CassandraTaskExecutor executor = createExecutor(frameworkId, daemonTask.getName() + "_executor", role, principal);
-        return daemonTask.move(executor);
+        return cassandraDaemonTaskFactory.move(daemonTask, executor);
     }
 
     public CassandraDaemonTask replaceDaemon(CassandraDaemonTask task) {

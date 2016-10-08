@@ -3,14 +3,12 @@ import time
 from functools import wraps
 
 import dcos
-import requests
 import shakedown
 
 from tests.defaults import (
     DEFAULT_NODE_COUNT,
     PACKAGE_NAME,
     TASK_RUNNING_STATE,
-    request_headers,
 )
 
 
@@ -28,8 +26,8 @@ def as_json(fn):
     return wrapper
 
 
-def cassandra_api_url(basename):
-    return '{}/v1/{}'.format(shakedown.dcos_service_url('cassandra'), basename)
+def cassandra_api_url(basename, app_id='cassandra'):
+    return '{}/v1/{}'.format(shakedown.dcos_service_url(app_id), basename)
 
 
 def check_health():
@@ -38,6 +36,8 @@ def check_health():
 
     def success_predicate(tasks):
         running_tasks = [t for t in tasks if t['state'] == TASK_RUNNING_STATE]
+        print('Waiting for {} healthy tasks, got {}/{}'.format(
+            DEFAULT_NODE_COUNT, len(running_tasks), len(tasks)))
         return (
             len(running_tasks) == DEFAULT_NODE_COUNT,
             'Service did not become healthy'
@@ -48,18 +48,14 @@ def check_health():
 
 def get_cassandra_config():
     response = request(
-        requests.get,
-        marathon_api_url('apps/cassandra/versions'),
-        headers=request_headers()
+        dcos.http.get,
+        marathon_api_url('apps/{}/versions'.format(PACKAGE_NAME))
     )
     assert response.status_code == 200, 'Marathon versions request failed'
 
     version = response.json()['versions'][0]
 
-    response = requests.get(
-        marathon_api_url('apps/cassandra/versions/%s' % version),
-        headers=request_headers()
-    )
+    response = dcos.http.get(marathon_api_url('apps/{}/versions/{}'.format(PACKAGE_NAME, version)))
     assert response.status_code == 200
 
     config = response.json()
@@ -100,7 +96,9 @@ def spin(fn, success_predicate, *args, **kwargs):
         result = fn(*args, **kwargs)
         is_successful, error_message = success_predicate(result)
         if is_successful:
+            print('Success state reached, exiting spin. prev_err={}'.format(error_message))
             break
+        print('Waiting for success state... err={}'.format(error_message))
         time.sleep(1)
 
     assert is_successful, error_message
@@ -109,15 +107,18 @@ def spin(fn, success_predicate, *args, **kwargs):
 
 
 def uninstall():
-    def fn():
-        try:
-            shakedown.uninstall_package_and_wait(PACKAGE_NAME)
-        except (dcos.errors.DCOSException, json.decoder.JSONDecodeError):
-            return False
+    print('Uninstalling/janitoring {}'.format(PACKAGE_NAME))
+    try:
+        shakedown.uninstall_package_and_wait(PACKAGE_NAME, app_id=PACKAGE_NAME)
+    except (dcos.errors.DCOSException, ValueError) as e:
+        print('Got exception when uninstalling package, continuing with janitor anyway: {}'.format(e))
 
-        return shakedown.run_command_on_master(
-            'docker run mesosphere/janitor /janitor.py '
-            '-r cassandra-role -p cassandra-principal -z cassandra'
+    shakedown.run_command_on_master(
+        'docker run mesosphere/janitor /janitor.py '
+        '-r cassandra-role -p cassandra-principal -z dcos-service-cassandra '
+        '--auth_token={}'.format(
+            shakedown.run_dcos_command(
+                'config show core.dcos_acs_token'
+            )[0].strip()
         )
-
-    spin(fn, lambda x: (x, 'Uninstall failed'))
+    )

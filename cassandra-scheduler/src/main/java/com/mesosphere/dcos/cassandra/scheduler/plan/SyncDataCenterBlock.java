@@ -4,16 +4,18 @@ import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-public class SyncDataCenterBlock implements Block, Runnable {
+public class SyncDataCenterBlock extends DefaultObservable implements Block, Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(
             SyncDataCenterBlock.class
@@ -60,8 +62,7 @@ public class SyncDataCenterBlock implements Block, Runnable {
     }
 
     @Override
-    public OfferRequirement start() {
-
+    public Optional<OfferRequirement> start() {
         Optional<DataCenterInfo> dc = byUrl();
         if (dc.isPresent() && dc.get().getSeeds().size() > 0) {
             LOGGER.info("Block {} : Data center synced {}", getName(),
@@ -79,7 +80,7 @@ public class SyncDataCenterBlock implements Block, Runnable {
     }
 
     @Override
-    public void updateOfferStatus(boolean accepted) {
+    public void updateOfferStatus(Collection<Protos.Offer.Operation> operations) {
         // Not expected to be called: start() always returns a null OfferRequirement.
     }
 
@@ -122,6 +123,11 @@ public class SyncDataCenterBlock implements Block, Runnable {
 
     private void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        Status oldStatus = status;
         status = newStatus;
+
+        if (!status.equals(oldStatus)) {
+            notifyObservers();
+        }
     }
 }

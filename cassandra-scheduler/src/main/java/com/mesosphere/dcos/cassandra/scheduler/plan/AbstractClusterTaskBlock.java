@@ -4,19 +4,23 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> implements Block {
+public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext>
+        extends DefaultObservable
+        implements Block {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             AbstractClusterTaskBlock.class);
 
@@ -25,7 +29,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     private volatile Status status;
     private final C context;
     private final CassandraOfferRequirementProvider provider;
-    protected final CassandraTasks cassandraTasks;
+    protected final CassandraState cassandraState;
 
     protected abstract Optional<CassandraTask> getOrCreateTask(C context)
             throws PersistenceException;
@@ -54,22 +58,27 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     }
 
     @Override
-    public OfferRequirement start() {
+    public Optional<OfferRequirement> start() {
         LOGGER.info("Starting Block: name = {}, id = {}",
                 getName(),
                 getId());
 
         try {
             // Is Daemon task running ?
-            final Protos.TaskStatus lastKnownDaemonStatus = cassandraTasks.getStateStore().fetchStatus(getDaemon());
-            if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus)) {
-                return null;
+            final Optional<Protos.TaskStatus> lastKnownDaemonStatus = cassandraState.getStateStore().fetchStatus(getDaemon());
+            if (!lastKnownDaemonStatus.isPresent()) {
+                return Optional.empty();
             }
+
+            if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus.get())) {
+                return Optional.empty();
+            }
+
             Optional<CassandraTask> task = getOrCreateTask(context);
             if (task.isPresent()) {
                 update(task.get().getCurrentStatus());
                 if (isComplete() || isInProgress()) {
-                    return null;
+                    return Optional.empty();
                 } else {
                     setStatus(Status.PENDING);
                 }
@@ -79,10 +88,10 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                 LOGGER.info("Block has no task: name = {}, id = {}",
                         getName(), getId());
 
-                return null;
+                return Optional.empty();
             } else {
                 LOGGER.info("Block has task: " + task);
-                return getOfferRequirement(task.get());
+                return Optional.of(getOfferRequirement(task.get()));
             }
 
         } catch (IOException ex) {
@@ -91,21 +100,21 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                     getName(),
                     getId()), ex);
 
-            return null;
+            return Optional.empty();
         }
     }
 
     public AbstractClusterTaskBlock(
             final String daemon,
-            final CassandraTasks cassandraTasks,
+            final CassandraState cassandraState,
             final CassandraOfferRequirementProvider provider,
             final C context) {
         this.daemon = daemon;
         this.provider = provider;
         this.status = Status.PENDING;
         this.context = context;
-        this.cassandraTasks = cassandraTasks;
-        Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
+        this.cassandraState = cassandraState;
+        Optional<CassandraTask> taskOption = cassandraState.get(getName());
         if (taskOption.isPresent()) {
             CassandraTask task = taskOption.get();
             if (Protos.TaskState.TASK_FINISHED.equals(
@@ -128,8 +137,8 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
         }
 
         try {
-            cassandraTasks.update(status);
-            Optional<CassandraTask> taskOption = cassandraTasks.get(getName());
+            cassandraState.update(status);
+            Optional<CassandraTask> taskOption = cassandraState.get(getName());
 
             if (taskOption.isPresent()) {
                 CassandraTask task = taskOption.get();
@@ -139,7 +148,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
                     setStatus(Status.IN_PROGRESS);
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
-                    cassandraTasks.remove(getName());
+                    cassandraState.remove(getName());
                     LOGGER.info("Reallocating task {} for block {}",
                             getName(),
                             id);
@@ -173,10 +182,10 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
     }
 
     @Override
-    public void updateOfferStatus(boolean accepted) {
+    public void updateOfferStatus(Collection<Protos.Offer.Operation> operations) {
         //TODO(nick): Any additional actions to perform when OfferRequirement returned by start()
         //            was accepted or not accepted?
-        if (accepted) {
+        if (operations.size() > 0) {
             setStatus(Status.IN_PROGRESS);
         } else {
             setStatus(Status.PENDING);
@@ -211,6 +220,11 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> imp
 
     protected void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
+        Status oldStatus = status;
         status = newStatus;
+
+        if (oldStatus != status) {
+            notifyObservers();
+        }
     }
 }

@@ -4,7 +4,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.cleanup;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,21 +13,22 @@ public class CleanupPhase extends AbstractClusterTaskPhase<CleanupBlock, Cleanup
 
     public CleanupPhase(
             CleanupContext context,
-            CassandraTasks cassandraTasks,
+            CassandraState cassandraState,
             ClusterTaskOfferRequirementProvider provider) {
-        super(context, cassandraTasks, provider);
+        super(context, cassandraState, provider);
     }
 
+    @Override
     protected List<CleanupBlock> createBlocks() {
         final Set<String> nodes = new HashSet<>(context.getNodes());
         final List<String> daemons =
-                new ArrayList<>(cassandraTasks.getDaemons().keySet());
+                new ArrayList<>(cassandraState.getDaemons().keySet());
         Collections.sort(daemons);
         return daemons.stream().filter(
                 deamon -> nodes.contains(deamon)
         ).map(daemon -> CleanupBlock.create(
                 daemon,
-                cassandraTasks,
+                cassandraState,
                 provider,
                 context
         )).collect(Collectors.toList());

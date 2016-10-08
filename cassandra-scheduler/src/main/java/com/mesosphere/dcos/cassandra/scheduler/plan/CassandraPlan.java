@@ -2,21 +2,25 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
+import com.mesosphere.dcos.cassandra.scheduler.CassandraScheduler;
 import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import org.apache.mesos.scheduler.DefaultObservable;
+import org.apache.mesos.scheduler.Observable;
+import org.apache.mesos.scheduler.Observer;
 import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Stage;
+import org.apache.mesos.scheduler.plan.Plan;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CassandraStage implements Stage {
+public class CassandraPlan extends DefaultObservable implements Plan, Observer {
 
-    public static final CassandraStage create(
+    public static final CassandraPlan create(
             final DefaultConfigurationManager defaultConfigurationManager,
             final DeploymentManager deployment,
             final BackupManager backup,
@@ -24,7 +28,7 @@ public class CassandraStage implements Stage {
             final CleanupManager cleanup,
             final RepairManager repair) {
 
-        return new CassandraStage(
+        return new CassandraPlan(
                 defaultConfigurationManager,
                 deployment,
                 backup,
@@ -38,7 +42,7 @@ public class CassandraStage implements Stage {
     private final DeploymentManager deployment;
     private final List<ClusterTaskManager<?>> managers;
 
-    public CassandraStage(
+    public CassandraPlan(
             final DefaultConfigurationManager defaultConfigurationManager,
             final DeploymentManager deployment,
             final BackupManager backup,
@@ -49,6 +53,11 @@ public class CassandraStage implements Stage {
         this.deployment = deployment;
         // Note: This ordering defines the ordering of the phases below:
         this.managers = Arrays.asList(backup, restore, cleanup, repair);
+
+        this.deployment.subscribe(this);
+        for (ClusterTaskManager<?> manager: this.managers) {
+            manager.subscribe(this);
+        }
     }
 
     @Override
@@ -73,7 +82,6 @@ public class CassandraStage implements Stage {
                 .build();
     }
 
-
     @Override
     public boolean isComplete() {
         if (!deployment.isComplete()) {
@@ -85,7 +93,6 @@ public class CassandraStage implements Stage {
             }
         }
         return true;
-
     }
 
     public void update() {
@@ -94,5 +101,10 @@ public class CassandraStage implements Stage {
                 manager.stop();
             }
         }
+    }
+
+    @Override
+    public void update(Observable observable) {
+        notifyObservers();
     }
 }

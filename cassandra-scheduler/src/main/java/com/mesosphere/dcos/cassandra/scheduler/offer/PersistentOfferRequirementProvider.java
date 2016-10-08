@@ -3,14 +3,13 @@ package com.mesosphere.dcos.cassandra.scheduler.offer;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.PlacementStrategy;
-import org.apache.mesos.protobuf.LabelBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,28 +19,28 @@ public class PersistentOfferRequirementProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             PersistentOfferRequirementProvider.class);
     private DefaultConfigurationManager configurationManager;
-    private CassandraTasks cassandraTasks;
+    private CassandraState cassandraState;
     public static final String CONFIG_TARGET_KEY = "config_target";
 
     @Inject
     public PersistentOfferRequirementProvider(
             DefaultConfigurationManager configurationManager,
-            CassandraTasks cassandraTasks) {
+            CassandraState cassandraState) {
         this.configurationManager = configurationManager;
-        this.cassandraTasks = cassandraTasks;
+        this.cassandraState = cassandraState;
     }
 
-    public OfferRequirement getNewOfferRequirement(CassandraContainer container) {
+    public Optional<OfferRequirement> getNewOfferRequirement(CassandraContainer container) {
         // TODO: Should we version configs ?
         LOGGER.info("Getting new offer requirement for: ", container.getId());
         PlacementStrategy placementStrategy;
         try {
             placementStrategy = PlacementStrategyManager.getPlacementStrategy(
                     configurationManager,
-                    cassandraTasks);
+                    cassandraState);
         } catch (ConfigStoreException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
-            return null;
+            return Optional.empty();
         }
 
         Protos.TaskInfo daemonTaskInfo = container.getDaemonTask().getTaskInfo();
@@ -58,14 +57,14 @@ public class PersistentOfferRequirementProvider {
             final UUID targetName = configurationManager.getTargetName();
             final Collection<Protos.TaskInfo> updatedTaskInfos = updateConfigLabel(taskInfos, targetName.toString());
 
-            return new OfferRequirement(
+            return Optional.of(new OfferRequirement(
                     clearTaskIds(updatedTaskInfos),
-                    clearExecutorId(container.getExecutorInfo()),
+                    Optional.of(clearExecutorId(container.getExecutorInfo())),
                     agentsToAvoid,
-                    agentsToColocate);
+                    agentsToColocate));
         } catch (InvalidRequirementException | ConfigStoreException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -79,34 +78,36 @@ public class PersistentOfferRequirementProvider {
     }
 
     private Protos.TaskInfo updateConfigLabel(String configName, Protos.TaskInfo taskInfo) {
-        final LabelBuilder labelBuilder = new LabelBuilder();
+        final Protos.Labels.Builder labelsBuilder = Protos.Labels.newBuilder();
 
         final Protos.Labels labels = taskInfo.getLabels();
         for (Protos.Label label : labels.getLabelsList()) {
             final String key = label.getKey();
             if (!CONFIG_TARGET_KEY.equals(key)) {
-                labelBuilder.addLabel(key, label.getValue());
+                labelsBuilder.addLabels(label);
             }
         }
 
-        labelBuilder.addLabel(CONFIG_TARGET_KEY, configName);
+        labelsBuilder.addLabels(Protos.Label.newBuilder()
+                .setKey(CONFIG_TARGET_KEY)
+                .setValue(configName));
         return Protos.TaskInfo.newBuilder(taskInfo)
                 .clearLabels()
-                .setLabels(labelBuilder.build())
+                .setLabels(labelsBuilder.build())
                 .build();
     }
 
-    public OfferRequirement getReplacementOfferRequirement(CassandraContainer container) {
+    public Optional<OfferRequirement> getReplacementOfferRequirement(CassandraContainer container) {
         LOGGER.info("Getting replacement requirement for task: {}", container.getId());
         try {
-            return new OfferRequirement(
+            return Optional.of(new OfferRequirement(
                     clearTaskIds(container.getTaskInfos()),
-                    clearExecutorId(container.getExecutorInfo()),
+                    Optional.of(clearExecutorId(container.getExecutorInfo())),
                     null,
-                    null);
+                    null));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -150,7 +151,7 @@ public class PersistentOfferRequirementProvider {
         try {
             return new OfferRequirement(
                     Arrays.asList(taskInfo),
-                    execInfo,
+                    Optional.of(execInfo),
                     null,
                     null);
         } catch (InvalidRequirementException e) {

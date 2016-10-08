@@ -19,14 +19,14 @@ import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraStageManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraTasks;
+import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.setup.Environment;
@@ -36,12 +36,18 @@ import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.http.client.HttpClient;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.curator.CuratorStateStore;
+import org.apache.mesos.dcos.Capabilities;
+import org.apache.mesos.dcos.DcosCluster;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
+import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
-import org.apache.mesos.scheduler.plan.StageManager;
+import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.api.JsonPropertyDeserializer;
+import org.apache.mesos.state.api.PropertyDeserializer;
 
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,6 +93,13 @@ public class SchedulerModule extends AbstractModule {
                 curatorConfig.getServers(),
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
+
+        try {
+            Capabilities capabilities = new Capabilities(new DcosCluster());
+            bind(Capabilities.class).toInstance(capabilities);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
 
         try {
             final ConfigValidator configValidator = new ConfigValidator();
@@ -187,20 +200,26 @@ public class SchedulerModule extends AbstractModule {
                 Executors .newScheduledThreadPool(8));
         bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
                 .asEagerSingleton();
-        bind(StageManager.class).to(CassandraStageManager.class)
+        bind(PlanManager.class).to(CassandraPlanManager.class)
                 .asEagerSingleton();
         bind(SchedulerClient.class).asEagerSingleton();
         bind(IdentityManager.class).asEagerSingleton();
         bind(ConfigurationManager.class).asEagerSingleton();
         bind(PersistentOfferRequirementProvider.class);
-        bind(CassandraTasks.class).asEagerSingleton();
+        bind(CassandraState.class).asEagerSingleton();
+        bind(TaskStatusProvider.class).to(CassandraState.class);
         bind(EventBus.class).asEagerSingleton();
         bind(BackupManager.class).asEagerSingleton();
         bind(ClusterTaskOfferRequirementProvider.class);
-        bind(Reconciler.class).to(DefaultReconciler.class).asEagerSingleton();
+        try {
+            bind(Reconciler.class).toConstructor(DefaultReconciler.class.getConstructor(TaskStatusProvider.class));
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
         bind(RestoreManager.class).asEagerSingleton();
         bind(CleanupManager.class).asEagerSingleton();
         bind(RepairManager.class).asEagerSingleton();
         bind(SeedsManager.class).asEagerSingleton();
+        bind(PropertyDeserializer.class).to(JsonPropertyDeserializer.class);
     }
 }
