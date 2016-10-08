@@ -17,6 +17,7 @@ package com.mesosphere.dcos.cassandra.executor;
 
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.AbstractScheduledService;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
@@ -255,6 +256,7 @@ public class CassandraDaemonProcess {
     private final CompletableFuture<Object> closeFuture =
             new CompletableFuture<>();
     private boolean metricsEnabled = MetricsConfig.metricsEnabled();
+    private final ScheduledExecutorService executorService;
 
     private String getReplaceIp() throws UnknownHostException {
         if (task.getConfig().getReplaceIp().trim().isEmpty()) {
@@ -342,6 +344,7 @@ public class CassandraDaemonProcess {
             .build().writeDaemonConfiguration(paths.cassandraConfig());
 
         task.getConfig().getHeap().writeHeapSettings(paths.heapConfig());
+        this.executorService = executor;
 
         if (metricsEnabled) {
             metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());
@@ -450,8 +453,6 @@ public class CassandraDaemonProcess {
         try {
             probe.stopCassandraDaemon();
         } catch (Throwable expected) {
-
-            expected.printStackTrace();
         }
 
         while (true) {
@@ -462,6 +463,12 @@ public class CassandraDaemonProcess {
 
             }
         }
+    }
+
+    public void shutdownAfter (long millis) {
+        executorService.schedule(() -> {
+            shutdown();
+        },millis,TimeUnit.MILLISECONDS);
     }
 
     /**

@@ -64,16 +64,13 @@ public class Repair implements Runnable {
             RepairParallelism.SEQUENTIAL.getName());
         options.put(RepairOption.INCREMENTAL_KEY, "true");
 
+
         String result = daemon.repair(keyspace, options);
 
         LOGGER.info("Repair output = {}", result);
         LOGGER.info("Completed repair : keySpace = {}, columnFamilies = {}",
             keyspace, columnFamilies);
 
-        sendStatus(driver, Protos.TaskState.TASK_RUNNING,
-            String.format(
-                "Completed repair : keySpace = %s, columnFamilies = %s",
-                keyspace, columnFamilies));
     }
 
     /**
