@@ -27,12 +27,11 @@ import org.apache.mesos.offer.VolumeRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 /**
  * CassandraDaemonTask extends CassandraTask to implement the task for a
@@ -215,12 +214,8 @@ public class CassandraDaemonTask extends CassandraTask {
                     ).getBytes()).build()
             );
         }
+
         return this;
-
-    }
-
-    public VolumeRequirement.VolumeType getVolumeType() {
-        return getConfig().getDiskType();
     }
 
     @Override
@@ -230,7 +225,6 @@ public class CassandraDaemonTask extends CassandraTask {
                 .setData(getData()
                     .withState(state)
                     .getBytes()).build());
-
     }
 
     public CassandraDaemonStatus createStatus(Protos.TaskState state,

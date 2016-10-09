@@ -9,11 +9,11 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
-import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
+import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.SeedsResponse;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
@@ -81,7 +81,7 @@ public class SeedsManager implements Runnable {
     Optional<DataCenterInfo> getRemoteInfo(String url) {
         LOGGER.info("Retrieving info: url = {}", url);
         try {
-            DataCenterInfo info = client.getDataCetnerInfo(url)
+            DataCenterInfo info = client.getDataCenterInfo(url)
                     .toCompletableFuture()
                     .get();
             LOGGER.info("Retrieved data center info: info = {}, url = {}",
@@ -150,6 +150,10 @@ public class SeedsManager implements Runnable {
                 .stream()
                 .filter(daemon -> daemon.getMode() == CassandraMode.NORMAL && daemon.getHostname().isEmpty() == false)
                 .collect(Collectors.toList());
+
+        for (CassandraDaemonTask daemonTask: tasks.getDaemons().values()) {
+           LOGGER.info("DaemonTask mode: {}, hostname: {}", daemonTask.getMode(), daemonTask.getHostname());
+        }
 
         final int seedCount = getConfiguredSeedsCount();
         final List<String> seeds = new ArrayList<>(active.size());

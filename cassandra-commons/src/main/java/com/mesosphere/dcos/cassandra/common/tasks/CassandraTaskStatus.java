@@ -145,15 +145,6 @@ public abstract class CassandraTaskStatus {
     }
 
     /**
-     * Gets the executor id.
-     *
-     * @return The id of the executor for the task associated with the status.
-     */
-    public String getExecutorId() {
-        return status.getExecutorId().getValue();
-    }
-
-    /**
      * Gets the status's message.
      *
      * @return An optional message associated with the status.

@@ -4,7 +4,6 @@ import com.codahale.metrics.health.HealthCheck;
 import com.google.inject.Inject;
 import org.apache.mesos.Protos;
 import org.apache.mesos.state.StateStore;
-import org.apache.mesos.state.StateStoreException;
 
 import java.util.Optional;
 

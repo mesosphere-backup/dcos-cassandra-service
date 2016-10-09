@@ -1,9 +1,9 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 
 import java.util.ArrayList;
 import java.util.Collections;

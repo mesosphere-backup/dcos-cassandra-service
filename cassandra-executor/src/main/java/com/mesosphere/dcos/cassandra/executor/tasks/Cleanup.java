@@ -19,19 +19,21 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.executor.ExecutorTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Future;
 
 /**
  * Implements the execution of CleanupTask for the node invoking the cleanup
  * methods of the CassandraDaemonProcess for the key spaces and column
  * families indicated by the task.
  */
-public class Cleanup implements Runnable {
+public class Cleanup implements ExecutorTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cleanup.class);
 
     private final CassandraDaemonProcess daemon;
@@ -107,5 +109,10 @@ public class Cleanup implements Runnable {
             LOGGER.error("Cleanup failed", t);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, t.getMessage());
         }
+    }
+
+    @Override
+    public void stop(Future<?> future) {
+        future.cancel(true);
     }
 }

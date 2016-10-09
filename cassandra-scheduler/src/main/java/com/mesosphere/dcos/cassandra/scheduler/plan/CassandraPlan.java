@@ -1,9 +1,8 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.collect.ImmutableList;
+import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
-import com.mesosphere.dcos.cassandra.scheduler.CassandraScheduler;
-import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;

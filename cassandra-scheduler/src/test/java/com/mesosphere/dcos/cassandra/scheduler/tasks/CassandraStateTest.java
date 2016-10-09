@@ -3,9 +3,8 @@ package com.mesosphere.dcos.cassandra.scheduler.tasks;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
+import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
-import com.mesosphere.dcos.cassandra.scheduler.config.*;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -29,11 +28,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.mockito.Mockito.when;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
+
+import static org.mockito.Mockito.when;
 
 /**
  * This class tests the CassandraState class.
@@ -112,7 +111,6 @@ public class CassandraStateTest {
 
         cassandraState = new CassandraState(
                 configuration,
-                curatorConfig,
                 clusterTaskConfig,
                 stateStore);
     }

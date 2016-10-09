@@ -20,17 +20,19 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.executor.ExecutorTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.util.concurrent.Future;
 
 /**
  * DownloadSnapshot implements the execution of the DownloadSnapshotTask by
  * delegating download of the snapshotted tables to a BackupStorageDriver
  * implementation.
  */
-public class DownloadSnapshot implements Runnable {
+public class DownloadSnapshot implements ExecutorTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             DownloadSnapshot.class);
     private ExecutorDriver driver;
@@ -86,4 +88,8 @@ public class DownloadSnapshot implements Runnable {
         }
     }
 
+    @Override
+    public void stop(Future<?> future) {
+        future.cancel(true);
+    }
 }

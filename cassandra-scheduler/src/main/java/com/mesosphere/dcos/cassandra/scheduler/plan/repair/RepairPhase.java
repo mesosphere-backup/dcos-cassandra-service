@@ -2,9 +2,9 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.repair;
 
 
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
-import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskPhase;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 
 import java.util.*;
 import java.util.stream.Collectors;

@@ -1,10 +1,10 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import com.mesosphere.dcos.cassandra.common.offer.CassandraOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
-import com.mesosphere.dcos.cassandra.scheduler.offer.CassandraOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.DefaultObservable;
@@ -18,9 +18,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext>
-        extends DefaultObservable
-        implements Block {
+public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext> extends DefaultObservable implements Block {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             AbstractClusterTaskBlock.class);
 
@@ -49,10 +47,10 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext>
             //we have not yet been assigned a slave id - This means that the
             //the task has never been launched
             setStatus(Status.IN_PROGRESS);
-            return provider.getNewOfferRequirement(task.getTaskInfo());
+            return provider.getNewOfferRequirement(task.getType().name(), task.getTaskInfo());
         } else {
             setStatus(Status.IN_PROGRESS);
-            return provider.getUpdateOfferRequirement(task.getTaskInfo());
+            return provider.getUpdateOfferRequirement(task.getType().name(), task.getTaskInfo());
 
         }
     }
@@ -67,17 +65,19 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext>
             // Is Daemon task running ?
             final Optional<Protos.TaskStatus> lastKnownDaemonStatus = cassandraState.getStateStore().fetchStatus(getDaemon());
             if (!lastKnownDaemonStatus.isPresent()) {
+                LOGGER.info("Daemon is not present in StateStore.");
                 return Optional.empty();
             }
 
             if (!CassandraDaemonBlock.isComplete(lastKnownDaemonStatus.get())) {
+                LOGGER.info("Daemon block is not complete.");
                 return Optional.empty();
             }
 
             Optional<CassandraTask> task = getOrCreateTask(context);
             if (task.isPresent()) {
-                update(task.get().getCurrentStatus());
                 if (isComplete() || isInProgress()) {
+                    LOGGER.info("No requirement because block is: ", status);
                     return Optional.empty();
                 } else {
                     setStatus(Status.PENDING);
@@ -185,7 +185,7 @@ public abstract class AbstractClusterTaskBlock<C extends ClusterTaskContext>
     public void updateOfferStatus(Collection<Protos.Offer.Operation> operations) {
         //TODO(nick): Any additional actions to perform when OfferRequirement returned by start()
         //            was accepted or not accepted?
-        if (operations.size() > 0) {
+        if (!operations.isEmpty()) {
             setStatus(Status.IN_PROGRESS);
         } else {
             setStatus(Status.PENDING);

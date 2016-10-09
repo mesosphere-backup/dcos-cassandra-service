@@ -2,13 +2,12 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.MutableSchedulerConfiguration;
-import com.mesosphere.dcos.cassandra.scheduler.health.ReconciledCheck;
+import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.config.MutableSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
 import com.mesosphere.dcos.cassandra.scheduler.resources.*;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -114,8 +113,6 @@ public class Main extends Application<MutableSchedulerConfiguration> {
       injector.getInstance(RegisteredCheck.class));
     environment.healthChecks().register(ServersCheck.NAME,
       injector.getInstance(ServersCheck.class));
-    environment.healthChecks().register(ReconciledCheck.NAME,
-      injector.getInstance(ReconciledCheck.class));
   }
 
 

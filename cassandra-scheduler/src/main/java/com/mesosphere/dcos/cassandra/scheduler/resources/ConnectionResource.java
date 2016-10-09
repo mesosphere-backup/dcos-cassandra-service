@@ -1,11 +1,10 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.google.common.collect.ImmutableMap;
+import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.config.ServiceConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.config.ServiceConfig;
-
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.dcos.Capabilities;
@@ -15,7 +14,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

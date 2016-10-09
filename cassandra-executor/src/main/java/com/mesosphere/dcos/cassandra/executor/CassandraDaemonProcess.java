@@ -17,16 +17,15 @@ package com.mesosphere.dcos.cassandra.executor;
 
 
 import com.google.common.collect.ImmutableSet;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraStatus;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.executor.metrics.MetricsConfig;
 import org.apache.cassandra.db.SystemKeyspace;
 import org.apache.cassandra.schema.SchemaKeyspace;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.executor.ProcessTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +35,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -54,98 +51,29 @@ import java.util.stream.Collectors;
  * All administration and monitoring is achieved by attaching to the Cassandra
  * daemon via JMX using the NodeProbe class.
  */
-public class CassandraDaemonProcess {
+public class CassandraDaemonProcess extends ProcessTask {
     public static final Set<String> SYSTEM_KEYSPACE_NAMES =
             ImmutableSet.of(SystemKeyspace.NAME, SchemaKeyspace.NAME);
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            CassandraDaemonProcess.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraDaemonProcess.class);
 
     private static final Object CLOSED = new Object();
-
-    private static class WatchDog implements Runnable {
-
-        public static final WatchDog create(
-                final CassandraDaemonTask task,
-                final Process process,
-                final ExecutorDriver driver,
-                final AtomicBoolean open,
-                final CompletableFuture<Object> closeFuture) {
-
-            return new WatchDog(task, process, driver, open, closeFuture);
-        }
-
-        private final CassandraDaemonTask task;
-        private final ExecutorDriver driver;
-        private final Process process;
-        private final AtomicBoolean open;
-        private final CompletableFuture<Object> closeFuture;
-
-        public WatchDog(final CassandraDaemonTask task,
-                        final Process process,
-                        final ExecutorDriver driver,
-                        final AtomicBoolean open,
-                        final CompletableFuture<Object> closeFuture) {
-
-            this.task = task;
-            this.driver = driver;
-            this.process = process;
-            this.open = open;
-            this.closeFuture = closeFuture;
-
-        }
-
-        public void run() {
-
-            while (true) {
-
-                try {
-
-                    process.waitFor();
-                    int exitCode = process.exitValue();
-                    LOGGER.info("Cassandra Daemon terminated: exit code = {}",
-                            exitCode);
-                    Protos.TaskState state;
-                    String message;
-
-                    if (exitCode == 0) {
-                        state = Protos.TaskState.TASK_FINISHED;
-                        message = "Cassandra Daemon exited normally";
-                    } else if (exitCode > 128) {
-                        state = Protos.TaskState.TASK_KILLED;
-                        message = "Cassandra Daemon was killed by signal " +
-                                (exitCode - 128);
-                    } else {
-                        state = Protos.TaskState.TASK_ERROR;
-                        message = "Cassandra Daemon exited with abnormal " +
-                                "status " + exitCode;
-                    }
-
-                    CassandraDaemonStatus status = task.createStatus(
-                            state,
-                            Optional.of(message)
-                    );
-                    driver.sendStatusUpdate(status.getTaskStatus());
-                    LOGGER.info("Sent status update: status = {}", status);
-                    open.set(false);
-                    closeFuture.complete(CLOSED);
-                    System.exit(0);
-
-
-                } catch (InterruptedException ex) {
-
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    return;
-                }
-            }
-        }
-    }
+    private final CassandraDaemonTask task;
+    private final CassandraPaths paths;
+    private final AtomicBoolean open = new AtomicBoolean(true);
+    private final AtomicReference<CassandraMode> mode;
+    private final Probe probe;
 
     private static final class ModeReporter implements Runnable {
 
+        private final CassandraDaemonTask task;
+        private final ExecutorDriver driver;
+        private final AtomicBoolean open;
+        private final AtomicReference<CassandraMode> mode;
+        private final Probe probe;
+
         public static ModeReporter create(
                 final CassandraDaemonTask task,
-                final NodeProbe probe,
+                final Probe probe,
                 final ExecutorDriver driver,
                 final AtomicBoolean open,
                 final
@@ -153,17 +81,12 @@ public class CassandraDaemonProcess {
             return new ModeReporter(task, probe, driver, open, mode);
         }
 
-        private final CassandraDaemonTask task;
-        private final NodeProbe probe;
-        private final ExecutorDriver driver;
-        private final AtomicBoolean open;
-        private final AtomicReference<CassandraMode> mode;
-
-        private ModeReporter(final CassandraDaemonTask task,
-                             final NodeProbe probe,
-                             final ExecutorDriver driver,
-                             final AtomicBoolean open,
-                             final AtomicReference<CassandraMode> mode) {
+        private ModeReporter(
+                final CassandraDaemonTask task,
+                final Probe probe,
+                final ExecutorDriver driver,
+                final AtomicBoolean open,
+                final AtomicReference<CassandraMode> mode) {
 
             this.task = task;
             this.probe = probe;
@@ -173,10 +96,8 @@ public class CassandraDaemonProcess {
         }
 
         public void run() {
-
             if (open.get()) {
-                CassandraMode current = CassandraMode.valueOf(
-                        probe.getOperationMode());
+                CassandraMode current = CassandraMode.valueOf(probe.get().getOperationMode());
                 if (!mode.get().equals(current)) {
                     mode.set(current);
                     LOGGER.info("Cassandra Daemon mode = {}", current);
@@ -185,7 +106,7 @@ public class CassandraDaemonProcess {
                                     mode.get(),
                                     Optional.of("Cassandra Daemon running."));
                     driver.sendStatusUpdate(daemonStatus.getTaskStatus());
-                    LOGGER.debug("Sent status update = {} ", daemonStatus);
+                    LOGGER.info("Sent status update = {} ", daemonStatus);
                 }
             }
         }
@@ -238,138 +159,77 @@ public class CassandraDaemonProcess {
      *                     CassandraProcess or connect to it via NodeProbe.
      */
     public static final CassandraDaemonProcess create(
-            final CassandraDaemonTask task,
-            final ScheduledExecutorService executor,
+            final ScheduledExecutorService scheduledExecutorService,
+            final Protos.TaskInfo taskInfo,
             final ExecutorDriver driver) throws IOException {
 
-        return new CassandraDaemonProcess(task, executor, driver);
+        CassandraDaemonTask cassandraTask = (CassandraDaemonTask) CassandraTask.parse(taskInfo);
+        CassandraPaths cassandraPaths = CassandraPaths.create(cassandraTask.getConfig().getVersion());
+        cassandraTask.getConfig().getLocation().writeProperties(cassandraPaths.cassandraLocation());
+
+        cassandraTask.getConfig().getApplication().toBuilder()
+                .setListenAddress(getListenAddress())
+                .setRpcAddress(getListenAddress())
+                .build().writeDaemonConfiguration(cassandraPaths.cassandraConfig());
+
+        cassandraTask.getConfig().getHeap().writeHeapSettings(cassandraPaths.heapConfig());
+
+
+        ProcessBuilder processBuilder = createDaemon(cassandraPaths, cassandraTask, MetricsConfig.writeMetricsConfig(cassandraPaths.conf()));
+
+        return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, cassandraPaths, driver, taskInfo, processBuilder, true);
     }
 
+    protected CassandraDaemonProcess(
+            ScheduledExecutorService scheduledExecutorService,
+            CassandraDaemonTask cassandraTask,
+            CassandraPaths cassandraPaths,
+            ExecutorDriver executorDriver,
+            Protos.TaskInfo taskInfo,
+            ProcessBuilder processBuilder,
+            boolean exitOnTermination) throws InvalidProtocolBufferException {
+        super(executorDriver, taskInfo, processBuilder, exitOnTermination);
+        this.task = cassandraTask;
+        this.paths = cassandraPaths;
 
-    private final CassandraDaemonTask task;
-    private final CassandraPaths paths;
-    private final Process process;
-    private final AtomicBoolean open = new AtomicBoolean(true);
-    private final AtomicReference<CassandraMode> mode;
-    private final NodeProbe probe;
-    private final CompletableFuture<Object> closeFuture =
-            new CompletableFuture<>();
-    private boolean metricsEnabled = MetricsConfig.metricsEnabled();
-
-    private String getReplaceIp() throws UnknownHostException {
-        if (task.getConfig().getReplaceIp().trim().isEmpty()) {
-            return "";
-        } else {
-            InetAddress address =
-                    InetAddress.getByName(task.getConfig().getReplaceIp());
-            LOGGER.info("Replacing node: address = {}", address);
-            return "-Dcassandra.replace_address=" + address.getHostAddress();
-        }
-    }
-
-    private Process createDaemon() throws IOException {
-
-        final ProcessBuilder builder = new ProcessBuilder(
-            paths.cassandraRun().toString(),
-            getReplaceIp(),
-            "-f")
-            .inheritIO()
-            .directory(new File(System.getProperty("user.dir")));
-        builder.environment().put(
-                "JMX_PORT",
-                Integer.toString(task.getConfig().getJmxPort()));
-        if (metricsEnabled) {
-            MetricsConfig.setEnv(builder.environment());
-        }
-        return builder.start();
-    }
-
-    private NodeProbe connectProbe() {
-
-        NodeProbe nodeProbe;
-
-        while (open.get()) {
-            try {
-                nodeProbe = new NodeProbe("127.0.0.1",
-                        task.getConfig().getJmxPort());
-                LOGGER.info("Node probe is successfully connected to the " +
-                                "Cassandra Daemon: port {}",
-                        task.getConfig().getJmxPort());
-                return nodeProbe;
-            } catch (Exception ex) {
-
-                LOGGER.info("Connection to server failed backing off for 500 " +
-                        "ms");
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                }
-
-            }
-        }
-
-        throw new IllegalStateException(
-                String.format("Failed to connect to Cassandra " +
-                        "Daemon: port = %s", task.getConfig().getJmxPort()));
-    }
-
-    /**
-     * Consructs a new CassandraDaemonProcess with background status reporting
-     * and a process watchdog. After calling this method the Cassandra
-     * process is running and the NodeProbe instance is connected.
-     *
-     * @param task     The CassandraDaemonTask that corresponds to the process.
-     * @param executor The ScheduledExecutorService to use for background
-     *                 Runnables (The watchdog and status reporter).
-     * @param driver   The ExecutorDriver for the CassandraExecutor
-     * @throws IOException If an error occurs attempting to start the
-     *                     CassandraProcess or connect to it via NodeProbe.
-     */
-    public CassandraDaemonProcess(final CassandraDaemonTask task,
-                                  final ScheduledExecutorService executor,
-                                  final ExecutorDriver driver)
-            throws IOException {
-
-        this.task = task;
-        this.paths = CassandraPaths.create(
-                task.getConfig().getVersion());
-        task.getConfig().getLocation().writeProperties(
-                paths.cassandraLocation());
-
-        task.getConfig().getApplication().toBuilder()
-            .setListenAddress(getListenAddress())
-            .setRpcAddress(getListenAddress())
-            .build().writeDaemonConfiguration(paths.cassandraConfig());
-
-        task.getConfig().getHeap().writeHeapSettings(paths.heapConfig());
-
-        if (metricsEnabled) {
-            metricsEnabled = MetricsConfig.writeMetricsConfig(paths.conf());
-        }
-
-        process = createDaemon();
-        executor.submit(
-                WatchDog.create(task, process, driver, open, closeFuture));
-        probe = connectProbe();
-        CassandraMode current = CassandraMode.valueOf(probe.getOperationMode());
-        mode = new AtomicReference<>(current);
-
-        CassandraDaemonStatus daemonStatus =
-                task.createStatus(
-                        Protos.TaskState.TASK_RUNNING,
-                        current,
-                        Optional.empty());
-        driver.sendStatusUpdate(daemonStatus.getTaskStatus());
-        LOGGER.debug("Sent status update = {} ", daemonStatus);
-        executor.scheduleAtFixedRate(
+        this.probe = new Probe(cassandraTask);
+        this.mode = new AtomicReference<>(CassandraMode.STARTING);
+        scheduledExecutorService.scheduleAtFixedRate(
                 ModeReporter.create(task,
                         probe,
-                        driver,
+                        executorDriver,
                         open,
                         mode),
                 1, 1, TimeUnit.SECONDS);
     }
 
+    private static String getReplaceIp(CassandraDaemonTask cassandraDaemonTask) throws UnknownHostException {
+        if (cassandraDaemonTask.getConfig().getReplaceIp().trim().isEmpty()) {
+            return "";
+        } else {
+            InetAddress address =
+                    InetAddress.getByName(cassandraDaemonTask.getConfig().getReplaceIp());
+            LOGGER.info("Replacing node: address = {}", address);
+            return "-Dcassandra.replace_address=" + address.getHostAddress();
+        }
+    }
+
+    private static ProcessBuilder createDaemon(CassandraPaths cassandraPaths, CassandraDaemonTask cassandraDaemonTask, boolean metricsEnabled) throws IOException {
+
+        final ProcessBuilder builder = new ProcessBuilder(
+            cassandraPaths.cassandraRun().toString(),
+            getReplaceIp(cassandraDaemonTask),
+            "-f")
+            .inheritIO()
+            .directory(new File(System.getProperty("user.dir")));
+        builder.environment().put(
+                "JMX_PORT",
+                Integer.toString(cassandraDaemonTask.getConfig().getJmxPort()));
+        if (metricsEnabled) {
+            MetricsConfig.setEnv(builder.environment());
+        }
+        return builder;
+    }
 
     /**
      * Gets the NodeProbe.
@@ -378,7 +238,7 @@ public class CassandraDaemonProcess {
      * process.
      */
     public NodeProbe getProbe() {
-        return this.probe;
+        return this.probe.get();
     }
 
     /**
@@ -407,7 +267,7 @@ public class CassandraDaemonProcess {
      */
     public CassandraStatus getStatus() {
 
-        return getCassandraStatus(probe);
+        return getCassandraStatus(getProbe());
     }
 
     /**
@@ -426,7 +286,7 @@ public class CassandraDaemonProcess {
      * instance.
      */
     public List<String> getKeySpaces() {
-        return probe.getKeyspaces();
+        return getProbe().getKeyspaces();
     }
 
     /**
@@ -436,53 +296,10 @@ public class CassandraDaemonProcess {
      * the Cassandra instance.
      */
     public List<String> getNonSystemKeySpaces() {
-        return probe.getKeyspaces().stream().filter(
+        return getProbe().getKeyspaces().stream().filter(
                 keyspace ->
                         !SYSTEM_KEYSPACE_NAMES.contains(keyspace))
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Shuts the Cassandra process down and causes the Executor to exit.
-     */
-    public void shutdown() {
-
-        try {
-            probe.stopCassandraDaemon();
-        } catch (Throwable expected) {
-
-            expected.printStackTrace();
-        }
-
-        while (true) {
-            try {
-                process.waitFor();
-                return;
-            } catch (InterruptedException e) {
-
-            }
-        }
-    }
-
-    /**
-     * Forcibly kills (as in kill -9) the Cassandra process causing the
-     * executor to shutdown.
-     */
-    public void kill() {
-        try {
-            process.destroyForcibly();
-        } catch (Throwable expected) {
-            expected.printStackTrace();
-        }
-
-        while (true) {
-            try {
-                process.waitFor();
-                return;
-            } catch (InterruptedException e) {
-
-            }
-        }
     }
 
     /**
@@ -494,7 +311,7 @@ public class CassandraDaemonProcess {
      *                              resolved.
      */
     public void assassinate(String address) throws UnknownHostException {
-        this.probe.assassinateEndpoint(address);
+        getProbe().assassinateEndpoint(address);
     }
 
     /**
@@ -514,11 +331,11 @@ public class CassandraDaemonProcess {
             throws InterruptedException, ExecutionException, IOException {
 
         if (columnFamilies.isEmpty()) {
-            this.probe.forceKeyspaceCleanup(0, keySpace);
+            getProbe().forceKeyspaceCleanup(0, keySpace);
         } else {
             String[] families = new String[columnFamilies.size()];
             families = columnFamilies.toArray(families);
-            this.probe.forceKeyspaceCleanup(0, keySpace, families);
+            getProbe().forceKeyspaceCleanup(0, keySpace, families);
         }
 
     }
@@ -547,7 +364,7 @@ public class CassandraDaemonProcess {
      * @throws IOException If an error occurs taking the snapshot.
      */
     public void takeSnapShot(String name, String keySpace) throws IOException {
-        probe.takeSnapshot(name, null, keySpace);
+        getProbe().takeSnapshot(name, null, keySpace);
     }
 
     /**
@@ -564,7 +381,7 @@ public class CassandraDaemonProcess {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream out = new PrintStream(baos);
 
-        probe.repairAsync(out, keySpace, options);
+        getProbe().repairAsync(out, keySpace, options);
 
         return baos.toString("UTF8");
     }
@@ -579,7 +396,7 @@ public class CassandraDaemonProcess {
      */
     public void clearSnapShot(String name, String... keySpaces) throws
             IOException {
-        probe.clearSnapshot(name, keySpaces);
+        getProbe().clearSnapshot(name, keySpaces);
     }
 
     /**
@@ -589,7 +406,7 @@ public class CassandraDaemonProcess {
      * @throws InterruptedException If decommission fails.
      */
     public void decommission() throws InterruptedException {
-        this.probe.decommission();
+        getProbe().decommission();
     }
 
     /**
@@ -602,7 +419,7 @@ public class CassandraDaemonProcess {
      */
     public void drain()
             throws InterruptedException, ExecutionException, IOException {
-        this.probe.drain();
+        getProbe().drain();
     }
 
     /**
@@ -617,9 +434,7 @@ public class CassandraDaemonProcess {
     public void upgradeTables()
             throws InterruptedException, ExecutionException, IOException {
         for (String keyspace : getNonSystemKeySpaces()) {
-            this.probe.forceKeyspaceCleanup(0, keyspace);
+            getProbe().forceKeyspaceCleanup(0, keyspace);
         }
     }
-
-
 }

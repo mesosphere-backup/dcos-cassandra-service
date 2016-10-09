@@ -4,14 +4,10 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Resources;
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTemplateTask;
+import com.mesosphere.dcos.cassandra.common.config.*;
+import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
@@ -19,7 +15,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
@@ -36,8 +32,8 @@ import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.ReconciliationPhase;
 import org.apache.mesos.scheduler.plan.PlanManager;
+import org.apache.mesos.scheduler.plan.ReconciliationPhase;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.testing.QueuedSchedulerDriver;
 import org.junit.After;
@@ -98,7 +94,6 @@ public class CassandraSchedulerTest {
         client = Mockito.mock(SchedulerClient.class);
         Mockito.when(mockFuture.get()).thenReturn(true);
         Mockito.when(mockStage.toCompletableFuture()).thenReturn(mockFuture);
-        Mockito.when(client.shutdown(Mockito.anyString(), Mockito.anyInt())).thenReturn(mockStage);
         backup = Mockito.mock(BackupManager.class);
         restore = Mockito.mock(RestoreManager.class);
         cleanup = Mockito.mock(CleanupManager.class);
@@ -150,10 +145,9 @@ public class CassandraSchedulerTest {
         final ClusterTaskConfig clusterTaskConfig = configurationManager.getTargetConfig().getClusterTaskConfig();
         cassandraState = new CassandraState(
                 configurationManager,
-                curatorConfig,
                 clusterTaskConfig,
                 stateStore);
-        reconciler = new DefaultReconciler(cassandraState);
+        reconciler = new DefaultReconciler(cassandraState.getStateStore());
 
         offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager, cassandraState);
         scheduler = new CassandraScheduler(
@@ -162,7 +156,6 @@ public class CassandraSchedulerTest {
                 offerRequirementProvider,
                 planManager,
                 cassandraState,
-                reconciler,
                 client,
                 eventBus,
                 backup,
@@ -334,8 +327,6 @@ public class CassandraSchedulerTest {
         final CassandraTask node0Template = cassandraState.get(CassandraTemplateTask.toTemplateTaskName("node-0")).get();
         final Protos.Offer offer1 = TestUtils.generateUpdateOffer(frameworkId.getValue(), node0.getTaskInfo(),
                 node0Template.getTaskInfo(), 3, 1024, 1024);
-        scheduler.resourceOffers(driver, Arrays.asList(offer1));
-        Mockito.verify(client).shutdown(Mockito.anyString(), Mockito.anyInt());
         // Send TASK_KILL
         scheduler.statusUpdate(
                 driver,
@@ -359,8 +350,6 @@ public class CassandraSchedulerTest {
         final Protos.Offer offer2 = TestUtils.generateUpdateOffer(frameworkId.getValue(), node1.getTaskInfo(),
                 node1Template.getTaskInfo(), 3, 1024, 1024);
         Mockito.reset(client);
-        scheduler.resourceOffers(driver, Arrays.asList(offer2));
-        Mockito.verify(client).shutdown(Mockito.anyString(), Mockito.anyInt());
         // Send TASK_KILL
         scheduler.statusUpdate(driver, TestUtils.generateStatus(node1.getTaskInfo().getTaskId(),
                 Protos.TaskState.TASK_KILLED));
@@ -382,8 +371,6 @@ public class CassandraSchedulerTest {
         final Protos.Offer offer3 = TestUtils.generateUpdateOffer(frameworkId.getValue(), node2.getTaskInfo(),
                 node2Template.getTaskInfo(), 3, 1024, 1024);
         Mockito.reset(client);
-        scheduler.resourceOffers(driver, Arrays.asList(offer3));
-        Mockito.verify(client).shutdown(Mockito.anyString(), Mockito.anyInt());
         // Send TASK_KILL
         scheduler.statusUpdate(driver, TestUtils.generateStatus(node2.getTaskInfo().getTaskId(),
                 Protos.TaskState.TASK_KILLED));
@@ -419,6 +406,7 @@ public class CassandraSchedulerTest {
         assertEquals(1, currentPhase.getBlocks().size());
 
         while (currentPhase.getName().equals("Reconciliation") && !currentPhase.isComplete()) {
+
             final Protos.Offer offer = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
             scheduler.resourceOffers(driver, Arrays.asList(offer));
             final Collection<Protos.TaskStatus> taskStatuses = driver.drainReconciling();

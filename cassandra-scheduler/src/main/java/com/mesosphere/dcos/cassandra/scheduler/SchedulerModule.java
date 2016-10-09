@@ -4,20 +4,18 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
-import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
+import com.mesosphere.dcos.cassandra.common.config.*;
+import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
@@ -26,7 +24,6 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.setup.Environment;
@@ -38,16 +35,12 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.dcos.DcosCluster;
-import org.apache.mesos.reconciliation.DefaultReconciler;
-import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.reconciliation.TaskStatusProvider;
 import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
 import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.api.JsonPropertyDeserializer;
 import org.apache.mesos.state.api.PropertyDeserializer;
 
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -77,7 +70,6 @@ public class SchedulerModule extends AbstractModule {
 
         bind(CassandraSchedulerConfiguration.class).toInstance(
                 this.configuration);
-
 
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
@@ -207,15 +199,9 @@ public class SchedulerModule extends AbstractModule {
         bind(ConfigurationManager.class).asEagerSingleton();
         bind(PersistentOfferRequirementProvider.class);
         bind(CassandraState.class).asEagerSingleton();
-        bind(TaskStatusProvider.class).to(CassandraState.class);
         bind(EventBus.class).asEagerSingleton();
         bind(BackupManager.class).asEagerSingleton();
         bind(ClusterTaskOfferRequirementProvider.class);
-        try {
-            bind(Reconciler.class).toConstructor(DefaultReconciler.class.getConstructor(TaskStatusProvider.class));
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
         bind(RestoreManager.class).asEagerSingleton();
         bind(CleanupManager.class).asEagerSingleton();
         bind(RepairManager.class).asEagerSingleton();

@@ -5,11 +5,12 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
+import com.mesosphere.dcos.cassandra.common.config.*;
+import com.mesosphere.dcos.cassandra.common.offer.LogOperationRecorder;
+import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.offer.PersistentOperationRecorder;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.*;
-import com.mesosphere.dcos.cassandra.scheduler.offer.LogOperationRecorder;
-import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOperationRecorder;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlan;
 import com.mesosphere.dcos.cassandra.scheduler.plan.DeploymentManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
@@ -17,19 +18,20 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
 import io.dropwizard.lifecycle.Managed;
-import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.offer.OfferAccepter;
+import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.ResourceCleaner;
 import org.apache.mesos.offer.ResourceCleanerScheduler;
+import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.scheduler.*;
+import org.apache.mesos.scheduler.DefaultTaskKiller;
 import org.apache.mesos.scheduler.Observable;
 import org.apache.mesos.scheduler.Observer;
+import org.apache.mesos.scheduler.SchedulerDriverFactory;
 import org.apache.mesos.scheduler.plan.*;
 import org.apache.mesos.scheduler.recovery.DefaultTaskFailureListener;
 import org.apache.mesos.state.StateStore;
@@ -49,8 +51,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     private final ConfigurationManager configurationManager;
     private final MesosConfig mesosConfig;
     private final PlanManager planManager;
-    private final PlanScheduler planScheduler;
-    private final CassandraRecoveryScheduler recoveryScheduler;
+    private CassandraRecoveryScheduler recoveryScheduler;
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraState cassandraState;
@@ -66,6 +67,8 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     private final StateStore stateStore;
     private final DefaultConfigurationManager defaultConfigurationManager;
     private final Protos.Filters offerFilters;
+    private PlanScheduler planScheduler;
+    private static DefaultTaskKiller taskKiller;
 
     @Inject
     public CassandraScheduler(
@@ -74,7 +77,6 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             final PersistentOfferRequirementProvider offerRequirementProvider,
             final PlanManager planManager,
             final CassandraState cassandraState,
-            final Reconciler reconciler,
             final SchedulerClient client,
             final EventBus eventBus,
             final BackupManager backup,
@@ -88,16 +90,12 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         this.eventBus = eventBus;
         this.mesosConfig = mesosConfig;
         this.cassandraState = cassandraState;
+        this.reconciler = new DefaultReconciler(cassandraState.getStateStore());
         this.configurationManager = configurationManager;
         this.offerRequirementProvider = offerRequirementProvider;
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(cassandraState)));
-        planScheduler = new DefaultPlanScheduler(
-                offerAccepter,
-                new DefaultTaskKiller(
-                        stateStore,
-                        new DefaultTaskFailureListener(stateStore)));
         recoveryScheduler = new CassandraRecoveryScheduler(
                 offerRequirementProvider,
                 offerAccepter,
@@ -105,7 +103,6 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         recoveryScheduler.subscribe(this);
         this.client = client;
         this.planManager = planManager;
-        this.reconciler = reconciler;
         this.backup = backup;
         this.restore = restore;
         this.cleanup = cleanup;
@@ -142,6 +139,14 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         final String frameworkIdValue = frameworkId.getValue();
         LOGGER.info("Framework registered : id = {}", frameworkIdValue);
         try {
+            this.taskKiller = new DefaultTaskKiller(
+                    stateStore,
+                    new DefaultTaskFailureListener(stateStore),
+                    driver);
+            this.planScheduler = new DefaultPlanScheduler(
+                    offerAccepter,
+                    new OfferEvaluator(cassandraState.getStateStore()),
+                    taskKiller);
             stateStore.storeFrameworkId(frameworkId);
             Plan plan = CassandraPlan.create(
                     defaultConfigurationManager,
@@ -425,5 +430,9 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         } else {
             suppressOffers();
         }
+    }
+
+    public static DefaultTaskKiller getTaskKiller() {
+        return taskKiller;
     }
 }

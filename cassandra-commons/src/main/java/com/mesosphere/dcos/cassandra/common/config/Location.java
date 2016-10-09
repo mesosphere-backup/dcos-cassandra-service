@@ -19,6 +19,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.util.Properties;
  * cluster.
  */
 public class Location {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * The default location of the Cassandra location snitch configuration.
@@ -136,6 +139,7 @@ public class Location {
      */
     public void writeProperties(Path path) throws IOException {
 
+        logger.info("Writing properties to path: " + path.toAbsolutePath());
         FileOutputStream stream = new FileOutputStream(path.toFile());
         try {
             toProperties().store(stream, "DCOS got yo Cassandra!");

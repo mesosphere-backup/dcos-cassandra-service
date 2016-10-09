@@ -89,17 +89,4 @@ public class CassandraDaemonController {
 
         return getDaemon().getTask().getConfig();
     }
-
-    /**
-     * Shuts the Cassandra daemon down. This will also shutdown the executor
-     * instance via a side effect.
-     */
-    @DELETE
-    @Counted
-    public void shutdown() {
-
-        getDaemon().shutdown();
-    }
-
-
 }
