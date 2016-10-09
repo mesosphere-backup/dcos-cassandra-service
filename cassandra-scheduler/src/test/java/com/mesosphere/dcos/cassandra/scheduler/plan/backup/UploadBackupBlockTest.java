@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
+import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
@@ -7,8 +8,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
@@ -96,7 +96,7 @@ public class UploadBackupBlockTest {
                 context);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!block.start().isPresent());
         Assert.assertTrue(block.isComplete());
     }
@@ -112,6 +112,7 @@ public class UploadBackupBlockTest {
 
         final BackupUploadTask task = Mockito.mock(BackupUploadTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
+        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.BACKUP_UPLOAD);
         Mockito
                 .when(cassandraState.getOrCreateBackupUpload(daemonTask, context))
                 .thenReturn(task);
@@ -123,7 +124,7 @@ public class UploadBackupBlockTest {
                 context);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(block.start().isPresent());
         Assert.assertTrue(block.isInProgress());
     }

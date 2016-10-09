@@ -1,9 +1,9 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
+import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
+import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.config.ConfigStoreException;
@@ -12,7 +12,6 @@ import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.OfferRecommendation;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.ChainedObserver;
-import org.apache.mesos.scheduler.DefaultObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,7 @@ public class CassandraRecoveryScheduler extends ChainedObserver {
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraState cassandraState;
-    private final OfferEvaluator offerEvaluator = new OfferEvaluator();
+    private final OfferEvaluator offerEvaluator;
     private final Random random = new Random();
 
     public CassandraRecoveryScheduler(
@@ -35,6 +34,7 @@ public class CassandraRecoveryScheduler extends ChainedObserver {
         this.offerAccepter = offerAccepter;
         this.cassandraState = cassandraState;
         this.offerRequirementProvider = requirementProvider;
+        this.offerEvaluator = new OfferEvaluator(cassandraState.getStateStore());
 
         this.cassandraState.subscribe(this);
     }
@@ -55,23 +55,26 @@ public class CassandraRecoveryScheduler extends ChainedObserver {
                 CassandraDaemonTask terminated = terminatedOption.get();
                 terminated = cassandraState.replaceDaemon(terminated);
 
-                OfferRequirement offerReq;
+                Optional<OfferRequirement> offerReq;
                 if (terminated.getConfig().getReplaceIp().isEmpty()) {
                     offerReq = offerRequirementProvider.getReplacementOfferRequirement(
-                            cassandraState.getOrCreateContainer(terminated.getName())).get();
+                            cassandraState.getOrCreateContainer(terminated.getName()));
                 } else {
                     offerReq = offerRequirementProvider.getNewOfferRequirement(
-                            cassandraState.createCassandraContainer(terminated)).get();
+                            cassandraState.createCassandraContainer(terminated));
                 }
 
-                List<OfferRecommendation> recommendations =
-                        offerEvaluator.evaluate(offerReq, offers);
-                LOGGER.debug(
-                        "Got recommendations: {} for terminated task: {}",
-                        recommendations,
-                        terminated.getId());
-                acceptedOffers = offerAccepter.accept(driver,
-                        recommendations);
+                if (offerReq.isPresent()) {
+                    LOGGER.info("Attempting to satisfy OfferRequirement: " + offerReq.get());
+                    List<OfferRecommendation> recommendations =
+                            offerEvaluator.evaluate(offerReq.get(), offers);
+                    LOGGER.debug(
+                            "Got recommendations: {} for terminated task: {}",
+                            recommendations,
+                            terminated.getId());
+                    acceptedOffers = offerAccepter.accept(driver,
+                            recommendations);
+                }
 
 
             } catch (PersistenceException | ConfigStoreException ex) {

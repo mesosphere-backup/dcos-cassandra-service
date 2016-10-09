@@ -1,12 +1,12 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.CassandraSchedulerConfiguration;
-import com.mesosphere.dcos.cassandra.scheduler.config.DefaultConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.state.StateStore;

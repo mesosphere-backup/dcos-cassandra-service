@@ -18,14 +18,16 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
+import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.scheduler.CassandraScheduler;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.config.ConfigurationManager;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.dcos.Capabilities;
 import org.glassfish.jersey.server.ManagedAsync;
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +36,7 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Path("/v1/nodes")
 @Produces(MediaType.APPLICATION_JSON)
@@ -107,21 +106,21 @@ public class TasksResource {
 
     @PUT
     @Path("/restart")
-    public void restart(@QueryParam("node") final String name) {
+    public Response restart(@QueryParam("node") final String name) {
         Optional<CassandraDaemonTask> taskOption =
             Optional.ofNullable(state.getDaemons().get(name));
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
-            client.shutdown(task.getHostname(),
-                task.getExecutor().getApiPort());
+            CassandraScheduler.getTaskKiller().killTask(task.getName(), false);
+            return killResponse(Arrays.asList(task.getTaskInfo().getTaskId().getValue()));
         } else {
-            throw new NotFoundException();
+            return Response.serverError().build();
         }
     }
 
     @PUT
     @Path("/replace")
-    public void replace(@QueryParam("node") final String name)
+    public Response replace(@QueryParam("node") final String name)
         throws Exception {
         Optional<CassandraDaemonTask> taskOption =
             Optional.ofNullable(state.getDaemons().get(name));
@@ -130,12 +129,10 @@ public class TasksResource {
             final CassandraContainer movedContainer = state.moveCassandraContainer(task);
             LOGGER.info("Moved container ExecutorInfo: {}",
                     TextFormat.shortDebugString(movedContainer.getExecutorInfo()));
-            if (!task.isTerminated()) {
-                client.shutdown(task.getHostname(),
-                    task.getExecutor().getApiPort());
-            }
+            CassandraScheduler.getTaskKiller().killTask(task.getName(), true);
+            return killResponse(Arrays.asList(task.getTaskInfo().getTaskId().getValue()));
         } else {
-            throw new NotFoundException();
+            return Response.serverError().build();
         }
     }
 
@@ -173,5 +170,9 @@ public class TasksResource {
         final ConnectionResource connectionResource =
                 new ConnectionResource(capabilities, state, configurationManager);
         return connectionResource.connectDns();
+    }
+
+    private static Response killResponse(List<String> taskIds) {
+        return Response.ok(new JSONArray(taskIds).toString(), MediaType.APPLICATION_JSON).build();
     }
 }

@@ -199,11 +199,7 @@ public class SchedulerClient {
                 CassandraConfig.class);
     }
 
-    public CompletionStage<Boolean> shutdown(String hostname, int port) {
-        return delete(host(hostname, port), "/v1/cassandra");
-    }
-
-    public CompletionStage<DataCenterInfo> getDataCetnerInfo(String url) {
+    public CompletionStage<DataCenterInfo> getDataCenterInfo(String url) {
         return get(url, DataCenterInfo.class);
     }
 
@@ -213,6 +209,4 @@ public class SchedulerClient {
 
         return put(url, info);
     }
-
-
 }

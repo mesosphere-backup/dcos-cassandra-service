@@ -9,7 +9,7 @@ public class CassandraPlanManager extends DefaultPlanManager {
     @Inject
     public CassandraPlanManager(
             final PhaseStrategyFactory strategyFactory) {
-        super(EmptyStage.get(), strategyFactory);
+        super(EmptyPlan.get(), strategyFactory);
     }
 
     @Override

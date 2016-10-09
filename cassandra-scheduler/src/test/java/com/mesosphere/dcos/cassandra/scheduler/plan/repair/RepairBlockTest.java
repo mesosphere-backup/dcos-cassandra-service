@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.repair;
 
+import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
@@ -7,8 +8,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
@@ -102,7 +102,7 @@ public class RepairBlockTest {
                 context);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!block.start().isPresent());
         Assert.assertTrue(block.isComplete());
     }
@@ -117,6 +117,7 @@ public class RepairBlockTest {
 
         final RepairTask task = Mockito.mock(RepairTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
+        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.REPAIR);
         Mockito
                 .when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT))
                 .thenReturn(task);
@@ -128,7 +129,7 @@ public class RepairBlockTest {
                 CONTEXT);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
-        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any())).thenReturn(requirement);
+        Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(block.start().isPresent());
         Assert.assertTrue(block.isInProgress());
     }

@@ -1,13 +1,13 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.scheduler.offer.ClusterTaskOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.persistence.PersistenceException;
+import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 
 import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.Observable;
@@ -106,13 +106,12 @@ public class BackupManager extends DefaultObservable implements ClusterTaskManag
 
     public void stop() {
         LOGGER.info("Stopping backup");
+        stateStore.clearProperty(BACKUP_KEY);
         try {
-            stateStore.clearProperty(BACKUP_KEY);
             cassandraState.remove(cassandraState.getBackupSnapshotTasks().keySet());
-            cassandraState.remove(cassandraState.getBackupUploadTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
-                    "Error deleting backup context from persistence store. Reason: {}",
+                    "Error stopping backup. Reason: ",
                     e);
         }
         this.activeContext = null;

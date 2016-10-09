@@ -21,17 +21,19 @@ import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import com.mesosphere.dcos.cassandra.executor.backup.BackupStorageDriver;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.executor.ExecutorTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.util.concurrent.Future;
 
 /**
  * UploadSnapshot implements UploadSnapshotTask by delegating the upload of
  * the snapshot to a BackupStorageDriver implementation and the clearing of
  * the local snapshot to CassandraDaemonProcess.
  */
-public class UploadSnapshot implements Runnable {
+public class UploadSnapshot implements ExecutorTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(
         UploadSnapshot.class);
     private final CassandraDaemonProcess daemon;
@@ -89,5 +91,10 @@ public class UploadSnapshot implements Runnable {
             LOGGER.error("Upload snapshot failed", t);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, t.getMessage());
         }
+    }
+
+    @Override
+    public void stop(Future<?> future) {
+        future.cancel(true);
     }
 }

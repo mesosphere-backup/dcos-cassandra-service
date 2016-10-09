@@ -2,7 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.mesosphere.dcos.cassandra.scheduler.config.MutableSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.common.config.MutableSchedulerConfiguration;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.testing.ConfigOverride;

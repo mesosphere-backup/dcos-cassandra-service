@@ -3,7 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.health;
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.scheduler.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 
 import java.util.List;
 import java.util.stream.Collectors;

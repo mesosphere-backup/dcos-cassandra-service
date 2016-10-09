@@ -20,6 +20,10 @@ package com.mesosphere.dcos.cassandra.common.tasks;
  */
 public enum CassandraMode {
     /**
+     * The node's status has not yet been determined.
+     */
+    UNKNOWN,
+    /**
      * The node is starting but has not yet attempted to join the cluster.
      */
     STARTING,

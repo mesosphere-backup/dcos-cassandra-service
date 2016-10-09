@@ -71,7 +71,7 @@ public class SyncDataCenterBlock extends DefaultObservable implements Block, Run
         }
         setStatus(Status.IN_PROGRESS);
         executor.execute(this);
-        return null;
+        return Optional.empty();
     }
 
     @Override
@@ -82,6 +82,7 @@ public class SyncDataCenterBlock extends DefaultObservable implements Block, Run
     @Override
     public void updateOfferStatus(Collection<Protos.Offer.Operation> operations) {
         // Not expected to be called: start() always returns a null OfferRequirement.
+        LOGGER.warn("Ignoring unexpected operations: " + operations);
     }
 
     @Override

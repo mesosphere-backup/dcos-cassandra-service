@@ -19,18 +19,20 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.executor.ExecutorTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Future;
 
 /**
  * Implements the execution of BackupSnapshot by executing the snapshot
  * method of the CassandraDaemonProcess and reporting status via the
  * ExecutorDriver.
  */
-public class BackupSnapshot implements Runnable {
+public class BackupSnapshot implements ExecutorTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             BackupSnapshot.class);
     private CassandraDaemonProcess daemon;
@@ -64,15 +66,12 @@ public class BackupSnapshot implements Runnable {
     public void run() {
         try {
             // Send TASK_RUNNING
-            sendStatus(driver, Protos.TaskState.TASK_RUNNING,
-                    "Started taking snapshot");
+            sendStatus(driver, Protos.TaskState.TASK_RUNNING, "Started taking snapshot");
 
-            final String snapshotName =
-                this.cassandraTask.getBackupRestoreContext() .getName();
-            final List<String> nonSystemKeyspaces = daemon
-                    .getNonSystemKeySpaces();
-            LOGGER.info("Started taking snapshot for non system keyspaces: {}",
-                    nonSystemKeyspaces);
+            final String snapshotName = this.cassandraTask.getBackupRestoreContext().getName();
+            final List<String> nonSystemKeyspaces = daemon.getNonSystemKeySpaces();
+            LOGGER.info("Started taking snapshot for non system keyspaces: {}", nonSystemKeyspaces);
+
             for (String keyspace : nonSystemKeyspaces) {
                 LOGGER.info("Taking snapshot for keyspace: {}", keyspace);
                 daemon.takeSnapShot(snapshotName, keyspace);
@@ -85,5 +84,10 @@ public class BackupSnapshot implements Runnable {
             LOGGER.error("Snapshot failed",t);
             sendStatus(driver, Protos.TaskState.TASK_FAILED, t.getMessage());
         }
+    }
+
+    @Override
+    public void stop(Future<?> future) {
+        future.cancel(true);
     }
 }
