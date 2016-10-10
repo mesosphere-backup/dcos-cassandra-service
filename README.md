@@ -1182,6 +1182,33 @@ The following configuration properties are global for all row caches.
 
 </table>
 
+### Authentication and Authorization Configuration
+
+Authentication and authorization may be independently configured.  By default they are set to `AllowAllAuthenticator` and `AllowAllAuthorizer` respectively.  This is necessary to allow initial access to a new cluster.  After initial installation these values may be changed by changing the appropriate environment variables, `CASSANDRA_AUTHENTICATOR` and `CASSANDRA_AUTHORIZER`.
+Further information regarding how to change authentication and authorization of a Cassaandra cluster is available [here](https://docs.datastax.com/en/cassandra/3.0/cassandra/configuration/secureConfigNativeAuth.html) and [here](https://docs.datastax.com/en/cassandra/3.0/cassandra/configuration/secureConfigInternalAuth.html).  The necessary changes to the cassandra.yml file referenced there are accomplished by changing the environment variables already mentioned.
+
+<table class="table">
+
+  <tr>
+    <th>Property</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+
+  <tr>
+    <td>authenticator</td>
+    <td>string</td>
+    <td>The authentication backend. It implements IAuthenticator, which is used to identify users.</td>
+  </tr>
+
+   <tr>
+    <td>authorizer</td>
+    <td>string</td>
+    <td>The authorization backend. It implements IAuthenticator, which limits access and provides permissions.</td>
+  </tr>
+
+</table>
+
 ## Operating System Configuration
 In order for Cassandra to function correctly there are several important configuration modifications that need to be performed to the OS hosting the deployment.
 #### Time Synchronization
