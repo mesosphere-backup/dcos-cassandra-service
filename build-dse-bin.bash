@@ -46,20 +46,6 @@ function _download_dse {
   curl --user $DSE_USERNAME:$DSE_PASSWORD -O $DSE_STOCK_IMAGE_DOWNLOAD_URL
 }
 
-function _package_github {
-    PROJECT_NAME=$(basename $1) # user/pkg => pkg
-    if [ ! -f "$PROJECT_NAME/$3" ]; then
-        echo "Building $PROJECT_NAME/$3 from $1:$2"
-        if [ ! -d "$PROJECT_NAME" ]; then
-            time git clone "https://github.com/$1" --depth 1 && cd "$PROJECT_NAME" && git reset --hard $2
-        else
-            cd "$PROJECT_NAME"
-        fi
-        time mvn -Dmaven.test.skip=true package
-        cd ..
-    fi
-}
-
 ###
 # Build seedprovider jar
 ###
