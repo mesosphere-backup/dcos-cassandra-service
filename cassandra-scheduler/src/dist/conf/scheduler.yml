@@ -29,8 +29,8 @@ cassandra:
   jmx_port: ${CASSANDRA_JMX_PORT:-7199}
   application:
      cluster_name : ${CASSANDRA_CLUSTER_NAME:-"cassandra"}
-     authenticator: "AllowAllAuthenticator"
-     authorizer: "AllowAllAuthorizer"
+     authenticator: ${CASSANDRA_AUTHENTICATOR:-"AllowAllAuthenticator"}
+     authorizer: ${CASSANDRA_AUTHORIZER:-"AllowAllAuthorizer"}
      role_manager: "CassandraRoleManager"
      roles_validity_in_ms: 2000
      permissions_validity_in_ms: 2000
