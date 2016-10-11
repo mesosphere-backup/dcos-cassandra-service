@@ -154,7 +154,6 @@
             "new",
             "gc"
           ]
-
         },
         "seeds": {
           "id": "http://cassandra/docs/mesosphere.com/node/seeds",
@@ -184,6 +183,18 @@
           "description": "The name of the cluster managed by the Service",
           "default": "cassandra"
         },
+				"authenticator" : {
+					"id" : 	 "http://cassandra/docs/mesosphere.com/cassandra/authenticator",
+					"type" : "string",
+					"description" : "The authentication backend. It implements IAuthenticator, which is used to identify users.",
+					"default" : "AllowAllAuthenticator"
+				},
+				"authorizer" : {
+					"id" : 	 "http://cassandra/docs/mesosphere.com/cassandra/authorizer",
+					"type" : "string",
+					"description" : "The authorization backend. It implements IAuthenticator, which limits access and provides permissions.",
+					"default" : "AllowAllAuthorizer"
+				},
         "jmx_port": {
           "id": "http://cassandra/docs/mesosphere.com/cassandra/jmxPort",
           "type": "integer",
@@ -410,7 +421,6 @@
           "id": "http://cassandra/docs/mesosphere.com/cassandra/truncateRequestTimeoutInMs",
           "type": "integer",
           "description": "The time that the coordinator waits for truncate operations to complete in ms.",
-
           "default": 60000
         },
         "request_timeout_in_ms": {
