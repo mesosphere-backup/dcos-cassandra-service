@@ -72,10 +72,12 @@ To generate a new DataStax DSE binary package:
 - **Option A:** Jenkins-based build/upload
 
 0. Make any needed changes to [build-dse-bin.bash](build-dse-bin.bash), ex: version bumps.
-1. Execute the [cassandra/build-upload-dist-dse](https://jenkins.mesosphere.com/service/jenkins/job/cassandra/job/build-upload-dist-dse/) job in Jenkins. Note that this will refuse to overwrite a file that already exists, but that shouldn't be a problem if a new version of DSE is being built, in which case the new filename would be different.
+1. Execute the [cassandra/build-upload-dist-dse](https://jenkins.mesosphere.com/service/jenkins/job/cassandra/job/build-upload-dist-dse/) job in Jenkins, with the latest commit sha from the current DSE release branch. Note that this will refuse to overwrite a file that already exists, but that shouldn't be a problem if a new version of DSE is being built, in which case the new filename would be different.
 2. Update the universe's [resource.json](universe/resource.json) with new URL if necessary.
 
 - **Option B:** Manual build/upload
+
+Note: Because we currently maintain DSE as a separate branch, make sure that you are on the correct release branch before proceeding.
 
 0. Make any needed changes to [build-dse-bin.bash](build-dse-bin.bash), ex: version bumps.
 1. Execute the following:
