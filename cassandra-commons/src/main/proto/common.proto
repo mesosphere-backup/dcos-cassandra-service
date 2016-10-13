@@ -48,6 +48,8 @@ message CassandraConfig{
     optional bytes application = 10;
 
     optional int32 diskType = 11;
+
+    optional bool publishDiscoveryInfo = 12;
 }
 
 message CassandraData{
