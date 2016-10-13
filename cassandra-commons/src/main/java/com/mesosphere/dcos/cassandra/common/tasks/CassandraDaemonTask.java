@@ -161,7 +161,12 @@ public class CassandraDaemonTask extends CassandraTask {
                 config.getApplication().getSslStoragePort(),
                 config.getApplication().getRpcPort(),
                 config.getApplication().getNativeTransportPort()),
-            getDiscoveryInfo(capabilities, name, config.getApplication().getNativeTransportPort()),
+            getDiscoveryInfo(
+                    config.getPublishDiscoveryInfo(),
+                    config.getApplication().getClusterName(),
+                    capabilities,
+                    name,
+                    config.getApplication().getNativeTransportPort()),
             data);
     }
 
@@ -288,8 +293,25 @@ public class CassandraDaemonTask extends CassandraTask {
     }
 
     @Nullable
-    private static DiscoveryInfo getDiscoveryInfo(
-            Capabilities capabilities, String nodeName, int nativePort) {
+    private static DiscoveryInfo getDiscoveryInfo(boolean publishDiscoveryInfo,
+                                                  String clusterName,
+                                                  Capabilities capabilities,
+                                                  String nodeName,
+                                                  int nativePort) {
+
+        // If the explicit configuration flag for publishing discovery info is set, include the cluster name in the
+        // discovery info name and don't use labels.
+        if (publishDiscoveryInfo) {
+            DiscoveryInfo.Builder discoveryBuilder = DiscoveryInfo.newBuilder()
+                    .setVisibility(DiscoveryInfo.Visibility.EXTERNAL)
+                    .setName(clusterName + "." + nodeName);
+            discoveryBuilder.getPortsBuilder().addPortsBuilder()
+                    .setName("NativeTransport")
+                    .setNumber(nativePort);
+            return discoveryBuilder.build();
+        }
+
+        // Else, check if DC/OS has the right capabilities and publish the discovery info the DC/OS way.
         try {
             if (!capabilities.supportsNamedVips()) {
                 return null;
