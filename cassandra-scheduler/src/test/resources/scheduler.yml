@@ -28,6 +28,7 @@ cassandra:
     rack : ${CASSANDRA_LOCATION_RACK:-"rac1"}
     data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
   jmx_port: ${CASSANDRA_JMX_PORT:-7199}
+  publish_discovery_info: ${CASSANDRA_PUBLISH_DISCOVERY_INFO:-false}
   application:
      cluster_name : ${CASSANDRA_CLUSTER_NAME:-"cassandra"}
      authenticator: "AllowAllAuthenticator"

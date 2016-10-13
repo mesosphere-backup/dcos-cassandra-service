@@ -48,6 +48,7 @@ public class CassandraConfig {
       HeapConfig.DEFAULT,
       Location.DEFAULT,
       7199,
+      false,
       CassandraApplicationConfig.builder().build(),
       DseConfig.DEFAULT);
 
@@ -67,6 +68,7 @@ public class CassandraConfig {
     private HeapConfig heap;
     private Location location;
     private int jmxPort;
+    private boolean publishDiscoveryInfo;
     private CassandraApplicationConfig application;
     private DseConfig dseConfig;
 
@@ -86,6 +88,7 @@ public class CassandraConfig {
       this.heap = config.heap;
       this.location = config.location;
       this.jmxPort = config.jmxPort;
+      this.publishDiscoveryInfo = config.publishDiscoveryInfo;
       this.application = config.application;
       this.dseConfig = config.dseConfig;
     }
@@ -95,6 +98,22 @@ public class CassandraConfig {
      */
     private Builder() {
       this(DEFAULT);
+    }
+
+    /**
+     * Gets whether the Cassandra task should publish its discovery info.
+     * @return Flag that dictates whether the Cassandra task should publish its discovery info.
+     */
+    public boolean getPublishDiscoveryInfo() { return publishDiscoveryInfo; }
+
+    /**
+     * Sets whether the Cassandra task should publish its discovery info.
+     * @param publishDiscoveryInfo Flag to enable or disable publishing of discovery info.
+     * @return The Builder instance.
+     */
+    public Builder setPublishDiscoveryInfo(boolean publishDiscoveryInfo) {
+        this.publishDiscoveryInfo = publishDiscoveryInfo;
+        return this;
     }
 
     /**
@@ -391,6 +410,7 @@ public class CassandraConfig {
    * @param location    The location (Rack and Data center) configuration for
    *                    the node.
    * @param jmxPort     The JMX port the node will listen on.
+   * @param publishDiscoveryInfo The flag that specifies whether the Cassandra task should publish its discovery info.
    * @param application The Cassandra application configuration for the
    *                    node (This corresponds to the cassandra.yaml).
    * @return A CassandraConfig constructed from arguments.
@@ -406,6 +426,7 @@ public class CassandraConfig {
     @JsonProperty("heap") HeapConfig heap,
     @JsonProperty("location") Location location,
     @JsonProperty("jmx_port") int jmxPort,
+    @JsonProperty("publish_discovery_info") boolean publishDiscoveryInfo,
     @JsonProperty("application")
       CassandraApplicationConfig application,
     @JsonProperty("dse")
@@ -421,6 +442,7 @@ public class CassandraConfig {
       heap,
       location,
       jmxPort,
+      publishDiscoveryInfo,
       application,
       dseConfig);
   }
@@ -446,6 +468,7 @@ public class CassandraConfig {
       HeapConfig.parse(config.getHeap()),
       Location.parse(config.getLocation()),
       config.getJmxPort(),
+      config.getPublishDiscoveryInfo(),
       CassandraApplicationConfig.parse(config.getApplication()),
       DseConfig.parse(config.getDse()));
 
@@ -492,6 +515,9 @@ public class CassandraConfig {
   @JsonProperty("jmx_port")
   private final int jmxPort;
 
+  @JsonProperty("publish_discovery_info")
+  private final boolean publishDiscoveryInfo;
+
   @JsonProperty("application")
   private final CassandraApplicationConfig application;
 
@@ -525,6 +551,7 @@ public class CassandraConfig {
                          final HeapConfig heap,
                          final Location location,
                          final int jmxPort,
+                         final boolean publishDiscoveryInfo,
                          final CassandraApplicationConfig application,
                          final DseConfig dseConfig) {
     this.version = version;
@@ -536,6 +563,7 @@ public class CassandraConfig {
     this.heap = heap;
     this.location = location;
     this.jmxPort = jmxPort;
+    this.publishDiscoveryInfo = publishDiscoveryInfo;
     this.application = dseConfig.update(application);
     this.dseConfig = dseConfig;
   }
@@ -634,6 +662,12 @@ public class CassandraConfig {
     return memoryMb;
   }
 
+  /**
+   * Gets whether the Cassandra task should publish its discovery info.
+   * @return Flag that dictates whether the Cassandra task should publish its discovery info.
+   */
+  public boolean getPublishDiscoveryInfo() { return publishDiscoveryInfo; }
+
   public DseConfig getDse(){
     return this.dseConfig;
   }
@@ -659,8 +693,10 @@ public class CassandraConfig {
         .setReplaceIp(replaceIp)
         .setHeap(heap.toProto())
         .setLocation(location.toProto())
+        .setPublishDiscoveryInfo(publishDiscoveryInfo)
         .setApplication(application.toByteString())
         .setDse(dseConfig.toByteString());
+
     return builder.build();
   }
 
@@ -696,6 +732,7 @@ public class CassandraConfig {
       getDiskMb() == that.getDiskMb() &&
       getDiskType() == that.getDiskType() &&
       getJmxPort() == that.getJmxPort() &&
+      getPublishDiscoveryInfo() == that.getPublishDiscoveryInfo() &&
       Objects.equals(getVersion(), that.getVersion()) &&
       Objects.equals(getReplaceIp(), that.getReplaceIp()) &&
       Objects.equals(getHeap(), that.getHeap()) &&
@@ -708,7 +745,7 @@ public class CassandraConfig {
   public int hashCode() {
     return Objects.hash(getVersion(), getCpus(), getMemoryMb(), getDiskMb(),
       getDiskType(),
-      getReplaceIp(), getHeap(), getLocation(), getJmxPort(),
+      getReplaceIp(), getHeap(), getLocation(), getJmxPort(), getPublishDiscoveryInfo(),
       getApplication(), getDse());
   }
 
