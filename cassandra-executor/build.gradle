@@ -25,19 +25,20 @@ dependencies {
     testCompile "junit:junit:${junitVer}"
 }
 
-// build.sh needs executor.zip for ci_upload.py
-task copyDist(type: Copy) {
-    dependsOn distTar, distZip
-    from "$buildDir/distributions/"
-    into "$buildDir/distributions/"
-    rename("${project.name}-${project.version}", "executor")
+def projectVersion = project.version
+distributions {
+    main {
+        baseName = 'executor'
+        version = ""
+    }
 }
 
 publishing {
     publications {
         maven(MavenPublication) {
-            artifact("$buildDir/distributions/${project.name}-${project.version}.zip") {
+            artifact("$buildDir/distributions/executor.zip") {
                 extension 'zip'
+                version = projectVersion
             }
         }
     }
@@ -57,5 +58,3 @@ publishing {
 
 publishToMavenLocal.dependsOn(build)
 publish.dependsOn(build)
-
-build.dependsOn(copyDist)

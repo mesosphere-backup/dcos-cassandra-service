@@ -6,22 +6,23 @@ dependencies {
     compile project(':cassandra-commons')
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifact("$buildDir/distributions/${project.name}-${project.version}.zip") {
-                extension 'zip'
-            }
-        }
+def projectVersion = project.version
+distributions {
+    main {
+        baseName = 'scheduler'
+        version = ''
     }
 }
 
-// build.sh needs scheduler.zip for ci_upload.py
-task copyDist(type: Copy) {
-    dependsOn distTar, distZip
-    from "$buildDir/distributions/"
-    into "$buildDir/distributions/"
-    rename("${project.name}-${project.version}", "scheduler")
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact("$buildDir/distributions/scheduler.zip") {
+                extension 'zip'
+                version = projectVersion
+            }
+        }
+    }
 }
 
 publishing {
@@ -39,4 +40,3 @@ publishing {
 publishToMavenLocal.dependsOn(build)
 publish.dependsOn(build)
 
-build.dependsOn(copyDist)
