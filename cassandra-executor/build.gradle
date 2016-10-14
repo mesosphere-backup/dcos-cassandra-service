@@ -29,7 +29,7 @@ def projectVersion = project.version
 distributions {
     main {
         baseName = 'executor'
-        version = ""
+        version = ''
     }
 }
 
@@ -46,15 +46,10 @@ publishing {
 
 publishing {
     repositories {
-        maven {
-            credentials {
-                username System.getenv('REPOSITORY_USERNAME')
-                password System.getenv('REPOSITORY_PASSWORD')
-            }
-            url System.getenv('REPOSITORY_URL') ?: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-        }
+        maven parent.mavenRep
     }
 }
 
 publishToMavenLocal.dependsOn(build)
 publish.dependsOn(build)
+
