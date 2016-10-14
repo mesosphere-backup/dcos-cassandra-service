@@ -122,7 +122,6 @@ public class CassandraApplicationConfig {
   public static final String TRACETYPE_REPAIR_TTL_KEY = "tracetype_repair_ttl";
   public static final String ENABLE_USER_DEFINED_FUNCTIONS_KEY = "enable_user_defined_functions";
   public static final String WINDOWS_TIMER_INTERVAL_KEY = "windows_timer_interval";
-  public static final String HINTS_DIRECTORY_KEY = "hints_directory";
   public static final String MAX_HINTS_FILE_SIZE_KEY = "max_hints_file_size_in_mb";
   public static final String HINTS_FLUSH_PERIOD_KEY = "hints_flush_period_in_ms";
   public static final String CONCURRENT_MATERIALIZED_VIEWS = "concurrent_materialized_view_writes";
@@ -155,7 +154,6 @@ public class CassandraApplicationConfig {
   public static final String  STREAMING_SOCKET_TIMEOUT_IN_MS_KEY = "streaming_socket_timeout_in_ms";
   public static final String  PHI_CONVICT_THRESHOLD_KEY = "phi_convict_threshold";
   public static final String  GC_WARN_THRESHOLD_IN_MS_KEY = "gc_warn_threshold_in_ms";
-  public static final String  ALLOCATE_TOKENS_FOR_KEYSPACE_KEY = "allocate_tokens_for_keyspace";
   public static final String  BUFFER_POOL_USE_HEAP_IF_EXHAUSTED_KEY = "buffer_pool_use_heap_if_exhausted";
   public static final String  DISK_OPTIMIZATION_STRATEGY_KEY = "disk_optimization_strategy";
   public static final String  UNLOGGED_BATCH_ACROSS_PARTITIONS_WARN_THRESHOLD_KEY =  "unlogged_batch_across_partitions_warn_threshold";
@@ -291,8 +289,6 @@ public class CassandraApplicationConfig {
   public static final int DEFAULT_STREAMING_SOCKET_TIMEOUT_IN_MS = 86400000;
   public static final int DEFAULT_PHI_CONVICT_THRESHOLD = 8;
   public static final int DEFAULT_GC_WARN_THRESHOLD_IN_MS = 1000;
-  public static final String DEFAULT_ALLOCATE_TOKENS_FOR_KEYSPACE = "";
-  public static final String DEFAULT_HINTS_DIRECTORY = "/var/lib/cassandra/hints";
   public static final boolean DEFAULT_BUFFER_POOL_USE_HEAP_IF_EXHAUSTED = true;
   public static final String DEFAULT_DISK_OPTIMIZATION_STRATEGY = "ssd";
   public static final int DEFAULT_UNLOGGED_BATCH_ACROSS_PARTITIONS_WARN_THRESHOLD =  10;
@@ -474,8 +470,6 @@ public class CassandraApplicationConfig {
     @JsonProperty(STREAMING_SOCKET_TIMEOUT_IN_MS_KEY) final int streamingSocketTimeoutInMs,
     @JsonProperty(PHI_CONVICT_THRESHOLD_KEY) final int phiConvictThreshold,
     @JsonProperty(GC_WARN_THRESHOLD_IN_MS_KEY) final int gcWarnThresholdInMs,
-    @JsonProperty(ALLOCATE_TOKENS_FOR_KEYSPACE_KEY) final String allocateTokensForKeyspace,
-    @JsonProperty(HINTS_DIRECTORY_KEY) final String hintsDirectory,
     @JsonProperty(BUFFER_POOL_USE_HEAP_IF_EXHAUSTED_KEY) final boolean bufferPoolUseHeapIfExhausted,
     @JsonProperty(DISK_OPTIMIZATION_STRATEGY_KEY) final String diskOptimizationStrategy,
     @JsonProperty(UNLOGGED_BATCH_ACROSS_PARTITIONS_WARN_THRESHOLD_KEY) final int unloggedBatchAcrossPartitionsWarnThreshold,
@@ -587,8 +581,6 @@ public class CassandraApplicationConfig {
       streamingSocketTimeoutInMs,
       phiConvictThreshold,
       gcWarnThresholdInMs,
-      allocateTokensForKeyspace,
-      hintsDirectory,
       bufferPoolUseHeapIfExhausted,
       diskOptimizationStrategy,
       unloggedBatchAcrossPartitionsWarnThreshold,
@@ -809,10 +801,6 @@ public class CassandraApplicationConfig {
   private final int phiConvictThreshold;
   @JsonProperty(GC_WARN_THRESHOLD_IN_MS_KEY)
   private final int gcWarnThresholdInMs;
-  @JsonProperty(ALLOCATE_TOKENS_FOR_KEYSPACE_KEY)
-  private final String allocateTokensForKeyspace;
-  @JsonProperty(HINTS_DIRECTORY_KEY)
-  private final String hintsDirectory;
   @JsonProperty(BUFFER_POOL_USE_HEAP_IF_EXHAUSTED_KEY)
   private final boolean bufferPoolUseHeapIfExhausted;
   @JsonProperty(DISK_OPTIMIZATION_STRATEGY_KEY)
@@ -929,8 +917,6 @@ public class CassandraApplicationConfig {
     final int streamingSocketTimeoutInMs,
     final int phiConvictThreshold,
     final int gcWarnThresholdInMs,
-    final String allocateTokensForKeyspace,
-    final String hintsDirectory,
     final boolean bufferPoolUseHeapIfExhausted,
     final String diskOptimizationStrategy,
     final int unloggedBatchAcrossPartitionsWarnThreshold,
@@ -1041,8 +1027,6 @@ public class CassandraApplicationConfig {
     this.interDcStreamThroughputOutboundMegabitsPerSec = interDcStreamThroughputOutboundMegabitsPerSec;
     this.phiConvictThreshold = phiConvictThreshold;
     this.gcWarnThresholdInMs = gcWarnThresholdInMs;
-    this.allocateTokensForKeyspace = allocateTokensForKeyspace;
-    this.hintsDirectory = hintsDirectory;
     this.bufferPoolUseHeapIfExhausted = bufferPoolUseHeapIfExhausted;
     this.diskOptimizationStrategy = diskOptimizationStrategy;
     this.unloggedBatchAcrossPartitionsWarnThreshold = unloggedBatchAcrossPartitionsWarnThreshold;
@@ -1468,14 +1452,6 @@ public class CassandraApplicationConfig {
     return gcWarnThresholdInMs;
   }
 
-  public String getAllocateTokensForKeyspace() {
-    return allocateTokensForKeyspace;
-  }
-
-  public String getHintsDirectory() {
-    return hintsDirectory;
-  }
-
   public boolean getBufferPoolUseHeapIfExhausted() {
     return bufferPoolUseHeapIfExhausted;
   }
@@ -1521,8 +1497,6 @@ public class CassandraApplicationConfig {
         .toAbsolutePath().toString());
     map.put(SAVED_CACHES_DIRECTORY_KEY, Paths.get(CassandraConfig.VOLUME_PATH,
       "saved_caches").toAbsolutePath().toString());
-    map.put(HINTS_DIRECTORY_KEY, Paths.get(CassandraConfig.VOLUME_PATH,
-      "hints").toAbsolutePath().toString());
     map.put(DISK_FAILURE_POLICY_KEY, diskFailurePolicy);
     map.put(COMMIT_FAILURE_POLICY_KEY, commitFailurePolicy);
     map.put(KEY_CACHE_SIZE_IN_MB_KEY, keyCacheSizeInMb);
@@ -1630,8 +1604,6 @@ public class CassandraApplicationConfig {
     map.put(STREAMING_SOCKET_TIMEOUT_IN_MS_KEY, streamingSocketTimeoutInMs);
     map.put(PHI_CONVICT_THRESHOLD_KEY, phiConvictThreshold);
     map.put(GC_WARN_THRESHOLD_IN_MS_KEY, gcWarnThresholdInMs);
-    map.put(ALLOCATE_TOKENS_FOR_KEYSPACE_KEY, allocateTokensForKeyspace);
-    map.put(HINTS_DIRECTORY_KEY, hintsDirectory);
     map.put(BUFFER_POOL_USE_HEAP_IF_EXHAUSTED_KEY, bufferPoolUseHeapIfExhausted);
     map.put(DISK_OPTIMIZATION_STRATEGY_KEY, diskOptimizationStrategy);
     map.put(UNLOGGED_BATCH_ACROSS_PARTITIONS_WARN_THRESHOLD_KEY, unloggedBatchAcrossPartitionsWarnThreshold);
@@ -1751,9 +1723,7 @@ public class CassandraApplicationConfig {
       getEnableScriptedUserDefinedFunctions() == that.getEnableScriptedUserDefinedFunctions() &&
       getMaxValueSizeInMb() == that.getMaxValueSizeInMb() &&
       Objects.equals(getInternodeAuthenticator(), that.getInternodeAuthenticator()) &&
-      Objects.equals(getAllocateTokensForKeyspace(), that.getAllocateTokensForKeyspace()) &&
       Objects.equals(getDiskOptimizationStrategy(), that.getDiskOptimizationStrategy()) &&
-      Objects.equals(getHintsDirectory(), that.getHintsDirectory()) &&
       Objects.equals(getClusterName(), that.getClusterName()) &&
       Objects.equals(getAuthenticator(),
         that.getAuthenticator()) &&
@@ -1848,9 +1818,9 @@ public class CassandraApplicationConfig {
       getRpcRecvBuffSizeInBytes(), getConcurrentCompactors(),
       getStreamThroughputOutboundMegabitsPerSec(), getInterDcStreamThroughputOutboundMegabitsPerSec(),
       getStreamingSocketTimeoutInMs(), getPhiConvictThreshold(),
-      getGcWarnThresholdInMs(), getAllocateTokensForKeyspace(),
-      getBufferPoolUseHeapIfExhausted(), getDiskOptimizationStrategy(),
-      getUnloggedBatchAcrossPartitionsWarnThreshold(), getEnableScriptedUserDefinedFunctions(), getMaxValueSizeInMb());
+      getGcWarnThresholdInMs(), getBufferPoolUseHeapIfExhausted(),
+      getDiskOptimizationStrategy(), getUnloggedBatchAcrossPartitionsWarnThreshold(),
+      getEnableScriptedUserDefinedFunctions(), getMaxValueSizeInMb());
   }
 
   @Override
@@ -1964,8 +1934,6 @@ public class CassandraApplicationConfig {
     private int streamingSocketTimeoutInMs;
     private int phiConvictThreshold;
     private int gcWarnThresholdInMs;
-    private String allocateTokensForKeyspace;
-    private String hintsDirectory;
     private boolean bufferPoolUseHeapIfExhausted;
     private String diskOptimizationStrategy;
     private int unloggedBatchAcrossPartitionsWarnThreshold;
@@ -2079,8 +2047,6 @@ public class CassandraApplicationConfig {
       streamingSocketTimeoutInMs = DEFAULT_STREAMING_SOCKET_TIMEOUT_IN_MS;
       phiConvictThreshold = DEFAULT_PHI_CONVICT_THRESHOLD;
       gcWarnThresholdInMs = DEFAULT_GC_WARN_THRESHOLD_IN_MS;
-      allocateTokensForKeyspace = DEFAULT_ALLOCATE_TOKENS_FOR_KEYSPACE;
-      hintsDirectory = DEFAULT_HINTS_DIRECTORY;
       bufferPoolUseHeapIfExhausted = DEFAULT_BUFFER_POOL_USE_HEAP_IF_EXHAUSTED;
       diskOptimizationStrategy = DEFAULT_DISK_OPTIMIZATION_STRATEGY;
       unloggedBatchAcrossPartitionsWarnThreshold = DEFAULT_UNLOGGED_BATCH_ACROSS_PARTITIONS_WARN_THRESHOLD;
@@ -2195,8 +2161,6 @@ public class CassandraApplicationConfig {
       this.streamingSocketTimeoutInMs = config.streamingSocketTimeoutInMs;
       this.phiConvictThreshold = config.phiConvictThreshold;
       this.gcWarnThresholdInMs = config.gcWarnThresholdInMs;
-      this.allocateTokensForKeyspace = config.allocateTokensForKeyspace;
-      this.hintsDirectory = config.hintsDirectory;
       this.bufferPoolUseHeapIfExhausted = config.bufferPoolUseHeapIfExhausted;
       this.diskOptimizationStrategy = config.diskOptimizationStrategy;
       this.unloggedBatchAcrossPartitionsWarnThreshold = config.unloggedBatchAcrossPartitionsWarnThreshold;
@@ -3020,8 +2984,6 @@ public class CassandraApplicationConfig {
         streamingSocketTimeoutInMs,
         phiConvictThreshold,
         gcWarnThresholdInMs,
-        allocateTokensForKeyspace,
-        hintsDirectory,
         bufferPoolUseHeapIfExhausted,
         diskOptimizationStrategy,
         unloggedBatchAcrossPartitionsWarnThreshold,

@@ -132,8 +132,6 @@ cassandra:
      streaming_socket_timeout_in_ms : ${CASSANDRA_STREAMING_SOCKET_TIMEOUT_IN_MS:-3600000}
      phi_convict_threshold : ${CASSANDRA_PHI_CONVICT_THRESHOLD:-8}
      gc_warn_threshold_in_ms : ${CASSANDRA_GC_WARN_THRESHOLD_IN_MS:-1000}
-     allocate_tokens_for_keyspace : ${CASSANDRA_ALLOCATE_TOKENS_FOR_KEYSPACE:-""}
-     hints_directory: ${CASSANDRA_HINTS_DIRECTORY:-"/var/lib/cassandra/hints"}
      buffer_pool_use_heap_if_exhausted : ${CASSANDRA_BUFFER_POOL_USE_HEAP_IF_EXHAUSTED:-true}
      disk_optimization_strategy : ${CASSANDRA_DISK_OPTIMIZATION_STRATEGY:-"ssd"}
      unlogged_batch_across_partitions_warn_threshold : ${CASSANDRA_UNLOGGED_BATCH_ACROSS_PARTITIONS_WARN_THRESHOLD:-10}
