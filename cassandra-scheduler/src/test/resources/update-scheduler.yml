@@ -102,6 +102,42 @@ cassandra:
      tracetype_query_ttl : ${CASSANDRA_TRACETYPE_QUERY_TTL:-86400}
      tracetype_repair_ttl : ${CASSANDRA_TRACETYPE_REPAIR_TTL:-604800}
      windows_timer_interval : ${CASSANDRA_WINDOWS_TIMER_INTERVAL:-1}
+     max_hints_file_size_in_mb : ${CASSANDRA_MAX_HINTS_FILE_SIZE_IN_MB:-128}
+     hints_flush_period_in_ms : ${CASSANDRA_HINTS_FLUSH_PERIOD_IN_MS:-10000}
+     concurrent_materialized_view_writes : ${CASSANDRA_MATERIALIZED_VIEW_WRITES:-32}
+     commitlog_total_space_in_mb : ${CASSANDRA_COMMITLOG_TOTAL_SPACE_IN_MB:-8192}
+     roles_update_interval_in_ms : ${CASSANDRA_ROLES_UPDATE_INTERVAL_IN_MS:-1000}
+     permissions_update_interval_in_ms : ${CASSANDRA_PERMISSIONS_UPDATE_INTERVAL_IN_MS:-1000}
+     key_cache_keys_to_save : ${CASSANDRA_KEY_CACHE_KEYS_TO_SAVE:-100}
+     row_cache_keys_to_save : ${CASSANDRA_ROW_CACHE_KEYS_TO_SAVE:-100}
+     counter_cache_keys_to_save : ${CASSANDRA_COUNTER_CACHE_KEYS_TO_SAVE:-100}
+     file_cache_size_in_mb : ${CASSANDRA_FILE_CACHE_SIZE_IN_MB:-512}
+     memtable_heap_space_in_mb : ${CASSANDRA_MEMTABLE_HEAP_SPACE_IN_MB:-2048}
+     memtable_offheap_space_in_mb : ${CASSANDRA_MEMTABLE_OFFHEAP_SPACE_IN_MB:-2048}
+     memtable_cleanup_threshold : ${CASSANDRA_MEMTABLE_CLEANUP_THRESHOLD:-0.11}
+     memtable_flush_writers : ${CASSANDRA_MEMTABLE_FLUSH_WRITERS:-8}
+     listen_on_broadcast_address : ${CASSANDRA_LISTEN_ON_BROADCAST_ADDRESS:-false}
+     internode_authenticator : ${CASSANDRA_INTERNODE_AUTHENTICATOR:-"org.apache.cassandra.auth.AllowAllInternodeAuthenticator"}
+     native_transport_max_threads : ${CASSANDRA_NATIVE_TRANSPORT_MAX_THREADS:-128}
+     native_transport_max_frame_size_in_mb : ${CASSANDRA_NATIVE_TRANSPORT_MAX_FRAME_SIZE_IN_MB:-256}
+     native_transport_max_concurrent_connections : ${CASSANDRA_NATIVE_TRANSPORT_MAX_CONCURRENT_CONNECTIONS:--1}
+     native_transport_max_concurrent_connections_per_ip : ${CASSANDRA_NATIVE_TRANSPORT_MAX_CONCURRENT_CONNECTIONS_PER_IP:--1}
+     rpc_min_threads : ${CASSANDRA_RPC_MIN_THREADS:-16}
+     rpc_max_threads : ${CASSANDRA_RPC_MAX_THREADS:-2048}
+     rpc_send_buff_size_in_bytes : ${CASSANDRA_RPC_SEND_BUFF_SIZE_IN_BYTES:-0}
+     rpc_recv_buff_size_in_bytes : ${CASSANDRA_RPC_RECV_BUFF_SIZE_IN_BYTES:-0}
+     concurrent_compactors : ${CASSANDRA_CONCURRENT_COMPACTORS:-1}
+     stream_throughput_outbound_megabits_per_sec : ${CASSANDRA_STREAM_THROUGHPUT_OUTBOUND_MEGABITS_PER_SEC:-200}
+     inter_dc_stream_throughput_outbound_megabits_per_sec : ${CASSANDRA_INTER_DC_STREAM_THROUGHPUT_OUTBOUND_MEGABITS_PER_SEC:-200}
+     streaming_socket_timeout_in_ms : ${CASSANDRA_STREAMING_SOCKET_TIMEOUT_IN_MS:-3600000}
+     phi_convict_threshold : ${CASSANDRA_PHI_CONVICT_THRESHOLD:-8}
+     gc_warn_threshold_in_ms : ${CASSANDRA_GC_WARN_THRESHOLD_IN_MS:-1000}
+     buffer_pool_use_heap_if_exhausted : ${CASSANDRA_BUFFER_POOL_USE_HEAP_IF_EXHAUSTED:-true}
+     disk_optimization_strategy : ${CASSANDRA_DISK_OPTIMIZATION_STRATEGY:-"ssd"}
+     unlogged_batch_across_partitions_warn_threshold : ${CASSANDRA_UNLOGGED_BATCH_ACROSS_PARTITIONS_WARN_THRESHOLD:-10}
+     streaming_socket_timeout_in_ms : ${CASSANDRA_STREAMING_SOCKET_TIMOUT_IN_MS:-86400000}
+     enable_scripted_user_defined_functions : ${CASSANDRA_ENABLE_SCRIPTED_USER_DEFINED_FUNCTIONS:-false}
+     max_value_size_in_mb : ${CASSANDRA_MAX_VALUE_SIZE_IN_MB:-256}
 nodes: ${NODES:-3}
 seed_nodes: ${SEED_NODES:-2}
 placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
