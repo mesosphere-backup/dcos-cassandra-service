@@ -12,7 +12,7 @@
           "id": "http://cassandra/docs/mesosphere.com/service/name",
           "type": "string",
           "description": "The name of the DSE Cassandra service instance.",
-          "default": "datastax"
+          "default": "dse"
         },
         "user": {
           "id": "http://cassandra/docs/mesosphere.com/service/user",
@@ -23,7 +23,7 @@
         "principal": {
           "description": "The principal for the service instance.",
           "type": "string",
-          "default": "datastax-principal"
+          "default": "dse-principal"
         },
         "secret_name": {
           "description": "Name of the Secret Store credentials to use for DC/OS service authentication. This should be left empty unless service authentication is needed.",
@@ -522,7 +522,7 @@
     },
     "dse": {
       "type": "object",
-      "description": "DataStax specific configuration",
+      "description": "DSE specific configuration",
       "properties": {
         "use_dse_role_manager": {
           "type": "boolean",
@@ -537,7 +537,7 @@
         },
         "authentication_options": {
           "type": "object",
-          "description": "DataStax authentication options.",
+          "description": "DSE authentication options.",
           "properties": {
             "enabled": {
               "type": "boolean",
@@ -577,11 +577,11 @@
         },
         "authorization_options": {
           "type": "object",
-          "description": "DataStax authorization options.",
+          "description": "DSE authorization options.",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "description": "If true DataStax authorization will be used.",
+              "description": "If true DSE authorization will be used.",
               "default": false
             }
           },

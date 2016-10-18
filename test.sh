@@ -3,6 +3,8 @@
 # Exit immediately on errors -- the helper scripts all emit github statuses internally
 set -e
 
+export PACKAGE_NAME='dse'
+
 REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $REPO_ROOT_DIR
 
