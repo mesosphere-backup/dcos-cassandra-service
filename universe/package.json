@@ -3,10 +3,10 @@
   "name": "dse",
   "version": "stub-universe",
   "maintainer": "support@mesosphere.io",
-  "description": "DSE running on DCOS",
+  "description": "DSE running on DC/OS",
   "selected": true,
   "framework": true,
   "tags": ["data", "database", "nosql"],
-  "postInstallNotes": "DCOS DSE has been successfully installed!\n\n\tDocumentation: https://docs.mesosphere.com/usage/services/cassandra/\n\tIssues: https://docs.mesosphere.com/support/",
-  "postUninstallNotes": "DCOS DSE service has been uninstalled. Please run the framework_cleaner to remove any persistent state if required."
+  "postInstallNotes": "DC/OS DSE has been successfully installed!\n\n\tDocumentation: https://docs.mesosphere.com/usage/services/cassandra/\n\tIssues: https://docs.mesosphere.com/support/",
+  "postUninstallNotes": "DC/OS DSE service has been uninstalled. Please run the framework_cleaner to remove any persistent state if required."
 }
