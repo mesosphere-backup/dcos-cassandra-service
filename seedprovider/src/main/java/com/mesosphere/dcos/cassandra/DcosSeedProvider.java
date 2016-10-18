@@ -37,13 +37,11 @@ public class DcosSeedProvider implements SeedProvider {
     private static InetAddress getLocalAddress() throws UnknownHostException {
         String libProcessAddress = System.getenv("LIBPROCESS_IP");
 
-        if (libProcessAddress == null || libProcessAddress.isEmpty()) {
-            LOGGER.info("LIBPROCESS_IP address not found defaulting to " +
-                    "localhost");
-            return InetAddress.getLocalHost();
-
+        if (libProcessAddress == null || libProcessAddress.isEmpty() || libProcessAddress.equals("0.0.0.0")) {
+            InetAddress address = InetAddress.getLocalHost();
+            LOGGER.warn("LIBPROCESS_IP address not found defaulting to " + address);
+            return address;
         } else {
-
             return InetAddress.getByName(libProcessAddress);
         }
     }
