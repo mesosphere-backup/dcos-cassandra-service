@@ -109,6 +109,7 @@ public class BackupManager extends DefaultObservable implements ClusterTaskManag
         stateStore.clearProperty(BACKUP_KEY);
         try {
             cassandraState.remove(cassandraState.getBackupSnapshotTasks().keySet());
+            cassandraState.remove(cassandraState.getBackupUploadTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error stopping backup. Reason: ",
