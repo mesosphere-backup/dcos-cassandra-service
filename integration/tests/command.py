@@ -122,3 +122,7 @@ def uninstall():
             )[0].strip()
         )
     )
+
+
+def unset_ssl_verification():
+    shakedown.run_dcos_command('config set core.ssl_verify false')

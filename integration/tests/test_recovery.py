@@ -10,7 +10,8 @@ from tests.command import (
     marathon_api_url,
     request,
     spin,
-    uninstall
+    uninstall,
+    unset_ssl_verification,
 )
 from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
 
@@ -124,6 +125,10 @@ def run_repair():
         cassandra_api_url('repair/start'),
         json=payload,
     )
+
+
+def setup_module():
+    unset_ssl_verification()
 
 
 @pytest.yield_fixture
