@@ -174,6 +174,7 @@ public abstract class CassandraTask {
     }
 
     protected final Protos.TaskInfo info;
+    private Protos.TaskStatus status;
 
     protected CassandraData getData() {
         return CassandraData.parse(info.getData(), false);
@@ -183,12 +184,14 @@ public abstract class CassandraTask {
         return Protos.TaskInfo.newBuilder(info);
     }
 
-    public Protos.TaskStatus getCurrentStatus() {
-        return getStatusBuilder()
-            .setTaskId(info.getTaskId())
-            .setData(getData().getBytes())
-            .setState(getData()
-                .getState()).build();
+    public Protos.TaskStatus getTaskStatus() {
+        return status;
+    }
+
+    protected CassandraTask setTaskStatus(Protos.TaskStatus status) {
+        this.status = status;
+
+        return this;
     }
 
     public Protos.TaskState getState(){
@@ -202,7 +205,6 @@ public abstract class CassandraTask {
     protected CassandraTask(final Protos.TaskInfo info) {
         this.info = info;
     }
-
 
     protected CassandraTask(
         final String name,
