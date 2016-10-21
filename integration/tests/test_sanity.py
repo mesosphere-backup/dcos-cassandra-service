@@ -14,7 +14,7 @@ from tests.command import (
     uninstall,
     unset_ssl_verification,
 )
-from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
+from tests.defaults import DEFAULT_NODE_COUNT, OPTIONS_FILE, PACKAGE_NAME
 
 
 def setup_module():
@@ -24,7 +24,7 @@ def setup_module():
 @pytest.yield_fixture
 def install_framework():
     uninstall()
-    shakedown.install_package_and_wait(PACKAGE_NAME)
+    shakedown.install_package_and_wait(PACKAGE_NAME, options_file=OPTIONS_FILE)
     check_health()
     yield
 
