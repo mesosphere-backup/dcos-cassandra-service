@@ -11,15 +11,20 @@ from . import infinity_commons
 from tests.command import (
     cassandra_api_url,
     check_health,
-    uninstall
+    uninstall,
+    unset_ssl_verification,
 )
-from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
+from tests.defaults import DEFAULT_NODE_COUNT, OPTIONS_FILE, PACKAGE_NAME
+
+
+def setup_module():
+    unset_ssl_verification()
 
 
 @pytest.yield_fixture
 def install_framework():
     uninstall()
-    shakedown.install_package_and_wait(PACKAGE_NAME)
+    shakedown.install_package_and_wait(PACKAGE_NAME, options_file=OPTIONS_FILE)
     check_health()
     yield
 
