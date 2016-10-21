@@ -10,9 +10,10 @@ from tests.command import (
     marathon_api_url,
     request,
     spin,
-    uninstall
+    uninstall,
+    unset_ssl_verification,
 )
-from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
+from tests.defaults import DEFAULT_NODE_COUNT, OPTIONS_FILE, PACKAGE_NAME
 
 
 def bump_cpu_count_config():
@@ -126,9 +127,13 @@ def run_repair():
     )
 
 
+def setup_module():
+    unset_ssl_verification()
+
+
 @pytest.yield_fixture
 def install_framework():
-    shakedown.install_package_and_wait(PACKAGE_NAME)
+    shakedown.install_package_and_wait(PACKAGE_NAME, options_file=OPTIONS_FILE)
     check_health()
 
     yield
