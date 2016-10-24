@@ -844,7 +844,7 @@ Example node configuration:
 </table>
 
 ### Executor Configuration
-The executor configuration object allows you modify the resources associated with the DC/OS Apache Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
+The executor configuration object allows you to modify the resources associated with the DC/OS Apache Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
 Example executor configuration:
 ```
 {

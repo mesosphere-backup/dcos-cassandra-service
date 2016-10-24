@@ -108,6 +108,7 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
         try {
             // TODO: Delete restore context from Property store
             stateStore.clearProperty(RESTORE_KEY);
+            cassandraState.remove(cassandraState.getDownloadSnapshotTasks().keySet());
             cassandraState.remove(cassandraState.getRestoreSnapshotTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
