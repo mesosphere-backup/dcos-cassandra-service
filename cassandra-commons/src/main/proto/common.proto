@@ -50,6 +50,8 @@ message CassandraConfig{
     optional int32 diskType = 11;
 
     optional bool publishDiscoveryInfo = 12;
+
+    optional string rollingRestartName = 13;
 }
 
 message CassandraData{

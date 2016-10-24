@@ -26,6 +26,7 @@ import org.apache.mesos.offer.VolumeRequirement;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * CassandraConfig is the configuration object for a Cassandra node. It is
@@ -48,6 +49,7 @@ public class CassandraConfig {
                     Location.DEFAULT,
                     7199,
                     false,
+                    UUID.randomUUID().toString(),
                     CassandraApplicationConfig.builder().build());
 
 
@@ -67,6 +69,7 @@ public class CassandraConfig {
         private Location location;
         private int jmxPort;
         private boolean publishDiscoveryInfo;
+        private String rollingRestartName;
         private CassandraApplicationConfig application;
 
         /**
@@ -86,6 +89,7 @@ public class CassandraConfig {
             this.location = config.location;
             this.jmxPort = config.jmxPort;
             this.publishDiscoveryInfo = config.publishDiscoveryInfo;
+            this.rollingRestartName = config.rollingRestartName;
             this.application = config.application;
         }
 
@@ -304,6 +308,25 @@ public class CassandraConfig {
             this.publishDiscoveryInfo = publishDiscoveryInfo;
             return this;
         }
+
+        /**
+         * Gets whether the Cassandra task should publish its discovery info.
+         * @return Flag that dictates whether the Cassandra task should do rolling restart
+         */
+        public String getRollingRestartName() {
+            return rollingRestartName;
+        }
+
+        /**
+         * Sets whether the Cassandra task should publish its discovery info.
+         * @param rollingRestartName is to enable or disable publishing of discovery info.
+         * @return The Builder instance.
+         */
+        public Builder setRollingRestartName(String rollingRestartName) {
+            this.rollingRestartName = rollingRestartName;
+            return this;
+        }
+
         /**
          * Creates a CassandraConfig with the properties of the Builder.
          * @return A
@@ -321,6 +344,7 @@ public class CassandraConfig {
                     location,
                     jmxPort,
                     publishDiscoveryInfo,
+                    rollingRestartName,
                     application);
         }
     }
@@ -399,6 +423,7 @@ public class CassandraConfig {
             @JsonProperty("location") Location location,
             @JsonProperty("jmx_port") int jmxPort,
             @JsonProperty("publish_discovery_info") boolean publishDiscoveryInfo,
+            @JsonProperty("rolling_restart_name") String rollingRestartName,
             @JsonProperty("application")
             CassandraApplicationConfig application) {
 
@@ -413,6 +438,7 @@ public class CassandraConfig {
                 location,
                 jmxPort,
                 publishDiscoveryInfo,
+                rollingRestartName,
                 application);
     }
 
@@ -437,6 +463,7 @@ public class CassandraConfig {
                 Location.parse(config.getLocation()),
                 config.getJmxPort(),
                 config.getPublishDiscoveryInfo(),
+                config.getRollingRestartName(),
                 CassandraApplicationConfig.parse(config.getApplication()));
 
     }
@@ -487,6 +514,9 @@ public class CassandraConfig {
     @JsonProperty("application")
     private final CassandraApplicationConfig application;
 
+    @JsonProperty("rolling_restart_name")
+    public String rollingRestartName;
+
     /**
      * Constructs a CassandraConfig
      * @param version The Cassanra version of the node.
@@ -514,6 +544,7 @@ public class CassandraConfig {
                            final Location location,
                            final int jmxPort,
                            final boolean publishDiscoveryInfo,
+                           final String rollingRestartName,
                            final CassandraApplicationConfig application) {
         this.version = version;
         this.cpus = cpus;
@@ -525,6 +556,7 @@ public class CassandraConfig {
         this.location = location;
         this.jmxPort = jmxPort;
         this.publishDiscoveryInfo = publishDiscoveryInfo;
+        this.rollingRestartName = (rollingRestartName != null) ? rollingRestartName : "";
         this.application = application;
     }
 
@@ -619,6 +651,18 @@ public class CassandraConfig {
     public boolean getPublishDiscoveryInfo() { return publishDiscoveryInfo; }
 
     /**
+     * Gets whether the Cassandra task should do rolling restart.
+     * @return Flag that dictates whether the Cassandra task should do rolling restart.
+     */
+    public String getRollingRestartName() {
+        return rollingRestartName;
+    }
+
+    public void generateRollingRestartName() {
+        rollingRestartName = UUID.randomUUID().toString();
+    }
+
+    /**
      * Gets a Protocol Buffers representation of the config.
      * @return A Protocol Buffers representation of the config.
      * @throws IOException If the config could not be serialized. (This should
@@ -638,6 +682,7 @@ public class CassandraConfig {
                         .setHeap(heap.toProto())
                         .setLocation(location.toProto())
                         .setPublishDiscoveryInfo(publishDiscoveryInfo)
+                        .setRollingRestartName(rollingRestartName)
                         .setApplication(application.toByteString());
 
         return builder.build();
@@ -674,6 +719,7 @@ public class CassandraConfig {
                 getDiskType() == that.getDiskType() &&
                 getJmxPort() == that.getJmxPort() &&
                 getPublishDiscoveryInfo() == that.getPublishDiscoveryInfo() &&
+                Objects.equals(getRollingRestartName(), that.getRollingRestartName()) &&
                 Objects.equals(getVersion(), that.getVersion()) &&
                 Objects.equals(getReplaceIp(), that.getReplaceIp()) &&
                 Objects.equals(getHeap(), that.getHeap()) &&
@@ -686,7 +732,7 @@ public class CassandraConfig {
         return Objects.hash(getVersion(), getCpus(), getMemoryMb(), getDiskMb(),
                 getDiskType(),
                 getReplaceIp(), getHeap(), getLocation(), getJmxPort(), getPublishDiscoveryInfo(),
-                getApplication());
+                getRollingRestartName(), getApplication());
     }
 
     @Override

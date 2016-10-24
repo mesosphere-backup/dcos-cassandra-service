@@ -19,11 +19,13 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.scheduler.CassandraScheduler;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.scheduler.plan.DeploymentManager;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.dcos.Capabilities;
 import org.glassfish.jersey.server.ManagedAsync;
@@ -37,6 +39,7 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Path("/v1/nodes")
 @Produces(MediaType.APPLICATION_JSON)
@@ -113,6 +116,26 @@ public class TasksResource {
             CassandraDaemonTask task = taskOption.get();
             CassandraScheduler.getTaskKiller().killTask(task.getName(), false);
             return killResponse(Arrays.asList(task.getTaskInfo().getTaskId().getValue()));
+        } else {
+            return Response.serverError().build();
+        }
+    }
+
+    @PUT
+    @Path("rollingRestart")
+    public Response rollingRestart() throws ConfigStoreException, PersistenceException{
+        Optional<Map<String, CassandraDaemonTask>> tasksOption =
+            Optional.ofNullable(state.getDaemons());
+        if (tasksOption.isPresent()) {
+            List<CassandraDaemonTask> tasks = tasksOption.get().entrySet()
+                                                .stream()
+                                                .map(task -> task.getValue())
+                                                .collect(Collectors.toList());
+            configurationManager.updateTargetConfig();
+            DeploymentManager.instance.startRollingRestart();
+            return killResponse(tasks.stream()
+                                   .map(task -> task.getTaskInfo().getTaskId().getValue())
+                                   .collect(Collectors.toList()));
         } else {
             return Response.serverError().build();
         }
