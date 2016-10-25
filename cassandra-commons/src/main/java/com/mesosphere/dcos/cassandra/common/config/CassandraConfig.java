@@ -310,7 +310,7 @@ public class CassandraConfig {
         }
 
         /**
-         * Gets whether the Cassandra task should publish its discovery info.
+         * Gets the value defined to perform rolling restart, without updating the actual cassandra config.
          * @return Flag that dictates whether the Cassandra task should do rolling restart
          */
         public String getRollingRestartName() {
@@ -318,7 +318,7 @@ public class CassandraConfig {
         }
 
         /**
-         * Sets whether the Cassandra task should publish its discovery info.
+         * Gets the value defined to perform rolling restart, without updating the actual cassandra config.
          * @param rollingRestartName is to enable or disable publishing of discovery info.
          * @return The Builder instance.
          */
@@ -656,10 +656,6 @@ public class CassandraConfig {
      */
     public String getRollingRestartName() {
         return rollingRestartName;
-    }
-
-    public void generateRollingRestartName() {
-        rollingRestartName = UUID.randomUUID().toString();
     }
 
     /**
