@@ -7,7 +7,9 @@ import shakedown
 
 from tests.defaults import (
     DEFAULT_NODE_COUNT,
+    IS_STRICT,
     PACKAGE_NAME,
+    PRINCIPAL,
     TASK_RUNNING_STATE,
 )
 
@@ -114,9 +116,11 @@ def uninstall():
         print('Got exception when uninstalling package, continuing with janitor anyway: {}'.format(e))
 
     shakedown.run_command_on_master(
-        'docker run mesosphere/janitor /janitor.py '
-        '-r cassandra-role -p cassandra-principal -z dcos-service-cassandra '
+        'docker run mesosphere/janitor /janitor.py {}'
+        '-r cassandra-role -p {} -z dcos-service-cassandra '
         '--auth_token={}'.format(
+            '-m https://leader.mesos:5050/master/ ' if IS_STRICT else '',
+            PRINCIPAL,
             shakedown.run_dcos_command(
                 'config show core.dcos_acs_token'
             )[0].strip()
