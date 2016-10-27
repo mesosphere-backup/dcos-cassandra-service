@@ -58,7 +58,7 @@ public class CassandraDaemonProcess extends ProcessTask {
 
     private static final Object CLOSED = new Object();
     private final CassandraDaemonTask task;
-    private final CassandraPaths paths;
+    private final DsePaths paths;
     private final AtomicBoolean open = new AtomicBoolean(true);
     private final AtomicReference<CassandraMode> mode;
     private final Probe probe;
@@ -149,9 +149,9 @@ public class CassandraDaemonProcess extends ProcessTask {
      * and a process watchdog. After calling this method the Cassandra
      * process is running and the NodeProbe instance is connected.
      *
-     * @param task     The CassandraDaemonTask that corresponds to the process.
-     * @param executor The ScheduledExecutorService to use for background
+     * @param scheduledExecutorService The ScheduledExecutorService to use for background
      *                 Runnables (The watchdog and status reporter).
+     * @param taskInfo The CassandraDaemonTask that corresponds to the process.
      * @param driver   The ExecutorDriver for the CassandraExecutor.
      * @return A CassandraDaemonProcess constructed from the
      * @throws IOException If an error occurs attempting to start the
@@ -163,7 +163,8 @@ public class CassandraDaemonProcess extends ProcessTask {
             final ExecutorDriver driver) throws IOException {
 
         CassandraDaemonTask cassandraTask = (CassandraDaemonTask) CassandraTask.parse(taskInfo);
-        CassandraPaths cassandraPaths = CassandraPaths.create(cassandraTask.getConfig().getVersion());
+        DsePaths dsePaths = DsePaths.create(cassandraTask.getConfig().getVersion());
+        DsePaths.CassandraPaths cassandraPaths = dsePaths.cassandra();
         cassandraTask.getConfig().getLocation().writeProperties(cassandraPaths.cassandraLocation());
 
         cassandraTask.getConfig().getApplication().toBuilder()
@@ -173,22 +174,22 @@ public class CassandraDaemonProcess extends ProcessTask {
 
         cassandraTask.getConfig().getHeap().writeHeapSettings(cassandraPaths.heapConfig());
 
-        ProcessBuilder processBuilder = createDaemon(cassandraPaths, cassandraTask, MetricsConfig.writeMetricsConfig(cassandraPaths.conf()));
+        ProcessBuilder processBuilder = createDaemon(dsePaths, cassandraTask, MetricsConfig.writeMetricsConfig(cassandraPaths.conf()));
 
-        return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, cassandraPaths, driver, taskInfo, processBuilder, true);
+        return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, dsePaths, driver, taskInfo, processBuilder, true);
     }
 
     protected CassandraDaemonProcess(
             ScheduledExecutorService scheduledExecutorService,
             CassandraDaemonTask cassandraTask,
-            CassandraPaths cassandraPaths,
+            DsePaths dsePaths,
             ExecutorDriver executorDriver,
             Protos.TaskInfo taskInfo,
             ProcessBuilder processBuilder,
             boolean exitOnTermination) throws InvalidProtocolBufferException {
         super(executorDriver, taskInfo, processBuilder, exitOnTermination);
         this.task = cassandraTask;
-        this.paths = cassandraPaths;
+        this.paths = dsePaths;
 
         this.probe = new Probe(cassandraTask);
         this.mode = new AtomicReference<>(CassandraMode.STARTING);
@@ -212,10 +213,10 @@ public class CassandraDaemonProcess extends ProcessTask {
         }
     }
 
-    private static ProcessBuilder createDaemon(CassandraPaths cassandraPaths, CassandraDaemonTask cassandraDaemonTask, boolean metricsEnabled) throws IOException {
+    private static ProcessBuilder createDaemon(DsePaths dsePaths, CassandraDaemonTask cassandraDaemonTask, boolean metricsEnabled) throws IOException {
 
         final ProcessBuilder builder = new ProcessBuilder(
-                paths.dseRun().toString(),
+                dsePaths.dseRun().toString(),
                 "cassandra",
                 "-f",
                 getReplaceIp(cassandraDaemonTask))

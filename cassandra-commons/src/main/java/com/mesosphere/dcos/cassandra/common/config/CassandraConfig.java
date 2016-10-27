@@ -346,6 +346,7 @@ public class CassandraConfig {
         heap,
         location,
         jmxPort,
+        publishDiscoveryInfo,
         application,
         dseConfig);
     }
