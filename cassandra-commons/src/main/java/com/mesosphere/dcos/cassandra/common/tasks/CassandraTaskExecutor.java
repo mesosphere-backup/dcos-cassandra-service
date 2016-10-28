@@ -250,9 +250,20 @@ public class CassandraTaskExecutor {
         return new CassandraTaskExecutor(
             Protos.ExecutorInfo.newBuilder(info)
                 .setExecutorId(ExecutorUtils.toExecutorId(info.getName()))
-            .addAllResources(updateResources(config.getCpus(), config
-                    .getMemoryMb(),
-                info.getResourcesList())).build());
+                .setCommand(createCommandInfo(config.getCommand(),
+                        config.getArguments(),
+                        config.getURIs(),
+                        ImmutableMap.<String, String>builder()
+                                .put("JAVA_HOME", config.getJavaHome())
+                                .put("JAVA_OPTS", "-Xmx" + config.getHeapMb() + "M")
+                                .put("EXECUTOR_API_PORT", Integer.toString(config.getApiPort()))
+                                .build()))
+                .clearResources()
+                .addAllResources(
+                        updateResources(
+                                config.getCpus(),
+                                config.getMemoryMb(),
+                                info.getResourcesList())).build());
     }
 
     @Override
