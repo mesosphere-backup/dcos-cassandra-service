@@ -97,8 +97,10 @@ public class ConfigurationManager implements Managed {
     }
 
     public CassandraDaemonTask updateConfig(final CassandraDaemonTask task) throws ConfigStoreException {
-        CassandraConfig cassandraConfig = getTargetConfig().getCassandraConfig();
-        return task.updateConfig(cassandraConfig, getTargetConfigName());
+        return task.updateConfig(
+                getTargetConfig().getCassandraConfig(),
+                getTargetConfig().getExecutorConfig(),
+                getTargetConfigName());
     }
 
     public CassandraSchedulerConfiguration getTargetConfig() throws ConfigStoreException {

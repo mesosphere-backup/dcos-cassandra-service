@@ -72,7 +72,10 @@ public class CassandraDaemonTaskTest {
                 testTaskExecutor,
                 CassandraConfig.DEFAULT);
 
-        CassandraDaemonTask updatedTask = daemonTask.updateConfig(CassandraConfig.DEFAULT,TEST_CONFIG_ID);
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(
+                CassandraConfig.DEFAULT,
+                testExecutorConfig,
+                TEST_CONFIG_ID);
         Assert.assertEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
     }
 
@@ -99,7 +102,10 @@ public class CassandraDaemonTaskTest {
                 UUID.randomUUID().toString(),
                 CassandraApplicationConfig.builder().build());
 
-        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig,TEST_CONFIG_ID);
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(
+                updatedConfig,
+                testExecutorConfig,
+                TEST_CONFIG_ID);
         Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
         Assert.assertEquals(newCpu, updatedTask.getConfig().getCpus(), 0.0);
     }
@@ -127,7 +133,10 @@ public class CassandraDaemonTaskTest {
                 UUID.randomUUID().toString(),
                 CassandraApplicationConfig.builder().build());
 
-        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig,TEST_CONFIG_ID);
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(
+                updatedConfig,
+                testExecutorConfig,
+                TEST_CONFIG_ID);
         Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
         Assert.assertEquals(newMem, updatedTask.getConfig().getMemoryMb(), 0.0);
         double taskInfoDisk = getScalar(updatedTask.getTaskInfo().getResourcesList(), "mem");
@@ -157,13 +166,52 @@ public class CassandraDaemonTaskTest {
                 UUID.randomUUID().toString(),
                 CassandraApplicationConfig.builder().build());
 
-        CassandraDaemonTask updatedTask = daemonTask.updateConfig(updatedConfig,TEST_CONFIG_ID);
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(
+                updatedConfig,
+                testExecutorConfig,
+                TEST_CONFIG_ID);
         Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
         Assert.assertEquals(newDisk, updatedTask.getConfig().getDiskMb(), 0.0);
         double originalTaskInfoDisk = getScalar(daemonTask.getTaskInfo().getResourcesList(), "disk");
         double updatedTaskInfoDisk = getScalar(updatedTask.getTaskInfo().getResourcesList(), "disk");
         // Updating the Disk should not result in updated disk.  Disk cannot be updated.
         Assert.assertEquals(originalTaskInfoDisk, updatedTaskInfoDisk, 0.0);
+    }
+
+    @Test
+    public void testUpdateCassandraLocation() throws URISyntaxException {
+        CassandraDaemonTask daemonTask = testTaskFactory.create(
+                TEST_DAEMON_NAME,
+                TEST_CONFIG_NAME,
+                testTaskExecutor,
+                CassandraConfig.DEFAULT);
+
+        ExecutorConfig updatedTestExecutorConfig = ExecutorConfig.create(
+                "test-cmd",
+                Arrays.asList("arg0"),
+                1.0,
+                256,
+                500,
+                1000,
+                "java-home",
+                new URI("http://jre-location"),
+                new URI("http://executor-location"),
+                new URI("http://cassandra-location-updated"));
+
+        testTaskExecutor = CassandraTaskExecutor.create(
+                "test-framework-id",
+                TEST_DAEMON_NAME,
+                "test-role",
+                "test-principal",
+                updatedTestExecutorConfig);
+
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(
+                CassandraConfig.DEFAULT,
+                updatedTestExecutorConfig,
+                TEST_CONFIG_ID);
+        Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
+        Assert.assertEquals(3, updatedTask.getExecutor().getURIs().size());
+        Assert.assertTrue(updatedTask.getExecutor().getURIs().contains("http://cassandra-location-updated"));
     }
 
     @Test

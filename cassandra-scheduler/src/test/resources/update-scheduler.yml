@@ -8,7 +8,7 @@ executor:
   java_home : ${EXECUTOR_JAVA_HOME:-"./jre"}
   jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
-  cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
+  cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin-updated.tar.gz'}
 cluster_task:
   cpus: ${CLUSTER_TASK_CPUS:-1}
   memory_mb: ${CLUSTER_TASK_MEMORY_MB:-256}
@@ -27,6 +27,7 @@ cassandra:
     rack : ${CASSANDRA_LOCATION_RACK:-"rac1"}
     data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
   jmx_port: ${CASSANDRA_JMX_PORT:-7199}
+  publish_discovery_info: ${CASSANDRA_PUBLISH_DISCOVERY_INFO:-false}
   application:
      cluster_name : ${CASSANDRA_CLUSTER_NAME:-"cassandra"}
      authenticator: "AllowAllAuthenticator"
@@ -160,6 +161,7 @@ mesos:
   servers: ${MESOS_SERVERS:-"localhost:40000"}
   path: ${MESOS_PATH:-"/mesos"}
   timeout_ms: ${MESOS_TIMEOUT_MS:-10000}
+  refuse_seconds: ${MESOS_REFUSE_SECONDS:-5}
 zookeeper:
   servers: ${ZOOKEEPER_SERVERS:-"localhost:40000"}
   session_timeout_ms: 10000
