@@ -109,10 +109,6 @@ public class ConfigurationManager implements Managed {
         return configurationManager.getTargetName();
     }
 
-    public void updateTargetConfig() throws ConfigStoreException{
-        configurationManager.updateConfiguration();
-    }
-
     @Override
     public void start() throws Exception {
 

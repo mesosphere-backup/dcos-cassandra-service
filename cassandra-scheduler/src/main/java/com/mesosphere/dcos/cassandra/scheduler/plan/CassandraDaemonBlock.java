@@ -267,7 +267,7 @@ public class CassandraDaemonBlock extends DefaultObservable implements Block {
                 '}';
     }
 
-    public void setStatus(Status newStatus) {
+    private void setStatus(Status newStatus) {
         LOGGER.info("{}: changing status from: {} to: {}", getName(), status, newStatus);
         Status oldStatus = status;
         status = newStatus;

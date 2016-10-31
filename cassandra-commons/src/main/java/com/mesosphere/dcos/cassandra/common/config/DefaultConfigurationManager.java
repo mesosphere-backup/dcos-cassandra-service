@@ -46,10 +46,6 @@ public class DefaultConfigurationManager {
                 "This is expected if the framework is starting for the first time: {}",
                 e.getMessage());
         }
-        validateConfigs(configValidator, oldConfig, newConfiguration);
-    }
-
-    private void validateConfigs(ConfigValidator configValidator, Configuration oldConfig, Configuration newConfiguration) throws ConfigStoreException {
         validationErrors = configValidator.validate(oldConfig, newConfiguration);
         LOGGER.error("Validation errors: {}", validationErrors);
 
@@ -260,42 +256,5 @@ public class DefaultConfigurationManager {
 
     public List<ConfigValidationError> getErrors() {
         return validationErrors;
-    }
-
-    public void updateConfiguration() throws ConfigStoreException {
-        CassandraSchedulerConfiguration oldconfig = (CassandraSchedulerConfiguration)fetch(getTargetName());
-
-        CassandraConfig oldCassandraConfig = oldconfig.getCassandraConfig();
-        CassandraConfig newCassandraConfig = CassandraConfig.create(oldCassandraConfig.getVersion(),
-                oldCassandraConfig.getCpus(),
-                oldCassandraConfig.getMemoryMb(),
-                oldCassandraConfig.getDiskMb(),
-                oldCassandraConfig.getDiskType(),
-                oldCassandraConfig.getReplaceIp(),
-                oldCassandraConfig.getHeap(),
-                oldCassandraConfig.getLocation(),
-                oldCassandraConfig.getJmxPort(),
-                oldCassandraConfig.getPublishDiscoveryInfo(),
-                UUID.randomUUID().toString(),
-                oldCassandraConfig.getApplication());
-
-        CassandraSchedulerConfiguration newconfig = CassandraSchedulerConfiguration.create(oldconfig.getExecutorConfig(),
-                oldconfig.getServers(),
-                oldconfig.getSeeds(),
-                oldconfig.getPlacementStrategy(),
-                newCassandraConfig,
-                oldconfig.getClusterTaskConfig(),
-                oldconfig.getApiPort(),
-                oldconfig.getServiceConfig(),
-                oldconfig.getExternalDcSyncMs(),
-                oldconfig.getExternalDcs(),
-                oldconfig.getDcUrl(),
-                oldconfig.getPhaseStrategy());
-
-
-        LOGGER.info("Old Rolling Restart Flag: " + oldconfig.getCassandraConfig().getRollingRestartName().toString() + "  " + new java.util.Date());
-        LOGGER.info("New Rolling Restart Flag: " + newconfig.getCassandraConfig().getRollingRestartName().toString()  + "  " + new java.util.Date());
-
-        validateConfigs(new ConfigValidator(), oldconfig, newconfig);
     }
 }

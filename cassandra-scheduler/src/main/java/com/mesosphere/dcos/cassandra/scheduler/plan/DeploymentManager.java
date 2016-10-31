@@ -4,7 +4,6 @@ package com.mesosphere.dcos.cassandra.scheduler.plan;
 import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
@@ -15,15 +14,12 @@ import org.apache.mesos.scheduler.Observable;
 import org.apache.mesos.scheduler.Observer;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
-import org.apache.mesos.scheduler.plan.Status;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 public class DeploymentManager extends DefaultObservable implements Observer {
-
-    public static DeploymentManager instance = null;
 
     public static final DeploymentManager create(
             final PersistentOfferRequirementProvider provider,
@@ -34,7 +30,7 @@ public class DeploymentManager extends DefaultObservable implements Observer {
             final Reconciler reconciler,
             final SeedsManager seeds,
             final ExecutorService executor) throws ConfigStoreException {
-        return instance = new DeploymentManager(provider,
+        return new DeploymentManager(provider,
                 defaultConfigurationManager,
                 cassandraState,
                 client,
@@ -44,7 +40,7 @@ public class DeploymentManager extends DefaultObservable implements Observer {
     }
 
     private final ReconciliationPhase reconciliation;
-    private CassandraDaemonPhase deploy;
+    private final CassandraDaemonPhase deploy;
     private final SyncDataCenterPhase syncDc;
 
     public DeploymentManager(
@@ -68,13 +64,6 @@ public class DeploymentManager extends DefaultObservable implements Observer {
 
     public List<? extends Phase> getPhases() {
         return Arrays.asList(reconciliation, syncDc, deploy);
-    }
-
-    public void startRollingRestart() throws PersistenceException, ConfigStoreException{
-
-        if (deploy != null) {
-            this.deploy.getBlocks().stream().forEach(block -> ((CassandraDaemonBlock)block).setStatus(Status.PENDING));
-        }
     }
 
     public List<String> getErrors() {
