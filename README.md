@@ -299,8 +299,6 @@ $ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/c
 
    The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress by making a REST request identical to the one used to follow the progress of a [configuration upgrade](/1.7/usage/service-guides/cassandra/configuration/).
 
-**Note:** The upgrade process will cause all of your Cassandra node processes to restart.
-
 **If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Apache Cassandra from an older version (pre `1.0.13-X.Y.Z`), here is the upgrade path:**
 
 1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Please make a note of the backup name and backup location.
@@ -308,6 +306,11 @@ $ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/c
 3. Perform [Restore operation](https://github.com/mesosphere/dcos-cassandra-service#restore) on the new cluster created in Step #2
 4. Once the restore operation is finished, check if the data is restored correctly.
 5. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
+
+**Upgrade Notes:** 
+* The upgrade process will cause all of your Cassandra node processes to restart.
+* Upgrades are supported from version `N` to `N + 1`. So, if you are on version `N` and want to get to version `N + 2`, please upgrade from version `N` to `N + 1` first, followed by an upgrade from `N + 1` to `N + 2`.
+* Upgrade from `1.0.15-3.0.7` to `1.0.16-3.0.8` is not supported.
 
 # Uninstall
 
