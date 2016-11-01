@@ -107,7 +107,7 @@ cqlsh> SELECT * FROM demo.map;
 
 # About installing Cassandra on Enterprise DC/OS
   
- In Enterprise DC/OS `strict` [security mode](/1.8/administration/installing/custom/configuration-parameters/#security), Cassandra requires a service account. In `permissive`, a service account is optional. Only someone with `superuser` permission can create the service account. Refer to [Provisioning Cassandra](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) for instructions.
+ In Enterprise DC/OS `strict` [security mode](https://docs.mesosphere.com/1.8/administration/installing/custom/configuration-parameters/#security), Cassandra requires a service account. In `permissive`, a service account is optional. Only someone with `superuser` permission can create the service account. Refer to [Provisioning Cassandra](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) for instructions.
 
 ### Default Installation
 Prior to installing a default cluster, ensure that your DC/OS cluster has at least 3 DC/OS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
@@ -1268,7 +1268,7 @@ In addition to time synchronization, Cassandra requires OS level configuration s
 
 ## Connecting Clients
 
-The only supported client for the DS/OS Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
+The only supported client for the DC/OS Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
 
 ### Connection Info Using the CLI
 
