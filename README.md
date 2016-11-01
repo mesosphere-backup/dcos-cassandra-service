@@ -301,6 +301,9 @@ $ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/c
 
 | Version N     | Version N + 1 | Method        |
 | ------------- |:-------------:| -------------:|
+| 1.0.12-2.2.5  | 1.0.13-2.2.5  | Side-by-Side  |
+| 1.0.13-2.2.5  | 1.0.14-2.2.5  | In-place      |
+| 1.0.14-3.0.7  | 1.0.15-3.0.8  | In-place      |
 | 1.0.15-3.0.7  | 1.0.16-3.0.8  | Side-by-Side  |
 | 1.0.16-3.0.8  | 1.0.17-3.0.8  | In-place      |
 
