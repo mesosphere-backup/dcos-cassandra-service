@@ -286,6 +286,10 @@ public class CassandraSchedulerTest {
 
         assertTrue(!currentPhase.isPresent());
         assertTrue(!currentBlock.isPresent());
+
+        final CassandraDaemonTask task = cassandraState.getDaemons().get("node-0");
+        assertTrue(task.getExecutor().getURIs().contains("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin-updated.tar.gz"));
+        assertEquals(0.6, task.getConfig().getCpus(), 0.0);
     }
 
     @Test

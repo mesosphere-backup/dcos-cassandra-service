@@ -17,6 +17,8 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
+import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
+import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
@@ -262,20 +264,22 @@ public class CassandraDaemonTask extends CassandraTask {
                 .build());
     }
 
-    public CassandraDaemonTask updateConfig(CassandraConfig config, UUID targetConfigName) {
+    public CassandraDaemonTask updateConfig(CassandraConfig cassandraConfig,
+                                            ExecutorConfig executorConfig,
+                                            UUID targetConfigName) {
         LOGGER.info("Updating config for task: {} to config: {}", getTaskInfo().getName(), targetConfigName.toString());
         final Protos.Label label = Protos.Label.newBuilder()
                 .setKey("config_target")
                 .setValue(targetConfigName.toString())
                 .build();
         return new CassandraDaemonTask(getBuilder()
-            .setExecutor(getExecutor().withNewId().getExecutorInfo())
+            .setExecutor(getExecutor().update(executorConfig).getExecutorInfo())
             .setTaskId(createId(getName()))
-            .setData(getData().withNewConfig(config).getBytes())
+            .setData(getData().withNewConfig(cassandraConfig).getBytes())
             .clearResources()
             .addAllResources(TaskUtils.updateResources(
-                config.getCpus(),
-                config.getMemoryMb(),
+                cassandraConfig.getCpus(),
+                cassandraConfig.getMemoryMb(),
                 getTaskInfo().getResourcesList()
             ))
             .clearLabels()
