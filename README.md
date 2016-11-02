@@ -28,7 +28,7 @@ DC/OS Apache Cassandra provides the following features:
 
 ## Related Services
 
-- [DC/OS Spark](https://docs.mesosphere.com/manage-service/spark)
+- [DC/OS Spark](http://docs.mesosphere.com/usage/service-guides/spark)
 
 # Getting Started
 
@@ -104,6 +104,10 @@ cqlsh> SELECT * FROM demo.map;
 ```
 
 ## Install and Customize
+
+# About installing Cassandra on Enterprise DC/OS
+  
+ In Enterprise DC/OS `strict` [security mode](https://docs.mesosphere.com/1.8/administration/installing/custom/configuration-parameters/#security), Cassandra requires a service account. In `permissive`, a service account is optional. Only someone with `superuser` permission can create the service account. Refer to [Provisioning Cassandra](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) for instructions.
 
 ### Default Installation
 Prior to installing a default cluster, ensure that your DC/OS cluster has at least 3 DC/OS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
@@ -319,11 +323,11 @@ $ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/c
 
 ## Instructions - Side-by-side upgrade
 
-1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Please make a note of the backup name and backup location.
-2. [Install a new Cassandra Service](https://github.com/mesosphere/dcos-cassandra-service#multiple-cassandra-cluster-installation) instance.
-3. Perform [Restore operation](https://github.com/mesosphere/dcos-cassandra-service#restore) on the new cluster created in Step #2
-4. Once the restore operation is finished, check if the data is restored correctly.
-5. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
+1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Note the backup name and backup location.
+1. [Install a new Cassandra Service](https://github.com/mesosphere/dcos-cassandra-service#multiple-cassandra-cluster-installation) instance.
+1. Perform [Restore operation](https://github.com/mesosphere/dcos-cassandra-service#restore) on the new cluster created in Step #2
+1. Once the restore operation is finished, check if the data is restored correctly.
+1. [Uninstall](https://github.com/mesosphere/dcos-cassandra-service#uninstall) old cluster.
 
 # Uninstall
 
@@ -333,7 +337,7 @@ Uninstalling a cluster is straightforward. Replace `cassandra` with the name of 
 $ dcos package uninstall --app-id=cassandra
 ```
 
-Then, use the [framework cleaner script](https://docs.mesosphere.com/1.7/usage/managing-services/uninstall/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The script requires several arguments, the default values to be used are:
+Then, use the [framework cleaner script](https://docs.mesosphere.com/1.8/usage/managing-services/uninstall/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The script requires several arguments, the default values to be used are:
 
 - `framework_role` is `cassandra-role`.
 - `framework_principal` is `cassandra-principal`.
@@ -1280,7 +1284,7 @@ In addition to time synchronization, Cassandra requires OS level configuration s
 
 ## Connecting Clients
 
-The only supported client for the DSOC Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
+The only supported client for the DC/OS Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
 
 ### Connection Info Using the CLI
 
@@ -1553,6 +1557,7 @@ Result:
 ## Maintenance
 Cassandra supports several maintenance operations including Cleanup, Repair, Backup, and Restore.  In general, attempting to run multiple maintenance operations simultaneously (e.g. Repair and Backup) against a single cluster is not recommended. Likewise, running maintenance operations against multiple Cassandra clusters linked in a multi-datacenter configuration is not recommended.
 
+<a name="cleanup"></a>
 ### Cleanup
 
 When nodes are added or removed from the ring, a node can lose part of its partition range. Cassandra does not automatically remove data when this happens. You can tube cleanup to remove the unnecessary data.
@@ -1785,7 +1790,7 @@ Via API:
 $ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/replace?node=node-0"
 ```
 
-This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup]
+This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run [Cleanup](#cleanup)
 
 ## Restarting a Node
 To restart a given Cassandra node please use following:
@@ -1803,7 +1808,7 @@ $ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandr
 This will restart the node with the same name running on the same server.
 
 # API Reference
-The DC/OS Apache Cassandra Service implements a REST API that may be accessed from outside the cluster. If the DC/OS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.
+The DC/OS Apache Cassandra Service provides a REST API that may be accessed from outside the cluster. If the DC/OS cluster is configured with OAuth enabled, then you must acquire a valid token and include that token in the Authorization header of all requests. The <auth_token> parameter below is used to represent this token.
 The <dcos_url> parameter referenced below indicates the base URL of the DC/OS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
 
 <a name="#rest-auth"></a>
@@ -1822,6 +1827,8 @@ $ export AUTH_TOKEN=uSeR_t0k3n
 ```
 
 The `curl` examples in this document assume that an auth token has been stored in an environment variable named `AUTH_TOKEN`.
+
+If your DC/OS Enterprise installation requires encryption, you must also use the `ca-cert` flag when making REST calls. Refer to [Obtaining and passing the DC/OS certificate in cURL requests](https://docs.mesosphere.com/1.9/administration/tls-ssl/#get-dcos-cert) for information on how to use the `--cacert` flag. [If encryption is not required](https://docs.mesosphere.com/1.9/administration/tls-ssl/), you can omit the --cacert flags.
 
 ## Configuration
 
