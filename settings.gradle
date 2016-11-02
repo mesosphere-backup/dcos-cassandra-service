@@ -9,7 +9,7 @@
  * in the user guide at https://docs.gradle.org/2.10/userguide/multi_project_builds.html
  */
 
-rootProject.name = 'dcos-cassandra-service'
+rootProject.name = 'dse'
 
 include "cassandra-commons"
 include "cassandra-scheduler"

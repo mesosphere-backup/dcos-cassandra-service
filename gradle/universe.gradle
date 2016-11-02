@@ -2,7 +2,7 @@ ext {
   aws = "http://downloads.mesosphere.io/"
   basePath = "cassandra/assets/"
   packageVer = "stub-universe" // is replaced
-  cliBase = "dcos-cassandra-"
+  cliBase = "dcos-dse-"
 }
 
 task packageVersion (

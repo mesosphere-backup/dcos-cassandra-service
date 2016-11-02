@@ -50,7 +50,7 @@ _notify_github success "Build succeeded"
   universe/ \
   cassandra-scheduler/build/distributions/scheduler.zip \
   cassandra-executor/build/distributions/executor.zip \
-  cli/dcos-cassandra/dcos-cassandra-darwin \
-  cli/dcos-cassandra/dcos-cassandra-linux \
-  cli/dcos-cassandra/dcos-cassandra.exe \
+  cli/dcos-dse/dcos-dse-darwin \
+  cli/dcos-dse/dcos-dse-linux \
+  cli/dcos-dse/dcos-dse.exe \
   cli/python/dist/*.whl
