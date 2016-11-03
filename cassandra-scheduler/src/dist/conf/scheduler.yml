@@ -28,6 +28,7 @@ cassandra:
     data_center : ${CASSANDRA_LOCATION_DATA_CENTER:-"dc1"}
   jmx_port: ${CASSANDRA_JMX_PORT:-7199}
   publish_discovery_info: ${CASSANDRA_PUBLISH_DISCOVERY_INFO:-false}
+  rolling_restart_name: ${CASSANDRA_ROLLING_RESTART_NAME:-"00000000-0000-0000-0000-000000000000"}
   application:
      cluster_name : ${CASSANDRA_CLUSTER_NAME:-"cassandra"}
      authenticator: ${CASSANDRA_AUTHENTICATOR:-"AllowAllAuthenticator"}
