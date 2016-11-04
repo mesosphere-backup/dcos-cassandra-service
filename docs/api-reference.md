@@ -14,7 +14,7 @@ REST API requests must be authenticated. This authentication is only applicable 
  
 If you are using Enterprise DC/OS, follow these instructions to [create a service account and an authentication token](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/custom-service-auth/). You can then configure your service to automatically refresh the authentication token when it expires. To get started more quickly, you can also [get the authentication token without a service account](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/iam-api/), but you will need to manually refresh the token.
 
-If you are using open source DC/OS, follow these instructions to [pass your HTTP API token to the DC/OS endpoint](https://dcos.io/docs/1.8/administration/id-and-access-mgt/auth-api/#passing-your-http-api-token-to-dc-os-endpoints).
+If you are using open source DC/OS, follow these instructions to [pass your HTTP API token to the DC/OS endpoint](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/auth-api/#passing-your-http-api-token-to-dc-os-endpoints).
 
 Once you have the authentication token, you can store it in an environment variable and reference it in your REST API calls:
 
@@ -24,7 +24,7 @@ $ export AUTH_TOKEN=uSeR_t0k3n
 
 The `curl` examples in this document assume that an auth token has been stored in an environment variable named `AUTH_TOKEN`.
 
-If your DC/OS Enterprise installation requires encryption, you must also use the `ca-cert` flag when making REST calls. Refer to [Obtaining and passing the DC/OS certificate in cURL requests](https://dcos.io/docs/1.8/administration/tls-ssl/#get-dcos-cert) for information on how to use the `--cacert` flag. [If encryption is not required](https://dcos.io/docs/1.8/administration/tls-ssl/), you can omit the --cacert flags.
+If your DC/OS Enterprise installation requires encryption, you must also use the `ca-cert` flag when making REST calls. Refer to [Obtaining and passing the DC/OS certificate in cURL requests](https://docs.mesosphere.com/1.8/administration/tls-ssl/#get-dcos-cert) for information on how to use the `--cacert` flag. [If encryption is not required](https://docs.mesosphere.com/docs/1.8/administration/tls-ssl/), you can omit the --cacert flags.
 
 # Configuration
 
