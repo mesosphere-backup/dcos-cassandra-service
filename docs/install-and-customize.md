@@ -1,7 +1,13 @@
 ---
 post_title: Install and Customize
 menu_order: 20
+feature_maturity: preview
+enterprise: 'yes'
 ---
+
+# About installing Cassandra on Enterprise DC/OS
+  
+ In Enterprise DC/OS `strict` [security mode](https://docs.mesosphere.com/1.8/administration/installing/custom/configuration-parameters/#security), Cassandra requires a service account. In `permissive`, a service account is optional. Only someone with `superuser` permission can create the service account. Refer to [Provisioning Cassandra](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) for instructions.
 
 # Default Installation
 Prior to installing a default cluster, ensure that your DC/OS cluster has at least 3 DC/OS slaves with 8 Gb of memory, 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
@@ -12,7 +18,7 @@ To start a default cluster, run the following command on the DC/OS CLI. The defa
 $ dcos package install cassandra
 ```
 
-This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires [customizing the `name` at install time](#custom-installation) for each additional instance.
+This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires customizing the `name` at install time for each additional instance. See the Custom Installation section for more information.
 
 If you have more than one Cassandra cluster, use the `--name` argument after install time to specify which Cassandra instance to query. All `dcos cassandra` CLI commands accept the `--name` argument. If you do not specify a service name, the CLI assumes the default value, `cassandra`.
 
@@ -38,7 +44,7 @@ $ dcos package install --options=sample-cassandra.json cassandra
 ```
 
 This cluster will have 10 nodes and 3 seeds instead of the default values of 3 nodes and 2 seeds.
-See [Configuration Options](#configuration-options) for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
+See the Configuration Options section for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
 
 # Minimal Installation
 You may wish to install Cassandra on a local DC/OS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant).
@@ -77,7 +83,7 @@ To start a minimal cluster with a single node, create a JSON options file that c
     }
 }
 ```
-This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DC/OS Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
+This will create a single node cluster with 2 Gb of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DC/OS Apache Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Apache Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 # Multiple Cassandra Cluster Installation
 
@@ -98,7 +104,7 @@ In order to avoid port conflicts, by default you cannot collocate more than one 
 
 # Installation Plan
 
-When the DC/OS Cassandra service is initially installed it will generate an installation plan as shown below. You can view, pause, and resume installation via the REST API. See [REST API authentication][#rest-auth] for information on how this request must be authenticated.
+When the DC/OS Cassandra service is initially installed it will generate an installation plan as shown below. You can view, pause, and resume installation via the REST API. See the REST API authentication section of the REST API Reference for information on how this request must be authenticated.
 
 ```
 {
@@ -165,10 +171,10 @@ $ curl -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra
 ```
 
 ## Plan Errors
-If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress. See the [Troubleshooting](#troubleshooting) section for information on resolving errors.
+If there are any errors that prevent installation, these errors are dispayed in the errors list. The presence of errors indicates that the installation cannot progress. See the Troubleshooting section for information on resolving errors.
 
 ## Reconciliation Phase
-The first phase of the installation plan is the reconciliation phase. This phase ensures that the DC/OS Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DC/OS Cassandra Service and occurs each time the service starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
+The first phase of the installation plan is the reconciliation phase. This phase ensures that the DC/OS Apache Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DC/OS Apache Cassandra Service and occurs each time the service starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
 
 ## Deploy Phase
 The second phase of the installation is the deploy phase. This phase will deploy the requested number of Cassandra nodes. Each block in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
@@ -187,3 +193,6 @@ If the installation has been paused, the REST API request below will resume inst
 ```
 $ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
+
+ [5]: https://github.com/mesosphere/dcos-vagrant
+ [7]: http://mesos.apache.org/documentation/latest/reconciliation

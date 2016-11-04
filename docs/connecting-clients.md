@@ -1,9 +1,11 @@
 ---
 post_title: Connecting Clients
-menu_order: 70
+menu_order: 60
+feature_maturity: preview
+enterprise: 'yes'
 ---
 
-The only supported client for the DSOC Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
+The only supported client for the DS/OS Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
 
 # Connection Info Using the CLI
 
@@ -58,8 +60,8 @@ the cluster, the safest method is to set networkaddress.cache.ttl to a reasonabl
 As with the IP address method, the CQL driver still detect topology changes and reamin
 connected even if a node moves.
 
-# Configuring the CQL Driver
-## Adding the Driver to Your Application
+## Configuring the CQL Driver
+### Adding the Driver to Your Application
 
 ```
 <dependency>
@@ -69,7 +71,7 @@ connected even if a node moves.
 </dependency>
 ```
 
-The snippet above is the correct dependency for CQL driver to use with the DC/OS Cassandra service. After adding this dependency to the `pom.xml` file in your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
+The snippet above is the correct dependency for CQL driver to use with the DC/OS Apache Cassandra service. After adding this dependency to your project, you should have access to the correct binary dependencies to interface with the Cassandra cluster.
 
 ## Connecting the CQL Driver.
 The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query. Run this script from anywhere where the private IP addresses of your nodes are reachable. Find the IP addresses of your nodes by running the `dcos cassandra connection` command from the DC/OS CLI.

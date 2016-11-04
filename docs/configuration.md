@@ -1,6 +1,8 @@
 ---
 post_title: Configuring
-menu_order: 60
+menu_order: 50
+feature_maturity: preview
+enterprise: 'yes'
 ---
 
 # Changing Configuration at Runtime
@@ -23,7 +25,7 @@ This configuration update strategy is analogous to the installation procedure ab
 
 # Configuration Update
 
-Make the REST request below to view the current plan:
+Make the REST request below to view the current plan. See REST API authentication of the REST API Reference section for information on how this request must be authenticated.
 
 ```
 $ curl -H "Authorization: token=$AUTH_TOKEN" -v http://<dcos_url>/service/cassandra/v1/plan
@@ -223,7 +225,7 @@ After you execute the continue operation, the plan will look like this:
 
 # Configuration Options
 
-The following describes the most commonly used features of DC/OS Cassandra and how to configure them via the DC/OS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DC/OS command line (See the [Installation section](#installation)) or via modification to the Service Scheduler’s Marathon environment at runtime (See the [Configuration Update section](#configuration-update)). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DC/OS scheduler.
+The following describes the most commonly used features of DC/OS Apache Cassandra and how to configure them via the DC/OS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DC/OS command line (See the Install and Customize section) or via modification to the Service Scheduler’s Marathon environment at runtime (See the Configuration Update section). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DC/OS scheduler.
 
 ## Service Configuration
 
@@ -258,19 +260,19 @@ The service configuration object contains properties that MUST be specified duri
   <tr>
     <td>name</td>
     <td>string</td>
-    <td>The name of the Cassandra service installation. This must be unique for each DC/OS Cassandra service instance deployed on a DC/OS cluster.</td>
+    <td>The name of the Cassandra service installation. This must be unique for each DC/OS Apache Cassandra service instance deployed on a DC/OS cluster.</td>
   </tr>
 
   <tr>
     <td>cluster</td>
     <td>string</td>
-    <td>The cluster that the Cassandra service installation belongs to. Multiple DC/OS Cassandra service instances may belong to the same cluster.</td>
+    <td>The cluster that the Cassandra service installation belongs to. Multiple DC/OS Apache Cassandra service instances may belong to the same cluster.</td>
   </tr>
 
   <tr>
     <td>data_center</td>
     <td>string</td>
-    <td>The identifier of the datacenter that the DC/OS Cassandra service will deploy. This MUST be unique for deployments supporting multiple datacenters. This
+    <td>The identifier of the datacenter that the DC/OS Apache Cassandra service will deploy. This MUST be unique for deployments supporting multiple datacenters. This
     MAY be identical for multiple deployments on the same DC/OS cluster that support different clusters.</td>
   </tr>
 
@@ -300,19 +302,19 @@ The service configuration object contains properties that MUST be specified duri
    <tr>
       <td>cpus</td>
       <td>number</td>
-      <td>The number of CPU shares allocated to the DC/OS Cassandra Service scheduler. </td>
+      <td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service scheduler. </td>
     </tr>
 
     <tr>
       <td>mem</td>
       <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
+      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
     </tr>
 
     <tr>
       <td>heap</td>
       <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DC/OS Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
+      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
     </tr>
 
     <tr>
@@ -324,18 +326,18 @@ The service configuration object contains properties that MUST be specified duri
     <tr>
     <td>data_center_url</td>
     <td>string</td>
-    <td>This specifies the URL that the DC/OS Cassandra service instance will advertise to other instances in the cluster.
+    <td>This specifies the URL that the DC/OS Apache Cassandra service instance will advertise to other instances in the cluster.
     If you are not configuring a multi datacenter deployment this should be omitted.
     If you are configuring a multiple datacenter deployment inside the same DC/OS cluster, this should be omitted.
     If you are configuring a multiple datacenter deployment inside diffrent DC/OS clusters, this value MUST be set to a URL that
-    is reachable and resolvable by the DC/OS Cassandra instances in the remote datacenters. A good choice for this value is the admin
+    is reachable and resolvable by the DC/OS Apache Cassandra instances in the remote datacenters. A good choice for this value is the admin
     router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
     </tr>
     <tr>
     <td>external_data_centers</td>
     <td>string</td>
-    <td>This specifies the URLs of the external datacenters that contain a cluster the DC/OS Cassandra service will join as a comma separated list.
-    This value should only be included when your deploying a DC/OS Cassandra service instance that will extend an existing cluster. Otherwise, this
+    <td>This specifies the URLs of the external datacenters that contain a cluster the DC/OS Apache Cassandra service will join as a comma separated list.
+    This value should only be included when your deploying a DC/OS Apache Cassandra service instance that will extend an existing cluster. Otherwise, this
     value should be omitted. If this value is specified, the URLs contained in the comma separated list MUST be resolvable and reachable from the deployed cluster.
     In practice, they should be identical to the values specified in data_center_url configuration parameter for the instance whose cluster will be extended.
     </td>
@@ -433,7 +435,7 @@ Example node configuration:
 </table>
 
 ## Executor Configuration
-The executor configuration object allows you modify the resources associated with the DC/OS Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
+The executor configuration object allows you to modify the resources associated with the DC/OS Apache Cassandra Service's executor. These properties should not be modified unless you are trying to install a small cluster in a resource constrained environment.
 Example executor configuration:
 ```
 {
@@ -456,25 +458,25 @@ Example executor configuration:
    <tr>
       <td>cpus</td>
       <td>number</td>
-      <td>The number of CPU shares allocated to the DC/OS Cassandra Service executor. </td>
+      <td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service executor. </td>
     </tr>
 
     <tr>
       <td>mem</td>
       <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
+      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
     </tr>
 
     <tr>
       <td>heap</td>
       <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DC/OS Cassandra Service executor.</td>
+      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service executor.</td>
     </tr>
 
     <tr>
       <td>disk</td>
       <td>integer</td>
-      <td>The amount of disk, in MB, allocated for the DC/OS Cassandra Service executor.</td>
+      <td>The amount of disk, in MB, allocated for the DC/OS Apache Cassandra Service executor.</td>
     </tr>
 
     <tr>
@@ -505,12 +507,12 @@ Example executor configuration:
    <tr>
       <td>cpus</td>
       <td>number</td>
-      <td>The number of CPU shares allocated to the DC/OS Cassandra Service tasks. </td>
+      <td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service tasks. </td>
     </tr>
     <tr>
       <td>mem</td>
       <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Cassandra Service tasks.</td>
+      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service tasks.</td>
     </tr>
 </table>
 
@@ -604,7 +606,7 @@ The IP address of the Cassandra node is determined automatically by the service 
 
 ## Commit Log Configuration
 
-The DC/OS Cassandra service only supports the commitlog_sync model for configuring the Cassandra commit log. In this model a node responds to write requests after writing the request to file system and replicating to the configured number of nodes, but prior to synchronizing the commit log file to storage media. Cassandra will synchronize the data to storage media after a configurable time period. If all nodes in the cluster should fail, at the Operating System level or below, during this window the acknowledged writes will be lost. Note that, even if the JVM crashes, the data will still be available on the nodes persistent volume when the service recovers the node. The configuration parameters below control the window in which data remains acknowledged but has not been written to storage media.
+The DC/OS Apache Cassandra service only supports the commitlog_sync model for configuring the Cassandra commit log. In this model a node responds to write requests after writing the request to file system and replicating to the configured number of nodes, but prior to synchronizing the commit log file to storage media. Cassandra will synchronize the data to storage media after a configurable time period. If all nodes in the cluster should fail, at the Operating System level or below, during this window the acknowledged writes will be lost. Note that, even if the JVM crashes, the data will still be available on the nodes persistent volume when the service recovers the node.The configuration parameters below control the window in which data remains acknowledged but has not been written to storage media.
 
 <table class="table">
 
@@ -771,12 +773,37 @@ The following configuration properties are global for all row caches.
 
 </table>
 
+## Authentication and Authorization Configuration
+
+Authentication and authorization may be independently configured.  By default they are set to `AllowAllAuthenticator` and `AllowAllAuthorizer` respectively.  This is necessary to allow initial access to a new cluster.  After initial installation these values may be changed by changing the appropriate environment variables, `CASSANDRA_AUTHENTICATOR` and `CASSANDRA_AUTHORIZER`.
+Further information regarding how to change authentication and authorization of a Cassaandra cluster is available [here](https://docs.datastax.com/en/cassandra/3.0/cassandra/configuration/secureConfigNativeAuth.html) and [here](https://docs.datastax.com/en/cassandra/3.0/cassandra/configuration/secureConfigInternalAuth.html).  The necessary changes to the cassandra.yml file referenced there are accomplished by changing the environment variables already mentioned.
+
+<table class="table">
+
+  <tr>
+    <th>Property</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+
+  <tr>
+    <td>authenticator</td>
+    <td>string</td>
+    <td>The authentication backend. It implements IAuthenticator, which is used to identify users.</td>
+  </tr>
+
+   <tr>
+    <td>authorizer</td>
+    <td>string</td>
+    <td>The authorization backend. It implements IAuthenticator, which limits access and provides permissions.</td>
+  </tr>
+
+</table>
+
 # Operating System Configuration
 In order for Cassandra to function correctly there are several important configuration modifications that need to be performed to the OS hosting the deployment.
-
 ## Time Synchronization
 While writes in Cassandra are atomic at the column level, Cassandra only implements last write wins ordering to resolve consistency during concurrent writes to the same column. If system time is not synchronized across DOCS agent nodes, this will result in inconsistencies in the value stored with respect to the ordering of mutations as observed by the client. It is imperative that a mechanism, such as NTP, is used for time synchronization.
-
 ## Configuration Settings
 In addition to time synchronization, Cassandra requires OS level configuration settings typical of a production data base server.
 
