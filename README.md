@@ -296,6 +296,24 @@ $ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/c
 
 # Upgrade
 
+## Overview
+
+* Framework version has two components: `A.B.C-X.Y.Z`, where `A.B.C` is the scheduler version and `X.Y.Z` is the version of supported Apache Cassandra.
+* Upgrade process will cause a rolling restart of all Cassandra Node processes in the cluster.
+* Upgrades are supported from version `N` to `N + 1`. For ex: Upgrade from `1.0.16-3.0.8` is `1.0.17-3.0.8` is supported.
+* In order to upgrade from version `N` to `N + 2`, please upgrade from version `N` to `N + 1` first, followed by an upgrade from `N + 1` to `N + 2`.
+
+| Version N     | Version N + 1 | Method        |
+| ------------- |:-------------:| -------------:|
+| 1.0.12-2.2.5  | 1.0.13-2.2.5  | Side-by-Side  |
+| 1.0.13-2.2.5  | 1.0.14-2.2.5  | In-place      |
+| 1.0.14-3.0.7  | 1.0.15-3.0.8  | In-place      |
+| 1.0.15-3.0.7  | 1.0.16-3.0.8  | Side-by-Side  |
+| 1.0.16-3.0.8  | 1.0.17-3.0.8  | In-place      |
+
+
+## Instructions - In-place upgrades 
+
 1. In the DC/OS web interface, destroy the Cassandra instance to be updated. (This will not kill Cassandra node tasks).
 1. Verify that you no longer see the Cassandra instance in the DC/OS web interface.
 1. From the DC/OS CLI, install the latest version of Cassandra [with any customizations you require](1.7/usage/service-guides/cassandra/install-and-customize/) in a JSON options file:
@@ -303,9 +321,7 @@ $ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/c
 
    The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress by making a REST request identical to the one used to follow the progress of a [configuration upgrade](/1.7/usage/service-guides/cassandra/configuration/).
 
-**Note:** The upgrade process will cause all of your Cassandra node processes to restart.
-
-**If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Apache Cassandra from an older version (pre `1.0.13-X.Y.Z`), here is the upgrade path:**
+## Instructions - Side-by-side upgrade
 
 1. Perform [Backup Operation](https://github.com/mesosphere/dcos-cassandra-service#backup) on your currently running Cassandra Service. Note the backup name and backup location.
 1. [Install a new Cassandra Service](https://github.com/mesosphere/dcos-cassandra-service#multiple-cassandra-cluster-installation) instance.
