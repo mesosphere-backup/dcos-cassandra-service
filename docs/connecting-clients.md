@@ -5,7 +5,7 @@ feature_maturity: preview
 enterprise: 'yes'
 ---
 
-The only supported client for the DS/OS Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
+The only supported client for the DC/OS Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
 
 # Connection Info Using the CLI
 
