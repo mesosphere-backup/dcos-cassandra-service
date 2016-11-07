@@ -35,9 +35,10 @@ def teardown_module():
 def test_connect():
     result = dcos.http.get(cassandra_api_url('connection'))
     body = result.json()
-    assert len(body) == 2
+    assert len(body) == 3
     assert len(body["address"]) == DEFAULT_NODE_COUNT
     assert len(body["dns"]) == DEFAULT_NODE_COUNT
+    assert body["vip"] == 'node.{}.l4lb.thisdcos.directory:9042'.format(PACKAGE_NAME)
 
 
 @pytest.mark.sanity
