@@ -11,95 +11,57 @@ from . import infinity_commons
 from tests.command import (
     cassandra_api_url,
     check_health,
+    install,
     uninstall,
     unset_ssl_verification,
 )
-from tests.defaults import DEFAULT_NODE_COUNT, OPTIONS_FILE, PACKAGE_NAME
+from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
 
 
+# install once up-front, reuse install for tests (MUCH FASTER):
 def setup_module():
     unset_ssl_verification()
 
-
-@pytest.yield_fixture
-def install_framework():
     uninstall()
-    shakedown.install_package_and_wait(PACKAGE_NAME, options_file=OPTIONS_FILE)
+    install()
     check_health()
-    yield
 
+
+def teardown_module():
     uninstall()
 
 
 @pytest.mark.sanity
-def test_connect(install_framework):
-    try:
-        result = dcos.http.get(cassandra_api_url('connection'))
-        try:
-            body = result.json()
-            assert len(body) == 3
-            assert len(body["address"]) == DEFAULT_NODE_COUNT
-            assert len(body["dns"]) == DEFAULT_NODE_COUNT
-            assert body["vip"] == 'node.{}.l4lb.thisdcos.directory:9042'.format(PACKAGE_NAME)
-        except:
-            print('Failed to parse connect response')
-            raise
-    except:
-        # TODO: remove fallback when universe has recent build with '/connection'
-        result = dcos.http.get(cassandra_api_url('nodes/connect'))
-        try:
-            body = result.json()
-            assert len(body) == 2
-            assert len(body["address"]) == DEFAULT_NODE_COUNT
-            assert len(body["dns"]) == DEFAULT_NODE_COUNT
-        except:
-            print('Failed to parse connect response')
-            raise
+def test_connect():
+    result = dcos.http.get(cassandra_api_url('connection'))
+    body = result.json()
+    assert len(body) == 2
+    assert len(body["address"]) == DEFAULT_NODE_COUNT
+    assert len(body["dns"]) == DEFAULT_NODE_COUNT
 
 
 @pytest.mark.sanity
-def test_connect_address(install_framework):
-    # TODO: remove fallback when universe has recent build with '/connection'
-    try:
-        result = dcos.http.get(cassandra_api_url('connection/address'))
-    except:
-        result = dcos.http.get(cassandra_api_url('nodes/connect/address'))
-
-    try:
-        body = result.json()
-        assert len(body) == DEFAULT_NODE_COUNT
-    except:
-        print('Failed to parse connect response')
-        raise
+def test_connect_address():
+    result = dcos.http.get(cassandra_api_url('connection/address'))
+    body = result.json()
+    assert len(body) == DEFAULT_NODE_COUNT
 
 
 @pytest.mark.sanity
-def test_connect_dns(install_framework):
-    # TODO: remove fallback when universe has recent build with '/connection'
-    try:
-        result = dcos.http.get(cassandra_api_url('connection/dns'))
-    except:
-        result = dcos.http.get(cassandra_api_url('nodes/connect/dns'))
-
-    try:
-        body = result.json()
-        assert len(body) == DEFAULT_NODE_COUNT
-    except:
-        print('Failed to parse connect response')
-        raise
-
-        return False
+def test_connect_dns():
+    result = dcos.http.get(cassandra_api_url('connection/dns'))
+    body = result.json()
+    assert len(body) == DEFAULT_NODE_COUNT
 
 
 @pytest.mark.sanity
-def test_install(install_framework):
+def test_install():
     completed_plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
-
     assert completed_plan['status'] == infinity_commons.PlanState.COMPLETE.value
 
 
 @pytest.mark.sanity
-def test_env_unchanged(install_framework):
+def test_env_unchanged():
     completed_plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
     assert completed_plan['status'] == infinity_commons.PlanState.COMPLETE.value
 
@@ -112,7 +74,7 @@ def test_env_unchanged(install_framework):
 
 
 @pytest.mark.sanity
-def test_nodes_increase_by_one(install_framework):
+def test_nodes_increase_by_one():
     completed_plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
     mc = dcos.marathon.create_client()
     app = mc.get_app('/cassandra')
@@ -127,10 +89,14 @@ def test_nodes_increase_by_one(install_framework):
     plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value and len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 4 and infinity_commons.filter_phase(p, "Deploy")['blocks'][env_node_count - 1]['status'] == infinity_commons.PlanState.COMPLETE.value)
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
+    # reinstall after increase:
+    uninstall()
+    install()
+    check_health()
 
 
 @pytest.mark.sanity
-def test_nodes_decrease_by_one_should_fail(install_framework):
+def test_nodes_decrease_by_one_should_fail():
     completed_plan = infinity_commons.get_and_verify_plan(
         lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
     mc = dcos.marathon.create_client()
@@ -165,7 +131,7 @@ def test_nodes_decrease_by_one_should_fail(install_framework):
 
 
 @pytest.mark.sanity
-def test_change_disk_should_fail(install_framework):
+def test_change_disk_should_fail():
     completed_plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
     mc = dcos.marathon.create_client()
     app = mc.get_app('/cassandra')
@@ -195,7 +161,7 @@ def test_change_disk_should_fail(install_framework):
 
 
 @pytest.mark.sanity
-def test_cpus_increase_slightly(install_framework):
+def test_cpus_increase_slightly():
     completed_plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
     mc = dcos.marathon.create_client()
     app = mc.get_app('/cassandra')
@@ -213,7 +179,7 @@ def test_cpus_increase_slightly(install_framework):
 
 
 @pytest.mark.sanity
-def test_is_suppressed(install_framework):
+def test_is_suppressed():
     infinity_commons.get_and_verify_plan(lambda p: p['status'] == 'COMPLETE')
     time.sleep(5)
     response = dcos.http.get(cassandra_api_url('state/properties/suppressed'))
