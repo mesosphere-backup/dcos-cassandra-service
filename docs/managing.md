@@ -1,10 +1,14 @@
 ---
 post_title: Managing
-menu_order: 80
+menu_order: 70
+feature_maturity: preview
+enterprise: 'yes'
 ---
 
-# Add a Node
-Increase the `NODES` value via Marathon as described in the [Configuration Update](#configuration-update) section. This creates an update plan as described in that section. An additional node will be added as the last block of that plan. After a node has been added, you should run cleanup, as described in the [Cleanup](#cleanup) section. It is safe to delay running cleanup until off-peak hours.
+# Manage Nodes
+
+## Add a Node
+Increase the `NODES` value via Marathon as described in the Configuration Update section. This creates an update plan as described in that section. An additional node will be added as the last block of that plan. After a node has been added, you should run cleanup, as described in the [Cleanup](#cleanup) section of this page. It is safe to delay running cleanup until off-peak hours.
 
 ## Node Status
 
@@ -93,7 +97,7 @@ Result:
   <tr>
     <td>rack</td>
     <td>string</td>
-    <td>The rack assigned to the Cassandra node. This property is important for topology-aware replication strategies. For the DC/OS Cassandra service all nodes in the cluster should report the same value.</td>
+    <td>The rack assigned to the Cassandra node. This property is important for topology-aware replication strategies. For the DC/OS Apache Cassandra service all nodes in the cluster should report the same value.</td>
   </tr>
 
   <tr>
@@ -117,7 +121,7 @@ To view general information about a node, run the following command from the CLI
 $ dcos cassandra --name=<service-name> node describe <nodeid>
 ```
 
-In contrast to the `status` command, `node describe` requests information from the DC/OS Cassandra Service and not the Cassandra node.
+In contrast to the `status` command, `node describe` requests information from the DC/OS Apache Cassandra Service and not the Cassandra node.
 
 Result:
 
@@ -161,7 +165,7 @@ Result:
   <tr>
     <td>mode</td>
     <td>string</td>
-    <td>The operating mode of the Cassandra node as recorded by the DC/OS Cassandra service. This value should be eventually consistent with the mode returned by the status command.</td>
+    <td>The operating mode of the Cassandra node as recorded by the DC/OS Apache Cassandra service. This value should be eventually consistent with the mode returned by the status command.</td>
   </tr>
 
    <tr>
@@ -181,11 +185,12 @@ Result:
 # Maintenance
 Cassandra supports several maintenance operations including Cleanup, Repair, Backup, and Restore.  In general, attempting to run multiple maintenance operations simultaneously (e.g. Repair and Backup) against a single cluster is not recommended. Likewise, running maintenance operations against multiple Cassandra clusters linked in a multi-datacenter configuration is not recommended.
 
+<a name="cleanup"></a>
 ## Cleanup
 
 When nodes are added or removed from the ring, a node can lose part of its partition range. Cassandra does not automatically remove data when this happens. You can tube cleanup to remove the unnecessary data.
 
-Cleanup can be a CPU- and disk-intensive operation, so you may want to delay running cleanup until off-peak hours. The DC/OS Cassandra service will minimize the aggregate CPU and disk utilization for the cluster by performing cleanup for each selected node sequentially.
+Cleanup can be a CPU- and disk-intensive operation, so you may want to delay running cleanup until off-peak hours. The DC/OS Apache Cassandra service will minimize the aggregate CPU and disk utilization for the cluster by performing cleanup for each selected node sequentially.
 
 To perform a cleanup from the CLI, enter the following command:
 
@@ -206,7 +211,7 @@ The operation will end after the current node has finished its cleanup.
 
 ## Repair
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed.
-Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DC/OS Cassandra Service will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
+Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DC/OS Apache Cassandra Service will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
 To perform a repair from the CLI, enter the following command:
 
@@ -224,121 +229,3 @@ $ dcos cassandra --name=<service-name> repair stop
 ```
 
 The operation will end after the current node has finished its repair.
-
-## Backup and Restore
-
-DC/OS Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
-
-Cassandra takes a snapshot your tables and ships them to a remote location. Once the snapshots have been uploaded to a remote location, you can restore the data to a new cluster, in the event of a disaster, or restore them to an existing cluster, in the event that a user error has caused a data loss.
-
-### Backup
-
-You can take a complete snapshot of your DC/OS Cassandra ring and upload the artifacts to S3 or to Azure.
-
-**Note:** These instructions describe how to back up the _data_ in your Cassandra ring. You must back up your Cassandra _schemas_ manually.
-
-#### S3 Backup
-
-To perform a backup to S3, enter the following command on the DC/OS CLI:
-
-```
-$ dcos cassandra --name=<service-name> backup start \
-    --backup_name=<backup-name> \
-    --external_location=s3://<bucket-name> \
-    --s3_access_key=<s3-access-key> \
-    --s3_secret_key=<s3-secret-key>
-```
-
-To upload to S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
-
-To check the status of the backup from the CLI, enter the following command:
-
-```
-$ dcos cassandra --name=<service-name> backup status
-```
-
-To cancel a currently running backup from the CLI, enter the following command:
-
-```
-$ dcos cassandra --name=<service-name> backup stop
-```
-
-The operation will end after the current node has finished its backup.
-
-#### Azure Backup
-
-To perform a backup to Azure, enter the following command on the DC/OS CLI:
-
-```
-$ dcos cassandra --name=<service-name> backup start \
-    --backup_name=<backup-name> \
-    --external_location=azure://<container> \
-    --azure_account=<account_name> \
-    --azure_key=<key>
-```
-
-To upload to Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
-
-To check the status of the backup from the CLI, enter the following command:
-
-```
-$ dcos cassandra --name=<service-name> backup status
-```
-
-To cancel a currently running backup from the CLI, enter the following command:
-
-```
-$ dcos cassandra --name=<service-name> backup stop
-```
-
-The operation will end after the current node has finished its backup.
-
-### Restore
-
-You can restore your DC/OS Cassandra snapshots on a new Cassandra ring from S3 or from Azure storage.
-
-#### S3 Restore
-
-To restore, enter the following command on the DC/OS CLI:
-
-```
-$ dcos cassandra --name=<service-name> restore start \
-    --backup_name=<backup-name> \
-    --external_location=s3://<bucket-name> \
-    --s3_access_key=<s3-access-key> \
-    --s3_secret_key=<s3-secret-key>
-```
-
-To restore from S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
-
-Check the status of the restore:
-
-    $ dcos cassandra --name=<service-name> restore status
-
-#### Azure Restore
-
-To restore, enter the following command on the DC/OS CLI:
-
-```
-$ dcos cassandra --name=<service-name> restore start \
-    --backup_name=<backup-name> \
-    --external_location=azure://<container-name> \
-    --azure_account=<account_name> \
-    --azure_key=<key>
-```
-
-To restore from Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
-
-To check the status of the restore from the CLI, enter the following command:
-
-```
-$ dcos cassandra --name=<service-name> restore status
-```
-
-To cancel a currently running restore from the CLI, enter the following command:
-
-```
-$ dcos cassandra --name=<service-name> restore stop
-```
-
-The operation will end after the current node has finished its restore.
