@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -128,66 +127,73 @@ public class S3StorageDriver implements BackupStorageDriver {
         return directories;
     }
 
+    private static File[] getColumnFamilyDir(File keyspace) {
+        return keyspace.listFiles(
+                (current, name) -> new File(current, name).isDirectory());
+    }
+
     @Override
-    public void upload(BackupRestoreContext ctx) throws IOException, URISyntaxException {
+    public void upload(BackupRestoreContext ctx) throws Exception {
         final String localLocation = ctx.getLocalLocation();
         final String backupName = ctx.getName();
         final String nodeId = ctx.getNodeId();
-
         final String key = getPrefixKey(ctx) + "/" + nodeId;
         LOGGER.info("Backup key: " + key);
         final TransferManager tx = getS3TransferManager(ctx);
-
         final File dataDirectory = new File(localLocation);
 
-        // Ex: data/<keyspace>/<cf>/snapshots/</snapshot-dir>/<files>
-        for (File keyspaceDir : dataDirectory.listFiles()) {
-            if (keyspaceDir.isFile()) {
-                // Skip any files in the data directory.
-                // Only enter keyspace directory.
-                continue;
-            }
-            LOGGER.info("Entering keyspace: {}", keyspaceDir.getName());
-            for (File cfDir : keyspaceDir.listFiles(
-                    (current, name) -> new File(current, name).isDirectory())) {
-                LOGGER.info("Entering column family: {}", cfDir.getName());
-                File snapshotDir = new File(cfDir, "snapshots");
-                if (!storageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir)) {
-                    LOGGER.info("Skipping directory: {}",
-                            snapshotDir.getAbsolutePath());
+        try {
+            // Ex: data/<keyspace>/<cf>/snapshots/</snapshot-dir>/<files>
+            for (File keyspaceDir : dataDirectory.listFiles()) {
+                if (keyspaceDir.isFile()) {
+                    // Skip any files in the data directory.
+                    // Only enter keyspace directory.
                     continue;
                 }
-                LOGGER.info(
-                        "Valid backup directories. Keyspace: {} | ColumnFamily: {} | Snapshot: {} | BackupName: {}",
-                        keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(),
-                        snapshotDir.getAbsolutePath(), backupName);
+                LOGGER.info("Entering keyspace: {}", keyspaceDir.getName());
+                for (File cfDir : getColumnFamilyDir(keyspaceDir)) {
+                    LOGGER.info("Entering column family: {}", cfDir.getName());
+                    File snapshotDir = new File(cfDir, "snapshots");
+                    if (!storageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir)) {
+                        LOGGER.info("Skipping directory: {}",
+                                snapshotDir.getAbsolutePath());
+                        continue;
+                    }
+                    LOGGER.info(
+                            "Valid backup directories. Keyspace: {} | ColumnFamily: {} | Snapshot: {} | BackupName: {}",
+                            keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(),
+                            snapshotDir.getAbsolutePath(), backupName);
 
-                final Optional<File> snapshotDirectory = storageUtil.getValidSnapshotDirectory(
-                         snapshotDir, backupName);
-                LOGGER.info("Valid snapshot directory: {}",
-                        snapshotDirectory.isPresent());
-                if (snapshotDirectory.isPresent()) {
-                    // Upload this directory
-                    LOGGER.info("Going to upload directory: {}",
-                            snapshotDirectory.get().getAbsolutePath());
+                    final Optional<File> snapshotDirectory = storageUtil.getValidSnapshotDirectory(
+                            snapshotDir, backupName);
+                    LOGGER.info("Valid snapshot directory: {}",
+                            snapshotDirectory.isPresent());
+                    if (snapshotDirectory.isPresent()) {
+                        // Upload this directory
+                        LOGGER.info("Going to upload directory: {}",
+                                snapshotDirectory.get().getAbsolutePath());
 
-                    uploadDirectory(
-                            tx,
-                            getBucketName(ctx),
-                            key,
-                            keyspaceDir.getName(),
-                            cfDir.getName(),
-                            snapshotDirectory.get());
-                } else {
-                    LOGGER.warn(
-                            "Snapshots directory: {} doesn't contain the current backup directory: {}",
-                            snapshotDir.getName(), backupName);
+                        uploadDirectory(
+                                tx,
+                                getBucketName(ctx),
+                                key,
+                                keyspaceDir.getName(),
+                                cfDir.getName(),
+                                snapshotDirectory.get());
+                    } else {
+                        LOGGER.warn(
+                                "Snapshots directory: {} doesn't contain the current backup directory: {}",
+                                snapshotDir.getName(), backupName);
+                    }
                 }
             }
+            LOGGER.info("Done uploading snapshots for backup: {}", backupName);
+        } catch (Exception e) {
+            LOGGER.info("Failed uploading snapshots for backup: {}, error: {}", backupName, e);
+            throw new Exception(e);
+        } finally {
+            tx.shutdownNow();
         }
-
-        tx.shutdownNow();
-        LOGGER.info("Done uploading snapshots for backup: {}", backupName);
     }
 
     private void uploadDirectory(TransferManager tx,
@@ -195,18 +201,19 @@ public class S3StorageDriver implements BackupStorageDriver {
                                  String key,
                                  String keyspaceName,
                                  String cfName,
-                                 File snapshotDirectory) {
+                                 File snapshotDirectory) throws Exception {
         try {
             final String fileKey = key + "/" + keyspaceName + "/" + cfName + "/";
             final MultipleFileUpload myUpload = tx.uploadDirectory(bucketName, fileKey, snapshotDirectory, true);
             myUpload.waitForCompletion();
         } catch (Exception e) {
             LOGGER.error("Error occurred on uploading directory {} : {}", snapshotDirectory.getName(), e);
+            throw new Exception(e);
         }
     }
 
     @Override
-    public void download(BackupRestoreContext ctx) throws IOException, URISyntaxException {
+    public void download(BackupRestoreContext ctx) throws Exception {
         // download sstables at data/keyspace/cf/<files>
         final String backupName = ctx.getName();
         final String nodeId = ctx.getNodeId();
@@ -215,29 +222,33 @@ public class S3StorageDriver implements BackupStorageDriver {
         final TransferManager tx = getS3TransferManager(ctx);
         final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
 
-        for (File keyspace : keyspaces) {
-            for (File cfDir : keyspace.listFiles(
-                    (current, name) -> new File(current, name).isDirectory())) {
-                final String columnFamily = cfDir.getName().substring(0, cfDir.getName().indexOf("-"));
-                final Map<String, Long> snapshotFileKeys = listSnapshotFiles(amazonS3Client,
-                    bucketName,
-                    backupName + "/" + nodeId + "/" + keyspace.getName() + "/" + columnFamily);
-                for (String fileKey : snapshotFileKeys.keySet()) {
-                    final String destinationFile = cfDir.getAbsolutePath() + fileKey.substring(fileKey.lastIndexOf("/"));
-                    downloadFile(tx, bucketName, fileKey, destinationFile);
-                    LOGGER.info("Keyspace {}, Column Family {}, FileKey {}, destination {}", keyspace, columnFamily, fileKey, destinationFile);
+        try {
+            for (File keyspace : keyspaces) {
+                for (File cfDir : getColumnFamilyDir(keyspace)) {
+                    final String columnFamily = cfDir.getName().substring(0, cfDir.getName().indexOf("-"));
+                    final Map<String, Long> snapshotFileKeys = listSnapshotFiles(amazonS3Client,
+                            bucketName,
+                            backupName + "/" + nodeId + "/" + keyspace.getName() + "/" + columnFamily);
+                    for (String fileKey : snapshotFileKeys.keySet()) {
+                        final String destinationFile = cfDir.getAbsolutePath() + fileKey.substring(fileKey.lastIndexOf("/"));
+                        downloadFile(tx, bucketName, fileKey, destinationFile);
+                        LOGGER.info("Keyspace {}, Column Family {}, FileKey {}, destination {}", keyspace, columnFamily, fileKey, destinationFile);
+                    }
                 }
             }
+            LOGGER.info("Done downloading snapshots for backup: {}", backupName);
+        } catch (Exception e) {
+            LOGGER.info("Failed downloading snapshots for backup: {}, error: {}", backupName, e);
+            throw new Exception(e);
+        } finally {
+            tx.shutdownNow();
         }
-
-        tx.shutdownNow();
-        LOGGER.info("Done downloading snapshots for backup: {}", backupName);
     }
 
     private void downloadFile(TransferManager tx,
                               String bucketName,
                               String sourcePrefixKey,
-                              String destinationFile) {
+                              String destinationFile) throws Exception{
         try {
             final File snapshotFile = new File(destinationFile);
             snapshotFile.createNewFile();
@@ -245,6 +256,7 @@ public class S3StorageDriver implements BackupStorageDriver {
             download.waitForCompletion();
         } catch (Exception e) {
             LOGGER.error("Error downloading the file {} : {}", destinationFile, e);
+            throw new Exception(e);
         }
     }
 
