@@ -7,7 +7,7 @@ import shakedown
 
 from tests.defaults import (
     DEFAULT_NODE_COUNT,
-    IS_STRICT,
+    DEFAULT_OPTIONS_DICT,
     PACKAGE_NAME,
     PRINCIPAL,
     TASK_RUNNING_STATE,
@@ -93,19 +93,28 @@ def request(request_fn, *args, **kwargs):
 
 
 def spin(fn, success_predicate, *args, **kwargs):
-    end_time = time.time() + WAIT_TIME_IN_SECONDS
-    while time.time() < end_time:
+    now = time.time()
+    end_time = now + WAIT_TIME_IN_SECONDS
+    while now < end_time:
+        print("%s: %.01fs left" % (time.strftime("%H:%M:%S %Z", time.localtime(now)), end_time - now))
         result = fn(*args, **kwargs)
         is_successful, error_message = success_predicate(result)
         if is_successful:
-            print('Success state reached, exiting spin. prev_err={}'.format(error_message))
+            print('Success state reached, exiting spin.')
             break
         print('Waiting for success state... err={}'.format(error_message))
         time.sleep(1)
+        now = time.time()
 
     assert is_successful, error_message
 
     return result
+
+
+def install(additional_options = {}):
+    merged_options = _nested_dict_merge(DEFAULT_OPTIONS_DICT, additional_options)
+    print('Installing {} with options: {}'.format(PACKAGE_NAME, merged_options))
+    shakedown.install_package_and_wait(PACKAGE_NAME, options_json=merged_options)
 
 
 def uninstall():
@@ -116,10 +125,9 @@ def uninstall():
         print('Got exception when uninstalling package, continuing with janitor anyway: {}'.format(e))
 
     shakedown.run_command_on_master(
-        'docker run mesosphere/janitor /janitor.py {}'
+        'docker run mesosphere/janitor /janitor.py '
         '-r cassandra-role -p {} -z dcos-service-cassandra '
         '--auth_token={}'.format(
-            '-m https://leader.mesos:5050/master/ ' if IS_STRICT else '',
             PRINCIPAL,
             shakedown.run_dcos_command(
                 'config show core.dcos_acs_token'
@@ -130,3 +138,20 @@ def uninstall():
 
 def unset_ssl_verification():
     shakedown.run_dcos_command('config set core.ssl_verify false')
+
+
+def _nested_dict_merge(a, b, path=None):
+    "ripped from http://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge"
+    if path is None: path = []
+    a = a.copy()
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                _nested_dict_merge(a[key], b[key], path + [str(key)])
+            elif a[key] == b[key]:
+                pass # same leaf value
+            else:
+                raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
+        else:
+            a[key] = b[key]
+    return a

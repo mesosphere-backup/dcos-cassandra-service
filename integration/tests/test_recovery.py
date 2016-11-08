@@ -7,13 +7,14 @@ from tests.command import (
     cassandra_api_url,
     check_health,
     get_cassandra_config,
+    install,
     marathon_api_url,
     request,
     spin,
     uninstall,
     unset_ssl_verification,
 )
-from tests.defaults import DEFAULT_NODE_COUNT, OPTIONS_FILE, PACKAGE_NAME
+from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
 
 
 def bump_cpu_count_config():
@@ -127,29 +128,28 @@ def run_repair():
     )
 
 
+# install once up-front, reuse install for tests (MUCH FASTER):
 def setup_module():
     unset_ssl_verification()
 
-
-@pytest.yield_fixture
-def install_framework():
-    shakedown.install_package_and_wait(PACKAGE_NAME, options_file=OPTIONS_FILE)
+    uninstall()
+    install()
     check_health()
 
-    yield
 
+def teardown_module():
     uninstall()
 
 
 @pytest.mark.recovery
-def test_kill_task_in_node(install_framework):
+def test_kill_task_in_node():
     kill_task_with_pattern('CassandraDaemon', get_node_host())
 
     check_health()
 
 
 @pytest.mark.recovery
-def test_kill_all_task_in_node(install_framework):
+def test_kill_all_task_in_node():
     for host in shakedown.get_service_ips(PACKAGE_NAME):
         kill_task_with_pattern('CassandraDaemon', host)
 
@@ -157,21 +157,21 @@ def test_kill_all_task_in_node(install_framework):
 
 
 @pytest.mark.recovery
-def test_scheduler_died(install_framework):
+def test_scheduler_died():
     kill_task_with_pattern('cassandra.scheduler.Main', get_scheduler_host())
 
     check_health()
 
 
 @pytest.mark.recovery
-def test_executor_killed(install_framework):
+def test_executor_killed():
     kill_task_with_pattern('cassandra.executor.Main', get_node_host())
 
     check_health()
 
 
 @pytest.mark.recovery
-def test_all_executors_killed(install_framework):
+def test_all_executors_killed():
     for host in shakedown.get_service_ips(PACKAGE_NAME):
         kill_task_with_pattern('cassandra.executor.Main', host)
 
@@ -179,21 +179,21 @@ def test_all_executors_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_master_killed(install_framework):
+def test_master_killed():
     kill_task_with_pattern('mesos-master')
 
     check_health()
 
 
 @pytest.mark.recovery
-def test_zk_killed(install_framework):
+def test_zk_killed():
     kill_task_with_pattern('zookeeper')
 
     check_health()
 
 
 @pytest.mark.recovery
-def test_partition(install_framework):
+def test_partition():
     host = get_node_host()
 
     shakedown.partition_agent(host)
@@ -203,7 +203,7 @@ def test_partition(install_framework):
 
 
 @pytest.mark.recovery
-def test_partition_master_both_ways(install_framework):
+def test_partition_master_both_ways():
     shakedown.partition_master()
     shakedown.reconnect_master()
 
@@ -211,7 +211,7 @@ def test_partition_master_both_ways(install_framework):
 
 
 @pytest.mark.recovery
-def test_partition_master_incoming(install_framework):
+def test_partition_master_incoming():
     shakedown.partition_master(incoming=True, outgoing=False)
     shakedown.reconnect_master()
 
@@ -219,7 +219,7 @@ def test_partition_master_incoming(install_framework):
 
 
 @pytest.mark.recovery
-def test_partition_master_outgoing(install_framework):
+def test_partition_master_outgoing():
     shakedown.partition_master(incoming=False, outgoing=True)
     shakedown.reconnect_master()
 
@@ -227,7 +227,7 @@ def test_partition_master_outgoing(install_framework):
 
 
 @pytest.mark.recovery
-def test_all_partition(install_framework):
+def test_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
     for host in hosts:
@@ -239,7 +239,7 @@ def test_all_partition(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_kill_task_in_node(install_framework):
+def test_config_update_then_kill_task_in_node():
     host = get_node_host()
     run_planned_operation(
         bump_cpu_count_config,
@@ -250,7 +250,7 @@ def test_config_update_then_kill_task_in_node(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_kill_all_task_in_node(install_framework):
+def test_config_update_then_kill_all_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
     run_planned_operation(
         bump_cpu_count_config,
@@ -261,7 +261,7 @@ def test_config_update_then_kill_all_task_in_node(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_scheduler_died(install_framework):
+def test_config_update_then_scheduler_died():
     host = get_scheduler_host()
     run_planned_operation(
         bump_cpu_count_config,
@@ -272,7 +272,7 @@ def test_config_update_then_scheduler_died(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_executor_killed(install_framework):
+def test_config_update_then_executor_killed():
     host = get_node_host()
     run_planned_operation(
         bump_cpu_count_config,
@@ -283,7 +283,7 @@ def test_config_update_then_executor_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_all_executors_killed(install_framework):
+def test_config_update_then_all_executors_killed():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
     run_planned_operation(
         bump_cpu_count_config,
@@ -296,7 +296,7 @@ def test_config_update_then_all_executors_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_master_killed(install_framework):
+def test_config_update_then_master_killed():
     run_planned_operation(
         bump_cpu_count_config, lambda: kill_task_with_pattern('mesos-master')
     )
@@ -305,7 +305,7 @@ def test_config_update_then_master_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_zk_killed(install_framework):
+def test_config_update_then_zk_killed():
     run_planned_operation(
         bump_cpu_count_config, lambda: kill_task_with_pattern('zookeeper')
     )
@@ -314,7 +314,7 @@ def test_config_update_then_zk_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_partition(install_framework):
+def test_config_update_then_partition():
     host = get_node_host()
 
     def partition():
@@ -327,7 +327,7 @@ def test_config_update_then_partition(install_framework):
 
 
 @pytest.mark.recovery
-def test_config_update_then_all_partition(install_framework):
+def test_config_update_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
     def partition():
@@ -342,7 +342,7 @@ def test_config_update_then_all_partition(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_kill_task_in_node(install_framework):
+def test_cleanup_then_kill_task_in_node():
     host = get_node_host()
     run_planned_operation(
         run_cleanup,
@@ -353,7 +353,7 @@ def test_cleanup_then_kill_task_in_node(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_kill_all_task_in_node(install_framework):
+def test_cleanup_then_kill_all_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
     run_planned_operation(
         run_cleanup,
@@ -364,7 +364,7 @@ def test_cleanup_then_kill_all_task_in_node(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_scheduler_died(install_framework):
+def test_cleanup_then_scheduler_died():
     host = get_scheduler_host()
     run_planned_operation(
         run_cleanup,
@@ -375,7 +375,7 @@ def test_cleanup_then_scheduler_died(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_executor_killed(install_framework):
+def test_cleanup_then_executor_killed():
     host = get_node_host()
     run_planned_operation(
         run_cleanup,
@@ -386,7 +386,7 @@ def test_cleanup_then_executor_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_all_executors_killed(install_framework):
+def test_cleanup_then_all_executors_killed():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
     run_planned_operation(
         run_cleanup(),
@@ -399,7 +399,7 @@ def test_cleanup_then_all_executors_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_master_killed(install_framework):
+def test_cleanup_then_master_killed():
     run_planned_operation(
         run_cleanup(), lambda: kill_task_with_pattern('mesos-master')
     )
@@ -408,7 +408,7 @@ def test_cleanup_then_master_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_zk_killed(install_framework):
+def test_cleanup_then_zk_killed():
     run_planned_operation(
         run_cleanup(), lambda: kill_task_with_pattern('zookeeper')
     )
@@ -417,7 +417,7 @@ def test_cleanup_then_zk_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_partition(install_framework):
+def test_cleanup_then_partition():
     host = get_node_host()
 
     def partition():
@@ -430,7 +430,7 @@ def test_cleanup_then_partition(install_framework):
 
 
 @pytest.mark.recovery
-def test_cleanup_then_all_partition(install_framework):
+def test_cleanup_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
     def partition():
@@ -445,7 +445,7 @@ def test_cleanup_then_all_partition(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_kill_task_in_node(install_framework):
+def test_repair_then_kill_task_in_node():
     host = get_node_host()
     run_planned_operation(
         run_repair,
@@ -456,7 +456,7 @@ def test_repair_then_kill_task_in_node(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_kill_all_task_in_node(install_framework):
+def test_repair_then_kill_all_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
     run_planned_operation(
         run_repair,
@@ -467,7 +467,7 @@ def test_repair_then_kill_all_task_in_node(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_scheduler_died(install_framework):
+def test_repair_then_scheduler_died():
     host = get_scheduler_host()
     run_planned_operation(
         run_repair,
@@ -478,7 +478,7 @@ def test_repair_then_scheduler_died(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_executor_killed(install_framework):
+def test_repair_then_executor_killed():
     host = get_node_host()
     run_planned_operation(
         run_repair,
@@ -489,7 +489,7 @@ def test_repair_then_executor_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_all_executors_killed(install_framework):
+def test_repair_then_all_executors_killed():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
     run_planned_operation(
         run_repair,
@@ -502,7 +502,7 @@ def test_repair_then_all_executors_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_master_killed(install_framework):
+def test_repair_then_master_killed():
     run_planned_operation(
         run_repair,
         lambda: kill_task_with_pattern('mesos-master')
@@ -512,7 +512,7 @@ def test_repair_then_master_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_zk_killed(install_framework):
+def test_repair_then_zk_killed():
     run_planned_operation(
         run_repair,
         lambda: kill_task_with_pattern('zookeeper')
@@ -522,7 +522,7 @@ def test_repair_then_zk_killed(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_partition(install_framework):
+def test_repair_then_partition():
     host = get_node_host()
 
     def partition():
@@ -535,7 +535,7 @@ def test_repair_then_partition(install_framework):
 
 
 @pytest.mark.recovery
-def test_repair_then_all_partition(install_framework):
+def test_repair_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
     def partition():

@@ -22,6 +22,11 @@ else
     echo "Using provided CLUSTER_URL as cluster: $CLUSTER_URL"
 fi
 
+echo Security: $SECURITY
+if [ "$SECURITY" = "strict" ]; then
+    ${REPO_ROOT_DIR}/dcos-commons-tools/setup_permissions.sh nobody cassandra-role
+fi
+
 # Run shakedown tests:
 ${REPO_ROOT_DIR}/dcos-commons-tools/run_tests.py shakedown ${REPO_ROOT_DIR}/integration/tests/ ${REPO_ROOT_DIR}/integration/requirements.txt
 
