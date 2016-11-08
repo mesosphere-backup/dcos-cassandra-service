@@ -143,6 +143,7 @@ def unset_ssl_verification():
 def _nested_dict_merge(a, b, path=None):
     "ripped from http://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge"
     if path is None: path = []
+    a = a.copy()
     for key in b:
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
