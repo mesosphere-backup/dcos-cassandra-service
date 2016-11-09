@@ -76,8 +76,6 @@ public class DownloadSnapshot implements ExecutorTask {
 
             backupStorageDriver.download(context);
 
-            // TODO: Do cleanup (So, that we are good when we start restoring the snapshots)
-
             // Send TASK_FINISHED
             sendStatus(driver, Protos.TaskState.TASK_FINISHED,
                     "Finished downloading snapshots");

@@ -3,7 +3,7 @@ mainClassName = 'com.mesosphere.dcos.cassandra.executor.Main'
 
 ext {
     junitVer = '4.12'
-    awsVer = '1.10.54'
+    awsVer = '1.11.49'
 }
 
 dependencies {
@@ -11,7 +11,7 @@ dependencies {
     compile ('com.google.guava:guava:18.0'){force = true}
     compile 'org.apache.cassandra:cassandra-all:3.0.8'
     compile 'org.apache.commons:commons-compress:1.5'
-    compile "com.amazonaws:aws-java-sdk-core:${awsVer}"
+    compile ("com.amazonaws:aws-java-sdk-core:${awsVer}"){force = true}
     compile "com.amazonaws:aws-java-sdk:${awsVer}"
     compile "com.microsoft.azure:azure-storage:4.2.0"
     compile "commons-io:commons-io:2.5"
