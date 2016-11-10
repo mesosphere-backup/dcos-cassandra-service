@@ -71,29 +71,38 @@ public class CassandraTaskFactory implements ExecutorTaskFactory {
 
         switch (cassandraTask.getType()) {
             case BACKUP_SNAPSHOT:
-                return new BackupSnapshot(driver, cassandra, (BackupSnapshotTask) cassandraTask);
+                return new BackupSnapshot(
+                    driver,
+                    cassandra,
+                    (BackupSnapshotTask) cassandraTask);
             case BACKUP_UPLOAD:
                 return new UploadSnapshot(
                     driver,
                     cassandra,
                     (BackupUploadTask) cassandraTask,
                     StorageDriverFactory.createStorageDriver(
-                            (BackupUploadTask) cassandraTask));
+                    (BackupUploadTask) cassandraTask));
             case SNAPSHOT_DOWNLOAD:
                 return new DownloadSnapshot(
-                        driver,
-                        (DownloadSnapshotTask) cassandraTask,
-                        StorageDriverFactory.createStorageDriver(
-                                (DownloadSnapshotTask) cassandraTask));
+                    driver,
+                    (DownloadSnapshotTask) cassandraTask,
+                    StorageDriverFactory.createStorageDriver(
+                    (DownloadSnapshotTask) cassandraTask));
             case SNAPSHOT_RESTORE:
                 return new RestoreSnapshot(
-                        driver,
-                        (RestoreSnapshotTask) cassandraTask,
-                        cassandra.getTask().getConfig().getVersion());
+                    driver,
+                    (RestoreSnapshotTask) cassandraTask,
+                    cassandra);
             case CLEANUP:
-                return new Cleanup(driver, cassandra, (CleanupTask) cassandraTask);
+                return new Cleanup(
+                    driver,
+                    cassandra,
+                    (CleanupTask) cassandraTask);
             case REPAIR:
-                return new Repair(driver, cassandra, (RepairTask) cassandraTask);
+                return new Repair(
+                    driver,
+                    cassandra,
+                    (RepairTask) cassandraTask);
             default:
                 Protos.TaskInfo info = cassandraTask.getTaskInfo();
                 Protos.TaskStatus failed = Protos.TaskStatus

@@ -18,7 +18,6 @@ package com.mesosphere.dcos.cassandra.executor.backup;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 /**
  * BackupStorageDriver is the interface to all drivers that store and
@@ -31,12 +30,12 @@ public interface BackupStorageDriver {
      * @param ctx The context of the backup.
      * @throws IOException If the upload fails.
      */
-    void upload(BackupRestoreContext ctx) throws IOException, URISyntaxException;
+    void upload(BackupRestoreContext ctx) throws Exception;
 
     /**
      * Downloads snapshot files from a remote location.
      * @param ctx The context of the restore.
      * @throws IOException If the download from the remote location fails.
      */
-    void download(BackupRestoreContext ctx) throws IOException, URISyntaxException;
+    void download(BackupRestoreContext ctx) throws Exception;
 }

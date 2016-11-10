@@ -1,18 +1,20 @@
 ---
 post_title: Multi-Datacenter Deployments
-menu_order: 50
+menu_order: 40
+feature_maturity: preview
+enterprise: 'yes'
 ---
 
 # Requirements
 - All nodes in each datacenter MUST be reachable by the configured network addresses.
-- All DC/OS Cassandra deployments participating in the cluster MUST be configured to belong to the same cluster.
-- Each DC/OS Cassandra deployment participating in the cluster MUST be configured to belong to different datacenters.
+- All DC/OS Apache Cassandra deployments participating in the cluster MUST be configured to belong to the same cluster.
+- Each DC/OS Apache Cassandra deployment participating in the cluster MUST be configured to belong to different datacenters.
 
 # Installing the Initial Datacenter
 
-Install the cluster as described in the [Installation](#installation) section. If all virtual datacenters in the Cassandra cluster will reside in the same DC/OS cluster, no additional configuration is necessary.
+Install the cluster as described in the Install and Customize section. If all virtual datacenters in the Cassandra cluster will reside in the same DC/OS cluster, no additional configuration is necessary.
 
-If the cluster will span multiple DC/OS clusters, the `service.data_center_url` property of the cluster must be set to an address that is reachable and resolvable by the nodes in all subsequently installed deployments. Depending on the configuration of your DC/OS deployment, a good choice for this value may be the service router endpoint for the DC/OS Cassandra Service (i.e. <dcos_url>/service/cassandra/v1/datacenter>). If all datacenters in the cluster reside in the same DC/OS cluster, the `service.data_center_url` will automatically be set to the MesosDNS address of the cluster (i.e. http://<service.name>.marathon.mesos:<api_port>/v1/datacenter) if left blank. For example, if the default service name and api port are used, the URL is set to http://cassandra.marathon.mesos:9000/v1/datacenter.
+If the cluster will span multiple DC/OS clusters, the `service.data_center_url` property of the cluster must be set to an address that is reachable and resolvable by the nodes in all subsequently installed deployments. Depending on the configuration of your DC/OS deployment, a good choice for this value may be the service router endpoint for the DC/OS Apache Cassandra Service (i.e. `<master-IP>/service/cassandra/v1/datacenter`). If all datacenters in the cluster reside in the same DC/OS cluster, the `service.data_center_url` will automatically be set to the Mesos DNS address of the cluster (i.e., `http://<service.name>.marathon.mesos:<api_port>/v1/datacenter`) if left blank. For example, if the default service name and api port are used, the URL is set to `http://cassandra.marathon.mesos:9000/v1/datacenter`.
 
 # Installing Additional Datacenters
 Prior to installing additional datacenters, you MUST wait until at least one node per datacenter is active, and you SHOULD wait until at least the number of configured seed nodes is active.
@@ -76,9 +78,9 @@ During the installation of additional datacenters, you will see a plan generated
 }
 ```
 
-In the above, the `Sync DataCenter` phase has a block for each datacenter with a DC/OS Cassandra service deployment that contains a partition of the cluster.
+In the above, the `Sync DataCenter` phase has a block for each datacenter with a DC/OS Apache Cassandra service deployment that contains a partition of the cluster.
 
-During the execution of each block the DC/OS Cassandra Service registers its
+During the execution of each block the DC/OS Apache Cassandra Service registers its
 local endpoint with the datacenter indicated by the URL in the block's message. Then, it retrieves the current seed nodes for that datacenter.
 
 When the installation plan progresses to the `Deploy` phase, it provides the seeds from the
