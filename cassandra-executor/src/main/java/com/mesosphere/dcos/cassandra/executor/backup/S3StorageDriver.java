@@ -19,23 +19,19 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.Constants;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.*;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -250,6 +246,16 @@ public class S3StorageDriver implements BackupStorageDriver {
                         return FileVisitResult.CONTINUE;
                     }
                 });
+    }
+
+    @Override
+    public void uploadSchema(BackupRestoreContext ctx, String schema) throws Exception {
+        final String nodeId = ctx.getNodeId();
+        final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
+        final String key = getPrefixKey(ctx) + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
+        final InputStream stream = new ByteArrayInputStream(schema.getBytes(StandardCharsets.UTF_8));
+
+        amazonS3Client.putObject(getBucketName(ctx), key, stream, new ObjectMetadata());
     }
 
     @Override

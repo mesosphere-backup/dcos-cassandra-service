@@ -16,10 +16,7 @@
 package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.google.protobuf.TextFormat;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotStatus;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
 import org.apache.mesos.Protos;
@@ -99,6 +96,8 @@ public abstract class CassandraTaskStatus {
                 return CassandraDaemonStatus.create(status);
             case BACKUP_SNAPSHOT:
                 return BackupSnapshotStatus.create(status);
+            case BACKUP_SCHEMA:
+                return BackupSchemaStatus.create(status);
             case BACKUP_UPLOAD:
                 return BackupUploadStatus.create(status);
             case SNAPSHOT_DOWNLOAD:

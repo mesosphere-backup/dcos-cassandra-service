@@ -15,18 +15,13 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
-import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
-
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.DiscoveryInfo;
 import org.apache.mesos.offer.ResourceUtils;
@@ -35,7 +30,6 @@ import org.apache.mesos.offer.VolumeRequirement;
 import org.apache.mesos.util.Algorithms;
 
 import javax.annotation.Nullable;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,6 +89,10 @@ public abstract class CassandraTask {
          */
         BACKUP_UPLOAD,
         /**
+         * Task that backup schema for cassandra daemon.
+         */
+        BACKUP_SCHEMA,
+        /**
          * Task that downloads snapshotted column families.
          */
         SNAPSHOT_DOWNLOAD,
@@ -132,6 +130,8 @@ public abstract class CassandraTask {
                 return CassandraDaemonTask.parse(info);
             case BACKUP_SNAPSHOT:
                 return BackupSnapshotTask.parse(info);
+            case BACKUP_SCHEMA:
+                return BackupSchemaTask.parse(info);
             case BACKUP_UPLOAD:
                 return BackupUploadTask.parse(info);
             case SNAPSHOT_DOWNLOAD:

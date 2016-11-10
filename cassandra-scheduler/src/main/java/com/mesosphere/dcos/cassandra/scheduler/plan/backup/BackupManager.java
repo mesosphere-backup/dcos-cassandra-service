@@ -35,6 +35,7 @@ public class BackupManager extends DefaultObservable implements ClusterTaskManag
     private final ClusterTaskOfferRequirementProvider provider;
     private volatile BackupSnapshotPhase backup = null;
     private volatile UploadBackupPhase upload = null;
+    private volatile BackupSchemaPhase schema = null;
     private StateStore stateStore;
     private volatile BackupRestoreContext activeContext = null;
 
@@ -58,6 +59,10 @@ public class BackupManager extends DefaultObservable implements ClusterTaskManag
                         cassandraState,
                         provider);
                 this.upload = new UploadBackupPhase(
+                        context,
+                        cassandraState,
+                        provider);
+                this.schema = new BackupSchemaPhase(
                         context,
                         cassandraState,
                         provider);
@@ -87,12 +92,17 @@ public class BackupManager extends DefaultObservable implements ClusterTaskManag
                 for (String name : cassandraState.getBackupUploadTasks().keySet()) {
                     cassandraState.remove(name);
                 }
+                for (String name : cassandraState.getBackupSchemaTasks().keySet()) {
+                    cassandraState.remove(name);
+                }
             }
             stateStore.storeProperty(BACKUP_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
             backup = new BackupSnapshotPhase(context, cassandraState, provider);
             upload = new UploadBackupPhase(context, cassandraState, provider);
+            schema = new BackupSchemaPhase(context, cassandraState, provider);
             backup.subscribe(this);
             upload.subscribe(this);
+            schema.subscribe(this);
             //this volatile signals that backup is started
             activeContext = context;
         } catch (SerializationException | PersistenceException e) {
@@ -110,6 +120,7 @@ public class BackupManager extends DefaultObservable implements ClusterTaskManag
         try {
             cassandraState.remove(cassandraState.getBackupSnapshotTasks().keySet());
             cassandraState.remove(cassandraState.getBackupUploadTasks().keySet());
+            cassandraState.remove(cassandraState.getBackupSchemaTasks().keySet());
         } catch (PersistenceException e) {
             LOGGER.error(
                     "Error stopping backup. Reason: ",
@@ -127,14 +138,15 @@ public class BackupManager extends DefaultObservable implements ClusterTaskManag
     public boolean isComplete() {
         return (activeContext != null &&
                 backup != null && backup.isComplete() &&
-                upload != null && upload.isComplete());
+                upload != null && upload.isComplete() &&
+                schema != null && schema.isComplete());
     }
 
     public List<Phase> getPhases() {
         if (activeContext == null) {
             return Collections.emptyList();
         } else {
-            return Arrays.asList(backup, upload);
+            return Arrays.asList(backup, upload, schema);
         }
     }
 

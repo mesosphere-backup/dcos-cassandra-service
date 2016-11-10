@@ -39,4 +39,12 @@ public interface BackupStorageDriver {
      * @throws IOException If the download from the remote location fails.
      */
     void download(BackupRestoreContext ctx) throws IOException, URISyntaxException;
+
+    /**
+     * Uploads the schema for current cassandra daemon process
+     * @param ctx The context for the backup.
+     * @param schema Schema for the current cassandra node.
+     * @throws Exception If the upload fails.
+     */
+    void uploadSchema(BackupRestoreContext ctx, String schema) throws Exception;
 }
