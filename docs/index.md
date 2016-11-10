@@ -2,7 +2,7 @@
 post_title: Cassandra
 menu_order: 50
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 
