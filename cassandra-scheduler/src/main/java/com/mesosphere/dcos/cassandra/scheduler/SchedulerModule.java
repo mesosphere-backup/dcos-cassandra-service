@@ -15,6 +15,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
@@ -22,6 +23,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import io.dropwizard.client.HttpClientBuilder;
@@ -140,6 +142,9 @@ public class SchedulerModule extends AbstractModule {
         bind(new TypeLiteral<Serializer<RepairContext>>() {
         }).toInstance(RepairContext.JSON_SERIALIZER);
 
+        bind(new TypeLiteral<Serializer<UpgradeSSTableContext>>() {
+        }).toInstance(UpgradeSSTableContext.JSON_SERIALIZER);
+
         bind(new TypeLiteral<Serializer<DataCenterInfo>>() {
         }).toInstance(
                 DataCenterInfo.JSON_SERIALIZER
@@ -205,6 +210,7 @@ public class SchedulerModule extends AbstractModule {
         bind(RestoreManager.class).asEagerSingleton();
         bind(CleanupManager.class).asEagerSingleton();
         bind(RepairManager.class).asEagerSingleton();
+        bind(UpgradeSSTableManager.class).asEagerSingleton();
         bind(SeedsManager.class).asEagerSingleton();
         bind(PropertyDeserializer.class).to(JsonPropertyDeserializer.class);
     }

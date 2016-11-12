@@ -14,6 +14,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.configuration.ConfigurationFactory;
@@ -69,6 +70,7 @@ public class CassandraSchedulerTest {
     private RestoreManager restore;
     private CleanupManager cleanup;
     private RepairManager repair;
+    private UpgradeSSTableManager upgrade;
     private SeedsManager seeds;
     private ExecutorService executorService;
     private MesosConfig mesosConfig;
@@ -98,6 +100,7 @@ public class CassandraSchedulerTest {
         restore = Mockito.mock(RestoreManager.class);
         cleanup = Mockito.mock(CleanupManager.class);
         repair = Mockito.mock(RepairManager.class);
+        upgrade = Mockito.mock(UpgradeSSTableManager.class);
         seeds = Mockito.mock(SeedsManager.class);
 
         executorService = Executors.newCachedThreadPool();
@@ -162,6 +165,7 @@ public class CassandraSchedulerTest {
                 restore,
                 cleanup,
                 repair,
+                upgrade,
                 seeds,
                 executorService,
                 stateStore,

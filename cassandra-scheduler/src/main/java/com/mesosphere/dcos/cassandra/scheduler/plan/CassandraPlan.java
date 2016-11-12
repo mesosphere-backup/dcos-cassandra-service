@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
 import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.Observable;
 import org.apache.mesos.scheduler.Observer;
@@ -25,7 +26,8 @@ public class CassandraPlan extends DefaultObservable implements Plan, Observer {
             final BackupManager backup,
             final RestoreManager restore,
             final CleanupManager cleanup,
-            final RepairManager repair) {
+            final RepairManager repair,
+            final UpgradeSSTableManager upgrade) {
 
         return new CassandraPlan(
                 defaultConfigurationManager,
@@ -33,7 +35,8 @@ public class CassandraPlan extends DefaultObservable implements Plan, Observer {
                 backup,
                 restore,
                 cleanup,
-                repair
+                repair,
+                upgrade
         );
     }
 
@@ -47,11 +50,12 @@ public class CassandraPlan extends DefaultObservable implements Plan, Observer {
             final BackupManager backup,
             final RestoreManager restore,
             final CleanupManager cleanup,
-            final RepairManager repair) {
+            final RepairManager repair,
+            final UpgradeSSTableManager upgrade) {
         this.defaultConfigurationManager = defaultConfigurationManager;
         this.deployment = deployment;
         // Note: This ordering defines the ordering of the phases below:
-        this.managers = Arrays.asList(backup, restore, cleanup, repair);
+        this.managers = Arrays.asList(backup, restore, cleanup, repair, upgrade);
 
         this.deployment.subscribe(this);
         for (ClusterTaskManager<?> manager: this.managers) {
