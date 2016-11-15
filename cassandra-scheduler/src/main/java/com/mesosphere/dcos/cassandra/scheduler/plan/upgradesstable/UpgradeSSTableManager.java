@@ -55,7 +55,6 @@ public class UpgradeSSTableManager extends ChainedObserver implements ClusterTas
         }
     }
 
-
     public void start(UpgradeSSTableRequest request) {
         if (!ClusterTaskManager.canStart(this)) {
             LOGGER.warn("UpgradeSSTable already in progress: context = {}", this.activeContext);

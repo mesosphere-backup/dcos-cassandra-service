@@ -138,10 +138,8 @@ public class UpgradeSSTableTask extends CassandraTask {
             .build());
     }
 
-
     public UpgradeSSTableContext getUpgradeSSTableContext() {
         return getData().getUpgradeSSTableContext();
     }
-
 
 }
