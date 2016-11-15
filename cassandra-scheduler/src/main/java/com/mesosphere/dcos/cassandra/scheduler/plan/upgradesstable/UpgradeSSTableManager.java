@@ -99,19 +99,14 @@ public class UpgradeSSTableManager extends ChainedObserver implements ClusterTas
     }
 
     public boolean isInProgress() {
-        return (activeContext != null && !isComplete());
+        return activeContext != null && !isComplete();
     }
 
     public boolean isComplete() {
-        return (activeContext != null &&
-                phase != null && phase.isComplete());
+        return activeContext != null && phase != null && phase.isComplete();
     }
 
     public List<Phase> getPhases() {
-        if (phase == null) {
-            return Collections.emptyList();
-        } else {
-            return Arrays.asList(phase);
-        }
+        return phase == null ? Collections.emptyList() : Arrays.asList(phase);
     }
 }
