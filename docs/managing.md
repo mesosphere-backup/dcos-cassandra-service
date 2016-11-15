@@ -2,7 +2,7 @@
 post_title: Managing
 menu_order: 70
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 # Manage Nodes

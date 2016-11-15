@@ -2,7 +2,7 @@
 post_title: Quick Start
 menu_order: 0
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 

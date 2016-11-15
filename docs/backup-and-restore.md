@@ -2,7 +2,7 @@
 post_title: Backup and Restore
 menu_order: 60
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 DC/OS Apache Cassandra supports backup and restore from S3 storage for disaster recovery purposes.

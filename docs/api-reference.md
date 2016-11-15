@@ -2,7 +2,7 @@
 post_title: API Reference
 menu_order: 80
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 The DC/OS Apache Cassandra Service provides a REST API that may be accessed from outside the cluster. The <master-IP> parameter referenced below indicates the base URL of the DC/OS cluster on which the Cassandra Service is deployed. Depending on the transport layer security configuration of your deployment this may be a HTTP or a HTTPS URL.
