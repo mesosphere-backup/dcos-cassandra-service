@@ -43,12 +43,7 @@ public class CassandraTaskFactory implements ExecutorTaskFactory {
     @Override
     public ExecutorTask createTask(Protos.TaskInfo taskInfo, ExecutorDriver driver) throws ExecutorTaskException {
 
-        CassandraTask cassandraTask = null;
-        try {
-            cassandraTask = CassandraTask.parse(taskInfo);
-        } catch (IOException e) {
-            throw new ExecutorTaskException(e);
-        }
+        CassandraTask cassandraTask = CassandraTask.parse(taskInfo);
 
         switch(cassandraTask.getType()) {
             case CASSANDRA_DAEMON:

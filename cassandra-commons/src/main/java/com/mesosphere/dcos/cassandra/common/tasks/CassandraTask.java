@@ -124,8 +124,7 @@ public abstract class CassandraTask {
      * @return A CassandraTask parsed from info.
      * @throws IOException If a CassandraTask can not be parsed from info.
      */
-    public static CassandraTask parse(final Protos.TaskInfo info)
-        throws IOException {
+    public static CassandraTask parse(final Protos.TaskInfo info) {
         CassandraData data = CassandraData.parse(info.getData());
         switch (data.getType()) {
             case CASSANDRA_DAEMON:
@@ -145,7 +144,7 @@ public abstract class CassandraTask {
             case TEMPLATE:
                 return CassandraTemplateTask.parse(info);
             default:
-                throw new IOException("Failed to parse task from TaskInfo " +
+                throw new RuntimeException("Failed to parse task from TaskInfo " +
                     "type information is invalid");
         }
     }
