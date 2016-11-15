@@ -23,7 +23,6 @@ import com.mesosphere.dcos.cassandra.executor.metrics.MetricsConfig;
 import org.apache.cassandra.db.SystemKeyspace;
 import org.apache.cassandra.schema.SchemaKeyspace;
 import org.apache.cassandra.tools.NodeProbe;
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.executor.ProcessTask;
