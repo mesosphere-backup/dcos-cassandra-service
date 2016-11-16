@@ -29,6 +29,7 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
     private volatile BackupRestoreContext activeContext = null;
     private volatile DownloadSnapshotPhase download = null;
     private volatile RestoreSnapshotPhase restore = null;
+    private volatile RestoreSchemaPhase schema = null;
     private StateStore stateStore;
 
     @Inject
@@ -49,6 +50,10 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
                         cassandraState,
                         provider);
                 this.restore = new RestoreSnapshotPhase(
+                        context,
+                        cassandraState,
+                        provider);
+                this.schema = new RestoreSchemaPhase(
                         context,
                         cassandraState,
                         provider);
@@ -79,6 +84,10 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
                         cassandraState.getRestoreSnapshotTasks().keySet()){
                     cassandraState.remove(name);
                 }
+                for(String name:
+                        cassandraState.getRestoreSchemaTasks().keySet()){
+                    cassandraState.remove(name);
+                }
             }
             stateStore.storeProperty(RESTORE_KEY, BackupRestoreContext.JSON_SERIALIZER.serialize(context));
             this.download = new DownloadSnapshotPhase(
@@ -89,6 +98,11 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
                     context,
                     cassandraState,
                     provider);
+            this.schema = new RestoreSchemaPhase(
+                    context,
+                    cassandraState,
+                    provider);
+            this.schema.subscribe(this);
             this.download.subscribe(this);
             this.restore.subscribe(this);
             //this volatile signals that restore is started
@@ -108,6 +122,7 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
         try {
             // TODO: Delete restore context from Property store
             stateStore.clearProperty(RESTORE_KEY);
+            cassandraState.remove(cassandraState.getRestoreSchemaTasks().keySet());
             cassandraState.remove(cassandraState.getDownloadSnapshotTasks().keySet());
             cassandraState.remove(cassandraState.getRestoreSnapshotTasks().keySet());
         } catch (PersistenceException e) {
@@ -118,6 +133,7 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
         this.activeContext = null;
         this.download = null;
         this.restore = null;
+        this.schema = null;
 
         notifyObservers();
     }
@@ -129,14 +145,15 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
     public boolean isComplete() {
         return (activeContext != null &&
                 download != null && download.isComplete() &&
-                restore != null && restore.isComplete());
+                restore != null && restore.isComplete() &&
+                schema != null && schema.isComplete());
     }
 
     public List<Phase> getPhases() {
         if (activeContext == null) {
             return Collections.emptyList();
         } else {
-            return Arrays.asList(download, restore);
+            return Arrays.asList(schema, download, restore);
         }
     }
 }

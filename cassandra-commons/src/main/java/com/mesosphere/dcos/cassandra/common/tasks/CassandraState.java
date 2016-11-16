@@ -156,6 +156,14 @@ public class CassandraState extends SchedulerState implements Managed {
                         (RestoreSnapshotTask) entry.getValue())));
     }
 
+    public Map<String, RestoreSchemaTask> getRestoreSchemaTasks() {
+        refreshTasks();
+        return tasks.entrySet().stream().filter(entry -> entry.getValue()
+                .getType() == CassandraTask.TYPE.SCHEMA_RESTORE).collect
+                (Collectors.toMap(entry -> entry.getKey(), entry -> (
+                        (RestoreSchemaTask) entry.getValue())));
+    }
+
     public Map<String, CleanupTask> getCleanupTasks() {
         refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
@@ -319,6 +327,19 @@ public class CassandraState extends SchedulerState implements Managed {
         }
     }
 
+    public RestoreSchemaTask createRestoreSchemaTask(
+            CassandraDaemonTask daemon,
+            BackupRestoreContext context) throws PersistenceException {
+
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return RestoreSchemaTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
+    }
+
     public CleanupTask createCleanupTask(
             CassandraDaemonTask daemon,
             CleanupContext context) throws PersistenceException {
@@ -418,6 +439,19 @@ public class CassandraState extends SchedulerState implements Managed {
             return snapshots.get(name);
         } else {
             return createRestoreSnapshotTask(daemon, context);
+        }
+    }
+
+    public RestoreSchemaTask getOrCreateRestoreSchema(
+            CassandraDaemonTask daemon,
+            BackupRestoreContext context) throws PersistenceException {
+
+        String name = RestoreSchemaTask.nameForDaemon(daemon);
+        Map<String, RestoreSchemaTask> schemas = getRestoreSchemaTasks();
+        if (schemas.containsKey(name)) {
+            return schemas.get(name);
+        } else {
+            return createRestoreSchemaTask(daemon, context);
         }
     }
 

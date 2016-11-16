@@ -174,6 +174,25 @@ public class CassandraData {
         return new CassandraData(CassandraTask.TYPE.SNAPSHOT_RESTORE);
     }
 
+    public static final CassandraData createRestoreSchemaData(
+            final String hostname,
+            final BackupRestoreContext context) {
+        return new CassandraData(
+                CassandraTask.TYPE.SCHEMA_RESTORE,
+                hostname,
+                context.getNodeId(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getLocalLocation(),
+                context.getAccountId(),
+                context.getSecretKey(),
+                context.getUsesEmc());
+    }
+
+    public static final CassandraData createRestoreSchemaStatusData() {
+        return new CassandraData(CassandraTask.TYPE.SCHEMA_RESTORE);
+    }
+
     private final CassandraProtos.CassandraData data;
 
     private CassandraData(final ByteString bytes) {
@@ -373,6 +392,4 @@ public class CassandraData {
     public ByteString getBytes() {
         return data.toByteString();
     }
-
-
 }

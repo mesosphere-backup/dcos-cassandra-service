@@ -101,6 +101,10 @@ public abstract class CassandraTask {
          */
         SNAPSHOT_RESTORE,
         /**
+         * Task that restores the schema on a node.
+         */
+        SCHEMA_RESTORE,
+        /**
          * Task that performs cleanup on a node.
          */
         CLEANUP,
@@ -138,6 +142,8 @@ public abstract class CassandraTask {
                 return DownloadSnapshotTask.parse(info);
             case SNAPSHOT_RESTORE:
                 return RestoreSnapshotTask.parse(info);
+            case SCHEMA_RESTORE:
+                return RestoreSchemaTask.parse(info);
             case CLEANUP:
                 return CleanupTask.parse(info);
             case REPAIR:

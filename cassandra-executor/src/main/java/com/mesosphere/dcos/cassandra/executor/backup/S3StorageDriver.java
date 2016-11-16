@@ -27,6 +27,9 @@ import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
+import org.apache.commons.io.IOUtils;
+import org.glassfish.hk2.api.messaging.MessageReceiver;
+import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -277,6 +280,20 @@ public class S3StorageDriver implements BackupStorageDriver {
             LOGGER.error("Error downloading the file {} : {}", destinationFile, e);
             throw new Exception(e);
         }
+    }
+
+    @Override
+    public String downloadSchema(BackupRestoreContext ctx) throws Exception {
+        final String nodeId = ctx.getNodeId();
+        final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
+        final String key = getPrefixKey(ctx) + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
+
+        S3Object object = amazonS3Client.getObject(
+                new GetObjectRequest(getBucketName(ctx), key));
+        InputStream objectData = object.getObjectContent();
+        String schema = IOUtils.toString(objectData, "UTF-8");
+        objectData.close();
+        return schema;
     }
 
     private static Map<String, Long> listSnapshotFiles(AmazonS3Client amazonS3Client,
