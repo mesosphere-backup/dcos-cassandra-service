@@ -1,14 +1,14 @@
-package com.mesosphere.dcos.cassandra.scheduler.plan.repair;
+package com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable;
 
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
-import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
-public class RepairBlockTest {
-    public static final String REPAIR_NODE_0 = "repair-node-0";
+public class UpgradeSSTableBlockTest {
+    public static final String UPGRADESSTABLE_NODE_0 = "upgradesstable-node-0";
     public static final String NODE_0 = "node-0";
     @Mock
     private ClusterTaskOfferRequirementProvider provider;
@@ -33,7 +33,7 @@ public class RepairBlockTest {
     private CassandraState cassandraState;
     @Mock
     private SchedulerClient client;
-    public static final RepairContext CONTEXT = RepairContext.create(Collections.emptyList(),
+    public static final UpgradeSSTableContext CONTEXT = UpgradeSSTableContext.create(Collections.emptyList(),
             Collections.emptyList(), Collections.emptyList());
 
     @Before
@@ -48,15 +48,15 @@ public class RepairBlockTest {
 
     @Test
     public void testInitial() {
-        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
-        final RepairContext context = RepairContext.create(Collections.emptyList(),
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final RepairBlock block = RepairBlock.create(
+        final UpgradeSSTableBlock block = UpgradeSSTableBlock.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(REPAIR_NODE_0, block.getName());
+        Assert.assertEquals(UPGRADESSTABLE_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
         Assert.assertTrue(block.isPending());
     }
@@ -65,16 +65,16 @@ public class RepairBlockTest {
     public void testComplete() {
         final CassandraTask mockCassandraTask = Mockito.mock(CassandraTask.class);
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        Mockito.when(cassandraState.get(REPAIR_NODE_0))
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
-        final RepairContext context = RepairContext.create(Collections.emptyList(),
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final RepairBlock block = RepairBlock.create(
+        final UpgradeSSTableBlock block = UpgradeSSTableBlock.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(REPAIR_NODE_0, block.getName());
+        Assert.assertEquals(UPGRADESSTABLE_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
         Assert.assertTrue(block.isComplete());
     }
@@ -82,20 +82,20 @@ public class RepairBlockTest {
     @Test
     public void testTaskStartAlreadyCompleted() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final RepairContext context = RepairContext.create(Collections.emptyList(),
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
 
-        final RepairTask task = Mockito.mock(RepairTask.class);
+        final UpgradeSSTableTask task = Mockito.mock(UpgradeSSTableTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito
-                .when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT))
+                .when(cassandraState.getOrCreateUpgradeSSTable(daemonTask, CONTEXT))
                 .thenReturn(task);
 
-        final RepairBlock block = RepairBlock.create(
+        final UpgradeSSTableBlock block = UpgradeSSTableBlock.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -110,19 +110,19 @@ public class RepairBlockTest {
     @Test
     public void testTaskStart() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
 
-        final RepairTask task = Mockito.mock(RepairTask.class);
+        final UpgradeSSTableTask task = Mockito.mock(UpgradeSSTableTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
-        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.REPAIR);
+        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.CLEANUP);
         Mockito
-                .when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT))
+                .when(cassandraState.getOrCreateUpgradeSSTable(daemonTask, CONTEXT))
                 .thenReturn(task);
 
-        final RepairBlock block = RepairBlock.create(
+        final UpgradeSSTableBlock block = UpgradeSSTableBlock.create(
                 NODE_0,
                 cassandraState,
                 provider,

@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
 import org.apache.mesos.Protos;
 
 import java.io.IOException;
@@ -172,6 +173,22 @@ public class CassandraData {
 
     public static final CassandraData createRestoreSnapshotStatusData() {
         return new CassandraData(CassandraTask.TYPE.SNAPSHOT_RESTORE);
+    }
+
+    public static final CassandraData createUpgradeSSTableData(
+            final String hostname,
+            final UpgradeSSTableContext context) {
+
+        return new CassandraData(
+                CassandraTask.TYPE.UPGRADESSTABLE,
+                hostname,
+                context.getNodes(),
+                context.getKeySpaces(),
+                context.getColumnFamilies());
+    }
+
+    public static final CassandraData createUpgradeSSTableStatusData() {
+        return new CassandraData(CassandraTask.TYPE.UPGRADESSTABLE);
     }
 
     private final CassandraProtos.CassandraData data;
@@ -370,9 +387,14 @@ public class CassandraData {
             data.getUsesEmc());
     }
 
+    public UpgradeSSTableContext getUpgradeSSTableContext() {
+        return new UpgradeSSTableContext(
+                data.getNodesList(),
+                data.getKeySpacesList(),
+                data.getColumnFamiliesList());
+    }
+
     public ByteString getBytes() {
         return data.toByteString();
     }
-
-
 }

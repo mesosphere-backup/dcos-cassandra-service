@@ -13,12 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mesosphere.dcos.cassandra.common.tasks;
+package com.mesosphere.dcos.cassandra.common.tasks.upgradesstable;
+
+
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
+import org.apache.mesos.Protos;
 
 /**
- * Interface for the generic context object for ClusterTask execution (e.g
- * Backup, Restore, Cleanup, UpgradeSSTable, ... ). It is used to persist any necessary
- * state for the set of tasks that implement the cluster wie operation.
+ * UpgradeSSTableStatus extends CassandraTaskStatus to implement the status object for
+ * UpgradeSSTableTask.
  */
-public interface ClusterTaskContext {
+public class UpgradeSSTableStatus extends CassandraTaskStatus {
+
+    public static UpgradeSSTableStatus create(final Protos.TaskStatus status) {
+        return new UpgradeSSTableStatus(status);
+    }
+
+    protected UpgradeSSTableStatus(final Protos.TaskStatus status) {
+        super(status);
+    }
 }

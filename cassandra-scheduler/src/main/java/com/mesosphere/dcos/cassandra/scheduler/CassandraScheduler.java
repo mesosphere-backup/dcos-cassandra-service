@@ -17,6 +17,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.mesos.Protos;
@@ -62,6 +63,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     private final RestoreManager restore;
     private final CleanupManager cleanup;
     private final RepairManager repair;
+    private final UpgradeSSTableManager upgrade;
     private final SeedsManager seeds;
     private final ExecutorService executor;
     private final StateStore stateStore;
@@ -83,6 +85,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             final RestoreManager restore,
             final CleanupManager cleanup,
             final RepairManager repair,
+            final UpgradeSSTableManager upgrade,
             final SeedsManager seeds,
             final ExecutorService executor,
             final StateStore stateStore,
@@ -107,6 +110,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         this.restore = restore;
         this.cleanup = cleanup;
         this.repair = repair;
+        this.upgrade = upgrade;
         this.seeds = seeds;
         this.executor = executor;
         this.stateStore = stateStore;
@@ -163,7 +167,8 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                     backup,
                     restore,
                     cleanup,
-                    repair);
+                    repair,
+                    upgrade);
             plan.subscribe(this);
             planManager.setPlan(plan);
             reconciler.start();

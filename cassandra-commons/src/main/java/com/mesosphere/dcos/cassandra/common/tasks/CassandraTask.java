@@ -22,6 +22,7 @@ import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.DiscoveryInfo;
 import org.apache.mesos.offer.ResourceUtils;
@@ -110,6 +111,10 @@ public abstract class CassandraTask {
          */
         REPAIR,
         /**
+         * Task that performs upgrade SSTables on a node.
+         */
+        UPGRADESSTABLE,
+        /**
          * Place holder for pre-reserving resources for Cluster Tasks
          */
         TEMPLATE
@@ -142,6 +147,8 @@ public abstract class CassandraTask {
                 return CleanupTask.parse(info);
             case REPAIR:
                 return RepairTask.parse(info);
+            case UPGRADESSTABLE:
+                return UpgradeSSTableTask.parse(info);
             case TEMPLATE:
                 return CassandraTemplateTask.parse(info);
             default:

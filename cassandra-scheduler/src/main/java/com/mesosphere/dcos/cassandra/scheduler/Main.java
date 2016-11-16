@@ -91,6 +91,8 @@ public class Main extends Application<MutableSchedulerConfiguration> {
     environment.jersey().register(
       injector.getInstance(RepairResource.class));
     environment.jersey().register(
+      injector.getInstance(UpgradeSSTableResource.class));
+    environment.jersey().register(
       injector.getInstance(DataCenterResource.class));
     environment.jersey().register(
       injector.getInstance(ConnectionResource.class));

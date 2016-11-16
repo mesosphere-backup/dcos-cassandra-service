@@ -15,6 +15,8 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.Protos;
@@ -170,6 +172,14 @@ public class CassandraState extends SchedulerState implements Managed {
                 .getType() == CassandraTask.TYPE.REPAIR).collect
                 (Collectors.toMap(entry -> entry.getKey(), entry -> (
                         (RepairTask) entry.getValue())));
+    }
+
+    public Map<String, UpgradeSSTableTask> getUpgradeSSTableTasks() {
+        refreshTasks();
+        return tasks.entrySet().stream().filter(entry -> entry.getValue()
+                .getType() == CassandraTask.TYPE.UPGRADESSTABLE).collect
+                (Collectors.toMap(entry -> entry.getKey(), entry -> (
+                        (UpgradeSSTableTask) entry.getValue())));
     }
 
     public CassandraContainer createCassandraContainer(CassandraDaemonTask daemonTask) throws PersistenceException {
@@ -344,6 +354,19 @@ public class CassandraState extends SchedulerState implements Managed {
         }
     }
 
+    public UpgradeSSTableTask createUpgradeSSTableTask(
+            CassandraDaemonTask daemon,
+            UpgradeSSTableContext context) throws PersistenceException {
+
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return UpgradeSSTableTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
+    }
+
     public CassandraDaemonTask getOrCreateDaemon(String name) throws
             PersistenceException, ConfigStoreException {
         if (getDaemons().containsKey(name)) {
@@ -444,6 +467,19 @@ public class CassandraState extends SchedulerState implements Managed {
             return repairs.get(name);
         } else {
             return createRepairTask(daemon, context);
+        }
+    }
+
+    public UpgradeSSTableTask getOrCreateUpgradeSSTable(
+            CassandraDaemonTask daemon,
+            UpgradeSSTableContext context) throws PersistenceException {
+
+        String name = UpgradeSSTableTask.nameForDaemon(daemon);
+        Map<String, UpgradeSSTableTask> upgradesstables = getUpgradeSSTableTasks();
+        if (upgradesstables.containsKey(name)) {
+            return upgradesstables.get(name);
+        } else {
+            return createUpgradeSSTableTask(daemon, context);
         }
     }
 
