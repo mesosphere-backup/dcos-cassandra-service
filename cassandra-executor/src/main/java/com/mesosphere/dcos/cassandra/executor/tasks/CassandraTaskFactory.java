@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import com.mesosphere.dcos.cassandra.executor.backup.StorageDriverFactory;
 import org.apache.mesos.ExecutorDriver;
@@ -21,9 +22,6 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-/**
- * Created by gabriel on 9/20/16.
- */
 public class CassandraTaskFactory implements ExecutorTaskFactory {
     private static final int DEFAULT_CORE_THREAD_POOL_SIZE = 10;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -103,6 +101,11 @@ public class CassandraTaskFactory implements ExecutorTaskFactory {
                     driver,
                     cassandra,
                     (RepairTask) cassandraTask);
+            case UPGRADESSTABLE:
+                return new UpgradeSSTable(
+                        driver,
+                        cassandra,
+                        (UpgradeSSTableTask) cassandraTask);
             default:
                 Protos.TaskInfo info = cassandraTask.getTaskInfo();
                 Protos.TaskStatus failed = Protos.TaskStatus
