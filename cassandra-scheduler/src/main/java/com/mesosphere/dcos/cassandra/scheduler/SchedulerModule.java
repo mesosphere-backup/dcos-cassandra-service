@@ -185,8 +185,10 @@ public class SchedulerModule extends AbstractModule {
                 configuration.getPlacementStrategy());
         bindConstant().annotatedWith(
                 Names.named("ConfiguredPhaseStrategy")).to(
-                configuration.getPhaseStrategy()
-        );
+                configuration.getPhaseStrategy());
+        bindConstant().annotatedWith(
+                Names.named("ConfiguredEnableUpgradeSSTableEndpoint")).to(
+                configuration.getEnableUpgradeSSTableEndpoint());
 
         HttpClientConfiguration httpClient = new HttpClientConfiguration();
         bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(httpClient).build("http-client"));

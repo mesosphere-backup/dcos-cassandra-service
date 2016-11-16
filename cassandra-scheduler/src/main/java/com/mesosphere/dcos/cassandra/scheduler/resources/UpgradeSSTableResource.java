@@ -17,16 +17,26 @@ import javax.ws.rs.core.Response;
 public class UpgradeSSTableResource {
 
     private final ClusterTaskRunner<UpgradeSSTableRequest> runner;
+    private final UpgradeSSTableManager manager;
 
     @Inject
     public UpgradeSSTableResource(final UpgradeSSTableManager manager) {
         runner = new ClusterTaskRunner<>(manager, "UpgradeSSTable");
+        this.manager = manager;
     }
 
     @PUT
     @Timed
     @Path("/start")
     public Response start(UpgradeSSTableRequest request) {
+        if (!manager.isUpgradeSSTableEndpointEnabled()) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(ErrorResponse.fromString(
+                            "Upgrading SSTable endpoint is not enabled. " +
+                            "Please enable it by setting $ENABLE_UPGRADE_SSTABLE_ENDPOINT"))
+                    .build();
+        }
+
         return runner.start(request);
     }
 

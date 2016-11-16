@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable;
 
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
@@ -29,15 +30,18 @@ public class UpgradeSSTableManager extends ChainedObserver implements ClusterTas
     private volatile UpgradeSSTablePhase phase = null;
     private volatile UpgradeSSTableContext activeContext = null;
     private StateStore stateStore;
+    private boolean enableUpgradeSSTableEndpoint = false;
 
     @Inject
     public UpgradeSSTableManager(
             CassandraState cassandraState,
             ClusterTaskOfferRequirementProvider provider,
-            StateStore stateStore) {
+            StateStore stateStore,
+            @Named("ConfiguredEnableUpgradeSSTableEndpoint") boolean enableUpgradeSSTableEndpoint) {
         this.provider = provider;
         this.cassandraState = cassandraState;
         this.stateStore = stateStore;
+        this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
 
         // Load UpgradeSSTableManager from state store
         try {
@@ -108,4 +112,6 @@ public class UpgradeSSTableManager extends ChainedObserver implements ClusterTas
     public List<Phase> getPhases() {
         return phase == null ? Collections.emptyList() : Arrays.asList(phase);
     }
+
+    public boolean isUpgradeSSTableEndpointEnabled() { return enableUpgradeSSTableEndpoint; }
 }
