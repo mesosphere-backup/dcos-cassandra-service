@@ -191,22 +191,6 @@ public class CassandraData {
         return new CassandraData(CassandraTask.TYPE.UPGRADESSTABLE);
     }
 
-    public static final CassandraData createUpgradeSSTableData(
-            final String hostname,
-            final UpgradeSSTableContext context) {
-
-        return new CassandraData(
-                CassandraTask.TYPE.UPGRADESSTABLE,
-                hostname,
-                context.getNodes(),
-                context.getKeySpaces(),
-                context.getColumnFamilies());
-    }
-
-    public static final CassandraData createUpgradeSSTableStatusData() {
-        return new CassandraData(CassandraTask.TYPE.UPGRADESSTABLE);
-    }
-
     private final CassandraProtos.CassandraData data;
 
     private CassandraData(final ByteString bytes) {

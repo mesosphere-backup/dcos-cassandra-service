@@ -90,10 +90,6 @@ public abstract class CassandraTask {
          */
         BACKUP_UPLOAD,
         /**
-         * Task that backup schema for cassandra daemon.
-         */
-        BACKUP_SCHEMA,
-        /**
          * Task that downloads snapshotted column families.
          */
         SNAPSHOT_DOWNLOAD,
@@ -117,7 +113,11 @@ public abstract class CassandraTask {
         /**
          * Place holder for pre-reserving resources for Cluster Tasks
          */
-        TEMPLATE
+        TEMPLATE,
+        /**
+         * Task that backup schema for cassandra daemon.
+         */
+        BACKUP_SCHEMA,
     }
 
     /**
