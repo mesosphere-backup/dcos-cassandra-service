@@ -14,17 +14,17 @@ import java.util.Set;
 
 /**
  */
-public class StorageUtil {
+public final class StorageUtil {
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(StorageUtil.class);
 
-  private final Set<String> SKIP_KEYSPACES = ImmutableSet.of("system");
-  private final Map<String, List<String>> SKIP_COLUMN_FAMILIES = ImmutableMap.of();
+  private static final Set<String> SKIP_KEYSPACES = ImmutableSet.of("system");
+  private static final Map<String, List<String>> SKIP_COLUMN_FAMILIES = ImmutableMap.of();
 
   /**
    * Filters unwanted keyspaces and column families
    */
-  boolean isValidBackupDir(File ksDir, File cfDir, File bkDir) {
+  static boolean isValidBackupDir(File ksDir, File cfDir, File bkDir) {
     if (!bkDir.isDirectory() && !bkDir.exists()) {
       return false;
     }
@@ -45,7 +45,7 @@ public class StorageUtil {
     return true;
   }
 
-  Optional<File> getValidSnapshotDirectory(File snapshotsDir, String snapshotName) {
+  static Optional<File> getValidSnapshotDirectory(File snapshotsDir, String snapshotName) {
     File validSnapshot = null;
     for (File snapshotDir : snapshotsDir.listFiles())
       if (snapshotDir.getName().matches(snapshotName)) {
