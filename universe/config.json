@@ -69,7 +69,7 @@
 				"data_center_url": {
 					"id": "http://cassandra/docs/mesosphere.com/service/data_center_url",
 					"type": "string",
-					"description": "The URL from which the data center for the cluster managed by this service instance will server its data center information."
+					"description": "The URL from which the data center for the cluster managed by this service instance will serve its data center information."
 				},
 				"external_data_center_urls": {
 					"id": "http://cassandra/docs/mesosphere.com/service/data_center_url",
