@@ -117,7 +117,7 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   private boolean isValidRestoreType() {
-    return restoreType.matches("existing|new");
+    return restoreType == null? true: restoreType.matches("existing|new");
   }
 
   @Override

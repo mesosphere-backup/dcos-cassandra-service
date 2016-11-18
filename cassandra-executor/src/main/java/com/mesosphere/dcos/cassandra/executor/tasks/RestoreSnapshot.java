@@ -119,7 +119,7 @@ public class RestoreSnapshot implements ExecutorTask {
 
                         final String columnFamilyPath = columnFamily.getAbsolutePath();
                         final List<String> command = Arrays.asList(
-                                ssTableLoaderBinary, "d", libProcessAddress, "f",
+                                ssTableLoaderBinary, "-d", libProcessAddress, "-f",
                                 cassandraYaml, columnFamilyPath);
                         LOGGER.info("Executing command: {}", command);
 
