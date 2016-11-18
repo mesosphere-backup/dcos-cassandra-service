@@ -75,6 +75,7 @@ public abstract class CassandraTask {
 
     /**
      * Enumeration of the types of Cassandra Tasks.
+     * Note: Always add new types to the end of this list so that existing tasks get serialized/deserialized correctly.
      */
     public enum TYPE {
         /**
@@ -107,13 +108,13 @@ public abstract class CassandraTask {
          */
         REPAIR,
         /**
-         * Task that performs upgrade SSTables on a node.
-         */
-        UPGRADESSTABLE,
-        /**
          * Place holder for pre-reserving resources for Cluster Tasks
          */
         TEMPLATE,
+        /**
+         * Task that performs upgrade SSTables on a node.
+         */
+        UPGRADESSTABLE,
         /**
          * Task that backup schema for cassandra daemon.
          */
