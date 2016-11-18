@@ -89,4 +89,6 @@ message CassandraData{
     optional string node = 16;
 
     optional bool usesEmc = 17;
+
+    optional string restoreType = 18;
 }

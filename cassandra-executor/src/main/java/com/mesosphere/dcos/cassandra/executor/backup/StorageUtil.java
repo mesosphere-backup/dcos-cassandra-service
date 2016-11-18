@@ -20,6 +20,7 @@ public class StorageUtil {
 
   private final Set<String> SKIP_KEYSPACES = ImmutableSet.of("system");
   private final Map<String, List<String>> SKIP_COLUMN_FAMILIES = ImmutableMap.of();
+  public static final String SCHEMA_FILE = "schema.cql";
 
   /**
    * Filters unwanted keyspaces and column families

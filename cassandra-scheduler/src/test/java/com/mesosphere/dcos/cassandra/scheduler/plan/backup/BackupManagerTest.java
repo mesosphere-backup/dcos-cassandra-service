@@ -56,7 +56,7 @@ public class BackupManagerTest {
 
     @Test
     public void testInitialWithState() throws SerializationException {
-        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false, "");
         when(mockState.fetchProperty(BackupManager.BACKUP_KEY)).thenReturn(
                 BackupRestoreContext.JSON_SERIALIZER.serialize(context));
         BackupManager manager = new BackupManager(mockCassandraState, mockProvider, mockState);
@@ -190,6 +190,7 @@ public class BackupManagerTest {
         request.setName("");
         request.setS3AccessKey("");
         request.setS3SecretKey("");
+        request.setRestoreType("");
         return request;
     }
 }

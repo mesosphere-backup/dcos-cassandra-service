@@ -92,7 +92,8 @@ public class CassandraData {
             context.getLocalLocation(),
             context.getAccountId(),
             context.getSecretKey(),
-            context.getUsesEmc());
+            context.getUsesEmc(),
+            context.getRestoreType());
     }
 
     public static final CassandraData createBackupSnapshotStatusData() {
@@ -111,7 +112,8 @@ public class CassandraData {
             context.getLocalLocation(),
             context.getAccountId(),
             context.getSecretKey(),
-            context.getUsesEmc());
+            context.getUsesEmc(),
+            context.getRestoreType());
     }
 
     public static final CassandraData createBackupUploadStatusData() {
@@ -131,7 +133,8 @@ public class CassandraData {
             context.getLocalLocation(),
             context.getAccountId(),
             context.getSecretKey(),
-            context.getUsesEmc());
+            context.getUsesEmc(),
+            context.getRestoreType());
     }
 
     public static final CassandraData createSnapshotDownloadStatusData() {
@@ -150,7 +153,8 @@ public class CassandraData {
             context.getLocalLocation(),
             context.getAccountId(),
             context.getSecretKey(),
-            context.getUsesEmc());
+            context.getUsesEmc(),
+            context.getRestoreType());
     }
 
     public static final CassandraData createRestoreSnapshotStatusData() {
@@ -241,7 +245,8 @@ public class CassandraData {
                           final String localLocation,
                           final String accountId,
                           final String secretKey,
-                          final boolean usesEmc) {
+                          final boolean usesEmc,
+                          final String restoreType) {
 
         data = CassandraProtos.CassandraData.newBuilder()
             .setType(type.ordinal())
@@ -254,6 +259,7 @@ public class CassandraData {
             .setSecretKey(secretKey)
             .setState(Protos.TaskState.TASK_STAGING.ordinal())
             .setUsesEmc(usesEmc)
+            .setRestoreType(restoreType)
             .build();
 
     }
@@ -367,7 +373,8 @@ public class CassandraData {
             data.getLocalLocation(),
             data.getAccoundId(),
             data.getSecretKey(),
-            data.getUsesEmc());
+            data.getUsesEmc(),
+            data.getRestoreType());
     }
 
     public UpgradeSSTableContext getUpgradeSSTableContext() {

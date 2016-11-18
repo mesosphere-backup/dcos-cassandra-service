@@ -26,6 +26,7 @@ import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
+import org.apache.commons.logging.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,20 +220,31 @@ public class S3StorageDriver implements BackupStorageDriver {
         final String nodeId = ctx.getNodeId();
         final File[] keyspaces = getNonSystemKeyspaces(ctx);
         final String bucketName = getBucketName(ctx);
+        final String localLocation = ctx.getLocalLocation();
         final TransferManager tx = getS3TransferManager(ctx);
         final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
 
         try {
-            for (File keyspace : keyspaces) {
-                for (File cfDir : getColumnFamilyDir(keyspace)) {
-                    final String columnFamily = cfDir.getName().substring(0, cfDir.getName().indexOf("-"));
-                    final Map<String, Long> snapshotFileKeys = listSnapshotFiles(amazonS3Client,
-                            bucketName,
-                            backupName + "/" + nodeId + "/" + keyspace.getName() + "/" + columnFamily);
-                    for (String fileKey : snapshotFileKeys.keySet()) {
-                        final String destinationFile = cfDir.getAbsolutePath() + fileKey.substring(fileKey.lastIndexOf("/"));
-                        downloadFile(tx, bucketName, fileKey, destinationFile);
-                        LOGGER.info("Keyspace {}, Column Family {}, FileKey {}, destination {}", keyspace, columnFamily, fileKey, destinationFile);
+            if (ctx.getRestoreType().equals("new")) {
+                final Map<String, Long> snapshotFileKeys = listSnapshotFiles(amazonS3Client,
+                        bucketName,
+                        backupName + File.separator + nodeId);
+                LOGGER.info("Snapshot files for this node: {}", snapshotFileKeys);
+                for (String fileKey : snapshotFileKeys.keySet()) {
+                    downloadFile(tx, bucketName, fileKey, localLocation + File.separator + fileKey);
+                }
+            } else {
+                for (File keyspace : keyspaces) {
+                    for (File cfDir : getColumnFamilyDir(keyspace)) {
+                        final String columnFamily = cfDir.getName().substring(0, cfDir.getName().indexOf("-"));
+                        final Map<String, Long> snapshotFileKeys = listSnapshotFiles(amazonS3Client,
+                                bucketName,
+                                backupName + "/" + nodeId + "/" + keyspace.getName() + "/" + columnFamily);
+                        for (String fileKey : snapshotFileKeys.keySet()) {
+                            final String destinationFile = cfDir.getAbsolutePath() + fileKey.substring(fileKey.lastIndexOf("/"));
+                            downloadFile(tx, bucketName, fileKey, destinationFile);
+                            LOGGER.info("Keyspace {}, Column Family {}, FileKey {}, destination {}", keyspace, columnFamily, fileKey, destinationFile);
+                        }
                     }
                 }
             }
@@ -251,6 +263,17 @@ public class S3StorageDriver implements BackupStorageDriver {
                               String destinationFile) throws Exception{
         try {
             final File snapshotFile = new File(destinationFile);
+            // Only create parent directory once, if it doesn't exist.
+            final File parentDir = new File(snapshotFile.getParent());
+            if (!parentDir.isDirectory()) {
+                final boolean parentDirCreated = parentDir.mkdirs();
+                if (!parentDirCreated) {
+                    LOGGER.error(
+                            "Error creating parent directory for file: {}. Skipping to next",
+                            destinationFile);
+                    return;
+                }
+            }
             snapshotFile.createNewFile();
             final Download download = tx.download(bucketName, sourcePrefixKey, snapshotFile);
             download.waitForCompletion();
