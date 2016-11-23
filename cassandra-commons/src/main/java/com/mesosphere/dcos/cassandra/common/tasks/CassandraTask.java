@@ -19,10 +19,7 @@ import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
@@ -118,6 +115,10 @@ public abstract class CassandraTask {
          * Task that performs upgrade SSTables on a node.
          */
         UPGRADESSTABLE,
+        /**
+         * Task that backup schema for cassandra daemon.
+         */
+        BACKUP_SCHEMA,
     }
 
     /**
@@ -135,6 +136,8 @@ public abstract class CassandraTask {
                 return CassandraDaemonTask.parse(info);
             case BACKUP_SNAPSHOT:
                 return BackupSnapshotTask.parse(info);
+            case BACKUP_SCHEMA:
+                return BackupSchemaTask.parse(info);
             case BACKUP_UPLOAD:
                 return BackupUploadTask.parse(info);
             case SNAPSHOT_DOWNLOAD:

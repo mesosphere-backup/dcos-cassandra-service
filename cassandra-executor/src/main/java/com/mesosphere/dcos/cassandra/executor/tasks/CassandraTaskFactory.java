@@ -1,10 +1,7 @@
 package com.mesosphere.dcos.cassandra.executor.tasks;
 
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
@@ -22,6 +19,10 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+/**
+ * Implements creation of Cassandra Daemon Process
+ * or Maintenance Task objects.
+ */
 public class CassandraTaskFactory implements ExecutorTaskFactory {
     private static final int DEFAULT_CORE_THREAD_POOL_SIZE = 10;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -79,7 +80,14 @@ public class CassandraTaskFactory implements ExecutorTaskFactory {
                     cassandra,
                     (BackupUploadTask) cassandraTask,
                     StorageDriverFactory.createStorageDriver(
-                    (BackupUploadTask) cassandraTask));
+                                cassandraTask));
+            case BACKUP_SCHEMA:
+                return new BackupSchema(
+                        driver,
+                        cassandra,
+                        (BackupSchemaTask) cassandraTask,
+                        StorageDriverFactory.createStorageDriver(
+                                cassandraTask));
             case SNAPSHOT_DOWNLOAD:
                 return new DownloadSnapshot(
                     driver,
