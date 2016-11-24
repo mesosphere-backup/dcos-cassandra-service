@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.common.tasks.repair;
 
 import com.google.common.collect.Iterators;
+import com.mesosphere.dcos.cassandra.common.serialization.JsonSerializer;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -18,7 +19,7 @@ public class RepairContextTest {
                 Arrays.asList("node1"), Arrays.asList("keyspace1"), Arrays.asList("column_family1"));
         ObjectMapper om = new ObjectMapper();
 
-        String jsonContext = new String(RepairContext.JSON_SERIALIZER.serialize(context), "ISO-8859-1");
+        String jsonContext = new String(JsonSerializer.create(RepairContext.class).serialize(context), "ISO-8859-1");
 
         JsonNode rehydratedContext = om.readTree(jsonContext);
         List<String> keys = new ArrayList<>();

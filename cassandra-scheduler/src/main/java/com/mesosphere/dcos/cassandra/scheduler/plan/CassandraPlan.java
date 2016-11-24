@@ -8,17 +8,16 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
-import org.apache.mesos.scheduler.DefaultObservable;
-import org.apache.mesos.scheduler.Observable;
-import org.apache.mesos.scheduler.Observer;
-import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Plan;
 
+import org.apache.mesos.scheduler.plan.DefaultPlan;
+import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CassandraPlan extends DefaultObservable implements Plan, Observer {
+public class CassandraPlan extends DefaultPlan {
 
     public static final CassandraPlan create(
             final DefaultConfigurationManager defaultConfigurationManager,
@@ -40,9 +39,8 @@ public class CassandraPlan extends DefaultObservable implements Plan, Observer {
         );
     }
 
-    private final DefaultConfigurationManager defaultConfigurationManager;
     private final DeploymentManager deployment;
-    private final List<ClusterTaskManager<?>> managers;
+    private final List<ClusterTaskManager<?, ?>> clusterTaskManagers;
 
     public CassandraPlan(
             final DefaultConfigurationManager defaultConfigurationManager,
@@ -52,37 +50,30 @@ public class CassandraPlan extends DefaultObservable implements Plan, Observer {
             final CleanupManager cleanup,
             final RepairManager repair,
             final UpgradeSSTableManager upgrade) {
-        this.defaultConfigurationManager = defaultConfigurationManager;
+        super("cassandra",
+                new ArrayList<>(), // phases overridden by getChildren() below
+                new SerialStrategy<>(),
+                defaultConfigurationManager.getErrors().stream()
+                    .map(error -> error.getMessage())
+                    .collect(Collectors.toList()));
         this.deployment = deployment;
         // Note: This ordering defines the ordering of the phases below:
-        this.managers = Arrays.asList(backup, restore, cleanup, repair, upgrade);
+        this.clusterTaskManagers = Arrays.asList(backup, restore, cleanup, repair, upgrade);
 
         this.deployment.subscribe(this);
-        for (ClusterTaskManager<?> manager: this.managers) {
+        for (ClusterTaskManager<?, ?> manager: this.clusterTaskManagers) {
             manager.subscribe(this);
         }
     }
 
     @Override
-    public List<? extends Phase> getPhases() {
+    public List<Phase> getChildren() {
         ImmutableList.Builder<Phase> builder =
                 ImmutableList.<Phase>builder().addAll(deployment.getPhases());
-        for (ClusterTaskManager<?> manager : managers) {
+        for (ClusterTaskManager<?, ?> manager : clusterTaskManagers) {
             builder.addAll(manager.getPhases());
         }
         return builder.build();
-    }
-
-    @Override
-    public List<String> getErrors() {
-        return ImmutableList.<String>builder()
-                .addAll(defaultConfigurationManager
-                        .getErrors()
-                        .stream()
-                        .map(error -> error.getMessage())
-                        .collect(Collectors.toList()))
-                .addAll(deployment.getErrors())
-                .build();
     }
 
     @Override
@@ -90,7 +81,7 @@ public class CassandraPlan extends DefaultObservable implements Plan, Observer {
         if (!deployment.isComplete()) {
             return false;
         }
-        for (ClusterTaskManager<?> manager : managers) {
+        for (ClusterTaskManager<?, ?> manager : clusterTaskManagers) {
             if (manager.isInProgress() && !manager.isComplete()) {
                 return false;
             }
@@ -99,15 +90,10 @@ public class CassandraPlan extends DefaultObservable implements Plan, Observer {
     }
 
     public void update() {
-        for (ClusterTaskManager<?> manager : managers) {
+        for (ClusterTaskManager<?, ?> manager : clusterTaskManagers) {
             if (manager.isComplete()) {
                 manager.stop();
             }
         }
-    }
-
-    @Override
-    public void update(Observable observable) {
-        notifyObservers();
     }
 }

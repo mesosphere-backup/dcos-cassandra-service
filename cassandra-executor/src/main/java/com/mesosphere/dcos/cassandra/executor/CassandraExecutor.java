@@ -21,12 +21,9 @@ import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.executor.CustomExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * CassandraExecutor implements the Executor for the framework. It is
@@ -36,9 +33,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * will not be able to execute.
  */
 public class CassandraExecutor implements Executor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraExecutor.class);
 
-    private final ScheduledExecutorService executor;
     private final ExecutorService clusterJobExecutorService;
     private CassandraTaskFactory cassandraTaskFactory;
     private CustomExecutor customExecutor;
@@ -53,9 +48,7 @@ public class CassandraExecutor implements Executor {
      *                                  Executor to run ClusterTasks.
      */
     @Inject
-    public CassandraExecutor(final ScheduledExecutorService executor,
-                             final ExecutorService clusterJobExecutorService) {
-        this.executor = executor;
+    public CassandraExecutor(final ExecutorService clusterJobExecutorService) {
         this.clusterJobExecutorService = clusterJobExecutorService;
     }
 

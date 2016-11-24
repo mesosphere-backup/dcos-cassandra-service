@@ -21,7 +21,6 @@ import org.apache.mesos.Executor;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * The dependency injection module for the Cassandra executor.
@@ -50,18 +49,10 @@ public class ExecutorModule extends AbstractModule {
         this.configuration = configuration;
     }
 
-
     @Override
     protected void configure() {
-
-        bind(ExecutorService.class).toInstance(
-                Executors.newCachedThreadPool());
-        bind(ScheduledExecutorService.class).toInstance(
-                Executors.newScheduledThreadPool(10));
+        bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(Executor.class).to(CassandraExecutor.class).asEagerSingleton();
-        bind(ExecutorDriverFactory.class)
-                .to(MesosExecutorDriverFactory.class)
-                .asEagerSingleton();
-
+        bind(ExecutorDriverFactory.class).to(MesosExecutorDriverFactory.class).asEagerSingleton();
     }
 }

@@ -22,7 +22,7 @@ import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
-import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.scheduler.plan.PlanUtils;
 import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
@@ -43,7 +43,7 @@ import java.util.concurrent.CompletionStage;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
-public class CassandraDaemonBlockTest {
+public class CassandraDaemonStepTest {
     @Mock
     private PersistentOfferRequirementProvider persistentOfferRequirementProvider;
     @Mock
@@ -124,38 +124,38 @@ public class CassandraDaemonBlockTest {
         final String EXPECTED_NAME = "node-0";
         when(cassandraContainer.getDaemonTask()).thenReturn(daemonTask);
         when(daemonTask.getName()).thenReturn(EXPECTED_NAME);
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep block = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         Assert.assertEquals(EXPECTED_NAME, block.getName());
-        Assert.assertEquals(Status.PENDING, Block.getStatus(block));
+        Assert.assertEquals(Status.PENDING, PlanUtils.getStatus(block));
     }
 
     @Test
     public void testStart() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        final Optional<OfferRequirement> offerRequirement = block.start();
+        final Optional<OfferRequirement> offerRequirement = step.start();
         Assert.assertTrue(offerRequirement.isPresent());
     }
 
     @Test
     public void testStartCompleted() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
 
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 String.valueOf(configurationManager.getTargetName()),
@@ -175,20 +175,20 @@ public class CassandraDaemonBlockTest {
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
         stateStore.storeStatus(status);
 
-        Assert.assertTrue(!block.start().isPresent());
+        Assert.assertTrue(!step.start().isPresent());
     }
 
     @Test
     public void testStartNeedConfigUpdateNotTerminated1() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
 
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 String.valueOf(configurationManager.getTargetName()),
@@ -203,10 +203,8 @@ public class CassandraDaemonBlockTest {
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
         stateStore.storeStatus(status);
 
-        Assert.assertTrue(!block.start().isPresent());
+        Assert.assertTrue(!step.start().isPresent());
 
-        final CompletionStage mockStage = Mockito.mock(CompletionStage.class);
-        final CompletableFuture mockFuture = Mockito.mock(CompletableFuture.class);
         when(mockStage.toCompletableFuture()).thenReturn(mockFuture);
         when(mockFuture.get()).thenReturn(true);
 
@@ -216,20 +214,20 @@ public class CassandraDaemonBlockTest {
 
         when(persistentOfferRequirementProvider.getReplacementOfferRequirement(Mockito.any())).thenReturn(
                 Optional.empty());
-        Assert.assertTrue(!block.start().isPresent());
+        Assert.assertTrue(!step.start().isPresent());
     }
 
     @Test
     public void testStartNeedConfigUpdateNotTerminated2() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
 
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 String.valueOf(configurationManager.getTargetName()),
@@ -244,9 +242,7 @@ public class CassandraDaemonBlockTest {
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
         stateStore.storeStatus(status);
 
-        Assert.assertTrue(!block.start().isPresent());
-        final CompletionStage mockStage = Mockito.mock(CompletionStage.class);
-        final CompletableFuture mockFuture = Mockito.mock(CompletableFuture.class);
+        Assert.assertTrue(!step.start().isPresent());
         when(mockStage.toCompletableFuture()).thenReturn(mockFuture);
         when(mockFuture.get()).thenReturn(false);
 
@@ -256,20 +252,20 @@ public class CassandraDaemonBlockTest {
 
         when(persistentOfferRequirementProvider.getReplacementOfferRequirement(Mockito.any())).thenReturn(
                 Optional.empty());
-        Assert.assertTrue(!block.start().isPresent());
+        Assert.assertTrue(!step.start().isPresent());
     }
 
     @Test
     public void testStartNeedConfigUpdateTerminated() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
 
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
@@ -285,19 +281,19 @@ public class CassandraDaemonBlockTest {
         stateStore.storeStatus(status);
         when(persistentOfferRequirementProvider.getReplacementOfferRequirement(any())).thenReturn(
                 Optional.of(mockOfferReq));
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
     }
 
     @Test
     public void testStartTerminated() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(EXPECTED_NAME,
+        CassandraDaemonStep step = CassandraDaemonStep.create(EXPECTED_NAME,
                 persistentOfferRequirementProvider, cassandraState);
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
 
         String target = new ConfigurationManager(taskFactory, configurationManager).getTargetConfigName().toString();
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
@@ -315,7 +311,7 @@ public class CassandraDaemonBlockTest {
         stateStore.storeStatus(status);
         when(persistentOfferRequirementProvider.getReplacementOfferRequirement(any())).thenReturn(
                 Optional.of(mockOfferReq));
-        OfferRequirement offerRequirement = block.start().get();
+        OfferRequirement offerRequirement = step.start().get();
         Assert.assertEquals(mockOfferReq, offerRequirement);
 
         CassandraTemplateTask templateTask = cassandraState.getOrCreateTemplateTask(
@@ -328,14 +324,14 @@ public class CassandraDaemonBlockTest {
     @Test
     public void testStartLaunching() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
 
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 configurationManager.getTargetName().toString(),
@@ -353,24 +349,24 @@ public class CassandraDaemonBlockTest {
 
         when(persistentOfferRequirementProvider.getReplacementOfferRequirement(any())).thenReturn(
                 Optional.empty());
-        Assert.assertTrue(!block.start().isPresent());
+        Assert.assertTrue(!step.start().isPresent());
 
         when(persistentOfferRequirementProvider.getReplacementOfferRequirement(any())).thenReturn(
                 Optional.of(mockOfferReq));
-        Assert.assertEquals(mockOfferReq, block.start().get());
+        Assert.assertEquals(mockOfferReq, step.start().get());
     }
 
     @Test
     public void testUpdateDataPresent() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
 
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
@@ -380,24 +376,24 @@ public class CassandraDaemonBlockTest {
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
         stateStore.storeTasks(Arrays.asList(taskInfo));
-        block.updateOfferStatus(Collections.singleton(null));
+        step.updateOfferStatus(Collections.singleton(null));
         final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
 
-        block.update(status);
+        step.update(status);
     }
 
     @Test
     public void testUpdateDataNotPresent() throws Exception {
         final String EXPECTED_NAME = "node-0";
-        CassandraDaemonBlock block = CassandraDaemonBlock.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
         final OfferRequirement mockOfferReq = mock(OfferRequirement.class);
         when(persistentOfferRequirementProvider.getNewOfferRequirement(Mockito.any())).thenReturn(
                 Optional.of(mockOfferReq));
 
-        Assert.assertTrue(block.start().isPresent());
+        Assert.assertTrue(step.start().isPresent());
 
         final CassandraDaemonTask task = taskFactory.create(EXPECTED_NAME,
                 "abc",
@@ -407,10 +403,10 @@ public class CassandraDaemonBlockTest {
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
         stateStore.storeTasks(Arrays.asList(taskInfo));
-        block.updateOfferStatus(Collections.singleton(null));
+        step.updateOfferStatus(Collections.singleton(null));
         final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_RUNNING);
 
-        block.update(status);
+        step.update(status);
     }
 }

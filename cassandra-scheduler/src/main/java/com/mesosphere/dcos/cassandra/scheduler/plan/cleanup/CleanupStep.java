@@ -7,7 +7,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
+import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskStep;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
@@ -15,45 +15,38 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class CleanupBlock extends AbstractClusterTaskBlock<CleanupContext> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            CleanupBlock.class);
+public class CleanupStep extends AbstractClusterTaskStep {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupStep.class);
 
-    public static CleanupBlock create(
+    private final CleanupContext context;
+
+    public static CleanupStep create(
             String daemon,
             CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             CleanupContext context) {
-        return new CleanupBlock(daemon, cassandraState, provider, context);
+        return new CleanupStep(daemon, cassandraState, provider, context);
     }
 
-    public CleanupBlock(
+    public CleanupStep(
             String daemon,
             CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             CleanupContext context) {
-        super(daemon, cassandraState, provider, context);
+        super(daemon, CleanupTask.nameForDaemon(daemon), cassandraState, provider);
+        this.context = context;
     }
 
 
     @Override
-    protected Optional<CassandraTask> getOrCreateTask(CleanupContext context)
-            throws PersistenceException {
-        CassandraDaemonTask daemonTask =
-                cassandraState.getDaemons().get(getDaemon());
+    protected Optional<CassandraTask> getOrCreateTask() throws PersistenceException {
+        CassandraDaemonTask daemonTask = cassandraState.getDaemons().get(daemon);
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
             setStatus(Status.COMPLETE);
             return Optional.empty();
         }
-        return Optional.of(cassandraState.getOrCreateCleanup(
-                daemonTask,
-                context));
-    }
-
-    @Override
-    public String getName() {
-        return CleanupTask.nameForDaemon(getDaemon());
+        return Optional.of(cassandraState.getOrCreateCleanup(daemonTask, context));
     }
 
     @Override

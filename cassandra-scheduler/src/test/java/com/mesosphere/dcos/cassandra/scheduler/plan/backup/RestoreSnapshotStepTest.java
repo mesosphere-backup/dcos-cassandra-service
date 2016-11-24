@@ -23,7 +23,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.HashMap;
 import java.util.Optional;
 
-public class RestoreSnapshotBlockTest {
+public class RestoreSnapshotStepTest {
     public static final String RESTORE_NODE_0 = "restore-node-0";
     public static final String NODE_0 = "node-0";
     @Mock
@@ -47,7 +47,7 @@ public class RestoreSnapshotBlockTest {
     public void testInitial() {
         Mockito.when(cassandraState.get(RESTORE_NODE_0)).thenReturn(Optional.empty());
         final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
-        final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
+        final RestoreSnapshotStep block = RestoreSnapshotStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -64,7 +64,7 @@ public class RestoreSnapshotBlockTest {
         Mockito.when(cassandraState.get(RESTORE_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
-        final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
+        final RestoreSnapshotStep block = RestoreSnapshotStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -89,7 +89,7 @@ public class RestoreSnapshotBlockTest {
                 .when(cassandraState.getOrCreateRestoreSnapshot(daemonTask, context))
                 .thenReturn(task);
 
-        final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
+        final RestoreSnapshotStep block = RestoreSnapshotStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -117,7 +117,7 @@ public class RestoreSnapshotBlockTest {
                 .when(cassandraState.getOrCreateRestoreSnapshot(daemonTask, context))
                 .thenReturn(task);
 
-        final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
+        final RestoreSnapshotStep block = RestoreSnapshotStep.create(
                 NODE_0,
                 cassandraState,
                 provider,

@@ -227,7 +227,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
 
   @JsonIgnore
   @Override
-  public String toJsonString() throws Exception {
+  public String toJsonString() throws ConfigStoreException {
     return JsonUtils.toJsonString(this);
   }
 }

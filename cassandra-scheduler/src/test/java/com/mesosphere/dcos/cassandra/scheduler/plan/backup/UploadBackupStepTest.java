@@ -1,11 +1,11 @@
-package com.mesosphere.dcos.cassandra.scheduler.plan.repair;
+package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
-import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
@@ -20,12 +20,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
-public class RepairBlockTest {
-    public static final String REPAIR_NODE_0 = "repair-node-0";
+public class UploadBackupStepTest {
+    public static final String UPLOAD_NODE_0 = "upload-node-0";
     public static final String NODE_0 = "node-0";
     @Mock
     private ClusterTaskOfferRequirementProvider provider;
@@ -33,8 +32,6 @@ public class RepairBlockTest {
     private CassandraState cassandraState;
     @Mock
     private SchedulerClient client;
-    public static final RepairContext CONTEXT = RepairContext.create(Collections.emptyList(),
-            Collections.emptyList(), Collections.emptyList());
 
     @Before
     public void beforeEach() {
@@ -48,15 +45,14 @@ public class RepairBlockTest {
 
     @Test
     public void testInitial() {
-        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
-        final RepairContext context = RepairContext.create(Collections.emptyList(),
-                Collections.emptyList(), Collections.emptyList());
-        final RepairBlock block = RepairBlock.create(
+        Mockito.when(cassandraState.get(UPLOAD_NODE_0)).thenReturn(Optional.empty());
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final UploadBackupStep block = UploadBackupStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(REPAIR_NODE_0, block.getName());
+        Assert.assertEquals(UPLOAD_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
         Assert.assertTrue(block.isPending());
     }
@@ -65,16 +61,15 @@ public class RepairBlockTest {
     public void testComplete() {
         final CassandraTask mockCassandraTask = Mockito.mock(CassandraTask.class);
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        Mockito.when(cassandraState.get(REPAIR_NODE_0))
+        Mockito.when(cassandraState.get(UPLOAD_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
-        final RepairContext context = RepairContext.create(Collections.emptyList(),
-                Collections.emptyList(), Collections.emptyList());
-        final RepairBlock block = RepairBlock.create(
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final UploadBackupStep block = UploadBackupStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(REPAIR_NODE_0, block.getName());
+        Assert.assertEquals(UPLOAD_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
         Assert.assertTrue(block.isComplete());
     }
@@ -82,20 +77,19 @@ public class RepairBlockTest {
     @Test
     public void testTaskStartAlreadyCompleted() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(UPLOAD_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final RepairContext context = RepairContext.create(Collections.emptyList(),
-                Collections.emptyList(), Collections.emptyList());
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
 
-        final RepairTask task = Mockito.mock(RepairTask.class);
+        final BackupUploadTask task = Mockito.mock(BackupUploadTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito
-                .when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT))
+                .when(cassandraState.getOrCreateBackupUpload(daemonTask, context))
                 .thenReturn(task);
 
-        final RepairBlock block = RepairBlock.create(
+        final UploadBackupStep block = UploadBackupStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -110,23 +104,24 @@ public class RepairBlockTest {
     @Test
     public void testTaskStart() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(UPLOAD_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
 
-        final RepairTask task = Mockito.mock(RepairTask.class);
+        final BackupUploadTask task = Mockito.mock(BackupUploadTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
-        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.REPAIR);
+        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.BACKUP_UPLOAD);
         Mockito
-                .when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT))
+                .when(cassandraState.getOrCreateBackupUpload(daemonTask, context))
                 .thenReturn(task);
 
-        final RepairBlock block = RepairBlock.create(
+        final UploadBackupStep block = UploadBackupStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
-                CONTEXT);
+                context);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);

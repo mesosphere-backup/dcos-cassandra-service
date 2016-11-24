@@ -18,13 +18,9 @@ package com.mesosphere.dcos.cassandra.common.tasks.backup;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
-import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -217,34 +213,4 @@ public class BackupRestoreContext implements ClusterTaskContext {
             secretKey,
             usesEmc);
     }
-
-    /**
-     * Serializer that serializes a BackupRestoreContext to and from a JSON object.
-     */
-    public static final Serializer<BackupRestoreContext> JSON_SERIALIZER =
-        new Serializer<BackupRestoreContext>() {
-            @Override
-            public byte[] serialize(BackupRestoreContext value)
-                throws SerializationException {
-                try {
-                    return JsonUtils.MAPPER.writeValueAsBytes(value);
-                } catch (JsonProcessingException ex) {
-                    throw new SerializationException(
-                        "Error writing BackupRestoreContext to JSON",
-                        ex);
-                }
-            }
-
-            @Override
-            public BackupRestoreContext deserialize(byte[] bytes)
-                throws SerializationException {
-                try {
-                    return JsonUtils.MAPPER.readValue(bytes,
-                        BackupRestoreContext.class);
-                } catch (IOException ex) {
-                    throw new SerializationException("Error reading " +
-                        "BackupRestoreContext form JSON", ex);
-                }
-            }
-        };
 }

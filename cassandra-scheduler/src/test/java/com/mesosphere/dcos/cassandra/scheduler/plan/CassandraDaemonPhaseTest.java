@@ -48,7 +48,7 @@ public class CassandraDaemonPhaseTest {
                 client,
                 mockConfigManager);
         Assert.assertTrue(CollectionUtils.isEmpty(phase.getErrors()));
-        Assert.assertTrue(phase.getBlocks().size() == 0);
+        Assert.assertTrue(phase.getChildren().isEmpty());
         Assert.assertEquals("Deploy", phase.getName());
     }
 
@@ -74,7 +74,7 @@ public class CassandraDaemonPhaseTest {
                 client,
                 configurationManager);
         Assert.assertTrue(CollectionUtils.isEmpty(phase.getErrors()));
-        Assert.assertTrue(phase.getBlocks().size() == 1);
+        Assert.assertTrue(phase.getChildren().size() == 1);
         Assert.assertEquals("Deploy", phase.getName());
     }
 }

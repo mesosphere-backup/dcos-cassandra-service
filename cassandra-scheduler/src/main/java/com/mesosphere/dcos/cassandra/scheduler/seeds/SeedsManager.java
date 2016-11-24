@@ -3,6 +3,7 @@ package com.mesosphere.dcos.cassandra.scheduler.seeds;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.serialization.JsonSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
@@ -30,8 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class SeedsManager implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            SeedsManager.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SeedsManager.class);
+    private static final Serializer<DataCenterInfo> DATACENTER_SERIALIZER = JsonSerializer.create(DataCenterInfo.class);
 
     private final CassandraState tasks;
     private static final String DATA_CENTERS_KEY = "datacenters";
@@ -44,36 +45,17 @@ public class SeedsManager implements Runnable {
     private boolean putLocalInfo(String url) {
         try {
             DataCenterInfo local = getLocalInfo();
-            LOGGER.info(
-                    "Registering local data center info: info = {}, " +
-                            "url = {}",
-                    local,
-                    url);
+            LOGGER.info("Registering local data center info: info = {}, url = {}", local, url);
 
-            boolean success =
-                    client.putDataCenterInfo(url, local)
-                            .toCompletableFuture().get();
+            boolean success = client.putDataCenterInfo(url, local) .toCompletableFuture().get();
             if (success) {
-                LOGGER.info(
-                        "Registered local data center info: info = {}, " +
-                                "url = {}",
-                        local,
-                        url);
+                LOGGER.info("Registered local data center info: info = {}, url = {}", local, url);
             } else {
-                LOGGER.error(
-                        "Failed to register local data center info: info = " +
-                                "{}," +
-                                " url = {}",
-                        local,
-                        url);
+                LOGGER.error("Failed to register local data center info: info = {}, url = {}", local, url);
             }
             return success;
         } catch (Throwable t) {
-            LOGGER.error(
-                    String.format("Error registering local data center info :" +
-                            " " +
-                            "url = %s", url),
-                    t);
+            LOGGER.error(String.format("Error registering local data center info : url = %s", url), t);
             return false;
         }
     }
@@ -81,17 +63,11 @@ public class SeedsManager implements Runnable {
     Optional<DataCenterInfo> getRemoteInfo(String url) {
         LOGGER.info("Retrieving info: url = {}", url);
         try {
-            DataCenterInfo info = client.getDataCenterInfo(url)
-                    .toCompletableFuture()
-                    .get();
-            LOGGER.info("Retrieved data center info: info = {}, url = {}",
-                    info, url);
+            DataCenterInfo info = client.getDataCenterInfo(url).toCompletableFuture().get();
+            LOGGER.info("Retrieved data center info: info = {}, url = {}", info, url);
             return Optional.of(info);
         } catch (Throwable t) {
-            LOGGER.error(String.format("Failed to retrieve info: url = %s",
-                    url),
-                    t);
-
+            LOGGER.error(String.format("Failed to retrieve info: url = %s", url), t);
             return Optional.empty();
         }
     }
@@ -99,13 +75,11 @@ public class SeedsManager implements Runnable {
     @Inject
     public SeedsManager(final DefaultConfigurationManager configurationManager,
                         final CassandraState tasks,
-                        final Serializer<DataCenterInfo> serializer,
                         final ScheduledExecutorService executor,
                         final SchedulerClient client,
                         final StateStore stateStore) throws ConfigStoreException {
         this.tasks = tasks;
         this.stateStore = stateStore;
-        this.serializer = serializer;
         this.configurationManager = configurationManager;
         ImmutableMap.Builder<String, DataCenterInfo> builder =
                 ImmutableMap.<String, DataCenterInfo>builder();
@@ -118,7 +92,7 @@ public class SeedsManager implements Runnable {
                         continue;
                     }
                     LOGGER.info("Loaded key: {}", key);
-                    builder.put(key, serializer.deserialize(stateStore.fetchProperty(key)));
+                    builder.put(key, DATACENTER_SERIALIZER.deserialize(stateStore.fetchProperty(key)));
                 }
                 dataCenters = builder.build();
                 LOGGER.info("Loaded data centers: {}",

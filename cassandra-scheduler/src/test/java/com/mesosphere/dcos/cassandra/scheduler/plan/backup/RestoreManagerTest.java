@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
+import com.mesosphere.dcos.cassandra.common.serialization.JsonSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
@@ -10,20 +11,24 @@ import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
-import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.scheduler.plan.Step;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -59,7 +64,7 @@ public class RestoreManagerTest {
     public void testInitialWithState() throws SerializationException {
         final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
         when(mockState.fetchProperty(RestoreManager.RESTORE_KEY)).thenReturn(
-                BackupRestoreContext.JSON_SERIALIZER.serialize(context));
+                JsonSerializer.create(BackupRestoreContext.class).serialize(context));
         RestoreManager manager = new RestoreManager(mockCassandraState, mockProvider, mockState);
         assertTrue(manager.isComplete());
         assertFalse(manager.isInProgress());
@@ -89,8 +94,8 @@ public class RestoreManagerTest {
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
         // notify blocks to check for TASK_FINISHED:
         for (Phase phase : manager.getPhases()) {
-            for (Block block : phase.getBlocks()) {
-                block.update(TaskStatus.getDefaultInstance());
+            for (Step step : phase.getChildren()) {
+                step.update(TaskStatus.getDefaultInstance());
             }
         }
 
@@ -128,8 +133,8 @@ public class RestoreManagerTest {
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
         // notify blocks to check for TASK_FINISHED:
         for (Phase phase : manager.getPhases()) {
-            for (Block block : phase.getBlocks()) {
-                block.update(TaskStatus.getDefaultInstance());
+            for (Step step : phase.getChildren()) {
+                step.update(TaskStatus.getDefaultInstance());
             }
         }
 
@@ -182,6 +187,37 @@ public class RestoreManagerTest {
         assertFalse(manager.isComplete());
         assertFalse(manager.isInProgress());
         assertTrue(manager.getPhases().isEmpty());
+    }
+
+    @Test
+    public void testCreateBlocksEmpty() {
+        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
+
+        when(cassandraState.getDaemons()).thenReturn(Collections.emptyMap());
+        final DownloadSnapshotPhase phase = new DownloadSnapshotPhase(context, cassandraState, provider);
+        final List<DownloadSnapshotStep> blocks = phase.createSteps();
+
+        Assert.assertNotNull(blocks);
+        Assert.assertTrue(CollectionUtils.isEmpty(blocks));
+        Assert.assertEquals("Download", phase.getName());
+    }
+
+    @Test
+    public void testCreateBlocksSingle() {
+        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
+
+        final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
+        final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
+        map.put("node-0", daemonTask);
+        when(cassandraState.getDaemons()).thenReturn(map);
+        when(cassandraState.get("download-node-0")).thenReturn(Optional.of(daemonTask));
+        final DownloadSnapshotPhase phase = new DownloadSnapshotPhase(context, cassandraState, provider);
+        final List<DownloadSnapshotStep> blocks = phase.createSteps();
+
+        Assert.assertNotNull(blocks);
+        Assert.assertTrue(blocks.size() == 1);
+
+        Assert.assertEquals("download-node-0", blocks.get(0).getName());
     }
 
     private BackupRestoreRequest emptyRequest() {

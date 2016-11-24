@@ -1,6 +1,5 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
-import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
@@ -12,20 +11,8 @@ import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerialize
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
-import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
-import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
-import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
+
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.setup.Environment;
@@ -37,8 +24,6 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.dcos.DcosCluster;
-import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
-import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.api.JsonPropertyDeserializer;
 import org.apache.mesos.state.api.PropertyDeserializer;
@@ -69,17 +54,13 @@ public class SchedulerModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(Environment.class).toInstance(this.environment);
-
-        bind(CassandraSchedulerConfiguration.class).toInstance(
-                this.configuration);
+        bind(CassandraSchedulerConfiguration.class).toInstance(this.configuration);
 
         RetryPolicy retryPolicy =
-                (curatorConfig.getOperationTimeout().isPresent()) ?
+                curatorConfig.getOperationTimeout().isPresent() ?
                         new RetryUntilElapsed(
-                                curatorConfig.getOperationTimeoutMs()
-                                        .get()
-                                        .intValue()
-                                , (int) curatorConfig.getBackoffMs()) :
+                                curatorConfig.getOperationTimeoutMs().get().intValue(),
+                                (int) curatorConfig.getBackoffMs()) :
                         new RetryForever((int) curatorConfig.getBackoffMs());
 
         CuratorStateStore curatorStateStore = new CuratorStateStore(
@@ -109,111 +90,61 @@ public class SchedulerModule extends AbstractModule {
             throw new RuntimeException(e);
         }
 
-        bind(new TypeLiteral<Serializer<Integer>>() {
-        }).toInstance(IntegerStringSerializer.get());
-
-        bind(new TypeLiteral<Serializer<Boolean>>() {
-        }).toInstance(BooleanStringSerializer.get());
-
-        bind(new TypeLiteral<Serializer<ServiceConfig>>() {
-        }).toInstance(ServiceConfig.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<CassandraConfig>>() {
-        }).toInstance(CassandraConfig.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<ExecutorConfig>>() {
-        }).toInstance(ExecutorConfig.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<CassandraTask>>() {
-        }).toInstance(CassandraTask.PROTO_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<ClusterTaskConfig>>() {
-        }).toInstance(ClusterTaskConfig.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<BackupRestoreContext>>() {
-        }).toInstance(BackupRestoreContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<BackupRestoreContext>>() {
-        }).toInstance(BackupRestoreContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<CleanupContext>>() {
-        }).toInstance(CleanupContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<RepairContext>>() {
-        }).toInstance(RepairContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<UpgradeSSTableContext>>() {
-        }).toInstance(UpgradeSSTableContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<DataCenterInfo>>() {
-        }).toInstance(
-                DataCenterInfo.JSON_SERIALIZER
-        );
+        bind(new TypeLiteral<Serializer<Integer>>() {}).toInstance(IntegerStringSerializer.get());
+        bind(new TypeLiteral<Serializer<Boolean>>() {}).toInstance(BooleanStringSerializer.get());
+        bind(new TypeLiteral<Serializer<CassandraTask>>() {}).toInstance(CassandraTask.PROTO_SERIALIZER);
 
         bind(MesosConfig.class).toInstance(mesosConfig);
 
-        bindConstant().annotatedWith(Names.named("ConfiguredSyncDelayMs")).to(
-                configuration.getExternalDcSyncMs()
-        );
-        bindConstant().annotatedWith(Names.named("ConfiguredDcUrl")).to(
-                configuration.getDcUrl()
-        );
-        bind(new TypeLiteral<List<String>>() {
-        })
+        bindConstant()
+                .annotatedWith(Names.named("ConfiguredSyncDelayMs"))
+                .to(configuration.getExternalDcSyncMs());
+        bindConstant()
+                .annotatedWith(Names.named("ConfiguredDcUrl"))
+                .to(configuration.getDcUrl());
+        bind(new TypeLiteral<List<String>>() {})
                 .annotatedWith(Names.named("ConfiguredExternalDcs"))
                 .toInstance(configuration.getExternalDcsList());
-        bind(ServiceConfig.class).annotatedWith(
-                Names.named("ConfiguredIdentity")).toInstance(
-                configuration.getServiceConfig());
-        bind(CassandraConfig.class).annotatedWith(
-                Names.named("ConfiguredCassandraConfig")).toInstance(
-                configuration.getCassandraConfig());
-        bind(ClusterTaskConfig.class).annotatedWith(
-                Names.named("ConfiguredClusterTaskConfig")).toInstance(
-                configuration.getClusterTaskConfig());
-        bind(ExecutorConfig.class).annotatedWith(
-                Names.named("ConfiguredExecutorConfig")).toInstance(
-                configuration.getExecutorConfig());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredServers")).to(
-                configuration.getServers());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredSeeds")).to(
-                configuration.getSeeds());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredPlacementStrategy")).to(
-                configuration.getPlacementStrategy());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredPhaseStrategy")).to(
-                configuration.getPhaseStrategy());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredEnableUpgradeSSTableEndpoint")).to(
-                configuration.getEnableUpgradeSSTableEndpoint());
+        bind(ServiceConfig.class)
+                .annotatedWith(Names.named("ConfiguredIdentity"))
+                .toInstance(configuration.getServiceConfig());
+        bind(CassandraConfig.class)
+                .annotatedWith(Names.named("ConfiguredCassandraConfig"))
+                .toInstance(configuration.getCassandraConfig());
+        bind(ClusterTaskConfig.class)
+                .annotatedWith(Names.named("ConfiguredClusterTaskConfig"))
+                .toInstance(configuration.getClusterTaskConfig());
+        bind(ExecutorConfig.class)
+                .annotatedWith(Names.named("ConfiguredExecutorConfig"))
+                .toInstance(configuration.getExecutorConfig());
+        bindConstant()
+                .annotatedWith(Names.named("ConfiguredServers"))
+                .to(configuration.getServers());
+        bindConstant()
+                .annotatedWith(Names.named("ConfiguredSeeds"))
+                .to(configuration.getSeeds());
+        bindConstant()
+                .annotatedWith(Names.named("ConfiguredPlacementStrategy"))
+                .to(configuration.getPlacementStrategy());
+        bindConstant()
+                .annotatedWith(Names.named("ConfiguredPhaseStrategy"))
+                .to(configuration.getPhaseStrategy());
+        bindConstant()
+                .annotatedWith(Names.named("ConfiguredEnableUpgradeSSTableEndpoint"))
+                .to(configuration.getEnableUpgradeSSTableEndpoint());
 
         HttpClientConfiguration httpClient = new HttpClientConfiguration();
         bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(httpClient).build("http-client"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(curatorConfig);
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
-        bind(ScheduledExecutorService.class).toInstance(
-                Executors .newScheduledThreadPool(8));
-        bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
-                .asEagerSingleton();
-        bind(PlanManager.class).to(CassandraPlanManager.class)
-                .asEagerSingleton();
+        bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(8));
         bind(SchedulerClient.class).asEagerSingleton();
         bind(IdentityManager.class).asEagerSingleton();
         bind(ConfigurationManager.class).asEagerSingleton();
         bind(PersistentOfferRequirementProvider.class);
         bind(CassandraState.class).asEagerSingleton();
-        bind(EventBus.class).asEagerSingleton();
-        bind(BackupManager.class).asEagerSingleton();
         bind(ClusterTaskOfferRequirementProvider.class);
-        bind(RestoreManager.class).asEagerSingleton();
-        bind(CleanupManager.class).asEagerSingleton();
-        bind(RepairManager.class).asEagerSingleton();
-        bind(UpgradeSSTableManager.class).asEagerSingleton();
-        bind(SeedsManager.class).asEagerSingleton();
         bind(PropertyDeserializer.class).to(JsonPropertyDeserializer.class);
     }
 }

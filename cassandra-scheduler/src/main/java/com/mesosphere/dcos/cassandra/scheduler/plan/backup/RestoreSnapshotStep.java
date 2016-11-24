@@ -6,7 +6,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
+import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskStep;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
@@ -14,25 +14,23 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<BackupRestoreContext> {
+public class RestoreSnapshotStep extends AbstractClusterTaskStep {
     private static final Logger LOGGER = LoggerFactory.getLogger(
-            RestoreSnapshotBlock.class);
+            RestoreSnapshotStep.class);
 
-    public static RestoreSnapshotBlock create(
+    private final BackupRestoreContext context;
+
+    public static RestoreSnapshotStep create(
             String daemon,
             CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             BackupRestoreContext context) {
-        return new RestoreSnapshotBlock(daemon, cassandraState, provider,
-                context);
+        return new RestoreSnapshotStep(daemon, cassandraState, provider, context);
     }
 
     @Override
-    protected Optional<CassandraTask> getOrCreateTask(BackupRestoreContext context)
-            throws PersistenceException {
-
-        CassandraDaemonTask daemonTask =
-                cassandraState.getDaemons().get(getDaemon());
+    protected Optional<CassandraTask> getOrCreateTask() throws PersistenceException {
+        CassandraDaemonTask daemonTask = cassandraState.getDaemons().get(daemon);
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon does not exist");
             setStatus(Status.COMPLETE);
@@ -44,17 +42,12 @@ public class RestoreSnapshotBlock extends AbstractClusterTaskBlock<BackupRestore
 
     }
 
-    public RestoreSnapshotBlock(
+    public RestoreSnapshotStep(
             String daemon,
             CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             BackupRestoreContext context) {
-        super(daemon, cassandraState, provider, context);
-    }
-
-
-    @Override
-    public String getName() {
-        return RestoreSnapshotTask.nameForDaemon(getDaemon());
+        super(daemon, RestoreSnapshotTask.nameForDaemon(daemon), cassandraState, provider);
+        this.context = context;
     }
 }

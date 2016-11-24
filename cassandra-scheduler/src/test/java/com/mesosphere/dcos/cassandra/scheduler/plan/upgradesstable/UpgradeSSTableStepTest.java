@@ -1,14 +1,14 @@
-package com.mesosphere.dcos.cassandra.scheduler.plan.cleanup;
+package com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable;
 
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
-public class CleanupBlockTest {
-    public static final String CLEANUP_NODE_0 = "cleanup-node-0";
+public class UpgradeSSTableStepTest {
+    public static final String UPGRADESSTABLE_NODE_0 = "upgradesstable-node-0";
     public static final String NODE_0 = "node-0";
     @Mock
     private ClusterTaskOfferRequirementProvider provider;
@@ -33,7 +33,7 @@ public class CleanupBlockTest {
     private CassandraState cassandraState;
     @Mock
     private SchedulerClient client;
-    public static final CleanupContext CONTEXT = CleanupContext.create(Collections.emptyList(),
+    public static final UpgradeSSTableContext CONTEXT = UpgradeSSTableContext.create(Collections.emptyList(),
             Collections.emptyList(), Collections.emptyList());
 
     @Before
@@ -48,15 +48,15 @@ public class CleanupBlockTest {
 
     @Test
     public void testInitial() {
-        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
-        final CleanupContext context = CleanupContext.create(Collections.emptyList(),
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final CleanupBlock block = CleanupBlock.create(
+        final UpgradeSSTableStep block = UpgradeSSTableStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(CLEANUP_NODE_0, block.getName());
+        Assert.assertEquals(UPGRADESSTABLE_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
         Assert.assertTrue(block.isPending());
     }
@@ -65,16 +65,16 @@ public class CleanupBlockTest {
     public void testComplete() {
         final CassandraTask mockCassandraTask = Mockito.mock(CassandraTask.class);
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        Mockito.when(cassandraState.get(CLEANUP_NODE_0))
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
-        final CleanupContext context = CleanupContext.create(Collections.emptyList(),
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final CleanupBlock block = CleanupBlock.create(
+        final UpgradeSSTableStep block = UpgradeSSTableStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(CLEANUP_NODE_0, block.getName());
+        Assert.assertEquals(UPGRADESSTABLE_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
         Assert.assertTrue(block.isComplete());
     }
@@ -82,20 +82,20 @@ public class CleanupBlockTest {
     @Test
     public void testTaskStartAlreadyCompleted() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final CleanupContext context = CleanupContext.create(Collections.emptyList(),
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
 
-        final CleanupTask task = Mockito.mock(CleanupTask.class);
+        final UpgradeSSTableTask task = Mockito.mock(UpgradeSSTableTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito
-                .when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT))
+                .when(cassandraState.getOrCreateUpgradeSSTable(daemonTask, CONTEXT))
                 .thenReturn(task);
 
-        final CleanupBlock block = CleanupBlock.create(
+        final UpgradeSSTableStep block = UpgradeSSTableStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -110,19 +110,19 @@ public class CleanupBlockTest {
     @Test
     public void testTaskStart() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
 
-        final CleanupTask task = Mockito.mock(CleanupTask.class);
+        final UpgradeSSTableTask task = Mockito.mock(UpgradeSSTableTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.CLEANUP);
         Mockito
-                .when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT))
+                .when(cassandraState.getOrCreateUpgradeSSTable(daemonTask, CONTEXT))
                 .thenReturn(task);
 
-        final CleanupBlock block = CleanupBlock.create(
+        final UpgradeSSTableStep block = UpgradeSSTableStep.create(
                 NODE_0,
                 cassandraState,
                 provider,

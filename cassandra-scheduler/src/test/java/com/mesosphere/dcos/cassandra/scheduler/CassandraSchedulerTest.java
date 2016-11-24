@@ -8,8 +8,6 @@ import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
@@ -31,10 +29,10 @@ import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.PlanManager;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
+import org.apache.mesos.scheduler.plan.Step;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.testing.QueuedSchedulerDriver;
 import org.junit.After;
@@ -199,7 +197,7 @@ public class CassandraSchedulerTest {
         // node-0
         final Protos.Offer offer1 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
         scheduler.resourceOffers(driver, Arrays.asList(offer1));
-        Block currentBlock = planManager.getCurrentBlock().get();
+        Block currentBlock = planManager.getCurrentStep().get();
         assertEquals("node-0", currentBlock.getName());
         assertTrue(currentBlock.isInProgress());
         Collection<QueuedSchedulerDriver.OfferOperations> offerOps = driver.drainAccepted();
@@ -212,7 +210,7 @@ public class CassandraSchedulerTest {
         // node-1
         final Protos.Offer offer2 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
         scheduler.resourceOffers(driver, Arrays.asList(offer2));
-        currentBlock = planManager.getCurrentBlock().get();
+        currentBlock = planManager.getCurrentStep().get();
         assertEquals("node-1", currentBlock.getName());
         assertTrue(currentBlock.isInProgress());
         offerOps = driver.drainAccepted();
@@ -225,7 +223,7 @@ public class CassandraSchedulerTest {
         // node-2
         final Protos.Offer offer3 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
         scheduler.resourceOffers(driver, Arrays.asList(offer3));
-        currentBlock = planManager.getCurrentBlock().get();
+        currentBlock = planManager.getCurrentStep().get();
         assertEquals("node-2", currentBlock.getName());
         assertTrue(currentBlock.isInProgress());
         offerOps = driver.drainAccepted();
@@ -240,7 +238,7 @@ public class CassandraSchedulerTest {
     public void installAndRecover() throws Exception {
         install();
         final Optional<Phase> currentPhase = planManager.getCurrentPhase();
-        final Optional<Block> currentBlock = planManager.getCurrentBlock();
+        final Optional<Block> currentBlock = planManager.getCurrentStep();
 
         assertTrue(!currentPhase.isPresent());
         assertTrue(!currentBlock.isPresent());
@@ -277,7 +275,7 @@ public class CassandraSchedulerTest {
     public void installAndUpdate() throws Exception {
         install();
         Optional<Phase> currentPhase = planManager.getCurrentPhase();
-        Optional<Block> currentBlock = planManager.getCurrentBlock();
+        Optional<Block> currentBlock = planManager.getCurrentStep();
 
         assertTrue(!currentPhase.isPresent());
         assertTrue(!currentBlock.isPresent());
@@ -286,7 +284,7 @@ public class CassandraSchedulerTest {
 
         update();
         currentPhase = planManager.getCurrentPhase();
-        currentBlock = planManager.getCurrentBlock();
+        currentBlock = planManager.getCurrentStep();
 
         assertTrue(!currentPhase.isPresent());
         assertTrue(!currentBlock.isPresent());
@@ -321,7 +319,7 @@ public class CassandraSchedulerTest {
         assertEquals("Deploy", currentPhase.getName());
         assertEquals(3, currentPhase.getBlocks().size());
 
-        Block currentBlock = planManager.getCurrentBlock().get();
+        Block currentBlock = planManager.getCurrentStep().get();
         assertEquals("node-0", currentBlock.getName());
         assertTrue("expected current block to be in Pending due to offer carried over in reconcile stage",
                 currentBlock.isPending());
@@ -342,7 +340,7 @@ public class CassandraSchedulerTest {
                         node0.getTaskInfo().getTaskId(),
                         Protos.TaskState.TASK_KILLED));
         scheduler.resourceOffers(driver, Arrays.asList(offer1));
-        currentBlock = planManager.getCurrentBlock().get();
+        currentBlock = planManager.getCurrentStep().get();
         assertEquals("node-0", currentBlock.getName());
         assertTrue("expected current block to be in progress", currentBlock.isInProgress());
         offerOps = driver.drainAccepted();
@@ -362,7 +360,7 @@ public class CassandraSchedulerTest {
         scheduler.statusUpdate(driver, TestUtils.generateStatus(node1.getTaskInfo().getTaskId(),
                 Protos.TaskState.TASK_KILLED));
         scheduler.resourceOffers(driver, Arrays.asList(offer2));
-        currentBlock = planManager.getCurrentBlock().get();
+        currentBlock = planManager.getCurrentStep().get();
         assertEquals("node-1", currentBlock.getName());
         assertTrue("expected current block to be in progress",
                 currentBlock.isInProgress());
@@ -383,7 +381,7 @@ public class CassandraSchedulerTest {
         scheduler.statusUpdate(driver, TestUtils.generateStatus(node2.getTaskInfo().getTaskId(),
                 Protos.TaskState.TASK_KILLED));
         scheduler.resourceOffers(driver, Arrays.asList(offer3));
-        currentBlock = planManager.getCurrentBlock().get();
+        currentBlock = planManager.getCurrentStep().get();
         assertEquals("node-2", currentBlock.getName());
         assertTrue("expected current block to be in progress",
                 currentBlock.isInProgress());
