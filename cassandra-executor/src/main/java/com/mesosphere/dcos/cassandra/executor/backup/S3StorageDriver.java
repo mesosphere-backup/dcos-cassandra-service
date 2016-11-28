@@ -19,6 +19,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.Constants;
+import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -29,7 +30,15 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -209,6 +218,16 @@ public class S3StorageDriver implements BackupStorageDriver {
             LOGGER.error("Error occurred on uploading directory {} : {}", snapshotDirectory.getName(), e);
             throw new Exception(e);
         }
+    }
+
+    @Override
+    public void uploadSchema(BackupRestoreContext ctx, String schema) throws Exception {
+        final String nodeId = ctx.getNodeId();
+        final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
+        final String key = getPrefixKey(ctx) + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
+        final InputStream stream = new ByteArrayInputStream(schema.getBytes(StandardCharsets.UTF_8));
+
+        amazonS3Client.putObject(getBucketName(ctx), key, stream, new ObjectMetadata());
     }
 
     @Override

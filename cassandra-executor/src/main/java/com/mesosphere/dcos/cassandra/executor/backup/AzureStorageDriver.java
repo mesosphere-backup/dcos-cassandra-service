@@ -155,6 +155,12 @@ public class AzureStorageDriver implements BackupStorageDriver {
   }
 
   @Override
+  public void uploadSchema(BackupRestoreContext ctx, String schema) {
+    // ToDo : Add the upload schema to Azure.
+    // Path: <backupname/node-id/schema.cql>
+  }
+
+  @Override
   public void download(BackupRestoreContext ctx) throws IOException {
 
     final String accountName = ctx.getAccountId();

@@ -19,10 +19,7 @@ import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
 import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
@@ -78,6 +75,7 @@ public abstract class CassandraTask {
 
     /**
      * Enumeration of the types of Cassandra Tasks.
+     * Note: Always add new types to the end of this list so that existing tasks get serialized/deserialized correctly.
      */
     public enum TYPE {
         /**
@@ -110,13 +108,17 @@ public abstract class CassandraTask {
          */
         REPAIR,
         /**
+         * Place holder for pre-reserving resources for Cluster Tasks
+         */
+        TEMPLATE,
+        /**
          * Task that performs upgrade SSTables on a node.
          */
         UPGRADESSTABLE,
         /**
-         * Place holder for pre-reserving resources for Cluster Tasks
+         * Task that backup schema for cassandra daemon.
          */
-        TEMPLATE
+        BACKUP_SCHEMA,
     }
 
     /**
@@ -134,6 +136,8 @@ public abstract class CassandraTask {
                 return CassandraDaemonTask.parse(info);
             case BACKUP_SNAPSHOT:
                 return BackupSnapshotTask.parse(info);
+            case BACKUP_SCHEMA:
+                return BackupSchemaTask.parse(info);
             case BACKUP_UPLOAD:
                 return BackupUploadTask.parse(info);
             case SNAPSHOT_DOWNLOAD:
