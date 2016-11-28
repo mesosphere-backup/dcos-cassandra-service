@@ -78,13 +78,12 @@ public class CassandraData {
         return new CassandraData(CassandraTask.TYPE.CLEANUP);
     }
 
-
-    public static final CassandraData createBackupSnapshotData(
+    public static final CassandraData createBackupSchemaData(
         final String hostname,
         final BackupRestoreContext context) {
 
         return new CassandraData(
-            CassandraTask.TYPE.BACKUP_SNAPSHOT,
+            CassandraTask.TYPE.BACKUP_SCHEMA,
             hostname,
             context.getNodeId(),
             context.getName(),
@@ -93,6 +92,26 @@ public class CassandraData {
             context.getAccountId(),
             context.getSecretKey(),
             context.getUsesEmc());
+    }
+
+    public static final CassandraData createBackupSchemaStatusData() {
+        return new CassandraData(CassandraTask.TYPE.BACKUP_SCHEMA);
+    }
+
+    public static final CassandraData createBackupSnapshotData(
+            final String hostname,
+            final BackupRestoreContext context) {
+
+        return new CassandraData(
+                CassandraTask.TYPE.BACKUP_SNAPSHOT,
+                hostname,
+                context.getNodeId(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getLocalLocation(),
+                context.getAccountId(),
+                context.getSecretKey(),
+                context.getUsesEmc());
     }
 
     public static final CassandraData createBackupSnapshotStatusData() {
@@ -117,7 +136,6 @@ public class CassandraData {
     public static final CassandraData createBackupUploadStatusData() {
         return new CassandraData(CassandraTask.TYPE.BACKUP_UPLOAD);
     }
-
 
     public static final CassandraData createSnapshotDownloadData(
         final String hostname,
@@ -156,7 +174,6 @@ public class CassandraData {
     public static final CassandraData createRestoreSnapshotStatusData() {
         return new CassandraData(CassandraTask.TYPE.SNAPSHOT_RESTORE);
     }
-
 
     public static final CassandraData createUpgradeSSTableData(
             final String hostname,
@@ -380,6 +397,4 @@ public class CassandraData {
     public ByteString getBytes() {
         return data.toByteString();
     }
-
-
 }

@@ -24,6 +24,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.scheduler.CassandraScheduler;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
+import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.dcos.Capabilities;
 import org.glassfish.jersey.server.ManagedAsync;
@@ -127,6 +128,16 @@ public class TasksResource {
         if (taskOption.isPresent()) {
             CassandraDaemonTask task = taskOption.get();
             final CassandraContainer movedContainer = state.moveCassandraContainer(task);
+            state.update(movedContainer.getDaemonTask());
+            state.update(movedContainer.getClusterTemplateTask());
+
+            for (Protos.TaskInfo taskInfo : movedContainer.getTaskInfos()) {
+                state.update(Protos.TaskStatus.newBuilder()
+                        .setState(Protos.TaskState.TASK_FAILED)
+                        .setTaskId(taskInfo.getTaskId())
+                        .build());
+            }
+
             LOGGER.info("Moved container ExecutorInfo: {}",
                     TextFormat.shortDebugString(movedContainer.getExecutorInfo()));
             CassandraScheduler.getTaskKiller().killTask(task.getName(), true);

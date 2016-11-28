@@ -73,7 +73,9 @@ public class BackupSnapshot implements ExecutorTask {
             LOGGER.info("Started taking snapshot for non system keyspaces: {}", nonSystemKeyspaces);
 
             for (String keyspace : nonSystemKeyspaces) {
-                LOGGER.info("Taking snapshot for keyspace: {}", keyspace);
+                LOGGER.info("Clearing snapshot {} for keyspace: {}", snapshotName, keyspace);
+                daemon.clearSnapshot(snapshotName, keyspace);
+                LOGGER.info("Taking snapshot {} for keyspace: {}", snapshotName, keyspace);
                 daemon.takeSnapShot(snapshotName, keyspace);
             }
 
