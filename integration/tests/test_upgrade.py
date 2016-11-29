@@ -27,7 +27,7 @@ def teardown_module(module):
 
 
 @pytest.mark.sanity
-def test_upgrade():
+def test_upgrade_downgrade():
     test_repo_name, test_repo_url = get_test_repo_info()
     test_version = get_pkg_version()
     print('Found test version: {}'.format(test_version))
@@ -45,7 +45,12 @@ def test_upgrade():
     destroy_service()
     add_repo(test_repo_name, test_repo_url, master_version)
     install(package_version = test_version)
-    check_post_upgrade_health()
+    check_post_version_change_health()
+
+    print('Downgrading to master version')
+    destroy_service()
+    install(package_version = master_version)
+    check_post_version_change_health()
 
 
 def get_test_repo_info():
@@ -95,7 +100,7 @@ def destroy_service():
     spin(fn, success_predicate)
 
 
-def check_post_upgrade_health():
+def check_post_version_change_health():
     check_health()
     check_scheduler_health()
     # TODO: verify data integrity
