@@ -89,7 +89,7 @@ public class CassandraRecoveryScheduler extends ChainedObserver {
 
     private Optional<CassandraDaemonTask> getTerminatedTask(
             final Set<String> ignore) {
-        LOGGER.info("Ignoring blocks: {}", ignore);
+        LOGGER.info("Ignoring steps: {}", ignore);
         cassandraState.refreshTasks();
         List<CassandraDaemonTask> terminated =
                 cassandraState.getDaemons().values().stream()

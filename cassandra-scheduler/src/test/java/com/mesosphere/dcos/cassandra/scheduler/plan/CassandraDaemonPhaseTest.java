@@ -53,7 +53,7 @@ public class CassandraDaemonPhaseTest {
     }
 
     @Test
-    public void testCreateSingleBlockPhase() throws Exception {
+    public void testCreateSingleStepPhase() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         final CassandraContainer cassandraContainer = Mockito.mock(CassandraContainer.class);
         when(cassandraContainer.getDaemonTask()).thenReturn(daemonTask);

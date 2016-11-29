@@ -48,12 +48,4 @@ public class CleanupStep extends AbstractClusterTaskStep {
         }
         return Optional.of(cassandraState.getOrCreateCleanup(daemonTask, context));
     }
-
-    @Override
-    public String toString() {
-        return "CleanupBlock{" +
-                "name='" + getName() + '\'' +
-                ", id=" + getId() +
-                '}';
-    }
 }

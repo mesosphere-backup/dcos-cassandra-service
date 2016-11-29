@@ -47,14 +47,14 @@ public class UploadBackupStepTest {
     public void testInitial() {
         Mockito.when(cassandraState.get(UPLOAD_NODE_0)).thenReturn(Optional.empty());
         final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
-        final UploadBackupStep block = UploadBackupStep.create(
+        final UploadBackupStep step = UploadBackupStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(UPLOAD_NODE_0, block.getName());
-        Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertTrue(block.isPending());
+        Assert.assertEquals(UPLOAD_NODE_0, step.getName());
+        Assert.assertEquals(NODE_0, step.getDaemon());
+        Assert.assertTrue(step.isPending());
     }
 
     @Test
@@ -64,14 +64,14 @@ public class UploadBackupStepTest {
         Mockito.when(cassandraState.get(UPLOAD_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
-        final UploadBackupStep block = UploadBackupStep.create(
+        final UploadBackupStep step = UploadBackupStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(UPLOAD_NODE_0, block.getName());
-        Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertTrue(block.isComplete());
+        Assert.assertEquals(UPLOAD_NODE_0, step.getName());
+        Assert.assertEquals(NODE_0, step.getDaemon());
+        Assert.assertTrue(step.isComplete());
     }
 
     @Test
@@ -89,7 +89,7 @@ public class UploadBackupStepTest {
                 .when(cassandraState.getOrCreateBackupUpload(daemonTask, context))
                 .thenReturn(task);
 
-        final UploadBackupStep block = UploadBackupStep.create(
+        final UploadBackupStep step = UploadBackupStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -97,8 +97,8 @@ public class UploadBackupStepTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
-        Assert.assertTrue(!block.start().isPresent());
-        Assert.assertTrue(block.isComplete());
+        Assert.assertTrue(!step.start().isPresent());
+        Assert.assertTrue(step.isComplete());
     }
 
     @Test
@@ -117,7 +117,7 @@ public class UploadBackupStepTest {
                 .when(cassandraState.getOrCreateBackupUpload(daemonTask, context))
                 .thenReturn(task);
 
-        final UploadBackupStep block = UploadBackupStep.create(
+        final UploadBackupStep step = UploadBackupStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -125,7 +125,7 @@ public class UploadBackupStepTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
-        Assert.assertTrue(block.start().isPresent());
-        Assert.assertTrue(block.isInProgress());
+        Assert.assertTrue(step.start().isPresent());
+        Assert.assertTrue(step.isInProgress());
     }
 }

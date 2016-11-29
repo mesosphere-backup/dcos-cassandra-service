@@ -39,7 +39,6 @@ public class RestoreSnapshotStep extends AbstractClusterTaskStep {
         return Optional.of(cassandraState.getOrCreateRestoreSnapshot(
                 daemonTask,
                 context));
-
     }
 
     public RestoreSnapshotStep(

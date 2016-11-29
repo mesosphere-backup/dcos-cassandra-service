@@ -107,33 +107,33 @@ public class CassandraDaemonStep extends DefaultStep {
 
     @Override
     public Optional<OfferRequirement> start() {
-        LOGGER.info("Starting Block = {}", getName());
+        LOGGER.info("Starting Step = {}", getName());
         try {
             CassandraContainer container = cassandraState.getOrCreateContainer(getName());
 
             if (!isPending()) {
-                LOGGER.warn("Block {} is not pending. start() should not be called.", getName());
+                LOGGER.warn("Step {} is not pending. start() should not be called.", getName());
                 return Optional.empty();
             }
 
             if (isComplete(container)) {
-                LOGGER.info("Block {} - Task complete: id = {}",
+                LOGGER.info("Step {} - Task complete: id = {}",
                         getName(),
                         container.getId());
                 setStatus(Status.COMPLETE);
                 return Optional.empty();
             } else if (StringUtils.isBlank(container.getAgentId())) {
-                LOGGER.info("Block {} - Launching new container : id = {}",
+                LOGGER.info("Step {} - Launching new container : id = {}",
                         getName(),
                         container.getId());
                 return provider.getNewOfferRequirement(container);
             } else if (needsConfigUpdate(container.getDaemonTask())) {
-                LOGGER.info("Block {} - Task requires config update: id = {}",
+                LOGGER.info("Step {} - Task requires config update: id = {}",
                         getName(),
                         container.getId());
                 return reconfigureTask(container.getDaemonTask());
             } else if (container.isTerminated() || container.isLaunching()) {
-                LOGGER.info("Block {} - Replacing container : id = {}",
+                LOGGER.info("Step {} - Replacing container : id = {}",
                         getName(),
                         container.getId());
                 return replaceTask(container.getDaemonTask());
@@ -141,7 +141,7 @@ public class CassandraDaemonStep extends DefaultStep {
                 return Optional.empty();
             }
         } catch (IOException ex) {
-            LOGGER.error(String.format("Block %s - Failed to get or create a container", getName()), ex);
+            LOGGER.error(String.format("Step %s - Failed to get or create a container", getName()), ex);
             return Optional.empty();
         }
     }
@@ -151,12 +151,12 @@ public class CassandraDaemonStep extends DefaultStep {
         try {
             final String taskName = org.apache.mesos.offer.TaskUtils.toTaskName(status.getTaskId());
             if (!getName().equals(taskName)) {
-                LOGGER.info("TaskStatus was meant for block: {} and doesn't affect block {}. Status: {}",
+                LOGGER.info("TaskStatus was meant for step: {} and doesn't affect step {}. Status: {}",
                         taskName, getName(), status);
                 return;
             }
             if (isPending()) {
-                LOGGER.info("Ignoring TaskStatus (Block {} is Pending): {}", getName(), status);
+                LOGGER.info("Ignoring TaskStatus (Step {} is Pending): {}", getName(), status);
                 return;
             }
             if (status.getReason().equals(Protos.TaskStatus.Reason.REASON_RECONCILIATION)) {
@@ -166,23 +166,23 @@ public class CassandraDaemonStep extends DefaultStep {
             if (status.hasData()) {
                 final CassandraData cassandraData = CassandraData.parse(status.getData());
                 mode = cassandraData.getMode();
-                LOGGER.info("{} Block: {} received status: {} with mode: {}",
+                LOGGER.info("{} Step: {} received status: {} with mode: {}",
                         getStatus(), getName(), status, cassandraData.getMode());
             } else {
-                LOGGER.info("{} Block: {} received status: {}",
+                LOGGER.info("{} Step: {} received status: {}",
                         getStatus(), getName(), status);
             }
             if (isComplete(status)) {
                 setStatus(Status.COMPLETE);
-                LOGGER.info("Updating block: {} with: {}", getName(), Status.COMPLETE);
+                LOGGER.info("Updating step: {} with: {}", getName(), Status.COMPLETE);
             } else if (CassandraTaskStatus.isTerminated(status.getState())) {
                 setStatus(Status.PENDING);
-                LOGGER.info("Updating block: {} with: {}", getName(), Status.PENDING);
+                LOGGER.info("Updating step: {} with: {}", getName(), Status.PENDING);
             } else {
-                LOGGER.info("TaskStatus doesn't affect block: {}", status);
+                LOGGER.info("TaskStatus doesn't affect step: {}", status);
             }
         } catch (Exception ex) {
-            LOGGER.error(String.format("Block %s - Failed to update status: %s", getName(), status), ex);
+            LOGGER.error(String.format("Step %s - Failed to update status: %s", getName(), status), ex);
         }
     }
 

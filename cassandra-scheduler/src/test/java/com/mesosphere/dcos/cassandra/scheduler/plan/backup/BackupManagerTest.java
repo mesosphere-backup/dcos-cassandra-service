@@ -91,7 +91,7 @@ public class BackupManagerTest {
         assertEquals(3, manager.getPhases().size());
 
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        // notify blocks to check for TASK_FINISHED:
+        // notify steps to check for TASK_FINISHED:
         for (Phase phase : manager.getPhases()) {
             for (Step step : phase.getChildren()) {
                 step.update(TaskStatus.getDefaultInstance());
@@ -131,7 +131,7 @@ public class BackupManagerTest {
         assertEquals(3, manager.getPhases().size());
 
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        // notify blocks to check for TASK_FINISHED:
+        // notify steps to check for TASK_FINISHED:
         for (Phase phase : manager.getPhases()) {
             for (Step step : phase.getChildren()) {
                 step.update(TaskStatus.getDefaultInstance());

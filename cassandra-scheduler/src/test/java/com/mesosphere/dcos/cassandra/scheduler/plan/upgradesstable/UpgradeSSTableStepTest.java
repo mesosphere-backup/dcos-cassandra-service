@@ -51,14 +51,14 @@ public class UpgradeSSTableStepTest {
         Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
         final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final UpgradeSSTableStep block = UpgradeSSTableStep.create(
+        final UpgradeSSTableStep step = UpgradeSSTableStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(UPGRADESSTABLE_NODE_0, block.getName());
-        Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertTrue(block.isPending());
+        Assert.assertEquals(UPGRADESSTABLE_NODE_0, step.getName());
+        Assert.assertEquals(NODE_0, step.getDaemon());
+        Assert.assertTrue(step.isPending());
     }
 
     @Test
@@ -69,14 +69,14 @@ public class UpgradeSSTableStepTest {
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final UpgradeSSTableStep block = UpgradeSSTableStep.create(
+        final UpgradeSSTableStep step = UpgradeSSTableStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(UPGRADESSTABLE_NODE_0, block.getName());
-        Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertTrue(block.isComplete());
+        Assert.assertEquals(UPGRADESSTABLE_NODE_0, step.getName());
+        Assert.assertEquals(NODE_0, step.getDaemon());
+        Assert.assertTrue(step.isComplete());
     }
 
     @Test
@@ -95,7 +95,7 @@ public class UpgradeSSTableStepTest {
                 .when(cassandraState.getOrCreateUpgradeSSTable(daemonTask, CONTEXT))
                 .thenReturn(task);
 
-        final UpgradeSSTableStep block = UpgradeSSTableStep.create(
+        final UpgradeSSTableStep step = UpgradeSSTableStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -103,8 +103,8 @@ public class UpgradeSSTableStepTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
-        Assert.assertTrue(!block.start().isPresent());
-        Assert.assertTrue(block.isComplete());
+        Assert.assertTrue(!step.start().isPresent());
+        Assert.assertTrue(step.isComplete());
     }
 
     @Test
@@ -122,7 +122,7 @@ public class UpgradeSSTableStepTest {
                 .when(cassandraState.getOrCreateUpgradeSSTable(daemonTask, CONTEXT))
                 .thenReturn(task);
 
-        final UpgradeSSTableStep block = UpgradeSSTableStep.create(
+        final UpgradeSSTableStep step = UpgradeSSTableStep.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -130,7 +130,7 @@ public class UpgradeSSTableStepTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
-        Assert.assertTrue(block.start().isPresent());
-        Assert.assertTrue(block.isInProgress());
+        Assert.assertTrue(step.start().isPresent());
+        Assert.assertTrue(step.isInProgress());
     }
 }

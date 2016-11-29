@@ -18,7 +18,7 @@ public class DefaultConfigurationManager {
             LoggerFactory.getLogger(DefaultConfigurationManager.class);
 
     private final ConfigStore<Configuration> configStore;
-    private final ConfigurationFactory<Configuration> yamlConfigurationFactory;;
+    private final ConfigurationFactory<Configuration> yamlConfigurationFactory;
     private final List<ConfigValidationError> validationErrors;
     private final StateStore stateStore;
 

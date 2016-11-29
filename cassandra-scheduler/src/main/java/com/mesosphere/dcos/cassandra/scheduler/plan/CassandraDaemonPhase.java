@@ -35,8 +35,8 @@ public class CassandraDaemonPhase extends DefaultPhase {
 
         Collections.sort(names);
 
-        //here we will add a block for all tasks we have recorded and create a
-        //new block with a newly recorded task for a scale out
+        // here we will add a step for all tasks we have recorded and create a
+        // new step with a newly recorded task for a scale out
         final List<Step> steps = new ArrayList<>();
         for (int i = 0; i < servers; i++) {
             steps.add(CassandraDaemonStep.create(names.get(i), provider, cassandraState));
@@ -55,7 +55,7 @@ public class CassandraDaemonPhase extends DefaultPhase {
                     new ArrayList<>());
         } catch (Throwable e) {
             return new CassandraDaemonPhase(new ArrayList<>(), Arrays.asList(String.format(
-                    "Error creating CassandraDaemonBlock : message = %s", e.getMessage())));
+                    "Error creating CassandraDaemonStep : message = %s", e.getMessage())));
         }
     }
 

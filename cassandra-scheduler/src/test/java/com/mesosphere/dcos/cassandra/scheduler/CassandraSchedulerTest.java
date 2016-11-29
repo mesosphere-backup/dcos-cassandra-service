@@ -138,13 +138,13 @@ public class CassandraSchedulerTest {
                 cassandraState,
                 client,
                 executorService,
-                stateStore,
-                defaultConfigurationManager,
                 backup,
                 restore,
                 cleanup,
                 repair,
-                upgrade);
+                upgrade,
+                stateStore,
+                defaultConfigurationManager);
 
         masterInfo = TestUtils.generateMasterInfo();
 

@@ -78,13 +78,13 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             final CassandraState cassandraState,
             final SchedulerClient client,
             final ScheduledExecutorService executor,
-            final StateStore stateStore,
-            final DefaultConfigurationManager defaultConfigurationManager,
             final BackupManager backupManager,
             final RestoreManager restoreManager,
             final CleanupManager cleanupManager,
             final RepairManager repairManager,
-            final UpgradeSSTableManager upgradeSSTableManager) {
+            final UpgradeSSTableManager upgradeSSTableManager,
+            final StateStore stateStore,
+            final DefaultConfigurationManager defaultConfigurationManager) {
         this.mesosConfig = mesosConfig;
         this.cassandraState = cassandraState;
         this.reconciler = new DefaultReconciler(stateStore);
@@ -151,7 +151,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";
             LOGGER.error(error, t);
-            throw new RuntimeException(error + " " + t, t);
+            throw new RuntimeException(error, t);
         }
     }
 

@@ -38,7 +38,7 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
 
     @Override
     public Optional<OfferRequirement> start() {
-        LOGGER.info("Starting Block: name = {}, id = {}",
+        LOGGER.info("Starting Step: name = {}, id = {}",
                 getName(),
                 getId());
 
@@ -51,14 +51,14 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
             }
 
             if (!CassandraDaemonStep.isComplete(lastKnownDaemonStatus.get())) {
-                LOGGER.info("Daemon block is not complete.");
+                LOGGER.info("Daemon step is not complete.");
                 return Optional.empty();
             }
 
             Optional<CassandraTask> task = getOrCreateTask();
             if (task.isPresent()) {
                 if (isComplete() || isInProgress()) {
-                    LOGGER.info("No requirement because block is: ", getStatus());
+                    LOGGER.info("No requirement because step is: ", getStatus());
                     return Optional.empty();
                 } else {
                     setStatus(Status.PENDING);
@@ -66,17 +66,17 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
             }
 
             if (!task.isPresent()) {
-                LOGGER.info("Block has no task: name = {}, id = {}",
+                LOGGER.info("Step has no task: name = {}, id = {}",
                         getName(), getId());
 
                 return Optional.empty();
             } else {
-                LOGGER.info("Block has task: " + task);
+                LOGGER.info("Step has task: " + task);
                 return Optional.of(getOfferRequirement(task.get()));
             }
 
         } catch (IOException ex) {
-            LOGGER.error(String.format("Block failed to create offer " +
+            LOGGER.error(String.format("Step failed to create offer " +
                             "requirement: name = %s, id = %s",
                     getName(),
                     getId()), ex);
@@ -108,14 +108,14 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
                     cassandraState.remove(getName());
-                    LOGGER.info("Reallocating task {} for block {}", getName(), getId());
+                    LOGGER.info("Reallocating task {} for step {}", getName(), getId());
                     setStatus(Status.PENDING);
                 }
             }
 
         } catch (Exception ex) {
             LOGGER.error(String.format(
-                    "Exception for task {} in block {}. Block failed to progress", getName(), getId()), ex);
+                    "Exception for task {} in step {}. Step failed to progress", getName(), getId()), ex);
         }
     }
 
@@ -128,7 +128,7 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
         if (Protos.TaskState.TASK_FINISHED.equals(task.getState())) {
             // Task is already finished
             LOGGER.info(
-                    "Task {} assigned to this block {}, is already in state: {}",
+                    "Task {} assigned to this step {}, is already in state: {}",
                     task.getId(),
                     getId(),
                     task.getState());
