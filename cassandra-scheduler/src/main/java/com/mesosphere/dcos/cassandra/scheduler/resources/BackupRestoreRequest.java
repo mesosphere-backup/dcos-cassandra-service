@@ -82,7 +82,13 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
     this.azureKey = azureKey;
   }
 
-  public String getRestoreType() { return restoreType; }
+  public String getRestoreType() {
+    if (restoreType != null && !restoreType.isEmpty()) {
+      return restoreType;
+    } else {
+      return "existing";
+    }
+  }
 
   public void setRestoreType(String restoreType) { this.restoreType = restoreType; }
 
@@ -117,7 +123,7 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   private boolean isValidRestoreType() {
-    return restoreType == null? true: restoreType.matches("existing|new");
+    return restoreType == null || restoreType.isEmpty() ? true: restoreType.matches("existing|new");
   }
 
   @Override
