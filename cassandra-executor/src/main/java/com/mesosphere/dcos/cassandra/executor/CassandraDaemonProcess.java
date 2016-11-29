@@ -361,6 +361,16 @@ public class CassandraDaemonProcess extends ProcessTask {
         getProbe().takeSnapshot(name, null, keySpace);
     }
 
+    /** Clears a snapshot of the indicated key space with the given name.
+     *
+     * @param name     The name of the snapshot.
+     * @param keySpace The name of the key space.
+     * @throws IOException If an error occurs clearing the snapshot.
+     */
+    public void clearSnapshot(String name, String keySpace) throws IOException {
+        getProbe().clearSnapshot(name, keySpace);
+    }
+
     /**
      * Performs anti-entropy repair on the indicated keySpace.
      *

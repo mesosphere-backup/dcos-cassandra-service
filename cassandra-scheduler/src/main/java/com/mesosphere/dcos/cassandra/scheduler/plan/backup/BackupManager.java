@@ -50,13 +50,15 @@ public class BackupManager extends ClusterTaskManager<BackupRestoreRequest, Back
     protected List<Phase> createPhases(BackupRestoreContext context) {
         return Arrays.asList(
                 createBackupSnapshotPhase(context, cassandraState, provider),
-                createUploadBackupPhase(context, cassandraState, provider));
+                createUploadBackupPhase(context, cassandraState, provider),
+                createBackupSchemaPhase(context, cassandraState, provider));
     }
 
     @Override
     protected void clearTasks() throws PersistenceException {
         cassandraState.remove(cassandraState.getBackupSnapshotTasks().keySet());
         cassandraState.remove(cassandraState.getBackupUploadTasks().keySet());
+        cassandraState.remove(cassandraState.getBackupSchemaTasks().keySet());
     }
 
     private static Phase createBackupSnapshotPhase(
@@ -81,5 +83,17 @@ public class BackupManager extends ClusterTaskManager<BackupRestoreRequest, Back
                 .map(daemon -> UploadBackupStep.create(daemon, cassandraState, provider, context))
                 .collect(Collectors.toList());
         return new DefaultPhase("Upload", steps, new SerialStrategy<>(), Collections.emptyList());
+    }
+
+    private static Phase createBackupSchemaPhase(
+            BackupRestoreContext context,
+            CassandraState cassandraState,
+            ClusterTaskOfferRequirementProvider provider) {
+        final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
+        Collections.sort(daemons);
+        List<Step> steps = daemons.stream()
+                .map(daemon -> BackupSchemaStep.create(daemon, cassandraState, provider, context))
+                .collect(Collectors.toList());
+        return new DefaultPhase("BackupSchema", steps, new SerialStrategy<>(), Collections.emptyList());
     }
 }

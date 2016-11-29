@@ -126,6 +126,14 @@ public class CassandraState extends SchedulerState implements Managed {
                         (BackupSnapshotTask) entry.getValue())));
     }
 
+    public Map<String, BackupSchemaTask> getBackupSchemaTasks() {
+        refreshTasks();
+        return tasks.entrySet().stream().filter(entry -> entry.getValue()
+                .getType() == CassandraTask.TYPE.BACKUP_SCHEMA).collect
+                (Collectors.toMap(entry -> entry.getKey(), entry -> (
+                        (BackupSchemaTask) entry.getValue())));
+    }
+
     public Map<String, BackupUploadTask> getBackupUploadTasks() {
         refreshTasks();
         return tasks.entrySet().stream().filter(entry -> entry.getValue()
@@ -269,6 +277,19 @@ public class CassandraState extends SchedulerState implements Managed {
 
     }
 
+    public BackupSchemaTask createBackupSchemaTask(
+            CassandraDaemonTask daemon,
+            BackupRestoreContext context) throws PersistenceException {
+
+        Optional<Protos.TaskInfo> template = getTemplate(daemon);
+
+        if (template.isPresent()) {
+            return BackupSchemaTask.create(template.get(), daemon, context);
+        } else {
+            throw new PersistenceException("Failed to retrieve ClusterTask Template.");
+        }
+    }
+
     public BackupUploadTask createBackupUploadTask(
             CassandraDaemonTask daemon,
             BackupRestoreContext context) throws PersistenceException {
@@ -368,6 +389,19 @@ public class CassandraState extends SchedulerState implements Managed {
             return createBackupSnapshotTask(daemon, context);
         }
 
+    }
+
+    public BackupSchemaTask getOrCreateBackupSchema(
+            CassandraDaemonTask daemon,
+            BackupRestoreContext context) throws PersistenceException {
+
+        String name = BackupSchemaTask.nameForDaemon(daemon);
+        Map<String, BackupSchemaTask> schemas = getBackupSchemaTasks();
+        if (schemas.containsKey(name)) {
+            return schemas.get(name);
+        } else {
+            return createBackupSchemaTask(daemon, context);
+        }
     }
 
     public BackupUploadTask getOrCreateBackupUpload(
