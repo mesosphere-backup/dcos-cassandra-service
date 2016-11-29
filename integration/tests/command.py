@@ -130,7 +130,7 @@ def spin(fn, success_predicate, *args, **kwargs):
 
 def install(additional_options = {}, package_version = None):
     merged_options = _nested_dict_merge(DEFAULT_OPTIONS_DICT, additional_options)
-    print('Installing {} with options: {}'.format(PACKAGE_NAME, merged_options))
+    print('Installing {} with options: {} {}'.format(PACKAGE_NAME, merged_options, package_version))
     shakedown.install_package_and_wait(
         PACKAGE_NAME,
         package_version,
