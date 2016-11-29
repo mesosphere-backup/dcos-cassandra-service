@@ -42,6 +42,7 @@ import org.apache.mesos.scheduler.plan.*;
 import org.apache.mesos.scheduler.plan.api.PlansResource;
 import org.apache.mesos.scheduler.recovery.DefaultTaskFailureListener;
 import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.api.JsonPropertyDeserializer;
 import org.apache.mesos.state.api.StateResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,7 +179,8 @@ public class CassandraScheduler implements Scheduler, Observer {
                     ClusterTaskResourceFactory.create("Repair", "/v1/repair", repair, RepairRequest.class),
                     new DataCenterResource(seeds),
                     new ConnectionResource(capabilities, cassandraState, configurationManager),
-                    new StateResource(stateStore)));
+                    // TODO(nick) rename upstream to StringPropertyDeserializer:
+                    new StateResource(stateStore, new JsonPropertyDeserializer())));
             if (enableUpgradeSSTableEndpoint) {
                 resources.add(ClusterTaskResourceFactory.create(
                         "UpgradeSSTable", "/v1/upgradesstable", upgrade, UpgradeSSTableRequest.class));

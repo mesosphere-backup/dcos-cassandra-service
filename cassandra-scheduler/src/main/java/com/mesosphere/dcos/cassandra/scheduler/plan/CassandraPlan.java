@@ -6,6 +6,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import org.apache.mesos.scheduler.plan.DefaultPlan;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
+import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
 import java.util.Arrays;
 import java.util.List;
@@ -14,8 +15,8 @@ import java.util.stream.Collectors;
 /**
  * Extension of {@link DefaultPlan} which also includes any active maintenance tasks.
  *
- * TODO(nick): Consider a separate plan for these tasks? Depends on the convention established by
- * dcos-commons once it has native maintenance task support.
+ * TODO(nick): Consider using separate Plan for maintenance tasks? Depends on the convention
+ * established by dcos-commons once it has native maintenance task support.
  */
 public class CassandraPlan extends DefaultPlan {
 
@@ -51,6 +52,17 @@ public class CassandraPlan extends DefaultPlan {
             }
         }
         return phases;
+    }
+
+    /**
+     * TODO(nick): Remove this custom override once PlanUtils.getStatus() checks for non-empty errors.
+     */
+    @Override
+    public Status getStatus() {
+        if (!getErrors().isEmpty()) {
+            return Status.ERROR;
+        }
+        return super.getStatus();
     }
 
     @Override
