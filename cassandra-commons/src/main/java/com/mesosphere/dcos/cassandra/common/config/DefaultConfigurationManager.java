@@ -46,7 +46,11 @@ public class DefaultConfigurationManager {
                 e.getMessage());
         }
         validationErrors = configValidator.validate(oldConfig, newConfiguration);
-        LOGGER.error("Validation errors: {}", validationErrors);
+        if (validationErrors.isEmpty()) {
+            LOGGER.info("No config validation errors.");
+        } else {
+            LOGGER.error("Validation errors: {}", validationErrors);
+        }
 
         if (validationErrors.isEmpty()) {
             if (!Objects.equals(newConfiguration, oldConfig)) {

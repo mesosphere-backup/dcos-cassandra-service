@@ -3,11 +3,10 @@ package com.mesosphere.dcos.cassandra.common.config;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.mesosphere.dcos.cassandra.common.serialization.JsonSerializer;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 
 import io.dropwizard.lifecycle.Managed;
+
+import org.apache.mesos.state.JsonSerializer;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
@@ -16,8 +15,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class IdentityManager implements Managed {
     private static final Logger LOGGER = LoggerFactory.getLogger(IdentityManager.class);
-    private static final Serializer<ServiceConfig> SERVICECONFIG_SERIALIZER =
-            JsonSerializer.create(ServiceConfig.class);
+    private static final JsonSerializer SERVICECONFIG_SERIALIZER = new JsonSerializer();
     public static final String IDENTITY = "serviceConfig";
 
     private volatile ServiceConfig serviceConfig;
@@ -42,7 +40,7 @@ public class IdentityManager implements Managed {
         return serviceConfig;
     }
 
-    public synchronized void register(String id) throws SerializationException {
+    public synchronized void register(String id) {
         final ServiceConfig registeredServiceConfig = serviceConfig.register(id);
         this.stateStore.storeProperty(IDENTITY, SERVICECONFIG_SERIALIZER.serialize(registeredServiceConfig));
         this.serviceConfig = serviceConfig.register(id);
@@ -55,7 +53,7 @@ public class IdentityManager implements Managed {
 
         try {
             final byte[] bytesOfIdentity = stateStore.fetchProperty(IDENTITY);
-            final ServiceConfig persisted = SERVICECONFIG_SERIALIZER.deserialize(bytesOfIdentity);
+            final ServiceConfig persisted = SERVICECONFIG_SERIALIZER.deserialize(bytesOfIdentity, ServiceConfig.class);
 
             LOGGER.info("Retrieved persisted serviceConfig = {}", persisted);
 

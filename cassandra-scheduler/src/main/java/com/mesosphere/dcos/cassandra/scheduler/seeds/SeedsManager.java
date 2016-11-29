@@ -3,19 +3,16 @@ package com.mesosphere.dcos.cassandra.scheduler.seeds;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.mesosphere.dcos.cassandra.common.serialization.JsonSerializer;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
-import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
-import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.scheduler.resources.SeedsResponse;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.config.ConfigStoreException;
+import org.apache.mesos.config.SerializationUtils;
+import org.apache.mesos.state.JsonSerializer;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
@@ -32,7 +29,7 @@ import java.util.stream.Collectors;
 
 public class SeedsManager implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SeedsManager.class);
-    private static final Serializer<DataCenterInfo> DATACENTER_SERIALIZER = JsonSerializer.create(DataCenterInfo.class);
+    private static final JsonSerializer DATACENTER_SERIALIZER = new JsonSerializer();
 
     private final CassandraState tasks;
     private static final String DATA_CENTERS_KEY = "datacenters";
@@ -40,7 +37,6 @@ public class SeedsManager implements Runnable {
     private final SchedulerClient client;
     private DefaultConfigurationManager configurationManager;
     private StateStore stateStore;
-    private Serializer<DataCenterInfo> serializer;
 
     private boolean putLocalInfo(String url) {
         try {
@@ -92,13 +88,13 @@ public class SeedsManager implements Runnable {
                         continue;
                     }
                     LOGGER.info("Loaded key: {}", key);
-                    builder.put(key, DATACENTER_SERIALIZER.deserialize(stateStore.fetchProperty(key)));
+                    builder.put(key, DATACENTER_SERIALIZER.deserialize(
+                            stateStore.fetchProperty(key), DataCenterInfo.class));
                 }
                 dataCenters = builder.build();
-                LOGGER.info("Loaded data centers: {}",
-                        JsonUtils.toJsonString(dataCenters));
+                LOGGER.info("Loaded data centers: {}", SerializationUtils.toJsonString(dataCenters));
             }
-        } catch (SerializationException e) {
+        } catch (IOException e) {
             LOGGER.error("Error loading data centers", e);
             throw new RuntimeException(e);
         } catch (StateStoreException e) {
@@ -169,11 +165,11 @@ public class SeedsManager implements Runnable {
                 (List::stream).collect(Collectors.toList());
     }
 
-    public void update(final DataCenterInfo info) throws PersistenceException, SerializationException {
+    public void update(final DataCenterInfo info) throws IOException {
         LOGGER.info("Updating data center {}", info);
         synchronized (stateStore) {
             final String propertyKey = DATA_CENTERS_KEY + "." + info.getDatacenter();
-            stateStore.storeProperty(propertyKey, serializer.serialize(info));
+            stateStore.storeProperty(propertyKey, DATACENTER_SERIALIZER.serialize(info));
             dataCenters = ImmutableMap.<String, DataCenterInfo>builder().putAll(
                     dataCenters.entrySet().stream()
                             .filter(entry -> !entry.getKey().equals(
@@ -185,15 +181,14 @@ public class SeedsManager implements Runnable {
                     .build();
 
         }
-        LOGGER.info("Data centers after update = {},",
-                JsonUtils.toJsonString(dataCenters));
+        LOGGER.info("Data centers after update = {},", SerializationUtils.toJsonString(dataCenters));
     }
 
     public boolean tryUpdate(final DataCenterInfo info) {
         try {
             update(info);
             return true;
-        } catch (SerializationException | PersistenceException e) {
+        } catch (IOException e) {
             LOGGER.error(
                     String.format("Failed to update info: info = %s",
                             info),

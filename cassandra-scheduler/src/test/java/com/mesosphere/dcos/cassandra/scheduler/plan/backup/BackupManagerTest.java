@@ -2,8 +2,6 @@ package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.common.serialization.JsonSerializer;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
@@ -14,6 +12,7 @@ import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
+import org.apache.mesos.config.SerializationUtils;
 import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.Step;
 import org.apache.mesos.state.StateStore;
@@ -24,6 +23,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,10 +60,10 @@ public class BackupManagerTest {
     }
 
     @Test
-    public void testInitialWithState() throws SerializationException {
+    public void testInitialWithState() throws IOException {
         final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
         when(mockState.fetchProperty(BackupManager.BACKUP_KEY)).thenReturn(
-                JsonSerializer.create(BackupRestoreContext.class).serialize(context));
+                SerializationUtils.toJsonString(context).getBytes(StandardCharsets.UTF_8));
         BackupManager manager = new BackupManager(mockCassandraState, mockProvider, mockState);
         assertTrue(manager.isComplete());
         assertFalse(manager.isInProgress());

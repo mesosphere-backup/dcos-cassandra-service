@@ -12,6 +12,7 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
+import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -61,6 +62,8 @@ public class CassandraSchedulerTest {
     private CleanupManager cleanup;
     private RepairManager repair;
     private UpgradeSSTableManager upgrade;
+    private SeedsManager seeds;
+    private Capabilities capabilities;
     private ScheduledExecutorService executorService;
     private MesosConfig mesosConfig;
     private Protos.FrameworkID frameworkId;
@@ -90,6 +93,8 @@ public class CassandraSchedulerTest {
         cleanup = Mockito.mock(CleanupManager.class);
         repair = Mockito.mock(RepairManager.class);
         upgrade = Mockito.mock(UpgradeSSTableManager.class);
+        seeds = Mockito.mock(SeedsManager.class);
+        capabilities = Mockito.mock(Capabilities.class);
 
         executorService = Executors.newSingleThreadScheduledExecutor();
         frameworkId = TestUtils.generateFrameworkId();
@@ -133,18 +138,22 @@ public class CassandraSchedulerTest {
 
         offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager, cassandraState);
         scheduler = new CassandraScheduler(
+                configurationManager,
                 mesosConfig,
                 offerRequirementProvider,
                 cassandraState,
                 client,
-                executorService,
                 backup,
                 restore,
                 cleanup,
                 repair,
                 upgrade,
+                true,
+                seeds,
+                executorService,
                 stateStore,
-                defaultConfigurationManager);
+                defaultConfigurationManager,
+                capabilities);
 
         masterInfo = TestUtils.generateMasterInfo();
 

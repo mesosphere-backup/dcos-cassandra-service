@@ -3,19 +3,21 @@ package com.mesosphere.dcos.cassandra.scheduler.client;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraStatus;
-import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.mesos.config.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
@@ -95,10 +97,9 @@ public class SchedulerClient {
                                     "failed status = " + response
                                     .getStatusLine().getStatusCode()));
                 } else {
-                    promise.complete(
-                            JsonUtils.MAPPER.readValue(
-                                    response.getEntity().getContent(),
-                                    clazz));
+                    promise.complete(SerializationUtils.fromJsonString(
+                            IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8),
+                            clazz));
                 }
             } catch (Throwable t) {
                 LOGGER.error(String.format("Get request failed: url = %s",
@@ -112,51 +113,6 @@ public class SchedulerClient {
         return promise;
     }
 
-    private CompletionStage<Boolean> delete(String url) {
-        LOGGER.debug("Executing delete: url = {}", url);
-        CompletableFuture<Boolean> promise = new CompletableFuture<Boolean>();
-        executor.submit(() -> {
-           HttpDelete delete = new HttpDelete(url);
-            try {
-
-                HttpResponse response = client.execute(delete);
-                boolean successful = isSuccessful(response);
-                if (!successful) {
-                    LOGGER.error("Delete request failed :url = {}, " +
-                            "status = {}", url,
-                            response.getStatusLine().getStatusCode());
-                }
-                promise.complete(successful);
-            } catch (Throwable t) {
-                LOGGER.error(String.format("Delete request failed: url = %s",
-                        url),
-                        t);
-                promise.completeExceptionally(t);
-            } finally{
-                delete.releaseConnection();
-            }
-        });
-        return promise;
-    }
-
-    private CompletionStage<Boolean> delete(String host, String path) {
-        try {
-            return delete(
-                    new URIBuilder()
-                            .setScheme(SCHEME)
-                            .setHost(host)
-                            .setPath(path)
-                            .build().toString());
-        } catch (Throwable t) {
-            LOGGER.error(String.format(
-                    "Delete request failed: host = %s, path = %s",
-                    host,
-                    path),
-                    t);
-            return failure(t);
-        }
-    }
-
     private CompletionStage<Boolean> put(String url, Object json) {
         LOGGER.debug("Executing put: url = {}, data = {}", url, json);
         CompletableFuture<Boolean> promise = new CompletableFuture<Boolean>();
@@ -164,7 +120,7 @@ public class SchedulerClient {
             HttpPut put = new HttpPut(url);
             try {
                 put.setEntity(new StringEntity(
-                        JsonUtils.MAPPER.writeValueAsString(json),
+                        SerializationUtils.toJsonString(json),
                         ContentType.APPLICATION_JSON));
                 HttpResponse response = client.execute(put);
                 boolean successful = isSuccessful(response);

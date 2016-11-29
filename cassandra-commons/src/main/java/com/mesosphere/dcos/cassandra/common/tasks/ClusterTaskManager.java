@@ -1,19 +1,18 @@
 package com.mesosphere.dcos.cassandra.common.tasks;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.mesos.scheduler.ChainedObserver;
 import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.state.JsonSerializer;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.common.serialization.JsonSerializer;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 
 /**
  * Interface for managers of ClusterTask execution (e.g Backup, Restore, Cleanup, ... )
@@ -25,10 +24,11 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
      * Use getClass() (NOT static class) to get/log implementing class.
      */
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final JsonSerializer SERIALIZER = new JsonSerializer();
 
     private final StateStore stateStore;
     private final String propertyKey;
-    private final Serializer<C> serializer;
+    private final Class<C> clazz;
 
     private List<Phase> phases = Collections.emptyList();
     private volatile C activeContext = null; // used to signal that the operation has started
@@ -36,7 +36,7 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
     protected ClusterTaskManager(StateStore stateStore, String propertyKey, Class<C> clazz) {
         this.stateStore = stateStore;
         this.propertyKey = propertyKey;
-        this.serializer = JsonSerializer.create(clazz);
+        this.clazz = clazz;
     }
 
     /**
@@ -60,7 +60,7 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
      */
     protected void restore() {
         try {
-            C context = serializer.deserialize(stateStore.fetchProperty(propertyKey));
+            C context = SERIALIZER.deserialize(stateStore.fetchProperty(propertyKey), clazz);
             if (context != null) {
                 // Recovering from restart while operation was running
                 this.phases = createPhases(context);
@@ -69,7 +69,7 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
                 }
                 this.activeContext = context;
             }
-        } catch (SerializationException e) {
+        } catch (IOException e) {
             logger.error("Error loading operation context from persistence store.", e);
         } catch (StateStoreException e) {
             logger.info("No operation context found.");
@@ -88,13 +88,13 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
             if (isComplete()) {
                 clearTasks();
             }
-            stateStore.storeProperty(propertyKey, serializer.serialize(context));
+            stateStore.storeProperty(propertyKey, SERIALIZER.serialize(context));
             this.phases = createPhases(context);
             for (Phase phase : this.phases) {
                 phase.subscribe(this);
             }
             this.activeContext = context;
-        } catch (SerializationException | PersistenceException e) {
+        } catch (IOException e) {
             logger.error("Error storing operation context into persistence store", e);
         }
 

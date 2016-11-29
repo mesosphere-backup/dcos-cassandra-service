@@ -1,7 +1,9 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.*;
@@ -9,7 +11,6 @@ import com.mesosphere.dcos.cassandra.common.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOperationRecorder;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
-import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDaemonPhase;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlan;
@@ -19,11 +20,13 @@ import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
+import com.mesosphere.dcos.cassandra.scheduler.resources.*;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
-import io.dropwizard.lifecycle.Managed;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.ResourceCleaner;
@@ -36,19 +39,23 @@ import org.apache.mesos.scheduler.Observer;
 import org.apache.mesos.scheduler.SchedulerDriverFactory;
 import org.apache.mesos.scheduler.TaskKiller;
 import org.apache.mesos.scheduler.plan.*;
+import org.apache.mesos.scheduler.plan.api.PlansResource;
 import org.apache.mesos.scheduler.recovery.DefaultTaskFailureListener;
 import org.apache.mesos.state.StateStore;
+import org.apache.mesos.state.api.StateResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class CassandraScheduler implements Scheduler, Managed, Observer {
-    private final static Logger LOGGER = LoggerFactory.getLogger(
-            CassandraScheduler.class);
+public class CassandraScheduler implements Scheduler, Observer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraScheduler.class);
 
     private final MesosConfig mesosConfig;
     private final OfferAccepter offerAccepter;
@@ -56,11 +63,22 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     private final CassandraState cassandraState;
     private final Reconciler reconciler;
     private final SchedulerClient client;
+    private final BackupManager backup;
+    private final RestoreManager restore;
+    private final CleanupManager cleanup;
+    private final RepairManager repair;
+    private final UpgradeSSTableManager upgrade;
+    private final boolean enableUpgradeSSTableEndpoint;
+    private final SeedsManager seeds;
     private final ScheduledExecutorService executor;
     private final StateStore stateStore;
     private final DefaultConfigurationManager defaultConfigurationManager;
-    private final List<ClusterTaskManager<?,?>> clusterTaskManagers;
     private final Protos.Filters offerFilters;
+    private final Capabilities capabilities;
+    private final ConfigurationManager configurationManager;
+
+    // use capacity 2, because 1 *will* block until resources are removed:
+    private final BlockingQueue<Collection<Object>> resourcesQueue = new ArrayBlockingQueue<>(2);
 
     private static TaskKiller taskKiller;
 
@@ -70,24 +88,30 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     private PlanManager planManager;
     private PlanScheduler planScheduler;
     private CassandraRecoveryScheduler recoveryScheduler;
+    private Collection<Object> resources;
 
     @Inject
     public CassandraScheduler(
+            final ConfigurationManager configurationManager,
             final MesosConfig mesosConfig,
             final PersistentOfferRequirementProvider offerRequirementProvider,
             final CassandraState cassandraState,
             final SchedulerClient client,
+            final BackupManager backup,
+            final RestoreManager restore,
+            final CleanupManager cleanup,
+            final RepairManager repair,
+            final UpgradeSSTableManager upgrade,
+            @Named("ConfiguredEnableUpgradeSSTableEndpoint") boolean enableUpgradeSSTableEndpoint,
+            final SeedsManager seeds,
             final ScheduledExecutorService executor,
-            final BackupManager backupManager,
-            final RestoreManager restoreManager,
-            final CleanupManager cleanupManager,
-            final RepairManager repairManager,
-            final UpgradeSSTableManager upgradeSSTableManager,
             final StateStore stateStore,
-            final DefaultConfigurationManager defaultConfigurationManager) {
+            final DefaultConfigurationManager defaultConfigurationManager,
+            final Capabilities capabilities) {
         this.mesosConfig = mesosConfig;
         this.cassandraState = cassandraState;
         this.reconciler = new DefaultReconciler(stateStore);
+        this.configurationManager = configurationManager;
         this.offerRequirementProvider = offerRequirementProvider;
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
@@ -96,28 +120,20 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                 offerRequirementProvider, offerAccepter, cassandraState);
         recoveryScheduler.subscribe(this);
         this.client = client;
+        this.backup = backup;
+        this.restore = restore;
+        this.cleanup = cleanup;
+        this.repair = repair;
+        this.upgrade = upgrade;
+        this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
+        this.seeds = seeds;
         this.executor = executor;
         this.stateStore = stateStore;
         this.defaultConfigurationManager = defaultConfigurationManager;
-        this.clusterTaskManagers = Arrays.asList(
-                backupManager, restoreManager, cleanupManager, repairManager, upgradeSSTableManager);
+        this.capabilities = capabilities;
 
         this.offerFilters = Protos.Filters.newBuilder().setRefuseSeconds(mesosConfig.getRefuseSeconds()).build();
         LOGGER.info("Creating an offer filter with refuse_seconds = {}", mesosConfig.getRefuseSeconds());
-    }
-
-    @Override
-    public void start() throws Exception {
-        registerFramework();
-    }
-
-    @Override
-    public void stop() throws Exception {
-        if (this.driver != null) {
-            LOGGER.info("Aborting driver...");
-            final Protos.Status driverStatus = this.driver.abort();
-            LOGGER.info("Aborted driver with status: {}", driverStatus);
-        }
     }
 
     @Override
@@ -142,11 +158,32 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                             executor),
                     CassandraDaemonPhase.create(
                             cassandraState, offerRequirementProvider, client, defaultConfigurationManager),
-                    clusterTaskManagers);
+                    Arrays.asList(
+                            backup, restore, cleanup, repair, upgrade));
             plan.subscribe(this);
             planManager = new DefaultPlanManager(plan);
             reconciler.start();
             suppressOrRevive();
+            // use add() to just throw if full:
+            List<Object> resources = new ArrayList<>();
+            resources.addAll(Arrays.asList(
+                    new ServiceConfigResource(configurationManager),
+                    new SeedsResource(seeds),
+                    new ConfigurationResource(defaultConfigurationManager),
+                    new TasksResource(capabilities, cassandraState, client, configurationManager),
+                    ClusterTaskResourceFactory.create("Backup", "/v1/backup", backup, BackupRestoreRequest.class),
+                    new PlansResource(ImmutableMap.of("deploy", planManager)), // TODO(nick) include recovery
+                    ClusterTaskResourceFactory.create("Restore", "/v1/restore", restore, BackupRestoreRequest.class),
+                    ClusterTaskResourceFactory.create("Cleanup", "/v1/cleanup", cleanup, CleanupRequest.class),
+                    ClusterTaskResourceFactory.create("Repair", "/v1/repair", repair, RepairRequest.class),
+                    new DataCenterResource(seeds),
+                    new ConnectionResource(capabilities, cassandraState, configurationManager),
+                    new StateResource(stateStore)));
+            if (enableUpgradeSSTableEndpoint) {
+                resources.add(ClusterTaskResourceFactory.create(
+                        "UpgradeSSTable", "/v1/upgradesstable", upgrade, UpgradeSSTableRequest.class));
+            }
+            resourcesQueue.add(resources);
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";
@@ -315,7 +352,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                 acceptedOfferId -> acceptedOfferId.equals(offer.getId()));
     }
 
-    private void registerFramework() throws IOException {
+    public void registerFramework() throws IOException {
         final SchedulerDriverFactory factory = new SchedulerDriverFactory();
         final CassandraSchedulerConfiguration targetConfig =
                 (CassandraSchedulerConfiguration) defaultConfigurationManager.getTargetConfig();
@@ -398,5 +435,18 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
 
     public static TaskKiller getTaskKiller() {
         return taskKiller;
+    }
+
+    Collection<Object> getResources() throws InterruptedException {
+        if (resources == null) {
+            // wait for scheduler thread to register and create resources
+            LOGGER.info("Waiting for registration to finish and resources to become available...");
+            resources = resourcesQueue.poll(60, TimeUnit.SECONDS);
+            if (resources == null) {
+                throw new RuntimeException("Timed out waiting for resources from scheduler");
+            }
+            LOGGER.info("Got {} resources", resources.size());
+        }
+        return resources;
     }
 }
