@@ -49,11 +49,8 @@ public class DownloadSnapshotStepTest {
     public void testInitial() {
         Mockito.when(cassandraState.get(DOWNLOAD_NODE_0)).thenReturn(Optional.empty());
         final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
-        final DownloadSnapshotStep downloadSnapshotStep = DownloadSnapshotStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                backupRestoreContext);
+        final DownloadSnapshotStep downloadSnapshotStep =
+                new DownloadSnapshotStep(NODE_0, cassandraState, provider, backupRestoreContext);
         Assert.assertEquals(DOWNLOAD_NODE_0, downloadSnapshotStep.getName());
         Assert.assertEquals(NODE_0, downloadSnapshotStep.getDaemon());
         Assert.assertEquals(Status.PENDING, downloadSnapshotStep.getStatus());
@@ -66,11 +63,8 @@ public class DownloadSnapshotStepTest {
         Mockito.when(cassandraState.get(DOWNLOAD_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
-        final DownloadSnapshotStep downloadSnapshotStep = DownloadSnapshotStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                backupRestoreContext);
+        final DownloadSnapshotStep downloadSnapshotStep =
+                new DownloadSnapshotStep(NODE_0, cassandraState, provider, backupRestoreContext);
         Assert.assertEquals(DOWNLOAD_NODE_0, downloadSnapshotStep.getName());
         Assert.assertEquals(NODE_0, downloadSnapshotStep.getDaemon());
         Assert.assertEquals(Status.COMPLETE, downloadSnapshotStep.getStatus());
@@ -87,16 +81,11 @@ public class DownloadSnapshotStepTest {
 
         final DownloadSnapshotTask snapshotTask = Mockito.mock(DownloadSnapshotTask.class);
         Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
-        Mockito
-                .when(cassandraState.getOrCreateSnapshotDownload(daemonTask, backupRestoreContext))
+        Mockito.when(cassandraState.getOrCreateSnapshotDownload(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
 
-        final DownloadSnapshotStep downloadSnapshotStep = DownloadSnapshotStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                backupRestoreContext);
-
+        final DownloadSnapshotStep downloadSnapshotStep =
+                new DownloadSnapshotStep(NODE_0, cassandraState, provider, backupRestoreContext);
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!downloadSnapshotStep.start().isPresent());
@@ -115,16 +104,11 @@ public class DownloadSnapshotStepTest {
         final DownloadSnapshotTask snapshotTask = Mockito.mock(DownloadSnapshotTask.class);
         Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
         Mockito.when(snapshotTask.getType()).thenReturn(CassandraTask.TYPE.SNAPSHOT_DOWNLOAD);
-        Mockito
-                .when(cassandraState.getOrCreateSnapshotDownload(daemonTask, backupRestoreContext))
+        Mockito.when(cassandraState.getOrCreateSnapshotDownload(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
 
-        final DownloadSnapshotStep downloadSnapshotStep = DownloadSnapshotStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                backupRestoreContext);
-
+        final DownloadSnapshotStep downloadSnapshotStep =
+                new DownloadSnapshotStep(NODE_0, cassandraState, provider, backupRestoreContext);
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(downloadSnapshotStep.start().isPresent());

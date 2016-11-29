@@ -20,14 +20,6 @@ public class RepairStep extends AbstractClusterTaskStep {
 
     private final RepairContext context;
 
-    public static RepairStep create(
-            String daemon,
-            CassandraState cassandraState,
-            CassandraOfferRequirementProvider provider,
-            RepairContext context) {
-        return new RepairStep(daemon, cassandraState, provider, context);
-    }
-
     public RepairStep(
             String daemon,
             CassandraState cassandraState,

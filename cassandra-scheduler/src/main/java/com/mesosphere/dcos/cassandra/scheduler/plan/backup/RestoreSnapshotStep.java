@@ -15,17 +15,17 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 public class RestoreSnapshotStep extends AbstractClusterTaskStep {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            RestoreSnapshotStep.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestoreSnapshotStep.class);
 
     private final BackupRestoreContext context;
 
-    public static RestoreSnapshotStep create(
+    public RestoreSnapshotStep(
             String daemon,
             CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,
             BackupRestoreContext context) {
-        return new RestoreSnapshotStep(daemon, cassandraState, provider, context);
+        super(daemon, RestoreSnapshotTask.nameForDaemon(daemon), cassandraState, provider);
+        this.context = context;
     }
 
     @Override
@@ -39,14 +39,5 @@ public class RestoreSnapshotStep extends AbstractClusterTaskStep {
         return Optional.of(cassandraState.getOrCreateRestoreSnapshot(
                 daemonTask,
                 context));
-    }
-
-    public RestoreSnapshotStep(
-            String daemon,
-            CassandraState cassandraState,
-            CassandraOfferRequirementProvider provider,
-            BackupRestoreContext context) {
-        super(daemon, RestoreSnapshotTask.nameForDaemon(daemon), cassandraState, provider);
-        this.context = context;
     }
 }

@@ -68,7 +68,7 @@ public class BackupManager extends ClusterTaskManager<BackupRestoreRequest, Back
         final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
         Collections.sort(daemons);
         List<Step> steps = daemons.stream()
-                .map(daemon -> BackupSnapshotStep.create(daemon, cassandraState, provider, context))
+                .map(daemon -> new BackupSnapshotStep(daemon, cassandraState, provider, context))
                 .collect(Collectors.toList());
         return new DefaultPhase("Snapshot", steps, new SerialStrategy<>(), Collections.emptyList());
     }
@@ -80,7 +80,7 @@ public class BackupManager extends ClusterTaskManager<BackupRestoreRequest, Back
         final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
         Collections.sort(daemons);
         List<Step> steps = daemons.stream()
-                .map(daemon -> UploadBackupStep.create(daemon, cassandraState, provider, context))
+                .map(daemon -> new UploadBackupStep(daemon, cassandraState, provider, context))
                 .collect(Collectors.toList());
         return new DefaultPhase("Upload", steps, new SerialStrategy<>(), Collections.emptyList());
     }
@@ -92,7 +92,7 @@ public class BackupManager extends ClusterTaskManager<BackupRestoreRequest, Back
         final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
         Collections.sort(daemons);
         List<Step> steps = daemons.stream()
-                .map(daemon -> BackupSchemaStep.create(daemon, cassandraState, provider, context))
+                .map(daemon -> new BackupSchemaStep(daemon, cassandraState, provider, context))
                 .collect(Collectors.toList());
         return new DefaultPhase("BackupSchema", steps, new SerialStrategy<>(), Collections.emptyList());
     }

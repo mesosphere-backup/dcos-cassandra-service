@@ -61,7 +61,7 @@ public class RestoreManager extends ClusterTaskManager<BackupRestoreRequest, Bac
         final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
         Collections.sort(daemons);
         List<Step> steps = daemons.stream()
-                .map(daemon -> DownloadSnapshotStep.create(daemon, cassandraState, provider, context))
+                .map(daemon -> new DownloadSnapshotStep(daemon, cassandraState, provider, context))
                 .collect(Collectors.toList());
         return new DefaultPhase("Download", steps, new SerialStrategy<>(), Collections.emptyList());
     }
@@ -73,7 +73,7 @@ public class RestoreManager extends ClusterTaskManager<BackupRestoreRequest, Bac
         final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
         Collections.sort(daemons);
         List<Step> steps = daemons.stream()
-                .map(daemon -> RestoreSnapshotStep.create(daemon, cassandraState, provider, context))
+                .map(daemon -> new RestoreSnapshotStep(daemon, cassandraState, provider, context))
                 .collect(Collectors.toList());
         return new DefaultPhase("Restore", steps, new SerialStrategy<>(), Collections.emptyList());
     }

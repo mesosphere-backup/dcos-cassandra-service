@@ -20,15 +20,7 @@ public class UploadBackupStep extends AbstractClusterTaskStep {
 
     private final BackupRestoreContext context;
 
-    public static UploadBackupStep create(
-            String daemon,
-            CassandraState cassandraState,
-            CassandraOfferRequirementProvider provider,
-            BackupRestoreContext context) {
-        return new UploadBackupStep(daemon, cassandraState, provider, context);
-    }
-
-    private UploadBackupStep(
+    public UploadBackupStep(
             String daemon,
             CassandraState cassandraState,
             CassandraOfferRequirementProvider provider,

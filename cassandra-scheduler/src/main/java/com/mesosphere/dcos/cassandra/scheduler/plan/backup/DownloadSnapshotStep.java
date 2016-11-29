@@ -19,12 +19,13 @@ public class DownloadSnapshotStep extends AbstractClusterTaskStep {
 
     private final BackupRestoreContext context;
 
-    public static DownloadSnapshotStep create(
+    public DownloadSnapshotStep(
             final String daemon,
             final CassandraState cassandraState,
             final CassandraOfferRequirementProvider provider,
             final BackupRestoreContext context) {
-        return new DownloadSnapshotStep(daemon, cassandraState, provider, context);
+        super(daemon, DownloadSnapshotTask.nameForDaemon(daemon), cassandraState, provider);
+        this.context = context;
     }
 
     @Override
@@ -36,14 +37,5 @@ public class DownloadSnapshotStep extends AbstractClusterTaskStep {
             return Optional.empty();
         }
         return Optional.of(cassandraState.getOrCreateSnapshotDownload(daemonTask, context));
-    }
-
-    public DownloadSnapshotStep(
-            final String daemon,
-            final CassandraState cassandraState,
-            final CassandraOfferRequirementProvider provider,
-            final BackupRestoreContext context) {
-        super(daemon, DownloadSnapshotTask.nameForDaemon(daemon), cassandraState, provider);
-        this.context = context;
     }
 }

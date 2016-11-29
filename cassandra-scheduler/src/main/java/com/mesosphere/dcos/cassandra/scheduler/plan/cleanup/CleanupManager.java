@@ -50,7 +50,7 @@ public class CleanupManager extends ClusterTaskManager<CleanupRequest, CleanupCo
         Collections.sort(daemons);
         List<Step> steps = daemons.stream()
                 .filter(daemon -> nodes.contains(daemon))
-                .map(daemon -> CleanupStep.create(daemon, cassandraState, provider, context))
+                .map(daemon -> new CleanupStep(daemon, cassandraState, provider, context))
                 .collect(Collectors.toList());
         return Arrays.asList(new DefaultPhase("Cleanup", steps, new SerialStrategy<>(), Collections.emptyList()));
     }

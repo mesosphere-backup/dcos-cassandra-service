@@ -52,7 +52,7 @@ public class UpgradeSSTableManager extends ClusterTaskManager<UpgradeSSTableRequ
         Collections.sort(daemons);
         List<Step> steps = daemons.stream()
                 .filter(daemon -> nodes.contains(daemon))
-                .map(daemon -> UpgradeSSTableStep.create(daemon, cassandraState, provider, context))
+                .map(daemon -> new UpgradeSSTableStep(daemon, cassandraState, provider, context))
                 .collect(Collectors.toList());
         return Arrays.asList(new DefaultPhase("UpgradeSSTable", steps, new SerialStrategy<>(), Collections.emptyList()));
     }

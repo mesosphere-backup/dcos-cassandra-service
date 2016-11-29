@@ -19,14 +19,6 @@ public class BackupSnapshotStep extends AbstractClusterTaskStep {
 
     private final BackupRestoreContext context;
 
-    public static BackupSnapshotStep create(
-            final String daemon,
-            final CassandraState cassandraState,
-            final CassandraOfferRequirementProvider provider,
-            final BackupRestoreContext context) {
-        return new BackupSnapshotStep(daemon, cassandraState, provider, context);
-    }
-
     public BackupSnapshotStep(
             final String daemon,
             final CassandraState cassandraState,

@@ -51,11 +51,7 @@ public class CleanupStepTest {
         Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
         final CleanupContext context = CleanupContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final CleanupStep step = CleanupStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                context);
+        final CleanupStep step = new CleanupStep(NODE_0, cassandraState, provider, context);
         Assert.assertEquals(CLEANUP_NODE_0, step.getName());
         Assert.assertEquals(NODE_0, step.getDaemon());
         Assert.assertTrue(step.isPending());
@@ -69,11 +65,7 @@ public class CleanupStepTest {
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final CleanupContext context = CleanupContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final CleanupStep step = CleanupStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                context);
+        final CleanupStep step = new CleanupStep(NODE_0, cassandraState, provider, context);
         Assert.assertEquals(CLEANUP_NODE_0, step.getName());
         Assert.assertEquals(NODE_0, step.getDaemon());
         Assert.assertTrue(step.isComplete());
@@ -91,16 +83,9 @@ public class CleanupStepTest {
 
         final CleanupTask task = Mockito.mock(CleanupTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
-        Mockito
-                .when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT))
-                .thenReturn(task);
+        Mockito.when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT)).thenReturn(task);
 
-        final CleanupStep step = CleanupStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                context);
-
+        final CleanupStep step = new CleanupStep(NODE_0, cassandraState, provider, context);
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!step.start().isPresent());
@@ -118,16 +103,9 @@ public class CleanupStepTest {
         final CleanupTask task = Mockito.mock(CleanupTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.CLEANUP);
-        Mockito
-                .when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT))
-                .thenReturn(task);
+        Mockito.when(cassandraState.getOrCreateCleanup(daemonTask, CONTEXT)).thenReturn(task);
 
-        final CleanupStep step = CleanupStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                CONTEXT);
-
+        final CleanupStep step = new CleanupStep(NODE_0, cassandraState, provider, CONTEXT);
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(step.start().isPresent());

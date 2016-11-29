@@ -20,14 +20,6 @@ public class UpgradeSSTableStep extends AbstractClusterTaskStep {
 
     private final UpgradeSSTableContext context;
 
-    public static UpgradeSSTableStep create(
-            String daemon,
-            CassandraState cassandraState,
-            CassandraOfferRequirementProvider provider,
-            UpgradeSSTableContext context) {
-        return new UpgradeSSTableStep(daemon, cassandraState, provider, context);
-    }
-
     public UpgradeSSTableStep(
             String daemon,
             CassandraState cassandraState,

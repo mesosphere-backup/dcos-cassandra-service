@@ -51,11 +51,7 @@ public class RepairStepTest {
         Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
         final RepairContext context = RepairContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final RepairStep step = RepairStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                context);
+        final RepairStep step = new RepairStep(NODE_0, cassandraState, provider, context);
         Assert.assertEquals(REPAIR_NODE_0, step.getName());
         Assert.assertEquals(NODE_0, step.getDaemon());
         Assert.assertTrue(step.isPending());
@@ -69,11 +65,7 @@ public class RepairStepTest {
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final RepairContext context = RepairContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
-        final RepairStep step = RepairStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                context);
+        final RepairStep step = new RepairStep(NODE_0, cassandraState, provider, context);
         Assert.assertEquals(REPAIR_NODE_0, step.getName());
         Assert.assertEquals(NODE_0, step.getDaemon());
         Assert.assertTrue(step.isComplete());
@@ -91,16 +83,9 @@ public class RepairStepTest {
 
         final RepairTask task = Mockito.mock(RepairTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
-        Mockito
-                .when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT))
-                .thenReturn(task);
+        Mockito.when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT)).thenReturn(task);
 
-        final RepairStep step = RepairStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                context);
-
+        final RepairStep step = new RepairStep(NODE_0, cassandraState, provider, context);
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!step.start().isPresent());
@@ -118,16 +103,9 @@ public class RepairStepTest {
         final RepairTask task = Mockito.mock(RepairTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.REPAIR);
-        Mockito
-                .when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT))
-                .thenReturn(task);
+        Mockito.when(cassandraState.getOrCreateRepair(daemonTask, CONTEXT)).thenReturn(task);
 
-        final RepairStep step = RepairStep.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                CONTEXT);
-
+        final RepairStep step = new RepairStep(NODE_0, cassandraState, provider, CONTEXT);
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(step.start().isPresent());

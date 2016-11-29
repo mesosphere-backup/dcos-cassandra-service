@@ -166,26 +166,21 @@ public class CassandraScheduler implements Scheduler, Observer {
             reconciler.start();
             suppressOrRevive();
             // use add() to just throw if full:
-            List<Object> resources = new ArrayList<>();
-            resources.addAll(Arrays.asList(
+            resourcesQueue.add(Arrays.asList(
                     new ServiceConfigResource(configurationManager),
                     new SeedsResource(seeds),
                     new ConfigurationResource(defaultConfigurationManager),
                     new TasksResource(capabilities, cassandraState, client, configurationManager),
-                    ClusterTaskResourceFactory.create("Backup", "/v1/backup", backup, BackupRestoreRequest.class),
                     new PlansResource(ImmutableMap.of("deploy", planManager)), // TODO(nick) include recovery
-                    ClusterTaskResourceFactory.create("Restore", "/v1/restore", restore, BackupRestoreRequest.class),
-                    ClusterTaskResourceFactory.create("Cleanup", "/v1/cleanup", cleanup, CleanupRequest.class),
-                    ClusterTaskResourceFactory.create("Repair", "/v1/repair", repair, RepairRequest.class),
+                    new BackupResource(backup),
+                    new RestoreResource(restore),
+                    new CleanupResource(cleanup),
+                    new RepairResource(repair),
+                    new UpgradeSSTableResource(upgrade, enableUpgradeSSTableEndpoint),
                     new DataCenterResource(seeds),
                     new ConnectionResource(capabilities, cassandraState, configurationManager),
                     // TODO(nick) rename upstream to StringPropertyDeserializer:
                     new StateResource(stateStore, new JsonPropertyDeserializer())));
-            if (enableUpgradeSSTableEndpoint) {
-                resources.add(ClusterTaskResourceFactory.create(
-                        "UpgradeSSTable", "/v1/upgradesstable", upgrade, UpgradeSSTableRequest.class));
-            }
-            resourcesQueue.add(resources);
         } catch (Throwable t) {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";

@@ -20,14 +20,6 @@ public class CleanupStep extends AbstractClusterTaskStep {
 
     private final CleanupContext context;
 
-    public static CleanupStep create(
-            String daemon,
-            CassandraState cassandraState,
-            CassandraOfferRequirementProvider provider,
-            CleanupContext context) {
-        return new CleanupStep(daemon, cassandraState, provider, context);
-    }
-
     public CleanupStep(
             String daemon,
             CassandraState cassandraState,
@@ -36,7 +28,6 @@ public class CleanupStep extends AbstractClusterTaskStep {
         super(daemon, CleanupTask.nameForDaemon(daemon), cassandraState, provider);
         this.context = context;
     }
-
 
     @Override
     protected Optional<CassandraTask> getOrCreateTask() throws PersistenceException {
