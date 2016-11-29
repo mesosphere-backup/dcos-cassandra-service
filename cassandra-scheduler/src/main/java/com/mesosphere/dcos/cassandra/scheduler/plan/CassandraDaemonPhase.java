@@ -48,8 +48,7 @@ public class CassandraDaemonPhase extends DefaultPhase {
             final CassandraState cassandraState,
             final PersistentOfferRequirementProvider provider,
             final SchedulerClient client,
-            final DefaultConfigurationManager configurationManager)
-                throws ConfigStoreException {
+            final DefaultConfigurationManager configurationManager) {
         try {
             return new CassandraDaemonPhase(
                     createSteps(cassandraState, provider, configurationManager),

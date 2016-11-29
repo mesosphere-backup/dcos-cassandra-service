@@ -190,4 +190,9 @@ public class CassandraDaemonStep extends DefaultStep {
     public String getMessage() {
         return "Deploying Cassandra node " + getName() + " mode: " + mode.name();
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s[%s]", getName(), getStatus());
+    }
 }

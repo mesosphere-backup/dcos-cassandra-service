@@ -45,10 +45,10 @@ public class SyncDataCenterStep extends DefaultStep implements Runnable {
     public Optional<OfferRequirement> start() {
         Optional<DataCenterInfo> dc = byUrl();
         if (dc.isPresent() && dc.get().getSeeds().size() > 0) {
-            LOGGER.info("Block {} : Data center synced {}", getName(), url);
+            LOGGER.info("Step {} : Data center synced {}", getName(), url);
             setStatus(Status.COMPLETE);
         } else {
-            LOGGER.info("Block {} : Syncing data center {}", getName(), url);
+            LOGGER.info("Step {} : Syncing data center {}", getName(), url);
             setStatus(Status.IN_PROGRESS);
             executor.execute(this);
         }

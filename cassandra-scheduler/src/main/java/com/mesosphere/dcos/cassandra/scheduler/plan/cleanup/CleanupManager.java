@@ -38,10 +38,12 @@ public class CleanupManager extends ClusterTaskManager<CleanupRequest, CleanupCo
         restore();
     }
 
+    @Override
     protected CleanupContext toContext(CleanupRequest request) {
         return request.toContext(cassandraState);
     }
 
+    @Override
     protected List<Phase> createPhases(CleanupContext context) {
         final Set<String> nodes = new HashSet<>(context.getNodes());
         final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
@@ -53,6 +55,7 @@ public class CleanupManager extends ClusterTaskManager<CleanupRequest, CleanupCo
         return Arrays.asList(new DefaultPhase("Cleanup", steps, new SerialStrategy<>(), Collections.emptyList()));
     }
 
+    @Override
     protected void clearTasks() throws PersistenceException {
         cassandraState.remove(cassandraState.getCleanupTasks().keySet());
     }

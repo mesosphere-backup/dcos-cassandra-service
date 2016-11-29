@@ -22,7 +22,6 @@ import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
-import org.apache.mesos.scheduler.plan.PlanUtils;
 import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
@@ -124,11 +123,11 @@ public class CassandraDaemonStepTest {
         final String EXPECTED_NAME = "node-0";
         when(cassandraContainer.getDaemonTask()).thenReturn(daemonTask);
         when(daemonTask.getName()).thenReturn(EXPECTED_NAME);
-        CassandraDaemonStep block = CassandraDaemonStep.create(
+        CassandraDaemonStep step = CassandraDaemonStep.create(
                 EXPECTED_NAME, persistentOfferRequirementProvider, cassandraState);
 
-        Assert.assertEquals(EXPECTED_NAME, block.getName());
-        Assert.assertEquals(Status.PENDING, PlanUtils.getStatus(block));
+        Assert.assertEquals(EXPECTED_NAME, step.getName());
+        Assert.assertEquals(Status.PENDING, step.getStatus());
     }
 
     @Test
@@ -376,7 +375,7 @@ public class CassandraDaemonStepTest {
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
         stateStore.storeTasks(Arrays.asList(taskInfo));
-        step.updateOfferStatus(Collections.singleton(null));
+        step.updateOfferStatus(Collections.emptyList());
         final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL);
 
@@ -403,7 +402,7 @@ public class CassandraDaemonStepTest {
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo)
                 .setSlaveId(Protos.SlaveID.newBuilder().setValue("1.2.3.4").build()).build();
         stateStore.storeTasks(Arrays.asList(taskInfo));
-        step.updateOfferStatus(Collections.singleton(null));
+        step.updateOfferStatus(Collections.emptyList());
         final Protos.TaskStatus status = TestUtils.generateStatus(taskInfo.getTaskId(),
                 Protos.TaskState.TASK_RUNNING);
 

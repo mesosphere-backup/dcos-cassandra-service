@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
@@ -8,9 +9,11 @@ import com.mesosphere.dcos.cassandra.common.offer.LogOperationRecorder;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOperationRecorder;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
+import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDaemonPhase;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlan;
-import com.mesosphere.dcos.cassandra.scheduler.plan.DeploymentManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.SyncDataCenterPhase;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
@@ -47,11 +50,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     private final static Logger LOGGER = LoggerFactory.getLogger(
             CassandraScheduler.class);
 
-    private SchedulerDriver driver;
-    private final ConfigurationManager configurationManager;
     private final MesosConfig mesosConfig;
-    private PlanManager planManager;
-    private CassandraRecoveryScheduler recoveryScheduler;
     private final OfferAccepter offerAccepter;
     private final PersistentOfferRequirementProvider offerRequirementProvider;
     private final CassandraState cassandraState;
@@ -60,19 +59,20 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     private final ScheduledExecutorService executor;
     private final StateStore stateStore;
     private final DefaultConfigurationManager defaultConfigurationManager;
-    private final BackupManager backupManager;
-    private final RestoreManager restoreManager;
-    private final CleanupManager cleanupManager;
-    private final RepairManager repairManager;
-    private final UpgradeSSTableManager upgradeSSTableManager;
+    private final List<ClusterTaskManager<?,?>> clusterTaskManagers;
     private final Protos.Filters offerFilters;
-    private PlanScheduler planScheduler;
 
     private static TaskKiller taskKiller;
 
+    // Initialized at start of registration:
+    private SchedulerDriver driver;
+    // Initialized when registration completes:
+    private PlanManager planManager;
+    private PlanScheduler planScheduler;
+    private CassandraRecoveryScheduler recoveryScheduler;
+
     @Inject
     public CassandraScheduler(
-            final ConfigurationManager configurationManager,
             final MesosConfig mesosConfig,
             final PersistentOfferRequirementProvider offerRequirementProvider,
             final CassandraState cassandraState,
@@ -87,26 +87,20 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             final UpgradeSSTableManager upgradeSSTableManager) {
         this.mesosConfig = mesosConfig;
         this.cassandraState = cassandraState;
-        this.reconciler = new DefaultReconciler(cassandraState.getStateStore());
-        this.configurationManager = configurationManager;
+        this.reconciler = new DefaultReconciler(stateStore);
         this.offerRequirementProvider = offerRequirementProvider;
         offerAccepter = new OfferAccepter(Arrays.asList(
                 new LogOperationRecorder(),
                 new PersistentOperationRecorder(cassandraState)));
         recoveryScheduler = new CassandraRecoveryScheduler(
-                offerRequirementProvider,
-                offerAccepter,
-                cassandraState);
+                offerRequirementProvider, offerAccepter, cassandraState);
         recoveryScheduler.subscribe(this);
         this.client = client;
         this.executor = executor;
         this.stateStore = stateStore;
         this.defaultConfigurationManager = defaultConfigurationManager;
-        this.backupManager = backupManager;
-        this.restoreManager = restoreManager;
-        this.cleanupManager = cleanupManager;
-        this.repairManager = repairManager;
-        this.upgradeSSTableManager = upgradeSSTableManager;
+        this.clusterTaskManagers = Arrays.asList(
+                backupManager, restoreManager, cleanupManager, repairManager, upgradeSSTableManager);
 
         this.offerFilters = Protos.Filters.newBuilder().setRefuseSeconds(mesosConfig.getRefuseSeconds()).build();
         LOGGER.info("Creating an offer filter with refuse_seconds = {}", mesosConfig.getRefuseSeconds());
@@ -137,28 +131,18 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                     stateStore,
                     new DefaultTaskFailureListener(stateStore),
                     driver);
-            this.planScheduler = new DefaultPlanScheduler(
-                    offerAccepter,
-                    new OfferEvaluator(cassandraState.getStateStore()),
-                    taskKiller);
+            this.planScheduler = new DefaultPlanScheduler(offerAccepter, new OfferEvaluator(stateStore), taskKiller);
             stateStore.storeFrameworkId(frameworkId);
-            Plan plan = CassandraPlan.create(
+            Plan plan = new CassandraPlan(
                     defaultConfigurationManager,
-                    DeploymentManager.create(
-                            offerRequirementProvider,
-                            configurationManager,
-                            defaultConfigurationManager,
-                            cassandraState,
-                            client,
-                            reconciler,
-                            new SeedsManager(defaultConfigurationManager, cassandraState, executor, client, stateStore),
-                            executor
-                    ),
-                    backupManager,
-                    restoreManager,
-                    cleanupManager,
-                    repairManager,
-                    upgradeSSTableManager);
+                    ReconciliationPhase.create(reconciler),
+                    SyncDataCenterPhase.create(
+                            new SeedsManager(
+                                    defaultConfigurationManager, cassandraState, executor, client, stateStore),
+                            executor),
+                    CassandraDaemonPhase.create(
+                            cassandraState, offerRequirementProvider, client, defaultConfigurationManager),
+                    clusterTaskManagers);
             plan.subscribe(this);
             planManager = new DefaultPlanManager(plan);
             reconciler.start();
@@ -167,7 +151,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
             String error = "An error occurred when registering " +
                     "the framework and initializing the execution plan.";
             LOGGER.error(error, t);
-            throw new RuntimeException(error, t);
+            throw new RuntimeException(error + " " + t, t);
         }
     }
 
@@ -180,16 +164,28 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     }
 
     @Override
-    public void resourceOffers(SchedulerDriver driver,
-                               List<Protos.Offer> offers) {
-        logOffers(offers);
+    public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
+        if (offers == null) {
+            return;
+        }
+        LOGGER.info("Received {} offers", offers.size());
+        for (Protos.Offer offer : offers) {
+            LOGGER.info("Received Offer: {}", TextFormat.shortDebugString(offer));
+        }
+
+        //TODO(nick): Switch to PlanCoordinator (after switching to DefaultRecoveryPlanManager)
+
+        // 0. clean up any completed task statuses as needed:
+        ((CassandraPlan) planManager.getPlan()).clearCompletedTasks();
+
+        // 1. reconciliation
         reconciler.reconcile(driver);
 
         try {
             final List<Protos.OfferID> acceptedOffers = new ArrayList<>();
 
+            // 2. deployment
             final Collection<? extends Step> currentSteps = planManager.getCandidates(Collections.emptyList());
-
             LOGGER.info("Current execution steps = {}", currentSteps);
             if (!currentSteps.isEmpty()) {
                 try {
@@ -198,40 +194,52 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
                     LOGGER.error("Error occurred with plan scheduler:", t);
                 }
             }
-            // Perform any required repairs
+
+            // 3. recovery
             final List<Protos.Offer> unacceptedOffers = filterAcceptedOffers(offers, acceptedOffers);
             try {
                 acceptedOffers.addAll(recoveryScheduler.resourceOffers(
                         driver,
                         unacceptedOffers,
-                        currentSteps.stream().map(step -> step.getName()).collect(Collectors.toSet())));
+                        currentSteps.stream()
+                                .map(step -> step.getName())
+                                .collect(Collectors.toSet())));
             } catch (Throwable t) {
-                LOGGER.error("Error occured with plan scheduler:", t);
+                LOGGER.error("Error occured with recovery scheduler:", t);
             }
 
+            // 4. cleanup
             ResourceCleanerScheduler cleanerScheduler = getCleanerScheduler();
             if (cleanerScheduler != null) {
                 try {
-                    acceptedOffers.addAll(getCleanerScheduler().resourceOffers(driver, offers));
+                    acceptedOffers.addAll(cleanerScheduler.resourceOffers(driver, offers));
                 } catch (Throwable t) {
                     LOGGER.error("Error occured with cleaner scheduler:", t);
                 }
             }
 
-            declineOffers(driver, acceptedOffers, offers);
-        } catch (Throwable t){
+            // 5. decline
+            for (Protos.Offer offer : offers) {
+                Protos.OfferID offerId = offer.getId();
+                if (!acceptedOffers.contains(offerId)) {
+                    LOGGER.info("Scheduler declining offer: {}", offerId);
+                    driver.declineOffer(offerId, offerFilters);
+                }
+            }
+        } catch (Throwable t) {
             LOGGER.error("Error in offer acceptance cycle", t);
         }
     }
 
     private ResourceCleanerScheduler getCleanerScheduler() {
+        ResourceCleaner cleaner;
         try {
-            ResourceCleaner cleaner = new ResourceCleaner(cassandraState.getStateStore());
-            return new ResourceCleanerScheduler(cleaner, offerAccepter);
+            cleaner = new ResourceCleaner(stateStore);
         } catch (Exception ex) {
             LOGGER.error("Failed to construct ResourceCleaner with exception:", ex);
             return null;
         }
+        return new ResourceCleanerScheduler(cleaner, offerAccepter);
     }
 
     @Override
@@ -256,7 +264,7 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         try {
             planManager.update(status);
         } catch (Exception ex) {
-            LOGGER.error("Error updating Stage Manager with status: {} reason: {}", status, ex);
+            LOGGER.error("Error updating Plan Manager with status: {} reason: {}", status, ex);
         }
     }
 
@@ -348,58 +356,19 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
         LOGGER.info("Driver started with status: {}", startStatus);
     }
 
-    public void setSchedulerDriver(SchedulerDriver driver) {
+    @VisibleForTesting
+    void setSchedulerDriver(SchedulerDriver driver) {
         this.driver = driver;
     }
 
-    private void logOffers(List<Protos.Offer> offers) {
-        if (Objects.isNull(offers)) {
-            return;
-        }
-
-        LOGGER.info("Received {} offers", offers.size());
-
-        for (Protos.Offer offer : offers) {
-            LOGGER.info("Received Offer: {}", TextFormat.shortDebugString(offer));
-        }
+    @VisibleForTesting
+    PlanManager getPlanManager() {
+        return planManager;
     }
 
-    private void declineOffers(SchedulerDriver driver,
-                               List<Protos.OfferID> acceptedOffers,
-                               List<Protos.Offer> offers) {
-        for (Protos.Offer offer : offers) {
-            if (!acceptedOffers.contains(offer.getId())) {
-                declineOffer(driver, offer);
-            }
-        }
-    }
-
-    private void declineOffer(SchedulerDriver driver, Protos.Offer offer) {
-        Protos.OfferID offerId = offer.getId();
-        LOGGER.info("Scheduler declining offer: {}", offerId);
-        driver.declineOffer(offerId, offerFilters);
-    }
-
-    private void reviveOffers() {
-        LOGGER.info("Reviving offers.");
-        driver.reviveOffers();
-        cassandraState.setSuppressed(false);
-    }
-
-    private void suppressOffers() {
-        LOGGER.info("Suppressing offers.");
-        driver.suppressOffers();
-        cassandraState.setSuppressed(true);
-    }
-
-    private boolean hasOperations() {
-        boolean hasOperations = !planManager.getPlan().isComplete() ||
-                recoveryScheduler.hasOperations();
-
-        LOGGER.debug(hasOperations ?
-                "Scheduler has operations to perform." :
-                "Scheduler has no operations to perform.");
-        return hasOperations;
+    @VisibleForTesting
+    Reconciler getReconciler() {
+        return reconciler;
     }
 
     @Override
@@ -411,10 +380,19 @@ public class CassandraScheduler implements Scheduler, Managed, Observer {
     }
 
     private void suppressOrRevive() {
-        if (hasOperations()) {
-            reviveOffers();
+        boolean hasOperations = !planManager.getPlan().isComplete() ||
+                recoveryScheduler.hasOperations();
+        LOGGER.debug(hasOperations ?
+                "Scheduler has operations to perform." :
+                "Scheduler has no operations to perform.");
+        if (hasOperations) {
+            LOGGER.info("Reviving offers.");
+            driver.reviveOffers();
+            cassandraState.setSuppressed(false);
         } else {
-            suppressOffers();
+            LOGGER.info("Suppressing offers.");
+            driver.suppressOffers();
+            cassandraState.setSuppressed(true);
         }
     }
 

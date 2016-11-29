@@ -37,10 +37,12 @@ public class RepairManager extends ClusterTaskManager<RepairRequest, RepairConte
         restore();
     }
 
+    @Override
     protected RepairContext toContext(RepairRequest request) {
         return request.toContext(cassandraState);
     }
 
+    @Override
     protected List<Phase> createPhases(RepairContext context) {
         final Set<String> nodes = new HashSet<>(context.getNodes());
         final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
@@ -52,6 +54,7 @@ public class RepairManager extends ClusterTaskManager<RepairRequest, RepairConte
         return Arrays.asList(new DefaultPhase("Repair", steps, new SerialStrategy<>(), Collections.emptyList()));
     }
 
+    @Override
     protected void clearTasks() throws PersistenceException {
         cassandraState.remove(cassandraState.getRepairTasks().keySet());
     }

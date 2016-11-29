@@ -13,7 +13,6 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
-import org.apache.mesos.scheduler.plan.PlanUtils;
 import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
@@ -48,14 +47,14 @@ public class BackupSnapshotStepTest {
     public void testInitial() {
         Mockito.when(cassandraState.get("snapshot-node-0")).thenReturn(Optional.empty());
         final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
-        final BackupSnapshotStep backupSnapshotBlock = BackupSnapshotStep.create(
+        final BackupSnapshotStep backupSnapshotStep = BackupSnapshotStep.create(
                 "node-0",
                 cassandraState,
                 provider,
                 backupRestoreContext);
-        Assert.assertEquals("snapshot-node-0", backupSnapshotBlock.getName());
-        Assert.assertEquals("node-0", backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.PENDING, PlanUtils.getStatus(backupSnapshotBlock));
+        Assert.assertEquals("snapshot-node-0", backupSnapshotStep.getName());
+        Assert.assertEquals("node-0", backupSnapshotStep.getDaemon());
+        Assert.assertEquals(Status.PENDING, backupSnapshotStep.getStatus());
     }
 
     @Test
@@ -65,14 +64,14 @@ public class BackupSnapshotStepTest {
         Mockito.when(cassandraState.get("snapshot-node-0"))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false);
-        final BackupSnapshotStep backupSnapshotBlock = BackupSnapshotStep.create(
+        final BackupSnapshotStep backupSnapshotStep = BackupSnapshotStep.create(
                 "node-0",
                 cassandraState,
                 provider,
                 backupRestoreContext);
-        Assert.assertEquals("snapshot-node-0", backupSnapshotBlock.getName());
-        Assert.assertEquals("node-0", backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.COMPLETE, PlanUtils.getStatus(backupSnapshotBlock));
+        Assert.assertEquals("snapshot-node-0", backupSnapshotStep.getName());
+        Assert.assertEquals("node-0", backupSnapshotStep.getDaemon());
+        Assert.assertEquals(Status.COMPLETE, backupSnapshotStep.getStatus());
     }
 
     @Test
@@ -90,7 +89,7 @@ public class BackupSnapshotStepTest {
                 .when(cassandraState.getOrCreateBackupSnapshot(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
 
-        final BackupSnapshotStep backupSnapshotBlock = BackupSnapshotStep.create(
+        final BackupSnapshotStep backupSnapshotStep = BackupSnapshotStep.create(
                 "node-0",
                 cassandraState,
                 provider,
@@ -98,8 +97,8 @@ public class BackupSnapshotStepTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
-        Assert.assertTrue(!backupSnapshotBlock.start().isPresent());
-        Assert.assertEquals(Status.COMPLETE, PlanUtils.getStatus(backupSnapshotBlock));
+        Assert.assertTrue(!backupSnapshotStep.start().isPresent());
+        Assert.assertEquals(Status.COMPLETE, backupSnapshotStep.getStatus());
     }
 
     @Test
@@ -118,7 +117,7 @@ public class BackupSnapshotStepTest {
                 .when(cassandraState.getOrCreateBackupSnapshot(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
 
-        final BackupSnapshotStep backupSnapshotBlock = BackupSnapshotStep.create(
+        final BackupSnapshotStep backupSnapshotStep = BackupSnapshotStep.create(
                 "node-0",
                 cassandraState,
                 provider,
@@ -126,8 +125,8 @@ public class BackupSnapshotStepTest {
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
-        Assert.assertNotNull(backupSnapshotBlock.start());
-        Assert.assertEquals(Status.IN_PROGRESS, PlanUtils.getStatus(backupSnapshotBlock));
+        Assert.assertNotNull(backupSnapshotStep.start());
+        Assert.assertEquals(Status.IN_PROGRESS, backupSnapshotStep.getStatus());
     }
 
     @Test
@@ -144,11 +143,11 @@ public class BackupSnapshotStepTest {
         Mockito.when(cassandraState.getOrCreateBackupSnapshot(daemonTask, backupRestoreContext))
                 .thenThrow(PersistenceException.class);
 
-        final BackupSnapshotStep backupSnapshotBlock = BackupSnapshotStep.create(
+        final BackupSnapshotStep backupSnapshotStep = BackupSnapshotStep.create(
                 "node-0",
                 cassandraState,
                 provider,
                 backupRestoreContext);
-        Assert.assertTrue(!backupSnapshotBlock.start().isPresent());
+        Assert.assertTrue(!backupSnapshotStep.start().isPresent());
     }
 }

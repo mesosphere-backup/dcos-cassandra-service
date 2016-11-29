@@ -41,16 +41,19 @@ public class BackupManager extends ClusterTaskManager<BackupRestoreRequest, Back
         restore();
     }
 
+    @Override
     protected BackupRestoreContext toContext(BackupRestoreRequest request) {
         return request.toContext();
     }
 
+    @Override
     protected List<Phase> createPhases(BackupRestoreContext context) {
         return Arrays.asList(
                 createBackupSnapshotPhase(context, cassandraState, provider),
                 createUploadBackupPhase(context, cassandraState, provider));
     }
 
+    @Override
     protected void clearTasks() throws PersistenceException {
         cassandraState.remove(cassandraState.getBackupSnapshotTasks().keySet());
         cassandraState.remove(cassandraState.getBackupUploadTasks().keySet());

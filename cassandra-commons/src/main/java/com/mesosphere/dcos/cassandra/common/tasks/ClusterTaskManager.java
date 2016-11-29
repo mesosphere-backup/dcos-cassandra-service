@@ -1,6 +1,6 @@
 package com.mesosphere.dcos.cassandra.common.tasks;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.mesos.scheduler.ChainedObserver;
@@ -30,7 +30,7 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
     private final String propertyKey;
     private final Serializer<C> serializer;
 
-    private List<Phase> phases = new ArrayList<>();
+    private List<Phase> phases = Collections.emptyList();
     private volatile C activeContext = null; // used to signal that the operation has started
 
     protected ClusterTaskManager(StateStore stateStore, String propertyKey, Class<C> clazz) {
@@ -110,7 +110,7 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
             logger.error("Error deleting operation context from persistence store", e);
         }
         this.activeContext = null;
-        this.phases.clear();
+        this.phases = Collections.emptyList();
         notifyObservers();
     }
 

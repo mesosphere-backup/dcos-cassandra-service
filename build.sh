@@ -45,7 +45,7 @@ cd $REPO_ROOT_DIR
 
 _notify_github success "Build succeeded"
 
-./dcos-commons-tools/ci_upload.py \
+./dcos-commons-tools/publish_aws.py \
   cassandra \
   universe/ \
   cassandra-scheduler/build/distributions/scheduler.zip \
