@@ -46,7 +46,7 @@ public class RestoreSnapshotBlockTest {
     @Test
     public void testInitial() {
         Mockito.when(cassandraState.get(RESTORE_NODE_0)).thenReturn(Optional.empty());
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
         final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
                 NODE_0,
                 cassandraState,
@@ -63,7 +63,7 @@ public class RestoreSnapshotBlockTest {
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
         Mockito.when(cassandraState.get(RESTORE_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
         final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
                 NODE_0,
                 cassandraState,
@@ -81,7 +81,7 @@ public class RestoreSnapshotBlockTest {
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
 
         final RestoreSnapshotTask task = Mockito.mock(RestoreSnapshotTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
@@ -108,7 +108,7 @@ public class RestoreSnapshotBlockTest {
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
 
         final RestoreSnapshotTask task = Mockito.mock(RestoreSnapshotTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
