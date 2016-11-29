@@ -53,7 +53,6 @@ import java.util.Optional;
 public class S3StorageDriver implements BackupStorageDriver {
     private static final Logger LOGGER = LoggerFactory.getLogger(
             S3StorageDriver.class);
-    private StorageUtil storageUtil = new StorageUtil();
 
     String getBucketName(BackupRestoreContext ctx) throws URISyntaxException {
         URI uri = new URI(ctx.getExternalLocation());
@@ -164,7 +163,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                 for (File cfDir : getColumnFamilyDir(keyspaceDir)) {
                     LOGGER.info("Entering column family: {}", cfDir.getName());
                     File snapshotDir = new File(cfDir, "snapshots");
-                    if (!storageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir)) {
+                    if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir)) {
                         LOGGER.info("Skipping directory: {}",
                                 snapshotDir.getAbsolutePath());
                         continue;
@@ -174,7 +173,7 @@ public class S3StorageDriver implements BackupStorageDriver {
                             keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(),
                             snapshotDir.getAbsolutePath(), backupName);
 
-                    final Optional<File> snapshotDirectory = storageUtil.getValidSnapshotDirectory(
+                    final Optional<File> snapshotDirectory = StorageUtil.getValidSnapshotDirectory(
                             snapshotDir, backupName);
                     LOGGER.info("Valid snapshot directory: {}",
                             snapshotDirectory.isPresent());
