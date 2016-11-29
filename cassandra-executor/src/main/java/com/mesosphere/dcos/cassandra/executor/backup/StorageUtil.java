@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  */
@@ -19,6 +20,7 @@ public class StorageUtil {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private final Set<String> SKIP_KEYSPACES = ImmutableSet.of("system");
+  private static final Set<String> SKIP_SYSTEM_KEYSPACES = ImmutableSet.of("system", "system_distributed", "system_traces", "system_schema", "system_auth");
   private final Map<String, List<String>> SKIP_COLUMN_FAMILIES = ImmutableMap.of();
   public static final String SCHEMA_FILE = "schema.cql";
 
@@ -62,5 +64,11 @@ public class StorageUtil {
   static boolean isAzure(String externalLocation) {
     // default to s3 (backward compatible)
     return StringUtils.isNotEmpty(externalLocation) && externalLocation.startsWith("azure:");
+  }
+
+  public static List<String> filterSystemKeyspaces(List<String> keyspaces) {
+    return keyspaces.stream()
+            .filter(k -> !SKIP_SYSTEM_KEYSPACES.contains(k))
+            .collect(Collectors.toList());
   }
 }
