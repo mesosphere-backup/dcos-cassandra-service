@@ -16,7 +16,6 @@ public class StorageDriverFactory {
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageDriverFactory.class);
 
   public static BackupStorageDriver createStorageDriver(CassandraTask cassandraTask) {
-
     String externalLocation = null;
     switch (cassandraTask.getType()) {
       case BACKUP_SNAPSHOT:

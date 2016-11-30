@@ -2,7 +2,7 @@
 post_title: Connecting Clients
 menu_order: 60
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 The only supported client for the DC/OS Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.

@@ -4,6 +4,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
 import com.mesosphere.dcos.cassandra.executor.CassandraDaemonProcess;
 import com.mesosphere.dcos.cassandra.executor.backup.StorageDriverFactory;
 import org.apache.mesos.ExecutorDriver;
@@ -115,6 +116,11 @@ public class CassandraTaskFactory implements ExecutorTaskFactory {
                     driver,
                     cassandra,
                     (RepairTask) cassandraTask);
+            case UPGRADESSTABLE:
+                return new UpgradeSSTable(
+                        driver,
+                        cassandra,
+                        (UpgradeSSTableTask) cassandraTask);
             default:
                 Protos.TaskInfo info = cassandraTask.getTaskInfo();
                 Protos.TaskStatus failed = Protos.TaskStatus

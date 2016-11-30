@@ -31,6 +31,9 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   @JsonProperty("uses_emc")
   private Boolean usesEmc;
 
+  @JsonProperty("restore_type")
+  private String restoreType;
+
   public String getName() {
     return name;
   }
@@ -79,6 +82,18 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
     this.azureKey = azureKey;
   }
 
+  public String getRestoreType() {
+
+
+    if (StringUtils.isNotBlank(restoreType)) {
+      return restoreType;
+    } else {
+      return "existing";
+    }
+  }
+
+  public void setRestoreType(String restoreType) { this.restoreType = restoreType; }
+
   public boolean usesEmc() {
     if (usesEmc != null) {
       return usesEmc;
@@ -89,7 +104,8 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
 
   public boolean isValid() {
     return (StringUtils.isNotBlank(name) && externalLocation != null)
-            && (isValidS3Request() || isValidAzureRequest());
+            && (isValidS3Request() || isValidAzureRequest())
+            && isValidRestoreType();
   }
 
   private boolean isValidS3Request() {
@@ -108,6 +124,10 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
     return azureAccount != null && azureKey != null && externalLocation.startsWith("azure:");
   }
 
+  private boolean isValidRestoreType() {
+    return restoreType == null || restoreType.isEmpty() ? true: restoreType.matches("existing|new");
+  }
+
   @Override
   public String toString() {
     return "BackupRestoreRequest{" +
@@ -118,6 +138,7 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
             ", azureAccount='" + azureAccount + '\'' +
             ", azureKey='" + azureKey + '\'' +
             ", usesEmc='" + usesEmc + '\'' +
+            ", restoreType='" + restoreType + '\'' +
             '}';
   }
 
@@ -140,7 +161,8 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
         "", // local_location
         accountId,
         secretKey,
-        usesEmc());
+        usesEmc(),
+        getRestoreType());
   }
 
   private static boolean isAzure(String externalLocation) {

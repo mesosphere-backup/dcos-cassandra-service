@@ -26,7 +26,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @JsonProperty("external_dc_sync_ms") final long externalDcSyncMs,
     @JsonProperty("external_dcs") final String externalDcs,
     @JsonProperty("dc_url") final String dcUrl,
-    @JsonProperty("phase_strategy") final String phaseStrategy) {
+    @JsonProperty("phase_strategy") final String phaseStrategy,
+    @JsonProperty("enable_upgrade_sstable_endpoint") final boolean enableUpgradeSSTableEndpoint) {
 
     return new CassandraSchedulerConfiguration(
       executorConfig,
@@ -40,7 +41,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       externalDcSyncMs,
       externalDcs,
       dcUrl,
-      phaseStrategy
+      phaseStrategy,
+      enableUpgradeSSTableEndpoint
     );
   }
 
@@ -68,6 +70,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
   private final String dcUrl;
   @JsonIgnore
   private final String phaseStrategy;
+  @JsonIgnore
+  private final boolean enableUpgradeSSTableEndpoint;
 
   private CassandraSchedulerConfiguration(
     ExecutorConfig executorConfig,
@@ -80,7 +84,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
     long externalDcSyncMs,
     String externalDcs,
     String dcUrl,
-    String phaseStrategy) {
+    String phaseStrategy,
+    boolean enableUpgradeSSTableEndpoint) {
     this.executorConfig = executorConfig;
     this.servers = servers;
     this.seeds = seeds;
@@ -93,6 +98,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     this.externalDcs = externalDcs;
     this.dcUrl = dcUrl;
     this.phaseStrategy = phaseStrategy;
+    this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
   }
 
   @JsonProperty("executor")
@@ -155,6 +161,9 @@ public class CassandraSchedulerConfiguration implements Configuration {
     return phaseStrategy;
   }
 
+  @JsonProperty("enable_upgrade_sstable_endpoint")
+  public boolean getEnableUpgradeSSTableEndpoint() { return enableUpgradeSSTableEndpoint; }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -164,6 +173,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       seeds == that.seeds &&
       apiPort == that.apiPort &&
       externalDcSyncMs == that.externalDcSyncMs &&
+      enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
       Objects.equals(executorConfig, that.executorConfig) &&
       Objects.equals(placementStrategy, that.placementStrategy) &&
       Objects.equals(cassandraConfig, that.cassandraConfig) &&
@@ -188,7 +198,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       externalDcSyncMs,
       externalDcs,
       dcUrl,
-      phaseStrategy);
+      phaseStrategy,
+      enableUpgradeSSTableEndpoint);
   }
 
   @JsonIgnore

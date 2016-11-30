@@ -7,6 +7,7 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
 import org.apache.mesos.Protos;
 
 import java.io.IOException;
@@ -78,19 +79,20 @@ public class CassandraData {
     }
 
     public static final CassandraData createBackupSchemaData(
-        final String hostname,
-        final BackupRestoreContext context) {
+            final String hostname,
+            final BackupRestoreContext context) {
 
         return new CassandraData(
-            CassandraTask.TYPE.BACKUP_SCHEMA,
-            hostname,
-            context.getNodeId(),
-            context.getName(),
-            context.getExternalLocation(),
-            context.getLocalLocation(),
-            context.getAccountId(),
-            context.getSecretKey(),
-            context.getUsesEmc());
+                CassandraTask.TYPE.BACKUP_SCHEMA,
+                hostname,
+                context.getNodeId(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getLocalLocation(),
+                context.getAccountId(),
+                context.getSecretKey(),
+                context.getUsesEmc(),
+                context.getRestoreType());
     }
 
     public static final CassandraData createBackupSchemaStatusData() {
@@ -110,7 +112,8 @@ public class CassandraData {
                 context.getLocalLocation(),
                 context.getAccountId(),
                 context.getSecretKey(),
-                context.getUsesEmc());
+                context.getUsesEmc(),
+                context.getRestoreType());
     }
 
     public static final CassandraData createBackupSnapshotStatusData() {
@@ -129,7 +132,8 @@ public class CassandraData {
             context.getLocalLocation(),
             context.getAccountId(),
             context.getSecretKey(),
-            context.getUsesEmc());
+            context.getUsesEmc(),
+            context.getRestoreType());
     }
 
     public static final CassandraData createBackupUploadStatusData() {
@@ -148,7 +152,8 @@ public class CassandraData {
             context.getLocalLocation(),
             context.getAccountId(),
             context.getSecretKey(),
-            context.getUsesEmc());
+            context.getUsesEmc(),
+            context.getRestoreType());
     }
 
     public static final CassandraData createSnapshotDownloadStatusData() {
@@ -167,7 +172,8 @@ public class CassandraData {
             context.getLocalLocation(),
             context.getAccountId(),
             context.getSecretKey(),
-            context.getUsesEmc());
+            context.getUsesEmc(),
+            context.getRestoreType());
     }
 
     public static final CassandraData createRestoreSnapshotStatusData() {
@@ -186,11 +192,28 @@ public class CassandraData {
                 context.getLocalLocation(),
                 context.getAccountId(),
                 context.getSecretKey(),
-                context.getUsesEmc());
+                context.getUsesEmc(),
+                context.getRestoreType());
     }
 
     public static final CassandraData createRestoreSchemaStatusData() {
         return new CassandraData(CassandraTask.TYPE.SCHEMA_RESTORE);
+    }
+
+    public static final CassandraData createUpgradeSSTableData(
+            final String hostname,
+            final UpgradeSSTableContext context) {
+
+        return new CassandraData(
+                CassandraTask.TYPE.UPGRADESSTABLE,
+                hostname,
+                context.getNodes(),
+                context.getKeySpaces(),
+                context.getColumnFamilies());
+    }
+
+    public static final CassandraData createUpgradeSSTableStatusData() {
+        return new CassandraData(CassandraTask.TYPE.UPGRADESSTABLE);
     }
 
     private final CassandraProtos.CassandraData data;
@@ -260,7 +283,8 @@ public class CassandraData {
                           final String localLocation,
                           final String accountId,
                           final String secretKey,
-                          final boolean usesEmc) {
+                          final boolean usesEmc,
+                          final String restoreType) {
 
         data = CassandraProtos.CassandraData.newBuilder()
             .setType(type.ordinal())
@@ -273,6 +297,7 @@ public class CassandraData {
             .setSecretKey(secretKey)
             .setState(Protos.TaskState.TASK_STAGING.ordinal())
             .setUsesEmc(usesEmc)
+            .setRestoreType(restoreType)
             .build();
 
     }
@@ -386,7 +411,15 @@ public class CassandraData {
             data.getLocalLocation(),
             data.getAccoundId(),
             data.getSecretKey(),
-            data.getUsesEmc());
+            data.getUsesEmc(),
+            data.getRestoreType());
+    }
+
+    public UpgradeSSTableContext getUpgradeSSTableContext() {
+        return new UpgradeSSTableContext(
+                data.getNodesList(),
+                data.getKeySpacesList(),
+                data.getColumnFamiliesList());
     }
 
     public ByteString getBytes() {

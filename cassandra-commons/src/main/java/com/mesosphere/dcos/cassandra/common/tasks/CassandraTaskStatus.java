@@ -19,6 +19,7 @@ import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableStatus;
 import org.apache.mesos.Protos;
 
 import java.io.IOException;
@@ -110,6 +111,8 @@ public abstract class CassandraTaskStatus {
                 return CleanupStatus.create(status);
             case REPAIR:
                 return RepairStatus.create(status);
+            case UPGRADESSTABLE:
+                return UpgradeSSTableStatus.create(status);
             default:
                 throw new IOException("Failed to parse task from TaskInfo " +
                     "type information is invalid");

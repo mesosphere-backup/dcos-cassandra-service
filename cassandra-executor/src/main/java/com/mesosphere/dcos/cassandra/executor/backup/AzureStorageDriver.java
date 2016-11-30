@@ -46,8 +46,6 @@ public class AzureStorageDriver implements BackupStorageDriver {
   private static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
   private static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
-  private StorageUtil storageUtil = new StorageUtil();
-
   @Override
   public void upload(BackupRestoreContext ctx) throws IOException {
 
@@ -80,7 +78,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       for (File cfDir : keyspaceDir.listFiles()) {
         logger.info("Entering column family: {}", cfDir.getName());
         File snapshotDir = new File(cfDir, "snapshots");
-        if (!storageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir)) {
+        if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir)) {
           logger.info("Skipping directory: {}", snapshotDir.getAbsolutePath());
           continue;
         }
@@ -89,7 +87,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
           keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(),
           snapshotDir.getAbsolutePath(), backupName);
 
-        final Optional<File> snapshotDirectory = storageUtil.getValidSnapshotDirectory(snapshotDir, backupName);
+        final Optional<File> snapshotDirectory = StorageUtil.getValidSnapshotDirectory(snapshotDir, backupName);
         logger.info("Valid snapshot directory: {}", snapshotDirectory.isPresent());
 
         if (snapshotDirectory.isPresent()) {

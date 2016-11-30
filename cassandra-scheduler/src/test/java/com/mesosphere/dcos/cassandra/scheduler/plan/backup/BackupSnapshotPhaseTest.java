@@ -36,7 +36,7 @@ public class BackupSnapshotPhaseTest {
 
     @Test
     public void testCreateBlocksEmpty() {
-        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false, "");
 
         when(cassandraState.getDaemons()).thenReturn(MapUtils.EMPTY_MAP);
         final BackupSnapshotPhase phase = new BackupSnapshotPhase(context, cassandraState, provider);
@@ -49,7 +49,7 @@ public class BackupSnapshotPhaseTest {
 
     @Test
     public void testCreateBlocksSingle() {
-        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false, "");
 
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();

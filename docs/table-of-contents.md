@@ -1,4 +1,6 @@
-# DC/OS Apache Cassandra Service Table of Contents
+# DC/OS Apache Cassandra Service Documentation
+
+## Table of Contents
 
 - [Overview](index.md)
 - [Quick Start](quick-start.md)

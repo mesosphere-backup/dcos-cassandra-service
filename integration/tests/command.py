@@ -78,8 +78,25 @@ def get_dcos_command(command):
     return result
 
 
+@as_json
+def get_cassandra_command(command):
+    result, error = shakedown.run_dcos_command(
+        '{} {}'.format(PACKAGE_NAME, command)
+    )
+    if error:
+        raise RuntimeError(
+            'command dcos {} {} failed'.format(command, PACKAGE_NAME)
+        )
+
+    return result
+
+
 def marathon_api_url(basename):
     return '{}/v2/{}'.format(shakedown.dcos_service_url('marathon'), basename)
+
+
+def marathon_api_url_with_param(basename, path_param):
+    return '{}/{}'.format(marathon_api_url(basename), path_param)
 
 
 def request(request_fn, *args, **kwargs):
@@ -111,16 +128,19 @@ def spin(fn, success_predicate, *args, **kwargs):
     return result
 
 
-def install(additional_options = {}):
+def install(additional_options = {}, package_version = None):
     merged_options = _nested_dict_merge(DEFAULT_OPTIONS_DICT, additional_options)
-    print('Installing {} with options: {}'.format(PACKAGE_NAME, merged_options))
-    shakedown.install_package_and_wait(PACKAGE_NAME, options_json=merged_options)
+    print('Installing {} with options: {} {}'.format(PACKAGE_NAME, merged_options, package_version))
+    shakedown.install_package_and_wait(
+        PACKAGE_NAME,
+        package_version,
+        options_json=merged_options)
 
 
 def uninstall():
     print('Uninstalling/janitoring {}'.format(PACKAGE_NAME))
     try:
-        shakedown.uninstall_package_and_wait(PACKAGE_NAME, app_id=PACKAGE_NAME)
+        shakedown.uninstall_package_and_wait(PACKAGE_NAME, service_name=PACKAGE_NAME)
     except (dcos.errors.DCOSException, ValueError) as e:
         print('Got exception when uninstalling package, continuing with janitor anyway: {}'.format(e))
 

@@ -2,7 +2,7 @@
 post_title: Multi-Datacenter Deployments
 menu_order: 40
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 # Requirements

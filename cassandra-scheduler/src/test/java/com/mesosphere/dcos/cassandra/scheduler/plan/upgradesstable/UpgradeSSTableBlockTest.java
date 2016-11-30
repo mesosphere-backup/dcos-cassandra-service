@@ -1,14 +1,14 @@
-package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
+package com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable;
 
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraMode;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
@@ -20,11 +20,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
-public class RestoreSnapshotBlockTest {
-    public static final String RESTORE_NODE_0 = "restore-node-0";
+public class UpgradeSSTableBlockTest {
+    public static final String UPGRADESSTABLE_NODE_0 = "upgradesstable-node-0";
     public static final String NODE_0 = "node-0";
     @Mock
     private ClusterTaskOfferRequirementProvider provider;
@@ -32,6 +33,8 @@ public class RestoreSnapshotBlockTest {
     private CassandraState cassandraState;
     @Mock
     private SchedulerClient client;
+    public static final UpgradeSSTableContext CONTEXT = UpgradeSSTableContext.create(Collections.emptyList(),
+            Collections.emptyList(), Collections.emptyList());
 
     @Before
     public void beforeEach() {
@@ -45,51 +48,54 @@ public class RestoreSnapshotBlockTest {
 
     @Test
     public void testInitial() {
-        Mockito.when(cassandraState.get(RESTORE_NODE_0)).thenReturn(Optional.empty());
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
-        final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList());
+        final UpgradeSSTableBlock block = UpgradeSSTableBlock.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(RESTORE_NODE_0, block.getName());
+        Assert.assertEquals(UPGRADESSTABLE_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertEquals(true, block.isPending());
+        Assert.assertTrue(block.isPending());
     }
 
     @Test
     public void testComplete() {
         final CassandraTask mockCassandraTask = Mockito.mock(CassandraTask.class);
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        Mockito.when(cassandraState.get(RESTORE_NODE_0))
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
-        final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList());
+        final UpgradeSSTableBlock block = UpgradeSSTableBlock.create(
                 NODE_0,
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(RESTORE_NODE_0, block.getName());
+        Assert.assertEquals(UPGRADESSTABLE_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
-        Assert.assertEquals(true, block.isComplete());
+        Assert.assertTrue(block.isComplete());
     }
 
     @Test
     public void testTaskStartAlreadyCompleted() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(RESTORE_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
+        final UpgradeSSTableContext context = UpgradeSSTableContext.create(Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList());
 
-        final RestoreSnapshotTask task = Mockito.mock(RestoreSnapshotTask.class);
+        final UpgradeSSTableTask task = Mockito.mock(UpgradeSSTableTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
         Mockito
-                .when(cassandraState.getOrCreateRestoreSnapshot(daemonTask, context))
+                .when(cassandraState.getOrCreateUpgradeSSTable(daemonTask, CONTEXT))
                 .thenReturn(task);
 
-        final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
+        final UpgradeSSTableBlock block = UpgradeSSTableBlock.create(
                 NODE_0,
                 cassandraState,
                 provider,
@@ -98,34 +104,33 @@ public class RestoreSnapshotBlockTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(!block.start().isPresent());
-        Assert.assertEquals(true, block.isComplete());
+        Assert.assertTrue(block.isComplete());
     }
 
     @Test
     public void testTaskStart() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(RESTORE_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(UPGRADESSTABLE_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
 
-        final RestoreSnapshotTask task = Mockito.mock(RestoreSnapshotTask.class);
+        final UpgradeSSTableTask task = Mockito.mock(UpgradeSSTableTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
-        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.SNAPSHOT_RESTORE);
+        Mockito.when(task.getType()).thenReturn(CassandraTask.TYPE.CLEANUP);
         Mockito
-                .when(cassandraState.getOrCreateRestoreSnapshot(daemonTask, context))
+                .when(cassandraState.getOrCreateUpgradeSSTable(daemonTask, CONTEXT))
                 .thenReturn(task);
 
-        final RestoreSnapshotBlock block = RestoreSnapshotBlock.create(
+        final UpgradeSSTableBlock block = UpgradeSSTableBlock.create(
                 NODE_0,
                 cassandraState,
                 provider,
-                context);
+                CONTEXT);
 
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(block.start().isPresent());
-        Assert.assertEquals(true, block.isInProgress());
+        Assert.assertTrue(block.isInProgress());
     }
 }

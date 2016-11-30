@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 public class RepairBlockTest {
-    public static final String CLEANUP_NODE_0 = "repair-node-0";
+    public static final String REPAIR_NODE_0 = "repair-node-0";
     public static final String NODE_0 = "node-0";
     @Mock
     private ClusterTaskOfferRequirementProvider provider;
@@ -48,7 +48,7 @@ public class RepairBlockTest {
 
     @Test
     public void testInitial() {
-        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
         final RepairContext context = RepairContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
         final RepairBlock block = RepairBlock.create(
@@ -56,7 +56,7 @@ public class RepairBlockTest {
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(CLEANUP_NODE_0, block.getName());
+        Assert.assertEquals(REPAIR_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
         Assert.assertTrue(block.isPending());
     }
@@ -65,7 +65,7 @@ public class RepairBlockTest {
     public void testComplete() {
         final CassandraTask mockCassandraTask = Mockito.mock(CassandraTask.class);
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        Mockito.when(cassandraState.get(CLEANUP_NODE_0))
+        Mockito.when(cassandraState.get(REPAIR_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final RepairContext context = RepairContext.create(Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
@@ -74,7 +74,7 @@ public class RepairBlockTest {
                 cassandraState,
                 provider,
                 context);
-        Assert.assertEquals(CLEANUP_NODE_0, block.getName());
+        Assert.assertEquals(REPAIR_NODE_0, block.getName());
         Assert.assertEquals(NODE_0, block.getDaemon());
         Assert.assertTrue(block.isComplete());
     }
@@ -82,7 +82,7 @@ public class RepairBlockTest {
     @Test
     public void testTaskStartAlreadyCompleted() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
@@ -110,7 +110,7 @@ public class RepairBlockTest {
     @Test
     public void testTaskStart() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
-        Mockito.when(cassandraState.get(CLEANUP_NODE_0)).thenReturn(Optional.empty());
+        Mockito.when(cassandraState.get(REPAIR_NODE_0)).thenReturn(Optional.empty());
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);

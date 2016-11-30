@@ -148,6 +148,7 @@ api_port : ${API_PORT:-8080}
 dc_sync_ms : ${DC_SYNC_MS:-60000}
 dc_url : "${DC_URL:-http://${SERVICE_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/datacenter}"
 external_dcs : ${EXTERNAL_DCS:-""}
+enable_upgrade_sstable_endpoint: ${ENABLE_UPGRADE_SSTABLE_ENDPOINT:-false}
 service:
   name : ${SERVICE_NAME:-"cassandra"}
   version : ${SERVICE_VERSION:-"0.1.0"}
@@ -183,3 +184,10 @@ logging:
       threshold: ALL
       timeZone: UTC
       target: stdout
+    - type: file
+      currentLogFilename: ${LOG_FILE:-dcos-cassandra-service.log}
+      threshold: ALL
+      archive: true
+      archivedFileCount: 5
+      archivedLogFilenamePattern: ${LOG_FILE:-dcos-cassandra-service.log}.%d
+      timeZone: UTC

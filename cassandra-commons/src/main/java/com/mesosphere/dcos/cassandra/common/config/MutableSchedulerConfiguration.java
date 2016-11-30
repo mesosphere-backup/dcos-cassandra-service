@@ -34,7 +34,7 @@ public class MutableSchedulerConfiguration extends Configuration {
   private String externalDcs;
   private String dcUrl;
   private String phaseStrategy;
-
+  private boolean enableUpgradeSSTableEndpoint;
 
   @JsonProperty("mesos")
   public MesosConfig getMesosConfig() {
@@ -183,6 +183,14 @@ public class MutableSchedulerConfiguration extends Configuration {
     this.externalDcs = externalDcs;
   }
 
+  @JsonProperty("enable_upgrade_sstable_endpoint")
+  public boolean getEnableUpgradeSStableEndpoint() { return enableUpgradeSSTableEndpoint; }
+
+  @JsonProperty("enable_upgrade_sstable_endpoint")
+  public void setEnableUpgradeSSTableEndpoint(boolean enableUpgradeSSTableEndpoint) {
+    this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
+  }
+
   @JsonIgnore
   public CassandraSchedulerConfiguration createConfig() {
     return CassandraSchedulerConfiguration.create(
@@ -197,7 +205,8 @@ public class MutableSchedulerConfiguration extends Configuration {
       externalDcSyncMs,
       externalDcs,
       dcUrl,
-      phaseStrategy
+      phaseStrategy,
+      enableUpgradeSSTableEndpoint
     );
   }
 
@@ -210,6 +219,7 @@ public class MutableSchedulerConfiguration extends Configuration {
       seeds == that.seeds &&
       apiPort == that.apiPort &&
       externalDcSyncMs == that.externalDcSyncMs &&
+      enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
       Objects.equals(executorConfig, that.executorConfig) &&
       Objects.equals(placementStrategy, that.placementStrategy) &&
       Objects.equals(cassandraConfig, that.cassandraConfig) &&
@@ -225,6 +235,6 @@ public class MutableSchedulerConfiguration extends Configuration {
   public int hashCode() {
     return Objects.hash(executorConfig, servers, seeds, placementStrategy, cassandraConfig,
       clusterTaskConfig, apiPort, serviceConfig, mesosConfig, curatorConfig,
-      externalDcSyncMs, externalDcs, dcUrl);
+      externalDcSyncMs, externalDcs, dcUrl, enableUpgradeSSTableEndpoint);
   }
 }

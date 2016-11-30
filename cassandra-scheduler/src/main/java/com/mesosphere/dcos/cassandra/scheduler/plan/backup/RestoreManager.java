@@ -73,6 +73,7 @@ public class RestoreManager extends ChainedObserver implements ClusterTaskManage
         }
 
         BackupRestoreContext context = request.toContext();
+        LOGGER.info("Restore Type: {}", context.getRestoreType());
         LOGGER.info("Starting restore");
         try {
             if (isComplete()) {

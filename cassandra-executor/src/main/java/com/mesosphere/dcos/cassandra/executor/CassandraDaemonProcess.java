@@ -150,9 +150,9 @@ public class CassandraDaemonProcess extends ProcessTask {
      * and a process watchdog. After calling this method the Cassandra
      * process is running and the NodeProbe instance is connected.
      *
-     * @param task     The CassandraDaemonTask that corresponds to the process.
-     * @param executor The ScheduledExecutorService to use for background
-     *                 Runnables (The watchdog and status reporter).
+     * @param taskInfo The CassandraDaemonTask info that corresponds to the process.
+     * @param scheduledExecutorService The ScheduledExecutorService to use for background
+     *                                 Runnables (The watchdog and status reporter).
      * @param driver   The ExecutorDriver for the CassandraExecutor.
      * @return A CassandraDaemonProcess constructed from the
      * @throws IOException If an error occurs attempting to start the
@@ -367,6 +367,16 @@ public class CassandraDaemonProcess extends ProcessTask {
         getProbe().takeSnapshot(name, null, keySpace);
     }
 
+    /** Clears a snapshot of the indicated key space with the given name.
+     *
+     * @param name     The name of the snapshot.
+     * @param keySpace The name of the key space.
+     * @throws IOException If an error occurs clearing the snapshot.
+     */
+    public void clearSnapshot(String name, String keySpace) throws IOException {
+        getProbe().clearSnapshot(name, keySpace);
+    }
+
     /**
      * Performs anti-entropy repair on the indicated keySpace.
      *
@@ -431,10 +441,17 @@ public class CassandraDaemonProcess extends ProcessTask {
      * @throws ExecutionException   If execution is interrupted.
      * @throws IOException          If communication with Cassandra fails.
      */
-    public void upgradeTables()
+    public void upgradeSSTables(String keyspace, List<String> columnFamilies)
             throws InterruptedException, ExecutionException, IOException {
-        for (String keyspace : getNonSystemKeySpaces()) {
-            getProbe().forceKeyspaceCleanup(0, keyspace);
-        }
+        String[] families = new String[columnFamilies.size()];
+        families = columnFamilies.toArray(families);
+
+        // Skip SSTables which are already current version.
+        final boolean excludeCurrentVersion = true;
+        // Number of SSTables to upgrade simultaneously, set to 0 to use all
+        // available compaction threads.
+        final int jobs = 0;
+
+        getProbe().upgradeSSTables(keyspace, excludeCurrentVersion, jobs, families);
     }
 }

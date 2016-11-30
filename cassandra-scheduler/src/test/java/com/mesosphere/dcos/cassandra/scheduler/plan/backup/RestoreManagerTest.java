@@ -58,7 +58,7 @@ public class RestoreManagerTest {
 
     @Test
     public void testInitialWithState() throws SerializationException {
-        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false, "");
         when(mockState.fetchProperty(RestoreManager.RESTORE_KEY)).thenReturn(
                 BackupRestoreContext.JSON_SERIALIZER.serialize(context));
         RestoreManager manager = new RestoreManager(mockCassandraState, mockProvider, mockState);

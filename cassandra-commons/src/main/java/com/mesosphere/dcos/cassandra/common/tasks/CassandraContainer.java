@@ -62,4 +62,8 @@ public class CassandraContainer {
     public CassandraDaemonTask getDaemonTask() {
         return daemonTask;
     }
+
+    public CassandraTemplateTask getClusterTemplateTask() {
+        return clusterTemplateTask;
+    }
 }

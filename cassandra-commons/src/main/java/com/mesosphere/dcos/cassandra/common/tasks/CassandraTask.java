@@ -22,6 +22,7 @@ import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupTask;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairTask;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableTask;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.DiscoveryInfo;
 import org.apache.mesos.offer.ResourceUtils;
@@ -74,6 +75,7 @@ public abstract class CassandraTask {
 
     /**
      * Enumeration of the types of Cassandra Tasks.
+     * Note: Always add new types to the end of this list so that existing tasks get serialized/deserialized correctly.
      */
     public enum TYPE {
         /**
@@ -89,10 +91,6 @@ public abstract class CassandraTask {
          */
         BACKUP_UPLOAD,
         /**
-         * Task that backup schema for cassandra daemon.
-         */
-        BACKUP_SCHEMA,
-        /**
          * Task that downloads snapshotted column families.
          */
         SNAPSHOT_DOWNLOAD,
@@ -100,10 +98,6 @@ public abstract class CassandraTask {
          * Task that restores column families to a node.
          */
         SNAPSHOT_RESTORE,
-        /**
-         * Task that restores the schema on a node.
-         */
-        SCHEMA_RESTORE,
         /**
          * Task that performs cleanup on a node.
          */
@@ -116,7 +110,19 @@ public abstract class CassandraTask {
         /**
          * Place holder for pre-reserving resources for Cluster Tasks
          */
-        TEMPLATE
+        TEMPLATE,
+        /**
+         * Task that performs upgrade SSTables on a node.
+         */
+        UPGRADESSTABLE,
+        /**
+         * Task that backup schema for cassandra daemon.
+         */
+        BACKUP_SCHEMA,
+        /**
+         * Task that restores the schema on a node.
+         */
+        SCHEMA_RESTORE,
     }
 
     /**
@@ -148,6 +154,8 @@ public abstract class CassandraTask {
                 return CleanupTask.parse(info);
             case REPAIR:
                 return RepairTask.parse(info);
+            case UPGRADESSTABLE:
+                return UpgradeSSTableTask.parse(info);
             case TEMPLATE:
                 return CassandraTemplateTask.parse(info);
             default:
