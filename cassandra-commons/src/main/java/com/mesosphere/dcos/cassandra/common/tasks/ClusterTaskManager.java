@@ -63,8 +63,8 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
             C context = SERIALIZER.deserialize(stateStore.fetchProperty(propertyKey), clazz);
             if (context != null) {
                 // Recovering from restart while operation was running
-                this.phases = createPhases(context);
-                for (Phase phase : this.phases) {
+                phases = createPhases(context);
+                for (Phase phase : phases) {
                     phase.subscribe(this);
                 }
                 this.activeContext = context;
@@ -89,11 +89,11 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
                 clearTasks();
             }
             stateStore.storeProperty(propertyKey, SERIALIZER.serialize(context));
-            this.phases = createPhases(context);
-            for (Phase phase : this.phases) {
+            phases = createPhases(context);
+            for (Phase phase : phases) {
                 phase.subscribe(this);
             }
-            this.activeContext = context;
+            activeContext = context;
         } catch (IOException e) {
             logger.error("Error storing operation context into persistence store", e);
         }
@@ -109,8 +109,8 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
         } catch (PersistenceException e) {
             logger.error("Error deleting operation context from persistence store", e);
         }
-        this.activeContext = null;
-        this.phases = Collections.emptyList();
+        activeContext = null;
+        phases = Collections.emptyList();
         notifyObservers();
     }
 

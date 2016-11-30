@@ -256,7 +256,7 @@ public class CassandraScheduler implements Scheduler, Observer {
             for (Protos.Offer offer : offers) {
                 Protos.OfferID offerId = offer.getId();
                 if (!acceptedOffers.contains(offerId)) {
-                    LOGGER.info("Scheduler declining offer: {}", offerId);
+                    LOGGER.info("Scheduler declining offer: {}", TextFormat.shortDebugString(offerId));
                     driver.declineOffer(offerId, offerFilters);
                 }
             }

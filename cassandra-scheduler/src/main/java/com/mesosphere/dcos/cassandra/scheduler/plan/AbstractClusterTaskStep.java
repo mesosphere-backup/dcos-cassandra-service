@@ -38,9 +38,7 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
 
     @Override
     public Optional<OfferRequirement> start() {
-        LOGGER.info("Starting Step: name = {}, id = {}",
-                getName(),
-                getId());
+        LOGGER.info("Starting Step: name = {}, id = {}", getName(), getId());
 
         try {
             // Is Daemon task running ?
@@ -66,9 +64,7 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
             }
 
             if (!task.isPresent()) {
-                LOGGER.info("Step has no task: name = {}, id = {}",
-                        getName(), getId());
-
+                LOGGER.info("Step has no task: name = {}, id = {}", getName(), getId());
                 return Optional.empty();
             } else {
                 LOGGER.info("Step has task: " + task);
@@ -76,10 +72,9 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
             }
 
         } catch (IOException ex) {
-            LOGGER.error(String.format("Step failed to create offer " +
-                            "requirement: name = %s, id = %s",
-                    getName(),
-                    getId()), ex);
+            LOGGER.error(String.format(
+                    "Step failed to create offer requirement: name = %s, id = %s",
+                    getName(), getId()), ex);
 
             return Optional.empty();
         }

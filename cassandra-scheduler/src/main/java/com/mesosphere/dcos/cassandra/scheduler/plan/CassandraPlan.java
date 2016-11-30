@@ -8,6 +8,8 @@ import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
 import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,8 +47,10 @@ public class CassandraPlan extends DefaultPlan {
 
     @Override
     public List<Phase> getChildren() {
-        List<Phase> phases = super.getChildren(); // reconciliation, syncDc, deploy
-        if (clusterTaskManagers != null) { // may be null when DefaultPlan constructor calling getChildren()
+        // copy super.getChildren() rather than appending in-place:
+        List<Phase> phases = new ArrayList<>();
+        phases.addAll(super.getChildren()); // should contain phases: reconciliation, syncDc, and deploy
+        if (clusterTaskManagers != null) { // may be null when DefaultPlan's constructor is calling getChildren()
             for (ClusterTaskManager<?, ?> manager : clusterTaskManagers) {
                 phases.addAll(manager.getPhases());
             }

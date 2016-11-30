@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.common.offer;
 
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
@@ -21,7 +22,7 @@ public class PersistentOperationRecorder implements OperationRecorder {
             Protos.Offer.Operation operation,
             Protos.Offer offer) throws Exception {
         if (operation.getType() == Protos.Offer.Operation.Type.LAUNCH) {
-            LOGGER.info("Persisting Launch Operation: " + operation);
+            LOGGER.info("Persisting Launch Operation: {}", TextFormat.shortDebugString(operation));
             for (TaskInfo taskInfo : operation.getLaunch().getTaskInfosList()) {
                 LOGGER.debug("Recording operation: {} for task: {}", operation, taskInfo);
                 try {
