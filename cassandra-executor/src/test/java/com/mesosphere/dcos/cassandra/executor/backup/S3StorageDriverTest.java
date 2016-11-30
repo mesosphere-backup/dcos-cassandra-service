@@ -29,7 +29,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(bucketName, s3StorageDriver.getBucketName(backupRestoreContext));
     }
 
@@ -43,7 +44,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(bucketName, s3StorageDriver.getBucketName(backupRestoreContext));
     }
 
@@ -57,7 +59,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(bucketName, s3StorageDriver.getBucketName(backupRestoreContext));
     }
 
@@ -71,7 +74,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(backupName, s3StorageDriver.getPrefixKey(backupRestoreContext));
     }
 
@@ -86,7 +90,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(nestedPath + "/" + backupName, s3StorageDriver.getPrefixKey(backupRestoreContext));
     }
 
@@ -100,7 +105,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(backupName, s3StorageDriver.getPrefixKey(backupRestoreContext));
     }
 
@@ -115,7 +121,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(nestedPath + "/" + backupName, s3StorageDriver.getPrefixKey(backupRestoreContext));
     }
 
@@ -128,7 +135,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(Constants.S3_HOSTNAME, s3StorageDriver.getEndpoint(backupRestoreContext));
     }
 
@@ -142,7 +150,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(endpoint, s3StorageDriver.getEndpoint(backupRestoreContext));
     }
 
@@ -156,7 +165,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(endpoint, s3StorageDriver.getEndpoint(backupRestoreContext));
     }
 
@@ -170,7 +180,8 @@ public class S3StorageDriverTest {
                 "local-location",
                 "account-id",
                 "secret-key",
-                false);
+                false,
+                "existing");
         Assert.assertEquals(endpoint, s3StorageDriver.getEndpoint(backupRestoreContext));
     }
 }

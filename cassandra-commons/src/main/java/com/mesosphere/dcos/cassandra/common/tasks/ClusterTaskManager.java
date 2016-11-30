@@ -83,7 +83,7 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
         }
 
         C context = toContext(request);
-        logger.info("Starting operation");
+        logger.info("Starting operation: {}", context);
         try {
             if (isComplete()) {
                 clearTasks();
@@ -95,7 +95,8 @@ public abstract class ClusterTaskManager<R extends ClusterTaskRequest, C extends
             }
             activeContext = context;
         } catch (IOException e) {
-            logger.error("Error storing operation context into persistence store", e);
+            logger.error(String.format(
+                    "Error storing operation context into persistence store: %s", context), e);
         }
 
         notifyObservers();

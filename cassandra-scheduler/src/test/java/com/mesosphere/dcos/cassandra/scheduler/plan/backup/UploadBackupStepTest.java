@@ -46,7 +46,7 @@ public class UploadBackupStepTest {
     @Test
     public void testInitial() {
         Mockito.when(cassandraState.get(UPLOAD_NODE_0)).thenReturn(Optional.empty());
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
         final UploadBackupStep step = new UploadBackupStep(NODE_0, cassandraState, provider, context);
         Assert.assertEquals(UPLOAD_NODE_0, step.getName());
         Assert.assertEquals(NODE_0, step.getDaemon());
@@ -59,7 +59,7 @@ public class UploadBackupStepTest {
         Mockito.when(mockCassandraTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
         Mockito.when(cassandraState.get(UPLOAD_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
         final UploadBackupStep step = new UploadBackupStep(NODE_0, cassandraState, provider, context);
         Assert.assertEquals(UPLOAD_NODE_0, step.getName());
         Assert.assertEquals(NODE_0, step.getDaemon());
@@ -73,7 +73,7 @@ public class UploadBackupStepTest {
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, null);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
 
         final BackupUploadTask task = Mockito.mock(BackupUploadTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
@@ -93,7 +93,7 @@ public class UploadBackupStepTest {
         final HashMap<String, CassandraDaemonTask> map = new HashMap<>();
         map.put(NODE_0, daemonTask);
         Mockito.when(cassandraState.getDaemons()).thenReturn(map);
-        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false);
+        final BackupRestoreContext context = BackupRestoreContext.create("", "", "", "", "", "", false, "");
 
         final BackupUploadTask task = Mockito.mock(BackupUploadTask.class);
         Mockito.when(task.getSlaveId()).thenReturn("1234");
