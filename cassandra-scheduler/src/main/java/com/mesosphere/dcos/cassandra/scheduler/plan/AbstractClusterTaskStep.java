@@ -1,6 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
@@ -17,7 +18,8 @@ import java.util.Collections;
 import java.util.Optional;
 
 public abstract class AbstractClusterTaskStep extends DefaultStep {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractClusterTaskStep.class);
+    // Non-static to support logging child class:
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected final String daemon;
     private final CassandraOfferRequirementProvider provider;
@@ -38,41 +40,48 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
 
     @Override
     public Optional<OfferRequirement> start() {
-        LOGGER.info("Starting Step: name = {}, id = {}", getName(), getId());
+        logger.info("Starting Step: name = {}, id = {}", getName(), getId());
 
         try {
             // Is Daemon task running ?
             final Optional<Protos.TaskStatus> lastKnownDaemonStatus = cassandraState.getStateStore().fetchStatus(daemon);
             if (!lastKnownDaemonStatus.isPresent()) {
-                LOGGER.info("Daemon is not present in StateStore.");
+                logger.info("Daemon is not present in StateStore.");
                 return Optional.empty();
             }
 
             if (!CassandraDaemonStep.isComplete(lastKnownDaemonStatus.get())) {
-                LOGGER.info("Daemon step is not complete.");
+                logger.info("Daemon step is not complete.");
                 return Optional.empty();
             }
 
-            Optional<CassandraTask> task = getOrCreateTask();
-            if (task.isPresent()) {
+            Optional<CassandraTask> taskOptional = getOrCreateTask();
+            if (taskOptional.isPresent()) {
+                CassandraTask task = taskOptional.get();
+                logger.info("Step has task: " + task);
                 if (isComplete() || isInProgress()) {
-                    LOGGER.info("No requirement because step is: ", getStatus());
+                    logger.info("No requirement because step is: ", getStatus());
                     return Optional.empty();
-                } else {
-                    setStatus(Status.PENDING);
                 }
-            }
-
-            if (!task.isPresent()) {
-                LOGGER.info("Step has no task: name = {}, id = {}", getName(), getId());
-                return Optional.empty();
+                if (Protos.TaskState.TASK_FINISHED.equals(task.getState())) {
+                    // Task is already finished
+                    logger.info("Task {} assigned to this step {}, is already in state: {}",
+                            task.getId(), getId(), task.getState());
+                    setStatus(Status.COMPLETE);
+                    return Optional.empty();
+                } else if (task.getSlaveId().isEmpty()) {
+                    // we have not yet been assigned a slave id - This means that the task has never been launched
+                    return Optional.of(provider.getNewOfferRequirement(task.getType().name(), task.getTaskInfo()));
+                } else {
+                    return Optional.of(provider.getUpdateOfferRequirement(task.getType().name(), task.getTaskInfo()));
+                }
             } else {
-                LOGGER.info("Step has task: " + task);
-                return Optional.of(getOfferRequirement(task.get()));
+                logger.info("Step has no task: name = {}, id = {}", getName(), getId());
+                return Optional.empty();
             }
 
         } catch (IOException ex) {
-            LOGGER.error(String.format(
+            logger.error(String.format(
                     "Step failed to create offer requirement: name = %s, id = %s",
                     getName(), getId()), ex);
 
@@ -82,11 +91,11 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
 
     @Override
     public void update(Protos.TaskStatus status) {
-        LOGGER.info("Updating status : id = {}, task = {}, status = {}",
-                getId(), getName(), status);
+        logger.info("Updating status: id = {}, task = {}, status = {}",
+                getId(), getName(), TextFormat.shortDebugString(status));
 
         if (isComplete()) {
-            LOGGER.warn("Task is already complete, ignoring status update.");
+            logger.warn("Task is already complete, ignoring status update.");
             return;
         }
 
@@ -103,13 +112,13 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
                 } else if (task.isTerminated()) {
                     //need to progress with a new task
                     cassandraState.remove(getName());
-                    LOGGER.info("Reallocating task {} for step {}", getName(), getId());
+                    logger.info("Reallocating task {} for step {}", getName(), getId());
                     setStatus(Status.PENDING);
                 }
             }
 
         } catch (Exception ex) {
-            LOGGER.error(String.format(
+            logger.error(String.format(
                     "Exception for task {} in step {}. Step failed to progress", getName(), getId()), ex);
         }
     }
@@ -117,28 +126,6 @@ public abstract class AbstractClusterTaskStep extends DefaultStep {
     @VisibleForTesting
     public String getDaemon() {
         return daemon;
-    }
-
-    private OfferRequirement getOfferRequirement(CassandraTask task) {
-        if (Protos.TaskState.TASK_FINISHED.equals(task.getState())) {
-            // Task is already finished
-            LOGGER.info(
-                    "Task {} assigned to this step {}, is already in state: {}",
-                    task.getId(),
-                    getId(),
-                    task.getState());
-            setStatus(Status.COMPLETE);
-            return null;
-        } else if (task.getSlaveId().isEmpty()) {
-            //we have not yet been assigned a slave id - This means that the
-            //the task has never been launched
-            setStatus(Status.IN_PROGRESS);
-            return provider.getNewOfferRequirement(task.getType().name(), task.getTaskInfo());
-        } else {
-            setStatus(Status.IN_PROGRESS);
-            return provider.getUpdateOfferRequirement(task.getType().name(), task.getTaskInfo());
-
-        }
     }
 
     private static Status getInitialStatus(String name, CassandraState cassandraState) {

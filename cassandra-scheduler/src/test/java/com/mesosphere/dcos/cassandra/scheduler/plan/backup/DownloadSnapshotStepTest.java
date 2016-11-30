@@ -112,6 +112,7 @@ public class DownloadSnapshotStepTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(downloadSnapshotStep.start().isPresent());
-        Assert.assertEquals(Status.IN_PROGRESS, downloadSnapshotStep.getStatus());
+        // not IN_PROGRESS until the requirement is fulfilled!:
+        Assert.assertEquals(Status.PENDING, downloadSnapshotStep.getStatus());
     }
 }

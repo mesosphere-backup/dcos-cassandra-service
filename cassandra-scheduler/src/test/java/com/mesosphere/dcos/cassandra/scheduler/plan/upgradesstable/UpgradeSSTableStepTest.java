@@ -12,6 +12,7 @@ import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
+import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
 import org.junit.Before;
@@ -109,6 +110,7 @@ public class UpgradeSSTableStepTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertTrue(step.start().isPresent());
-        Assert.assertTrue(step.isInProgress());
+        // not IN_PROGRESS until the requirement is fulfilled!:
+        Assert.assertEquals(Status.PENDING, step.getStatus());
     }
 }

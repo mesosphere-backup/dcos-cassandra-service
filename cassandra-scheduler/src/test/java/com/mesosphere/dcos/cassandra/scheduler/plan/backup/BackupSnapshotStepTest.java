@@ -111,7 +111,8 @@ public class BackupSnapshotStepTest {
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
         Assert.assertNotNull(backupSnapshotStep.start());
-        Assert.assertEquals(Status.IN_PROGRESS, backupSnapshotStep.getStatus());
+        // not IN_PROGRESS until the requirement is fulfilled!:
+        Assert.assertEquals(Status.PENDING, backupSnapshotStep.getStatus());
     }
 
     @Test
