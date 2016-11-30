@@ -6,7 +6,7 @@ enterprise: 'no'
 ---
 
 # About installing Cassandra on Enterprise DC/OS
-  
+
  In Enterprise DC/OS `strict` [security mode](https://docs.mesosphere.com/1.8/administration/installing/custom/configuration-parameters/#security), Cassandra requires a service account. In `permissive`, a service account is optional. Only someone with `superuser` permission can create the service account. Refer to [Provisioning Cassandra](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) for instructions.
 
 # Default Installation
@@ -111,9 +111,8 @@ When the DC/OS Cassandra service is initially installed it will generate an inst
     "errors": [],
     "phases": [
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
                     "message": "Reconciliation complete",
                     "name": "Reconciliation",
@@ -127,27 +126,24 @@ When the DC/OS Cassandra service is initially installed it will generate an inst
         {
 	        "id": "e90ad90b-fd71-4a1d-a63b-599003ea46f5",
 	         "name": "Sync Data Center",
-	         "blocks": [],
+	         "steps": [],
 	         "status": "Complete"
         },
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
                     "message": "Deploying Cassandra node node-0",
                     "name": "node-0",
                     "status": "Complete"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
                     "message": "Deploying Cassandra node node-1",
                     "name": "node-1",
                     "status": "InProgress"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
                     "message": "Deploying Cassandra node node-2",
                     "name": "node-2",
@@ -177,7 +173,7 @@ If there are any errors that prevent installation, these errors are dispayed in 
 The first phase of the installation plan is the reconciliation phase. This phase ensures that the DC/OS Apache Cassandra service maintains the correct status for the Cassandra nodes that it has deployed. Reconciliation is a normal operation of the DC/OS Apache Cassandra Service and occurs each time the service starts. See [the Mesos documentation](http://mesos.apache.org/documentation/latest/reconciliation) for more information.
 
 ## Deploy Phase
-The second phase of the installation is the deploy phase. This phase will deploy the requested number of Cassandra nodes. Each block in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
+The second phase of the installation is the deploy phase. This phase will deploy the requested number of Cassandra nodes. Each step in the phase represents an individual Cassandra node. In the plan shown above the first node, node-0, has been deployed, the second node, node-1, is in the process of being deployed, and the third node, node-2, is pending deployment based on the completion of node-1.
 
 ## Pausing Installation
 In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
