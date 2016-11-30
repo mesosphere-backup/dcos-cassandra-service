@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
@@ -152,25 +153,25 @@ public class CassandraDaemonStep extends DefaultStep {
             final String taskName = org.apache.mesos.offer.TaskUtils.toTaskName(status.getTaskId());
             if (!getName().equals(taskName)) {
                 LOGGER.info("TaskStatus was meant for step: {} and doesn't affect step {}. Status: {}",
-                        taskName, getName(), status);
+                        taskName, getName(), TextFormat.shortDebugString(status));
                 return;
             }
             if (isPending()) {
-                LOGGER.info("Ignoring TaskStatus (Step {} is Pending): {}", getName(), status);
+                LOGGER.info("Ignoring TaskStatus (Step {} is Pending): {}", getName(), TextFormat.shortDebugString(status));
                 return;
             }
             if (status.getReason().equals(Protos.TaskStatus.Reason.REASON_RECONCILIATION)) {
-                LOGGER.info("Ignoring TaskStatus (Reason is RECONCILIATION): {}", status);
+                LOGGER.info("Ignoring TaskStatus (Reason is RECONCILIATION): {}", TextFormat.shortDebugString(status));
                 return;
             }
             if (status.hasData()) {
                 final CassandraData cassandraData = CassandraData.parse(status.getData());
                 mode = cassandraData.getMode();
                 LOGGER.info("{} Step: {} received status: {} with mode: {}",
-                        getStatus(), getName(), status, cassandraData.getMode());
+                        getStatus(), getName(), TextFormat.shortDebugString(status), cassandraData.getMode());
             } else {
                 LOGGER.info("{} Step: {} received status: {}",
-                        getStatus(), getName(), status);
+                        getStatus(), getName(), TextFormat.shortDebugString(status));
             }
             if (isComplete(status)) {
                 setStatus(Status.COMPLETE);
@@ -179,7 +180,7 @@ public class CassandraDaemonStep extends DefaultStep {
                 setStatus(Status.PENDING);
                 LOGGER.info("Updating step: {} with: {}", getName(), Status.PENDING);
             } else {
-                LOGGER.info("TaskStatus doesn't affect step: {}", status);
+                LOGGER.info("TaskStatus doesn't affect step: {}", TextFormat.shortDebugString(status));
             }
         } catch (Exception ex) {
             LOGGER.error(String.format("Step %s - Failed to update status: %s", getName(), status), ex);

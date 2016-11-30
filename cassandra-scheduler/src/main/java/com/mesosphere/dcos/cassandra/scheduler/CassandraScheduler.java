@@ -209,9 +209,6 @@ public class CassandraScheduler implements Scheduler, Observer {
 
         //TODO(nick): Switch to PlanCoordinator (after switching to DefaultRecoveryPlanManager)
 
-        // 0. clean up any completed task statuses as needed:
-        ((CassandraPlan) planManager.getPlan()).clearCompletedTasks();
-
         // 1. reconciliation
         reconciler.reconcile(driver);
 

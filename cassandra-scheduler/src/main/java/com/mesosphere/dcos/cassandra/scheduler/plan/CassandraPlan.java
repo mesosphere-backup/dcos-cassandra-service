@@ -8,6 +8,7 @@ import org.apache.mesos.scheduler.plan.Phase;
 import org.apache.mesos.scheduler.plan.ReconciliationPhase;
 import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
+import org.apache.mesos.scheduler.plan.strategy.Strategy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,8 +18,10 @@ import java.util.stream.Collectors;
 /**
  * Extension of {@link DefaultPlan} which also includes any active maintenance tasks.
  *
- * TODO(nick): Consider using separate Plan for maintenance tasks? Depends on the convention
- * established by dcos-commons once it has native maintenance task support.
+ * TODO(nick): Use separate plan(s) for maintenance tasks, and use a plain DefaultPlan for deployment.
+ * This requires use of a PlanCoordinator upstream, which in turn requires updating
+ * CassandraRecoveryScheduler to work as a recovery plan, which in turn ... In any case, it'd be best
+ * to wait for upstreamed maintenance task support and just switch whole-hog to that.
  */
 public class CassandraPlan extends DefaultPlan {
 
@@ -33,7 +36,7 @@ public class CassandraPlan extends DefaultPlan {
             final List<ClusterTaskManager<?, ?>> clusterTaskManagers) {
         super("cassandra",
                 Arrays.asList(reconciliation, syncDc, deploy),
-                new SerialStrategy<>(),
+                null /* strategy retrieval is overridden below */,
                 defaultConfigurationManager.getErrors().stream()
                     .map(error -> error.getMessage())
                     .collect(Collectors.toList()));
@@ -59,7 +62,7 @@ public class CassandraPlan extends DefaultPlan {
     }
 
     /**
-     * TODO(nick): Remove this custom override once PlanUtils.getStatus() checks for non-empty errors.
+     * TODO(nick): Remove this custom override once PlanUtils.getStatus() checks for non-empty errors in the parent.
      */
     @Override
     public Status getStatus() {
@@ -69,24 +72,29 @@ public class CassandraPlan extends DefaultPlan {
         return super.getStatus();
     }
 
+    /**
+     * HACK: SerialStrategy is stateful, keeping track of plan phases. This plan meanwhile changes phases
+     * dynamically depending on any maintenance tasks that are being performed, so we constantly recreate the
+     * strategy so that it accurately reflects current plan contents. Otherwise it will ignore e.g. any
+     * newly-started maintenance tasks.
+     *
+     * TODO(nick): Switch to upstreamed maintenance operation support once that's available.
+     */
+    @Override
+    public Strategy<Phase> getStrategy() {
+        return new SerialStrategy<>();
+    }
+
     @Override
     public boolean isComplete() {
         if (!deploy.isComplete()) {
             return false;
         }
         for (ClusterTaskManager<?, ?> manager : clusterTaskManagers) {
-            if (manager.isInProgress() && !manager.isComplete()) {
+            if (manager.isInProgress()) {
                 return false;
             }
         }
         return true;
-    }
-
-    public void clearCompletedTasks() {
-        for (ClusterTaskManager<?, ?> manager : clusterTaskManagers) {
-            if (manager.isComplete()) {
-                manager.stop();
-            }
-        }
     }
 }
