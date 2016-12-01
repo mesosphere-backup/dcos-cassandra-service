@@ -15,13 +15,9 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks;
 
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
-
-import java.io.IOException;
 
 /**
  * CassandraStatus is the status object sent from the Executor to the Scheduler

@@ -9,7 +9,7 @@ import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.OfferRequirement;
-import org.apache.mesos.offer.constrain.PlacementRuleGenerator;
+import org.apache.mesos.offer.constrain.PlacementRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ public class PersistentOfferRequirementProvider {
 
         Protos.TaskInfo daemonTaskInfo = container.getDaemonTask().getTaskInfo();
 
-        Optional<PlacementRuleGenerator> placement = Optional.empty();
+        Optional<PlacementRule> placement = Optional.empty();
         try {
             placement = PlacementStrategyManager.getPlacementStrategy(
                     daemonTaskInfo,
@@ -52,7 +52,7 @@ public class PersistentOfferRequirementProvider {
             final UUID targetName = configurationManager.getTargetName();
             final Collection<Protos.TaskInfo> updatedTaskInfos = updateConfigLabel(taskInfos, targetName.toString());
 
-            return Optional.of(new OfferRequirement(
+            return Optional.of(OfferRequirement.create(
                     container.getDaemonTask().getType().name(),
                     clearTaskIds(updatedTaskInfos),
                     Optional.of(clearExecutorId(container.getExecutorInfo())),
@@ -95,7 +95,7 @@ public class PersistentOfferRequirementProvider {
     public Optional<OfferRequirement> getReplacementOfferRequirement(CassandraContainer container) {
         LOGGER.info("Getting replacement requirement for task: {}", container.getId());
         try {
-            return Optional.of(new OfferRequirement(
+            return Optional.of(OfferRequirement.create(
                     container.getDaemonTask().getType().name(),
                     clearTaskIds(container.getTaskInfos()),
                     Optional.of(clearExecutorId(container.getExecutorInfo())),
@@ -142,7 +142,7 @@ public class PersistentOfferRequirementProvider {
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
-            return new OfferRequirement(
+            return OfferRequirement.create(
                     type,
                     Arrays.asList(taskInfo),
                     Optional.of(execInfo),

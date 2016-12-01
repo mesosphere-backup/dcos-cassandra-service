@@ -1,7 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 
 import javax.ws.rs.Consumes;
@@ -16,23 +16,22 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public class RestoreResource {
 
-    private final ClusterTaskRunner<BackupRestoreRequest> runner;
+    private final ClusterTaskRunner<BackupRestoreRequest, BackupRestoreContext> runner;
 
-    @Inject
     public RestoreResource(final RestoreManager manager) {
-        runner = new ClusterTaskRunner<>(manager, "Restore");
+        this.runner = new ClusterTaskRunner<>(manager, "Restore");
     }
 
     @PUT
     @Timed
-    @Path("/start")
+    @Path("start")
     public Response start(BackupRestoreRequest request) {
         return runner.start(request);
     }
 
     @PUT
     @Timed
-    @Path("/stop")
+    @Path("stop")
     public Response stop() {
         return runner.stop();
     }

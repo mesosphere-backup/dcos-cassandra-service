@@ -1,5 +1,6 @@
 package com.mesosphere.dcos.cassandra.common.offer;
 
+import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
@@ -9,11 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PersistentOperationRecorder implements OperationRecorder {
-    private final static Logger LOGGER = LoggerFactory.getLogger(
-            PersistentOperationRecorder.class);
-    private CassandraState cassandraState;
-    public PersistentOperationRecorder(
-            CassandraState cassandraState) {
+    private final static Logger LOGGER = LoggerFactory.getLogger(PersistentOperationRecorder.class);
+
+    private final CassandraState cassandraState;
+
+    public PersistentOperationRecorder(CassandraState cassandraState) {
         this.cassandraState = cassandraState;
     }
 
@@ -21,7 +22,7 @@ public class PersistentOperationRecorder implements OperationRecorder {
             Protos.Offer.Operation operation,
             Protos.Offer offer) throws Exception {
         if (operation.getType() == Protos.Offer.Operation.Type.LAUNCH) {
-            LOGGER.info("Persisting Launch Operation: " + operation);
+            LOGGER.info("Persisting Launch Operation: {}", TextFormat.shortDebugString(operation));
             for (TaskInfo taskInfo : operation.getLaunch().getTaskInfosList()) {
                 LOGGER.debug("Recording operation: {} for task: {}", operation, taskInfo);
                 try {

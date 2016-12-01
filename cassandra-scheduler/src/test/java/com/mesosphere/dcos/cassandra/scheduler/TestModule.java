@@ -9,19 +9,13 @@ import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerialize
 import com.mesosphere.dcos.cassandra.common.serialization.IntegerStringSerializer;
 import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
-import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
-import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.client.HttpClientBuilder;
@@ -34,9 +28,6 @@ import org.apache.curator.test.TestingServer;
 import org.apache.http.client.HttpClient;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.scheduler.plan.PhaseStrategyFactory;
-import org.apache.mesos.scheduler.plan.PlanManager;
-
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -83,37 +74,8 @@ public class TestModule extends AbstractModule {
         bind(new TypeLiteral<Serializer<Boolean>>() {
         }).toInstance(BooleanStringSerializer.get());
 
-        bind(new TypeLiteral<Serializer<ServiceConfig>>() {
-        }).toInstance(ServiceConfig.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<CassandraConfig>>() {
-        }).toInstance(CassandraConfig.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<ExecutorConfig>>() {
-        }).toInstance(ExecutorConfig.JSON_SERIALIZER);
-
         bind(new TypeLiteral<Serializer<CassandraTask>>() {
         }).toInstance(CassandraTask.PROTO_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<ClusterTaskConfig>>() {
-        }).toInstance(ClusterTaskConfig.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<BackupRestoreContext>>() {
-        }).toInstance(BackupRestoreContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<BackupRestoreContext>>() {
-        }).toInstance(BackupRestoreContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<CleanupContext>>() {
-        }).toInstance(CleanupContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<RepairContext>>() {
-        }).toInstance(RepairContext.JSON_SERIALIZER);
-
-        bind(new TypeLiteral<Serializer<DataCenterInfo>>() {
-        }).toInstance(
-                DataCenterInfo.JSON_SERIALIZER
-        );
 
         bind(MesosConfig.class).toInstance(mesosConfig);
 
@@ -159,12 +121,7 @@ public class TestModule extends AbstractModule {
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(curatorConfig);
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
-        bind(ScheduledExecutorService.class).toInstance(
-                Executors.newScheduledThreadPool(8));
-        bind(PhaseStrategyFactory.class).to(CassandraPhaseStrategies.class)
-                .asEagerSingleton();
-        bind(PlanManager.class).to(CassandraPlanManager.class)
-                .asEagerSingleton();
+        bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(8));
         bind(SchedulerClient.class).asEagerSingleton();
         bind(IdentityManager.class).asEagerSingleton();
         bind(ConfigurationManager.class).asEagerSingleton();

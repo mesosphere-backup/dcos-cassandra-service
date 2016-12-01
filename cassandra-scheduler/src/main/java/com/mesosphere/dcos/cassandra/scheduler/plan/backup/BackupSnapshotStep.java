@@ -6,7 +6,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.offer.CassandraOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskBlock;
+import com.mesosphere.dcos.cassandra.scheduler.plan.AbstractClusterTaskStep;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import org.apache.mesos.scheduler.plan.Status;
 import org.slf4j.Logger;
@@ -14,43 +14,29 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class BackupSnapshotBlock extends AbstractClusterTaskBlock<BackupRestoreContext> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-            BackupSnapshotBlock.class);
+public class BackupSnapshotStep extends AbstractClusterTaskStep {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BackupSnapshotStep.class);
 
-    public static BackupSnapshotBlock create(
+    private final BackupRestoreContext context;
+
+    public BackupSnapshotStep(
             final String daemon,
             final CassandraState cassandraState,
             final CassandraOfferRequirementProvider provider,
             final BackupRestoreContext context) {
-        return new BackupSnapshotBlock(daemon, cassandraState, provider,
-                context);
-    }
-
-    public BackupSnapshotBlock(
-            final String daemon,
-            final CassandraState cassandraState,
-            final CassandraOfferRequirementProvider provider,
-            final BackupRestoreContext context) {
-        super(daemon, cassandraState, provider, context);
+        super(daemon, BackupSnapshotTask.nameForDaemon(daemon), cassandraState, provider);
+        this.context = context;
     }
 
     @Override
-    protected Optional<CassandraTask> getOrCreateTask(BackupRestoreContext context)
+    protected Optional<CassandraTask> getOrCreateTask()
             throws PersistenceException {
-        CassandraDaemonTask daemonTask = cassandraState.getDaemons().get(getDaemon());
+        CassandraDaemonTask daemonTask = cassandraState.getDaemons().get(daemon);
         if (daemonTask == null) {
             LOGGER.warn("Cassandra Daemon for backup does not exist");
             setStatus(Status.COMPLETE);
             return Optional.empty();
         }
-        return Optional.of(cassandraState.getOrCreateBackupSnapshot(
-                daemonTask,
-                context));
-    }
-
-    @Override
-    public String getName() {
-        return BackupSnapshotTask.nameForDaemon(getDaemon());
+        return Optional.of(cassandraState.getOrCreateBackupSnapshot(daemonTask, context));
     }
 }

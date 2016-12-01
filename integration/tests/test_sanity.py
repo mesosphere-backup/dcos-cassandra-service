@@ -87,7 +87,7 @@ def test_nodes_increase_by_one():
     print("Updated node count: {}".format(app['env']['NODES']))
     print(mc.update_app(app_id='/cassandra', payload=app, force=True))
     check_health()
-    plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value and len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 4 and infinity_commons.filter_phase(p, "Deploy")['blocks'][env_node_count - 1]['status'] == infinity_commons.PlanState.COMPLETE.value)
+    plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value and len(infinity_commons.filter_phase(p, "Deploy")['steps']) == 4 and infinity_commons.filter_phase(p, "Deploy")['steps'][env_node_count - 1]['status'] == infinity_commons.PlanState.COMPLETE.value)
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
     # reinstall after increase:
@@ -112,7 +112,7 @@ def test_nodes_decrease_by_one_should_fail():
     check_health()
     plan = infinity_commons.get_and_verify_plan(
         lambda p: (p['status'] == infinity_commons.PlanState.ERROR.value and
-                   len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 3))
+                   len(infinity_commons.filter_phase(p, "Deploy")['steps']) == 3))
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.ERROR.value
 
@@ -126,7 +126,7 @@ def test_nodes_decrease_by_one_should_fail():
     check_health()
     plan = infinity_commons.get_and_verify_plan(
         lambda p: (p['status'] == infinity_commons.PlanState.COMPLETE.value) and
-        (len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 3))
+        (len(infinity_commons.filter_phase(p, "Deploy")['steps']) == 3))
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
 
@@ -174,7 +174,7 @@ def test_cpus_increase_slightly():
     print("Updated CASSANDRA_CPUS: {}".format(app['env']['CASSANDRA_CPUS']))
     print(mc.update_app(app_id='/cassandra', payload=app, force=True))
     check_health()
-    plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value and len(infinity_commons.filter_phase(p, "Deploy")['blocks']) == 3)
+    plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value and len(infinity_commons.filter_phase(p, "Deploy")['steps']) == 3)
     print(plan)
     assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
 

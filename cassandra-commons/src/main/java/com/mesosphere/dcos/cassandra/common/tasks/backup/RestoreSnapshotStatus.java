@@ -15,14 +15,8 @@
  */
 package com.mesosphere.dcos.cassandra.common.tasks.backup;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.CassandraProtos;
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTaskStatus;
 import org.apache.mesos.Protos;
-
-import java.util.Optional;
 
 /**
  * RestoreSnapshotStatus extends CassandraTaskStatus to implement the status

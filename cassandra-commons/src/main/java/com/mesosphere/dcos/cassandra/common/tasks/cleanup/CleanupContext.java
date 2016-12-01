@@ -18,12 +18,9 @@ package com.mesosphere.dcos.cassandra.common.tasks.cleanup;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -41,36 +38,6 @@ import java.util.Objects;
  * families are used.
  */
 public class CleanupContext implements ClusterTaskContext {
-
-    /**
-     * Serializer serializes and deserializes a CleanupContext to and from a
-     * JSON object.
-     */
-    public static final Serializer<CleanupContext> JSON_SERIALIZER =
-            new Serializer<CleanupContext>() {
-                @Override
-                public byte[] serialize(CleanupContext value)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.writeValueAsBytes(value);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Serialization " +
-                                "failed", ex);
-                    }
-                }
-
-                @Override
-                public CleanupContext deserialize(byte[] bytes)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.readValue(bytes, CleanupContext
-                                .class);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Deserialization " +
-                                "failed", ex);
-                    }
-                }
-            };
 
     /**
      * Creates a new CleanupContext

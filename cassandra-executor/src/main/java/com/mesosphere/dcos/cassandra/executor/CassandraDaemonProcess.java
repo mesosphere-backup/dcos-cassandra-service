@@ -15,9 +15,7 @@
  */
 package com.mesosphere.dcos.cassandra.executor;
 
-
 import com.google.common.collect.ImmutableSet;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.executor.metrics.MetricsConfig;
 import org.apache.cassandra.db.SystemKeyspace;
@@ -56,9 +54,7 @@ public class CassandraDaemonProcess extends ProcessTask {
             ImmutableSet.of(SystemKeyspace.NAME, SchemaKeyspace.NAME);
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraDaemonProcess.class);
 
-    private static final Object CLOSED = new Object();
     private final CassandraDaemonTask task;
-    private final CassandraPaths paths;
     private final AtomicBoolean open = new AtomicBoolean(true);
     private final AtomicReference<CassandraMode> mode;
     private final Probe probe;
@@ -177,20 +173,18 @@ public class CassandraDaemonProcess extends ProcessTask {
 
         ProcessBuilder processBuilder = createDaemon(cassandraPaths, cassandraTask, MetricsConfig.writeMetricsConfig(cassandraPaths.conf()));
 
-        return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, cassandraPaths, driver, taskInfo, processBuilder, true);
+        return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, driver, taskInfo, processBuilder, true);
     }
 
-    protected CassandraDaemonProcess(
+    private CassandraDaemonProcess(
             ScheduledExecutorService scheduledExecutorService,
             CassandraDaemonTask cassandraTask,
-            CassandraPaths cassandraPaths,
             ExecutorDriver executorDriver,
             Protos.TaskInfo taskInfo,
             ProcessBuilder processBuilder,
-            boolean exitOnTermination) throws InvalidProtocolBufferException {
+            boolean exitOnTermination) throws IOException {
         super(executorDriver, taskInfo, processBuilder, exitOnTermination);
         this.task = cassandraTask;
-        this.paths = cassandraPaths;
 
         this.probe = new Probe(cassandraTask);
         this.mode = new AtomicReference<>(CassandraMode.STARTING);

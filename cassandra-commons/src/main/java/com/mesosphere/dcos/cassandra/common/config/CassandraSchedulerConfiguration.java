@@ -3,11 +3,13 @@ package com.mesosphere.dcos.cassandra.common.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.config.Configuration;
+import org.apache.mesos.config.SerializationUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -218,8 +220,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
   @Override
   public byte[] getBytes() throws ConfigStoreException {
     try {
-      return JsonUtils.MAPPER.writeValueAsBytes(this);
-    } catch (JsonProcessingException e) {
+      return SerializationUtils.toJsonString(this).getBytes(StandardCharsets.UTF_8);
+    } catch (IOException e) {
       e.printStackTrace();
       throw new ConfigStoreException(e);
     }
@@ -227,7 +229,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
 
   @JsonIgnore
   @Override
-  public String toJsonString() throws Exception {
+  public String toJsonString() throws ConfigStoreException {
     return JsonUtils.toJsonString(this);
   }
 }

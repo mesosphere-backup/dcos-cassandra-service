@@ -1,12 +1,14 @@
 package com.mesosphere.dcos.cassandra.common.tasks.repair;
 
 import com.google.common.collect.Iterators;
-import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+
+import org.apache.mesos.state.JsonSerializer;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,7 +20,8 @@ public class RepairContextTest {
                 Arrays.asList("node1"), Arrays.asList("keyspace1"), Arrays.asList("column_family1"));
         ObjectMapper om = new ObjectMapper();
 
-        String jsonContext = new String(RepairContext.JSON_SERIALIZER.serialize(context), "ISO-8859-1");
+        JsonSerializer serializer = new JsonSerializer();
+        String jsonContext = new String(serializer.serialize(context), StandardCharsets.ISO_8859_1);
 
         JsonNode rehydratedContext = om.readTree(jsonContext);
         List<String> keys = new ArrayList<>();
@@ -27,7 +30,7 @@ public class RepairContextTest {
 
         Assert.assertEquals(Arrays.asList("column_families", "key_spaces", "nodes"), keys);
 
-        context = JsonUtils.MAPPER.readValue(jsonContext, RepairContext.class);
+        context = serializer.deserialize(jsonContext.getBytes(StandardCharsets.ISO_8859_1), RepairContext.class);
         Assert.assertEquals(Arrays.asList("column_family1"), context.getColumnFamilies());
         Assert.assertEquals(Arrays.asList("keyspace1"), context.getKeySpaces());
         Assert.assertEquals(Arrays.asList("node1"), context.getNodes());
