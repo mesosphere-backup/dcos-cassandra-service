@@ -28,7 +28,6 @@ import org.apache.curator.test.TestingServer;
 import org.apache.http.client.HttpClient;
 import org.apache.mesos.reconciliation.DefaultReconciler;
 import org.apache.mesos.reconciliation.Reconciler;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -65,59 +64,22 @@ public class TestModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(CassandraSchedulerConfiguration.class).toInstance(
-                this.configuration);
-
-        bind(new TypeLiteral<Serializer<Integer>>() {
-        }).toInstance(IntegerStringSerializer.get());
-
-        bind(new TypeLiteral<Serializer<Boolean>>() {
-        }).toInstance(BooleanStringSerializer.get());
-
-        bind(new TypeLiteral<Serializer<CassandraTask>>() {
-        }).toInstance(CassandraTask.PROTO_SERIALIZER);
-
+        bind(CassandraSchedulerConfiguration.class).toInstance(this.configuration);
+        bind(new TypeLiteral<Serializer<Integer>>() {}).toInstance(IntegerStringSerializer.get());
+        bind(new TypeLiteral<Serializer<Boolean>>() {}).toInstance(BooleanStringSerializer.get());
+        bind(new TypeLiteral<Serializer<CassandraTask>>() {}).toInstance(CassandraTask.PROTO_SERIALIZER);
         bind(MesosConfig.class).toInstance(mesosConfig);
 
-        bindConstant().annotatedWith(Names.named("ConfiguredSyncDelayMs")).to(
-                configuration.getExternalDcSyncMs()
-        );
-        bindConstant().annotatedWith(Names.named("ConfiguredDcUrl")).to(
-                configuration.getDcUrl()
-        );
-        bind(new TypeLiteral<List<String>>() {
-        })
-                .annotatedWith(Names.named("ConfiguredExternalDcs"))
-                .toInstance(configuration.getExternalDcsList());
-        bind(ServiceConfig.class).annotatedWith(
-                Names.named("ConfiguredIdentity")).toInstance(
-                configuration.getServiceConfig());
-        bind(CassandraConfig.class).annotatedWith(
-                Names.named("ConfiguredCassandraConfig")).toInstance(
-                configuration.getCassandraConfig());
-        bind(ClusterTaskConfig.class).annotatedWith(
-                Names.named("ConfiguredClusterTaskConfig")).toInstance(
-                configuration.getClusterTaskConfig());
-        bind(ExecutorConfig.class).annotatedWith(
-                Names.named("ConfiguredExecutorConfig")).toInstance(
-                configuration.getExecutorConfig());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredServers")).to(
-                configuration.getServers());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredSeeds")).to(
-                configuration.getSeeds());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredPlacementStrategy")).to(
-                configuration.getPlacementStrategy());
-        bindConstant().annotatedWith(
-                Names.named("ConfiguredPhaseStrategy")).to(
-                configuration.getPhaseStrategy()
-        );
+        bind(ServiceConfig.class)
+                .annotatedWith(Names.named("ConfiguredIdentity"))
+                .toInstance(configuration.getServiceConfig());
+        bindConstant()
+                .annotatedWith(Names.named("ConfiguredEnableUpgradeSSTableEndpoint"))
+                .to(configuration.getEnableUpgradeSSTableEndpoint());
 
         HttpClientConfiguration httpClient = new HttpClientConfiguration();
-        bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(httpClient)
-                .build("http-client-test"));
+        bind(HttpClient.class)
+                .toInstance(new HttpClientBuilder(environment).using(httpClient).build("http-client-test"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(curatorConfig);
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
