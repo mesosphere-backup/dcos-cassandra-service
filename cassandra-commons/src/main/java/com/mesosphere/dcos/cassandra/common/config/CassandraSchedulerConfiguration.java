@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.common.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.config.ConfigStoreException;
@@ -13,6 +14,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Object representation of the scheduler configuration that's serialized to the config store.
+ *
+ * Enables the {@code ignoreUnknown} setting to ensure that removed fields do not cause config
+ * deserialization to fail. For example, if an old configuration still specifies "placement_strategy",
+ * this setting prevents that now-unknown field from breaking the parsing operation.
+ *
+ * @see JsonIgnoreProperties#ignoreUnknown()
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CassandraSchedulerConfiguration implements Configuration {
 
   @JsonCreator
@@ -20,7 +31,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @JsonProperty("executor") final ExecutorConfig executorConfig,
     @JsonProperty("servers") final int servers,
     @JsonProperty("seeds") final int seeds,
-    @JsonProperty("placement_strategy") final String placementStrategy,
+    @JsonProperty("marathon_placement") final String marathonPlacement,
     @JsonProperty("cassandra") final CassandraConfig cassandraConfig,
     @JsonProperty("cluster_task") final ClusterTaskConfig clusterTaskConfig,
     @JsonProperty("api_port") final int apiPort,
@@ -35,7 +46,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       executorConfig,
       servers,
       seeds,
-      placementStrategy,
+      marathonPlacement,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,
@@ -55,7 +66,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
   @JsonIgnore
   private final int seeds;
   @JsonIgnore
-  private final String placementStrategy;
+  private final String marathonPlacement;
   @JsonIgnore
   private final CassandraConfig cassandraConfig;
   @JsonIgnore
@@ -79,7 +90,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     ExecutorConfig executorConfig,
     int servers,
     int seeds,
-    String placementStrategy,
+    String marathonPlacement,
     CassandraConfig cassandraConfig,
     ClusterTaskConfig clusterTaskConfig,
     int apiPort, ServiceConfig serviceConfig,
@@ -91,7 +102,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     this.executorConfig = executorConfig;
     this.servers = servers;
     this.seeds = seeds;
-    this.placementStrategy = placementStrategy;
+    this.marathonPlacement = marathonPlacement;
     this.cassandraConfig = cassandraConfig;
     this.clusterTaskConfig = clusterTaskConfig;
     this.apiPort = apiPort;
@@ -118,9 +129,9 @@ public class CassandraSchedulerConfiguration implements Configuration {
     return seeds;
   }
 
-  @JsonProperty("placement_strategy")
-  public String getPlacementStrategy() {
-    return placementStrategy;
+  @JsonProperty("marathon_placement")
+  public String getMarathonPlacement() {
+    return marathonPlacement;
   }
 
   @JsonProperty("cassandra")
@@ -177,7 +188,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       externalDcSyncMs == that.externalDcSyncMs &&
       enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
       Objects.equals(executorConfig, that.executorConfig) &&
-      Objects.equals(placementStrategy, that.placementStrategy) &&
+      Objects.equals(marathonPlacement, that.marathonPlacement) &&
       Objects.equals(cassandraConfig, that.cassandraConfig) &&
       Objects.equals(clusterTaskConfig, that.clusterTaskConfig) &&
       Objects.equals(serviceConfig, that.serviceConfig) &&
@@ -192,7 +203,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       executorConfig,
       servers,
       seeds,
-      placementStrategy,
+      marathonPlacement,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,

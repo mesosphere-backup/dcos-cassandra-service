@@ -28,7 +28,6 @@ import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.api.JsonPropertyDeserializer;
 import org.apache.mesos.state.api.PropertyDeserializer;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -96,39 +95,10 @@ public class SchedulerModule extends AbstractModule {
 
         bind(MesosConfig.class).toInstance(mesosConfig);
 
-        bindConstant()
-                .annotatedWith(Names.named("ConfiguredSyncDelayMs"))
-                .to(configuration.getExternalDcSyncMs());
-        bindConstant()
-                .annotatedWith(Names.named("ConfiguredDcUrl"))
-                .to(configuration.getDcUrl());
-        bind(new TypeLiteral<List<String>>() {})
-                .annotatedWith(Names.named("ConfiguredExternalDcs"))
-                .toInstance(configuration.getExternalDcsList());
+        // Annotated bindings:
         bind(ServiceConfig.class)
                 .annotatedWith(Names.named("ConfiguredIdentity"))
                 .toInstance(configuration.getServiceConfig());
-        bind(CassandraConfig.class)
-                .annotatedWith(Names.named("ConfiguredCassandraConfig"))
-                .toInstance(configuration.getCassandraConfig());
-        bind(ClusterTaskConfig.class)
-                .annotatedWith(Names.named("ConfiguredClusterTaskConfig"))
-                .toInstance(configuration.getClusterTaskConfig());
-        bind(ExecutorConfig.class)
-                .annotatedWith(Names.named("ConfiguredExecutorConfig"))
-                .toInstance(configuration.getExecutorConfig());
-        bindConstant()
-                .annotatedWith(Names.named("ConfiguredServers"))
-                .to(configuration.getServers());
-        bindConstant()
-                .annotatedWith(Names.named("ConfiguredSeeds"))
-                .to(configuration.getSeeds());
-        bindConstant()
-                .annotatedWith(Names.named("ConfiguredPlacementStrategy"))
-                .to(configuration.getPlacementStrategy());
-        bindConstant()
-                .annotatedWith(Names.named("ConfiguredPhaseStrategy"))
-                .to(configuration.getPhaseStrategy());
         bindConstant()
                 .annotatedWith(Names.named("ConfiguredEnableUpgradeSSTableEndpoint"))
                 .to(configuration.getEnableUpgradeSSTableEndpoint());

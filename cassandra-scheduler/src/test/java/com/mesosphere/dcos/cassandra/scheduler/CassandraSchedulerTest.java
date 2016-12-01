@@ -136,7 +136,7 @@ public class CassandraSchedulerTest {
                 configurationManager.getTargetConfig().getClusterTaskConfig(),
                 stateStore);
 
-        offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager, cassandraState);
+        offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager);
         scheduler = new CassandraScheduler(
                 configurationManager,
                 mesosConfig,

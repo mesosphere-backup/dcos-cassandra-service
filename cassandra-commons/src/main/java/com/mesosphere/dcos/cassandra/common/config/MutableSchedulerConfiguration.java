@@ -11,7 +11,7 @@ public class MutableSchedulerConfiguration extends Configuration {
   private ExecutorConfig executorConfig;
   private int servers;
   private int seeds;
-  private String placementStrategy;
+  private String marathonPlacement;
   private CassandraConfig cassandraConfig;
   private ClusterTaskConfig clusterTaskConfig;
   private int apiPort;
@@ -112,14 +112,14 @@ public class MutableSchedulerConfiguration extends Configuration {
     this.servers = servers;
   }
 
-  @JsonProperty("placement_strategy")
-  public String getPlacementStrategy() {
-    return placementStrategy;
+  @JsonProperty("marathon_placement")
+  public String getMarathonPlacement() {
+    return marathonPlacement;
   }
 
-  @JsonProperty("placement_strategy")
-  public void setPlacementStrategy(String placementStrategy) {
-    this.placementStrategy = placementStrategy;
+  @JsonProperty("marathon_placement")
+  public void setMarathonPlacement(String marathonPlacement) {
+    this.marathonPlacement = marathonPlacement;
   }
 
   @JsonProperty("phase_strategy")
@@ -197,7 +197,7 @@ public class MutableSchedulerConfiguration extends Configuration {
       executorConfig,
       servers,
       seeds,
-      placementStrategy,
+      marathonPlacement,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,
@@ -221,7 +221,7 @@ public class MutableSchedulerConfiguration extends Configuration {
       externalDcSyncMs == that.externalDcSyncMs &&
       enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
       Objects.equals(executorConfig, that.executorConfig) &&
-      Objects.equals(placementStrategy, that.placementStrategy) &&
+      Objects.equals(marathonPlacement, that.marathonPlacement) &&
       Objects.equals(cassandraConfig, that.cassandraConfig) &&
       Objects.equals(clusterTaskConfig, that.clusterTaskConfig) &&
       Objects.equals(serviceConfig, that.serviceConfig) &&
@@ -233,7 +233,7 @@ public class MutableSchedulerConfiguration extends Configuration {
 
   @Override
   public int hashCode() {
-    return Objects.hash(executorConfig, servers, seeds, placementStrategy, cassandraConfig,
+    return Objects.hash(executorConfig, servers, seeds, marathonPlacement, cassandraConfig,
       clusterTaskConfig, apiPort, serviceConfig, mesosConfig, curatorConfig,
       externalDcSyncMs, externalDcs, dcUrl, enableUpgradeSSTableEndpoint);
   }

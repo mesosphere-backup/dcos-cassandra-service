@@ -142,7 +142,7 @@ cassandra:
      max_value_size_in_mb : ${CASSANDRA_MAX_VALUE_SIZE_IN_MB:-256}
 nodes: ${NODES:-3}
 seed_nodes: ${SEED_NODES:-2}
-placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
+marathon_placement: "${MARATHON_PLACEMENT:-}"
 phase_strategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
 api_port : ${API_PORT:-8080}
 dc_sync_ms : ${DC_SYNC_MS:-60000}
