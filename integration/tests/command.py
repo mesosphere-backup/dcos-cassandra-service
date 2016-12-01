@@ -106,7 +106,7 @@ def request(request_fn, *args, **kwargs):
             'Request failed: %s' % response.content,
         )
 
-    return spin(request_fn, success_predicate, wait_time=WAIT_TIME_IN_SECONDS, *args, **kwargs)
+    return spin(request_fn, success_predicate, WAIT_TIME_IN_SECONDS, *args, **kwargs)
 
 
 def spin(fn, success_predicate, wait_time=WAIT_TIME_IN_SECONDS, *args, **kwargs):
