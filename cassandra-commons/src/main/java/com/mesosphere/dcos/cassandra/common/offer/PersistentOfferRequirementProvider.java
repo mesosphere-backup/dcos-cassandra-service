@@ -72,11 +72,11 @@ public class PersistentOfferRequirementProvider {
 
     private Optional<PlacementRule> getPlacementRule() throws IOException {
         // Due to all cassandra nodes always requiring the same port, they will never colocate.
-        // Therefore we don't bother with explicit node avoidance in placement rules.
+        // Therefore we don't bother with explicit node avoidance in placement rules here.
         // If we did want to enforce that here, we'd use PlacementUtils.getAgentPlacementRule(), and
-        // merge the result with the marathon placement using MarathonConstraintParser.parseWith().
+        // merge the result with the marathon placement (if any) using MarathonConstraintParser.parseWith().
         String marathonPlacement =
-                ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getMarathonPlacement();
+                ((CassandraSchedulerConfiguration)configurationManager.getTargetConfig()).getPlacementConstraint();
         PlacementRule rule = MarathonConstraintParser.parse(marathonPlacement);
         if (rule instanceof PassthroughRule) {
             LOGGER.info("No placement constraints found for marathon-style constraint '{}': {}", marathonPlacement, rule);

@@ -11,7 +11,7 @@ public class MutableSchedulerConfiguration extends Configuration {
   private ExecutorConfig executorConfig;
   private int servers;
   private int seeds;
-  private String marathonPlacement;
+  private String placementConstraint;
   private CassandraConfig cassandraConfig;
   private ClusterTaskConfig clusterTaskConfig;
   private int apiPort;
@@ -112,14 +112,14 @@ public class MutableSchedulerConfiguration extends Configuration {
     this.servers = servers;
   }
 
-  @JsonProperty("marathon_placement")
-  public String getMarathonPlacement() {
-    return marathonPlacement;
+  @JsonProperty("placement_constraint")
+  public String getPlacementConstraint() {
+    return placementConstraint;
   }
 
-  @JsonProperty("marathon_placement")
-  public void setMarathonPlacement(String marathonPlacement) {
-    this.marathonPlacement = marathonPlacement;
+  @JsonProperty("placement_constraint")
+  public void setPlacementConstraint(String placementConstraint) {
+    this.placementConstraint = placementConstraint;
   }
 
   @JsonProperty("phase_strategy")
@@ -197,7 +197,7 @@ public class MutableSchedulerConfiguration extends Configuration {
       executorConfig,
       servers,
       seeds,
-      marathonPlacement,
+      placementConstraint,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,
@@ -221,7 +221,7 @@ public class MutableSchedulerConfiguration extends Configuration {
       externalDcSyncMs == that.externalDcSyncMs &&
       enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
       Objects.equals(executorConfig, that.executorConfig) &&
-      Objects.equals(marathonPlacement, that.marathonPlacement) &&
+      Objects.equals(placementConstraint, that.placementConstraint) &&
       Objects.equals(cassandraConfig, that.cassandraConfig) &&
       Objects.equals(clusterTaskConfig, that.clusterTaskConfig) &&
       Objects.equals(serviceConfig, that.serviceConfig) &&
@@ -233,7 +233,7 @@ public class MutableSchedulerConfiguration extends Configuration {
 
   @Override
   public int hashCode() {
-    return Objects.hash(executorConfig, servers, seeds, marathonPlacement, cassandraConfig,
+    return Objects.hash(executorConfig, servers, seeds, placementConstraint, cassandraConfig,
       clusterTaskConfig, apiPort, serviceConfig, mesosConfig, curatorConfig,
       externalDcSyncMs, externalDcs, dcUrl, enableUpgradeSSTableEndpoint);
   }

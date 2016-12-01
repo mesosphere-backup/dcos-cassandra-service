@@ -31,7 +31,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @JsonProperty("executor") final ExecutorConfig executorConfig,
     @JsonProperty("servers") final int servers,
     @JsonProperty("seeds") final int seeds,
-    @JsonProperty("marathon_placement") final String marathonPlacement,
+    @JsonProperty("placement_constraint") final String placementConstraint,
     @JsonProperty("cassandra") final CassandraConfig cassandraConfig,
     @JsonProperty("cluster_task") final ClusterTaskConfig clusterTaskConfig,
     @JsonProperty("api_port") final int apiPort,
@@ -46,7 +46,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       executorConfig,
       servers,
       seeds,
-      marathonPlacement,
+      placementConstraint,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,
@@ -66,7 +66,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
   @JsonIgnore
   private final int seeds;
   @JsonIgnore
-  private final String marathonPlacement;
+  private final String placementConstraint;
   @JsonIgnore
   private final CassandraConfig cassandraConfig;
   @JsonIgnore
@@ -90,7 +90,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     ExecutorConfig executorConfig,
     int servers,
     int seeds,
-    String marathonPlacement,
+    String placementConstraint,
     CassandraConfig cassandraConfig,
     ClusterTaskConfig clusterTaskConfig,
     int apiPort, ServiceConfig serviceConfig,
@@ -102,7 +102,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     this.executorConfig = executorConfig;
     this.servers = servers;
     this.seeds = seeds;
-    this.marathonPlacement = marathonPlacement;
+    this.placementConstraint = placementConstraint;
     this.cassandraConfig = cassandraConfig;
     this.clusterTaskConfig = clusterTaskConfig;
     this.apiPort = apiPort;
@@ -129,9 +129,9 @@ public class CassandraSchedulerConfiguration implements Configuration {
     return seeds;
   }
 
-  @JsonProperty("marathon_placement")
-  public String getMarathonPlacement() {
-    return marathonPlacement;
+  @JsonProperty("placement_constraint")
+  public String getPlacementConstraint() {
+    return placementConstraint;
   }
 
   @JsonProperty("cassandra")
@@ -188,7 +188,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       externalDcSyncMs == that.externalDcSyncMs &&
       enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
       Objects.equals(executorConfig, that.executorConfig) &&
-      Objects.equals(marathonPlacement, that.marathonPlacement) &&
+      Objects.equals(placementConstraint, that.placementConstraint) &&
       Objects.equals(cassandraConfig, that.cassandraConfig) &&
       Objects.equals(clusterTaskConfig, that.clusterTaskConfig) &&
       Objects.equals(serviceConfig, that.serviceConfig) &&
@@ -203,7 +203,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       executorConfig,
       servers,
       seeds,
-      marathonPlacement,
+      placementConstraint,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,
