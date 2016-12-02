@@ -156,12 +156,13 @@ public class RestoreSnapshot implements ExecutorTask {
                             keyspaceName);
                 }
                 // cleanup downloaded snapshot directory recursively.
-                //FileUtils.deleteQuietly(new File(context.getLocalLocation() + File.separator + context.getName()));
                 Path rootPath = Paths.get(context.getLocalLocation() + File.separator + context.getName());
-                Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS)
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
+                if (rootPath.toFile().exists()) {
+                    Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS)
+                            .sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
+                }
             } else {
                 // run nodetool refresh rather than SSTableLoader, as on performance test
                 // I/O stream was pretty slow between mesos container processes

@@ -30,46 +30,41 @@ During the installation of additional datacenters, you will see a plan generated
 	"phases": [{
 		"id": "72b91214-ad7e-4450-92cd-cc841fe531ad",
 		"name": "Reconciliation",
-		"blocks": [{
+		"steps": [{
 			"id": "89771069-d209-4a96-8dce-badcb2bc1abb",
 			"status": "Complete",
 			"name": "Reconciliation",
 			"message": "Reconciliation complete",
-			"has_decision_point": false
 		}],
 		"status": "Complete"
 	}, {
 		"id": "9be9c790-dd2e-4258-8ea6-5a4efb8b4eb3",
 		"name": "Sync DataCenter",
-		"blocks": [{
+		"steps": [{
 			"id": "bc1d0f6b-d2da-4680-aa96-580d740c04e9",
 			"status": "Complete",
 			"name": "Sync DataCenter",
 			"message": "Syncing data center @ http://cassandra.marathon.mesos:9000/v1/datacenter",
-			"has_decision_point": false
 		}],
 		"status": "Complete"
 	}, {
 		"id": "c3d48cb5-cb5e-4885-821b-63371ab668ec",
 		"name": "Deploy",
-		"blocks": [{
+		"steps": [{
 			"id": "8a6e6799-c518-478c-a429-2b8215af4573",
 			"status": "Complete",
 			"name": "node-0",
 			"message": "Deploying Cassandra node node-0",
-			"has_decision_point": false
 		}, {
 			"id": "07a3800e-ddaf-4f56-ac36-d607ca9fc46b",
 			"status": "Complete",
 			"name": "node-1",
 			"message": "Deploying Cassandra node node-1",
-			"has_decision_point": false
 		}, {
 			"id": "91405f22-fbe8-40c3-b236-8a8725d746bf",
 			"status": "Complete",
 			"name": "node-2",
 			"message": "Deploying Cassandra node node-2",
-			"has_decision_point": false
 		}],
 		"status": "Complete"
 	}],
@@ -78,14 +73,14 @@ During the installation of additional datacenters, you will see a plan generated
 }
 ```
 
-In the above, the `Sync DataCenter` phase has a block for each datacenter with a DC/OS Apache Cassandra service deployment that contains a partition of the cluster.
+In the above, the `Sync DataCenter` phase has a step for each datacenter with a DC/OS Apache Cassandra service deployment that contains a partition of the cluster.
 
-During the execution of each block the DC/OS Apache Cassandra Service registers its
-local endpoint with the datacenter indicated by the URL in the block's message. Then, it retrieves the current seed nodes for that datacenter.
+During the execution of each step the DC/OS Apache Cassandra Service registers its
+local endpoint with the datacenter indicated by the URL in the step's message. Then, it retrieves the current seed nodes for that datacenter.
 
 When the installation plan progresses to the `Deploy` phase, it provides the seeds from the
 external datacenters to the nodes it deploys, allowing the cluster to span multiple
 datacenters.
 
-After the `Sync DataCenter` block completes, both datacenters will periodically poll each
+After the `Sync DataCenter` step completes, both datacenters will periodically poll each
 other for modifications to the seed set.

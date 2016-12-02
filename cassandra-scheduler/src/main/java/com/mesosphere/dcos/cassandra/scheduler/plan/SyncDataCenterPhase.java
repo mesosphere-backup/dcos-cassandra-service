@@ -5,20 +5,21 @@ import com.mesosphere.dcos.cassandra.scheduler.seeds.DataCenterInfo;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.scheduler.plan.DefaultPhase;
+import org.apache.mesos.scheduler.plan.Step;
+import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SyncDataCenterPhase extends DefaultPhase {
 
-    private static List<SyncDataCenterBlock> createBlocks(
+    private static List<Step> createSteps(
             SeedsManager seeds,
-            ExecutorService executor
-    ) throws ConfigStoreException {
+            ExecutorService executor) throws ConfigStoreException {
         Map<String, DataCenterInfo> synched =
                 seeds.getDataCenters().stream()
                         .filter(dc -> dc.getSeeds().size() > 0)
@@ -28,17 +29,17 @@ public class SyncDataCenterPhase extends DefaultPhase {
 
         return seeds.getConfiguredDataCenters().stream()
                 .filter(url -> !synched.containsKey(url))
-                .map(url -> SyncDataCenterBlock.create(url, seeds, executor))
+                .map(url -> SyncDataCenterStep.create(url, seeds, executor))
                 .collect(Collectors.toList());
     }
 
 
     public static SyncDataCenterPhase create(SeedsManager seeds,
                                              ExecutorService executor) throws ConfigStoreException {
-        return new SyncDataCenterPhase(createBlocks(seeds, executor));
+        return new SyncDataCenterPhase(createSteps(seeds, executor));
     }
 
-    public SyncDataCenterPhase(List<SyncDataCenterBlock> blocks) {
-        super(UUID.randomUUID(), "Sync Datacenter", blocks);
+    private SyncDataCenterPhase(List<Step> steps) {
+        super("Sync Datacenter", steps, new SerialStrategy<>(), Collections.emptyList());
     }
 }

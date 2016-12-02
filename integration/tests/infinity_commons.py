@@ -5,7 +5,8 @@ from dcos import marathon
 from enum import Enum
 from tests.command import (
     cassandra_api_url,
-    spin
+    spin,
+    WAIT_TIME_IN_SECONDS
 )
 
 
@@ -37,7 +38,7 @@ def get_phase_index(plan, phase_name):
 
 
 counter = 0
-def get_and_verify_plan(predicate=lambda r: True):
+def get_and_verify_plan(predicate=lambda r: True, wait_time=WAIT_TIME_IN_SECONDS):
     global counter
     plan_url = cassandra_api_url('plan')
     def fn():
@@ -63,7 +64,7 @@ def get_and_verify_plan(predicate=lambda r: True):
 
         return pred_res, message
 
-    return spin(fn, success_predicate).json()
+    return spin(fn, success_predicate, wait_time=wait_time).json()
 
 
 def get_marathon_uri():

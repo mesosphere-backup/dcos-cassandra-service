@@ -32,7 +32,7 @@ def cassandra_api_url(basename, app_id='cassandra'):
     return '{}/v1/{}'.format(shakedown.dcos_service_url(app_id), basename)
 
 
-def check_health():
+def check_health(wait_time=WAIT_TIME_IN_SECONDS):
     def fn():
         return shakedown.get_service_tasks(PACKAGE_NAME)
 
@@ -45,7 +45,7 @@ def check_health():
             'Service did not become healthy'
         )
 
-    return spin(fn, success_predicate)
+    return spin(fn, success_predicate, wait_time=wait_time)
 
 
 def get_cassandra_config():
@@ -106,12 +106,12 @@ def request(request_fn, *args, **kwargs):
             'Request failed: %s' % response.content,
         )
 
-    return spin(request_fn, success_predicate, *args, **kwargs)
+    return spin(request_fn, success_predicate, WAIT_TIME_IN_SECONDS, *args, **kwargs)
 
 
-def spin(fn, success_predicate, *args, **kwargs):
+def spin(fn, success_predicate, wait_time=WAIT_TIME_IN_SECONDS, *args, **kwargs):
     now = time.time()
-    end_time = now + WAIT_TIME_IN_SECONDS
+    end_time = now + wait_time
     while now < end_time:
         print("%s: %.01fs left" % (time.strftime("%H:%M:%S %Z", time.localtime(now)), end_time - now))
         result = fn(*args, **kwargs)

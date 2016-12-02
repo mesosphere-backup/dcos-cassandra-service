@@ -13,8 +13,9 @@ import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
-import org.apache.mesos.scheduler.plan.Block;
+import org.apache.mesos.config.SerializationUtils;
 import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.scheduler.plan.Step;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.junit.Before;
@@ -23,6 +24,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -57,10 +61,10 @@ public class RestoreManagerTest {
     }
 
     @Test
-    public void testInitialWithState() throws SerializationException {
+    public void testInitialWithState() throws IOException {
         final BackupRestoreContext context =  BackupRestoreContext.create("", "", "", "", "", "", false, "");
         when(mockState.fetchProperty(RestoreManager.RESTORE_KEY)).thenReturn(
-                BackupRestoreContext.JSON_SERIALIZER.serialize(context));
+                SerializationUtils.toJsonString(context).getBytes(StandardCharsets.UTF_8));
         RestoreManager manager = new RestoreManager(mockCassandraState, mockProvider, mockState);
         assertTrue(manager.isComplete());
         assertFalse(manager.isInProgress());
@@ -89,10 +93,10 @@ public class RestoreManagerTest {
         assertEquals(3, manager.getPhases().size());
 
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        // notify blocks to check for TASK_FINISHED:
+        // notify steps to check for TASK_FINISHED:
         for (Phase phase : manager.getPhases()) {
-            for (Block block : phase.getBlocks()) {
-                block.update(TaskStatus.getDefaultInstance());
+            for (Step step : phase.getChildren()) {
+                step.update(TaskStatus.getDefaultInstance());
             }
         }
 
@@ -129,10 +133,10 @@ public class RestoreManagerTest {
         assertEquals(3, manager.getPhases().size());
 
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
-        // notify blocks to check for TASK_FINISHED:
+        // notify steps to check for TASK_FINISHED:
         for (Phase phase : manager.getPhases()) {
-            for (Block block : phase.getBlocks()) {
-                block.update(TaskStatus.getDefaultInstance());
+            for (Step step : phase.getChildren()) {
+                step.update(TaskStatus.getDefaultInstance());
             }
         }
 
@@ -155,9 +159,9 @@ public class RestoreManagerTest {
 
         manager.start(emptyRequest());
 
-        verify(mockCassandraState).remove("hi");
-        verify(mockCassandraState).remove("hey");
-        verify(mockCassandraState).remove("hello");
+        verify(mockCassandraState).remove(Collections.singleton("hi"));
+        verify(mockCassandraState).remove(Collections.singleton("hey"));
+        verify(mockCassandraState).remove(Collections.singleton("hello"));
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());

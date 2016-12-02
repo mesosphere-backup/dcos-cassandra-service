@@ -17,7 +17,6 @@ package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.config.CassandraConfig;
-import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 import com.mesosphere.dcos.cassandra.common.util.TaskUtils;
 import org.apache.commons.lang3.StringUtils;

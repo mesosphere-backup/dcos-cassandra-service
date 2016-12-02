@@ -17,10 +17,7 @@ package com.mesosphere.dcos.cassandra.common.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.CassandraProtos;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.offer.VolumeRequirement;
 
@@ -348,40 +345,6 @@ public class CassandraConfig {
                     application);
         }
     }
-
-    /**
-     * Serializer that serializes a CassandraConfig to JSON and deserializes it
-     * from JSON.
-     */
-    public static final Serializer<CassandraConfig> JSON_SERIALIZER =
-            new Serializer<CassandraConfig>() {
-                @Override
-                public byte[] serialize(CassandraConfig value)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.writeValueAsBytes(value);
-                    } catch (JsonProcessingException ex) {
-                        throw new SerializationException(
-                                "Error writing CassandraConfig to JSON",
-                                ex);
-                    }
-                }
-
-                @Override
-                public CassandraConfig deserialize(byte[] bytes)
-                        throws SerializationException {
-
-                    try {
-                        return JsonUtils.MAPPER.readValue(bytes,
-                                CassandraConfig.class);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Error reading " +
-                                "CassandraConfig form JSON", ex);
-                    }
-
-                }
-            };
-
 
     /**
      * Gets a new Builder for a CassandraConfig.

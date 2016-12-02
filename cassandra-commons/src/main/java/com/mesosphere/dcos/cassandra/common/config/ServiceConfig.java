@@ -3,10 +3,7 @@ package com.mesosphere.dcos.cassandra.common.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.protobuf.ByteString;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.mesos.Protos;
@@ -20,39 +17,6 @@ import java.util.Optional;
 
 
 public class ServiceConfig {
-
-  public static final Serializer<ServiceConfig> JSON_SERIALIZER =
-    new
-      Serializer<ServiceConfig>() {
-
-        @Override
-        public byte[] serialize(ServiceConfig value)
-          throws SerializationException {
-          try {
-            return JsonUtils.MAPPER.writeValueAsBytes(value);
-          } catch (JsonProcessingException ex) {
-
-            throw new SerializationException(
-              "Error writing ServiceConfig " +
-                "as JSON formatted byte array", ex);
-          }
-        }
-
-        @Override
-        public ServiceConfig deserialize(byte[] bytes)
-          throws SerializationException {
-
-          try {
-            return JsonUtils.MAPPER.readValue(bytes,
-              ServiceConfig.class);
-          } catch (IOException ex) {
-
-            throw new SerializationException("Exception parsing " +
-              "identity from JSON", ex);
-          }
-        }
-      };
-
 
   @JsonCreator
   public static final ServiceConfig create(

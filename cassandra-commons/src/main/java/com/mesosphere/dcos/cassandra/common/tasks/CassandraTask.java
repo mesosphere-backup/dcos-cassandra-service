@@ -51,7 +51,7 @@ public abstract class CassandraTask {
     /**
      * Serializer that serializes CassandraTasks to and from JSON Objects.
      */
-    public static Serializer<CassandraTask> PROTO_SERIALIZER = new
+    public static final Serializer<CassandraTask> PROTO_SERIALIZER = new
         Serializer<CassandraTask>() {
             @Override
             public byte[] serialize(CassandraTask value)

@@ -4,12 +4,8 @@ package com.mesosphere.dcos.cassandra.common.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,33 +15,6 @@ import java.util.Set;
 import java.util.Objects;
 
 public class ExecutorConfig {
-    public static Serializer<ExecutorConfig> JSON_SERIALIZER =
-            new Serializer<ExecutorConfig>() {
-                @Override
-                public byte[] serialize(ExecutorConfig value)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.writeValueAsBytes(value);
-                    } catch (JsonProcessingException ex) {
-                        throw new SerializationException(
-                                "Error writing ExecutorConfig to JSON",
-                                ex);
-                    }
-                }
-
-                @Override
-                public ExecutorConfig deserialize(byte[] bytes)
-                        throws SerializationException {
-
-                    try {
-                        return JsonUtils.MAPPER.readValue(bytes,
-                                ExecutorConfig.class);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Error reading " +
-                                "ExecutorConfig form JSON", ex);
-                    }
-                }
-            };
 
     public static ExecutorConfig create(
             String command,

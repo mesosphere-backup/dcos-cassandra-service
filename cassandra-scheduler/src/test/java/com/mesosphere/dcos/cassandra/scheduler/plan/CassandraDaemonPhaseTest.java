@@ -48,12 +48,12 @@ public class CassandraDaemonPhaseTest {
                 client,
                 mockConfigManager);
         Assert.assertTrue(CollectionUtils.isEmpty(phase.getErrors()));
-        Assert.assertTrue(phase.getBlocks().size() == 0);
+        Assert.assertTrue(phase.getChildren().isEmpty());
         Assert.assertEquals("Deploy", phase.getName());
     }
 
     @Test
-    public void testCreateSingleBlockPhase() throws Exception {
+    public void testCreateSingleStepPhase() throws Exception {
         final CassandraDaemonTask daemonTask = Mockito.mock(CassandraDaemonTask.class);
         final CassandraContainer cassandraContainer = Mockito.mock(CassandraContainer.class);
         when(cassandraContainer.getDaemonTask()).thenReturn(daemonTask);
@@ -74,7 +74,7 @@ public class CassandraDaemonPhaseTest {
                 client,
                 configurationManager);
         Assert.assertTrue(CollectionUtils.isEmpty(phase.getErrors()));
-        Assert.assertTrue(phase.getBlocks().size() == 1);
+        Assert.assertTrue(phase.getChildren().size() == 1);
         Assert.assertEquals("Deploy", phase.getName());
     }
 }

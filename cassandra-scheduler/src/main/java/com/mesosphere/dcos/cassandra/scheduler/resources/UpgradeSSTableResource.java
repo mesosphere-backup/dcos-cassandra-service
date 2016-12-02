@@ -2,6 +2,8 @@ package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
 
 import javax.ws.rs.Consumes;
@@ -16,33 +18,34 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public class UpgradeSSTableResource {
 
-    private final ClusterTaskRunner<UpgradeSSTableRequest> runner;
-    private final UpgradeSSTableManager manager;
+    private final ClusterTaskRunner<UpgradeSSTableRequest, UpgradeSSTableContext> runner;
+    private final boolean enableUpgradeSSTableEndpoint;
 
     @Inject
-    public UpgradeSSTableResource(final UpgradeSSTableManager manager) {
-        runner = new ClusterTaskRunner<>(manager, "UpgradeSSTable");
-        this.manager = manager;
+    public UpgradeSSTableResource(
+            final UpgradeSSTableManager manager,
+            @Named("ConfiguredEnableUpgradeSSTableEndpoint") boolean enableUpgradeSSTableEndpoint) {
+        this.runner = new ClusterTaskRunner<>(manager, "UpgradeSSTable");
+        this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
     }
 
     @PUT
     @Timed
-    @Path("/start")
+    @Path("start")
     public Response start(UpgradeSSTableRequest request) {
-        if (!manager.isUpgradeSSTableEndpointEnabled()) {
+        if (!enableUpgradeSSTableEndpoint) {
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(ErrorResponse.fromString(
                             "Upgrading SSTable endpoint is not enabled. " +
                             "Please enable it by setting $ENABLE_UPGRADE_SSTABLE_ENDPOINT"))
                     .build();
         }
-
         return runner.start(request);
     }
 
     @PUT
     @Timed
-    @Path("/stop")
+    @Path("stop")
     public Response stop() {
         return runner.stop();
     }

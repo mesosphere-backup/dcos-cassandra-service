@@ -9,10 +9,10 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskUtils;
-import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Status;
 import org.apache.mesos.state.StateStore;
 import org.junit.Assert;
@@ -25,7 +25,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.HashMap;
 import java.util.Optional;
 
-public class DownloadSnapshotBlockTest {
+public class DownloadSnapshotStepTest {
     public static final String DOWNLOAD_NODE_0 = "download-node-0";
     public static final String NODE_0 = "node-0";
     @Mock
@@ -49,14 +49,11 @@ public class DownloadSnapshotBlockTest {
     public void testInitial() {
         Mockito.when(cassandraState.get(DOWNLOAD_NODE_0)).thenReturn(Optional.empty());
         final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false, "");
-        final DownloadSnapshotBlock backupSnapshotBlock = DownloadSnapshotBlock.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                backupRestoreContext);
-        Assert.assertEquals(DOWNLOAD_NODE_0, backupSnapshotBlock.getName());
-        Assert.assertEquals(NODE_0, backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.PENDING, Block.getStatus(backupSnapshotBlock));
+        final DownloadSnapshotStep downloadSnapshotStep =
+                new DownloadSnapshotStep(NODE_0, cassandraState, provider, backupRestoreContext);
+        Assert.assertEquals(DOWNLOAD_NODE_0, downloadSnapshotStep.getName());
+        Assert.assertEquals(NODE_0, downloadSnapshotStep.getDaemon());
+        Assert.assertEquals(Status.PENDING, downloadSnapshotStep.getStatus());
     }
 
     @Test
@@ -66,14 +63,11 @@ public class DownloadSnapshotBlockTest {
         Mockito.when(cassandraState.get(DOWNLOAD_NODE_0))
                 .thenReturn(Optional.ofNullable(mockCassandraTask));
         final BackupRestoreContext backupRestoreContext = BackupRestoreContext.create("", "", "", "", "", "", false, "");
-        final DownloadSnapshotBlock backupSnapshotBlock = DownloadSnapshotBlock.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                backupRestoreContext);
-        Assert.assertEquals(DOWNLOAD_NODE_0, backupSnapshotBlock.getName());
-        Assert.assertEquals(NODE_0, backupSnapshotBlock.getDaemon());
-        Assert.assertEquals(Status.COMPLETE, Block.getStatus(backupSnapshotBlock));
+        final DownloadSnapshotStep downloadSnapshotStep =
+                new DownloadSnapshotStep(NODE_0, cassandraState, provider, backupRestoreContext);
+        Assert.assertEquals(DOWNLOAD_NODE_0, downloadSnapshotStep.getName());
+        Assert.assertEquals(NODE_0, downloadSnapshotStep.getDaemon());
+        Assert.assertEquals(Status.COMPLETE, downloadSnapshotStep.getStatus());
     }
 
     @Test
@@ -87,20 +81,15 @@ public class DownloadSnapshotBlockTest {
 
         final DownloadSnapshotTask snapshotTask = Mockito.mock(DownloadSnapshotTask.class);
         Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
-        Mockito
-                .when(cassandraState.getOrCreateSnapshotDownload(daemonTask, backupRestoreContext))
+        Mockito.when(cassandraState.getOrCreateSnapshotDownload(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
 
-        final DownloadSnapshotBlock backupSnapshotBlock = DownloadSnapshotBlock.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                backupRestoreContext);
-
+        final DownloadSnapshotStep downloadSnapshotStep =
+                new DownloadSnapshotStep(NODE_0, cassandraState, provider, backupRestoreContext);
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
-        Assert.assertTrue(!backupSnapshotBlock.start().isPresent());
-        Assert.assertEquals(Status.COMPLETE, Block.getStatus(backupSnapshotBlock));
+        Assert.assertTrue(!downloadSnapshotStep.start().isPresent());
+        Assert.assertEquals(Status.COMPLETE, downloadSnapshotStep.getStatus());
     }
 
     @Test
@@ -115,19 +104,15 @@ public class DownloadSnapshotBlockTest {
         final DownloadSnapshotTask snapshotTask = Mockito.mock(DownloadSnapshotTask.class);
         Mockito.when(snapshotTask.getSlaveId()).thenReturn("1234");
         Mockito.when(snapshotTask.getType()).thenReturn(CassandraTask.TYPE.SNAPSHOT_DOWNLOAD);
-        Mockito
-                .when(cassandraState.getOrCreateSnapshotDownload(daemonTask, backupRestoreContext))
+        Mockito.when(cassandraState.getOrCreateSnapshotDownload(daemonTask, backupRestoreContext))
                 .thenReturn(snapshotTask);
 
-        final DownloadSnapshotBlock downloadSnapshotBlock = DownloadSnapshotBlock.create(
-                NODE_0,
-                cassandraState,
-                provider,
-                backupRestoreContext);
-
+        final DownloadSnapshotStep downloadSnapshotStep =
+                new DownloadSnapshotStep(NODE_0, cassandraState, provider, backupRestoreContext);
         final OfferRequirement requirement = Mockito.mock(OfferRequirement.class);
         Mockito.when(provider.getUpdateOfferRequirement(Mockito.any(), Mockito.any())).thenReturn(requirement);
-        Assert.assertTrue(downloadSnapshotBlock.start().isPresent());
-        Assert.assertEquals(Status.IN_PROGRESS, Block.getStatus(downloadSnapshotBlock));
+        Assert.assertTrue(downloadSnapshotStep.start().isPresent());
+        // not IN_PROGRESS until the requirement is fulfilled!:
+        Assert.assertEquals(Status.PENDING, downloadSnapshotStep.getStatus());
     }
 }

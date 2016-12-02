@@ -38,7 +38,9 @@ def test_upgrade_downgrade():
     print('Installing master version')
     install(package_version = master_version)
     check_health()
-    infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
+    plan = infinity_commons.get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
+    assert plan['status'] == infinity_commons.PlanState.COMPLETE.value
+
     # TODO: write some data
 
     print('Upgrading to test version')

@@ -17,12 +17,9 @@ package com.mesosphere.dcos.cassandra.common.tasks.repair;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -32,36 +29,6 @@ import java.util.Objects;
  * cluster wide sequential, primary range, anti-entropy repair.
  */
 public class RepairContext implements ClusterTaskContext {
-
-    /**
-     * Serializer serializes and deserializes RepairContext to and from a JSON
-     * object.
-     */
-    public static final Serializer<RepairContext> JSON_SERIALIZER =
-        new Serializer<RepairContext>() {
-            @Override
-            public byte[] serialize(RepairContext value)
-                throws SerializationException {
-                try {
-                    return JsonUtils.MAPPER.writeValueAsBytes(value);
-                } catch (IOException ex) {
-                    throw new SerializationException("Serialization " +
-                        "failed", ex);
-                }
-            }
-
-            @Override
-            public RepairContext deserialize(byte[] bytes)
-                throws SerializationException {
-                try {
-                    return JsonUtils.MAPPER.readValue(bytes, RepairContext
-                        .class);
-                } catch (IOException ex) {
-                    throw new SerializationException("Deserialization " +
-                        "failed", ex);
-                }
-            }
-        };
 
     /**
      * Creates a new RepairContext.

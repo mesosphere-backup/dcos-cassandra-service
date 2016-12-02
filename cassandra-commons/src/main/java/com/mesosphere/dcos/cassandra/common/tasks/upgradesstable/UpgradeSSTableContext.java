@@ -18,12 +18,9 @@ package com.mesosphere.dcos.cassandra.common.tasks.upgradesstable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -39,36 +36,6 @@ import java.util.Objects;
  * families are used.
  */
 public class UpgradeSSTableContext implements ClusterTaskContext {
-
-    /**
-     * Serializer serializes and deserializes a UpgradeSSTableContext to and from a
-     * JSON object.
-     */
-    public static final Serializer<UpgradeSSTableContext> JSON_SERIALIZER =
-            new Serializer<UpgradeSSTableContext>() {
-                @Override
-                public byte[] serialize(UpgradeSSTableContext value)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.writeValueAsBytes(value);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Serialization " +
-                                "failed", ex);
-                    }
-                }
-
-                @Override
-                public UpgradeSSTableContext deserialize(byte[] bytes)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.readValue(bytes, UpgradeSSTableContext
-                                .class);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Deserialization " +
-                                "failed", ex);
-                    }
-                }
-            };
 
     /**
      * Creates a new UpgradeSSTableContext

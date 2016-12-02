@@ -17,12 +17,7 @@ package com.mesosphere.dcos.cassandra.common.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
-import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
-
-import java.io.IOException;
 
 /**
  * Configuration object for Cassandra ClusterTasks (e.g. Cleanup, Repair,
@@ -132,39 +127,6 @@ public class ClusterTaskConfig {
                     diskMb);
         }
     }
-
-    /**
-     * A Serializer that serializes a ClusterTaskConfig to and from JSON.
-     */
-    public static final Serializer<ClusterTaskConfig> JSON_SERIALIZER =
-            new Serializer<ClusterTaskConfig>() {
-                @Override
-                public byte[] serialize(ClusterTaskConfig value)
-                        throws SerializationException {
-                    try {
-                        return JsonUtils.MAPPER.writeValueAsBytes(value);
-                    } catch (JsonProcessingException ex) {
-                        throw new SerializationException(
-                                "Error writing ClusterTaskConfig to JSON",
-                                ex);
-                    }
-                }
-
-                @Override
-                public ClusterTaskConfig deserialize(byte[] bytes)
-                        throws SerializationException {
-
-                    try {
-                        return JsonUtils.MAPPER.readValue(bytes,
-                                ClusterTaskConfig.class);
-                    } catch (IOException ex) {
-                        throw new SerializationException("Error reading " +
-                                "ClusterTaskConfig form JSON", ex);
-                    }
-
-                }
-            };
-
 
     /**
      * Gets a Builder instance.

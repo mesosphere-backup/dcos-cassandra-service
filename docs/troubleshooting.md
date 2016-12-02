@@ -13,9 +13,8 @@ The plan below contains a configuration error that will not allow the installati
     "errors": ["The number of seeds is greater than the number of nodes."],
     "phases": [
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
                     "message": "Reconciliation complete",
                     "name": "Reconciliation",
@@ -27,23 +26,20 @@ The plan below contains a configuration error that will not allow the installati
             "status": "Complete"
         },
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
                     "message": "Deploying Cassandra node node-0",
                     "name": "node-0",
                     "status": "Pending"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
                     "message": "Deploying Cassandra node node-1",
                     "name": "node-1",
                     "status": "Pending"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
                     "message": "Deploying Cassandra node node-2",
                     "name": "node-2",

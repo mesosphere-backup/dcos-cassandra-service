@@ -18,10 +18,9 @@ public class DefaultConfigurationManager {
             LoggerFactory.getLogger(DefaultConfigurationManager.class);
 
     private final ConfigStore<Configuration> configStore;
-    private final Class<?> configClass;
-
-    private List<ConfigValidationError> validationErrors;
-    private StateStore stateStore;
+    private final ConfigurationFactory<Configuration> yamlConfigurationFactory;
+    private final List<ConfigValidationError> validationErrors;
+    private final StateStore stateStore;
 
     public DefaultConfigurationManager(
             Class<?> configClass,
@@ -30,9 +29,9 @@ public class DefaultConfigurationManager {
             Configuration newConfiguration,
             ConfigValidator configValidator,
             StateStore stateStore) throws ConfigStoreException {
-        this.configClass = configClass;
+        this.yamlConfigurationFactory = new YAMLConfigurationFactory(configClass);
         this.stateStore = stateStore;
-        configStore = new CuratorConfigStore<>(frameworkName, connectionHost);
+        configStore = new CuratorConfigStore<>(yamlConfigurationFactory, frameworkName, connectionHost);
         Configuration oldConfig = null;
         try {
             UUID targetName = getTargetName();
@@ -47,7 +46,11 @@ public class DefaultConfigurationManager {
                 e.getMessage());
         }
         validationErrors = configValidator.validate(oldConfig, newConfiguration);
-        LOGGER.error("Validation errors: {}", validationErrors);
+        if (validationErrors.isEmpty()) {
+            LOGGER.info("No config validation errors.");
+        } else {
+            LOGGER.error("Validation errors: {}", validationErrors);
+        }
 
         if (validationErrors.isEmpty()) {
             if (!Objects.equals(newConfiguration, oldConfig)) {
@@ -192,9 +195,7 @@ public class DefaultConfigurationManager {
 
     private Configuration fetch(UUID version) throws ConfigStoreException {
         try {
-            final ConfigurationFactory<Configuration> yamlConfigurationFactory =
-                    new YAMLConfigurationFactory(configClass);
-            return configStore.fetch(version, yamlConfigurationFactory);
+            return configStore.fetch(version);
         } catch (ConfigStoreException e) {
             LOGGER.error("Unable to fetch version: " + version, e);
             throw new ConfigStoreException(e);

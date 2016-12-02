@@ -8,7 +8,7 @@ enterprise: 'no'
 # Manage Nodes
 
 ## Add a Node
-Increase the `NODES` value via Marathon as described in the Configuration Update section. This creates an update plan as described in that section. An additional node will be added as the last block of that plan. After a node has been added, you should run cleanup, as described in the [Cleanup](#cleanup) section of this page. It is safe to delay running cleanup until off-peak hours.
+Increase the `NODES` value via Marathon as described in the Configuration Update section. This creates an update plan as described in that section. An additional node will be added as the last step of that plan. After a node has been added, you should run cleanup, as described in the [Cleanup](#cleanup) section of this page. It is safe to delay running cleanup until off-peak hours.
 
 ## Node Status
 

@@ -5,23 +5,24 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskContext;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskRequest;
 
 /**
  * Common code for starting/stopping Cleanup, Repair, Backup, and Restore tasks.
  */
-class ClusterTaskRunner<R extends ClusterTaskRequest> {
+class ClusterTaskRunner<R extends ClusterTaskRequest, C extends ClusterTaskContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClusterTaskRunner.class);
 
-    private final ClusterTaskManager<R> manager;
+    private final ClusterTaskManager<R, C> manager;
     private final String taskName;
 
     /**
      * @param manager task manager which will be driven
      * @param taskName user/log-visible name describing the task
      */
-    ClusterTaskRunner(ClusterTaskManager<R> manager, String taskName) {
+    ClusterTaskRunner(ClusterTaskManager<R, C> manager, String taskName) {
         this.manager = manager;
         this.taskName = taskName;
     }
@@ -31,7 +32,7 @@ class ClusterTaskRunner<R extends ClusterTaskRequest> {
         try {
             if (!request.isValid()) {
                 return Response.status(Response.Status.BAD_REQUEST).build();
-            } else if (ClusterTaskManager.canStart(manager)) {
+            } else if (!manager.isInProgress()) {
                 manager.start(request);
                 LOGGER.info("{} started: request = {}", taskName, request);
                 return Response.accepted().build();
@@ -54,7 +55,7 @@ class ClusterTaskRunner<R extends ClusterTaskRequest> {
     Response stop() {
         LOGGER.info("Processing stop {} request", taskName);
         try {
-            if (ClusterTaskManager.canStop(manager)) {
+            if (manager.isInProgress()) {
                 manager.stop();
                 LOGGER.info("{} stopped", taskName);
                 return Response.accepted().build();
