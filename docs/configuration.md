@@ -807,7 +807,7 @@ In addition to time synchronization, Cassandra requires OS level configuration s
    <tr>
     <td>/etc/sysctl.conf</td>
     <td>vm.max_map_count</td>
-    <td>131702</td>
+    <td>1048575</td>
     <td>Aside from calls to the system malloc implementation, Cassandra uses mmap directly to memory map files. Exceeding the number of allowed memory mappings will cause a Cassandra node to fail.</td>
   </tr>
 
