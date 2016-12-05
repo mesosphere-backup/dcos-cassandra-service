@@ -138,5 +138,4 @@ public class DownloadSnapshotTask extends CassandraTask {
     public BackupRestoreContext getBackupRestoreContext() {
         return getData().getBackupRestoreContext();
     }
-
 }

@@ -15,9 +15,7 @@
  */
 package com.mesosphere.dcos.cassandra.executor;
 
-
 import com.google.common.collect.ImmutableSet;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.executor.metrics.MetricsConfig;
 import org.apache.cassandra.db.SystemKeyspace;
@@ -58,9 +56,7 @@ public class CassandraDaemonProcess extends ProcessTask {
             ImmutableSet.of(SystemKeyspace.NAME, SchemaKeyspace.NAME);
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraDaemonProcess.class);
 
-    private static final Object CLOSED = new Object();
     private final CassandraDaemonTask task;
-    private final CassandraPaths paths;
     private final AtomicBoolean open = new AtomicBoolean(true);
     private final AtomicReference<CassandraMode> mode;
     private final Probe probe;
@@ -179,7 +175,7 @@ public class CassandraDaemonProcess extends ProcessTask {
             cassandraTask.getConfig().getHeap().writeHeapSettings(cassandraPaths.heapConfig());
 
             ProcessBuilder processBuilder = createDaemon(cassandraPaths, cassandraTask, MetricsConfig.writeMetricsConfig(cassandraPaths.conf()));
-            return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, cassandraPaths, driver, taskInfo, processBuilder, true);
+            return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, driver, taskInfo, processBuilder, true);
         } catch (IOException ex) {
             // CustomExecutor does not appropriately handle this error case,
             // ProcessTask does provide the appropriate scaffolding to safely init,
@@ -199,17 +195,15 @@ public class CassandraDaemonProcess extends ProcessTask {
         }
     }
 
-    protected CassandraDaemonProcess(
+    private CassandraDaemonProcess(
             ScheduledExecutorService scheduledExecutorService,
             CassandraDaemonTask cassandraTask,
-            CassandraPaths cassandraPaths,
             ExecutorDriver executorDriver,
             Protos.TaskInfo taskInfo,
             ProcessBuilder processBuilder,
-            boolean exitOnTermination) throws InvalidProtocolBufferException {
+            boolean exitOnTermination) throws IOException {
         super(executorDriver, taskInfo, processBuilder, exitOnTermination);
         this.task = cassandraTask;
-        this.paths = cassandraPaths;
 
         this.probe = new Probe(cassandraTask);
         this.mode = new AtomicReference<>(CassandraMode.STARTING);
@@ -386,6 +380,16 @@ public class CassandraDaemonProcess extends ProcessTask {
         getProbe().takeSnapshot(name, null, keySpace);
     }
 
+    /** Clears a snapshot of the indicated key space with the given name.
+     *
+     * @param name     The name of the snapshot.
+     * @param keySpace The name of the key space.
+     * @throws IOException If an error occurs clearing the snapshot.
+     */
+    public void clearSnapshot(String name, String keySpace) throws IOException {
+        getProbe().clearSnapshot(name, keySpace);
+    }
+
     /**
      * Performs anti-entropy repair on the indicated keySpace.
      *
@@ -450,10 +454,17 @@ public class CassandraDaemonProcess extends ProcessTask {
      * @throws ExecutionException   If execution is interrupted.
      * @throws IOException          If communication with Cassandra fails.
      */
-    public void upgradeTables()
+    public void upgradeSSTables(String keyspace, List<String> columnFamilies)
             throws InterruptedException, ExecutionException, IOException {
-        for (String keyspace : getNonSystemKeySpaces()) {
-            getProbe().forceKeyspaceCleanup(0, keyspace);
-        }
+        String[] families = new String[columnFamilies.size()];
+        families = columnFamilies.toArray(families);
+
+        // Skip SSTables which are already current version.
+        final boolean excludeCurrentVersion = true;
+        // Number of SSTables to upgrade simultaneously, set to 0 to use all
+        // available compaction threads.
+        final int jobs = 0;
+
+        getProbe().upgradeSSTables(keyspace, excludeCurrentVersion, jobs, families);
     }
 }

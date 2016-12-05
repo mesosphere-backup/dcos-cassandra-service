@@ -32,7 +32,7 @@ def cassandra_api_url(basename, app_id='cassandra'):
     return '{}/v1/{}'.format(shakedown.dcos_service_url(app_id), basename)
 
 
-def check_health():
+def check_health(wait_time=WAIT_TIME_IN_SECONDS):
     def fn():
         return shakedown.get_service_tasks(PACKAGE_NAME)
 
@@ -45,7 +45,7 @@ def check_health():
             'Service did not become healthy'
         )
 
-    return spin(fn, success_predicate)
+    return spin(fn, success_predicate, wait_time=wait_time)
 
 
 def get_cassandra_config():
@@ -78,8 +78,25 @@ def get_dcos_command(command):
     return result
 
 
+@as_json
+def get_cassandra_command(command):
+    result, error = shakedown.run_dcos_command(
+        '{} {}'.format(PACKAGE_NAME, command)
+    )
+    if error:
+        raise RuntimeError(
+            'command dcos {} {} failed'.format(command, PACKAGE_NAME)
+        )
+
+    return result
+
+
 def marathon_api_url(basename):
     return '{}/v2/{}'.format(shakedown.dcos_service_url('marathon'), basename)
+
+
+def marathon_api_url_with_param(basename, path_param):
+    return '{}/{}'.format(marathon_api_url(basename), path_param)
 
 
 def request(request_fn, *args, **kwargs):
@@ -89,12 +106,12 @@ def request(request_fn, *args, **kwargs):
             'Request failed: %s' % response.content,
         )
 
-    return spin(request_fn, success_predicate, *args, **kwargs)
+    return spin(request_fn, success_predicate, WAIT_TIME_IN_SECONDS, *args, **kwargs)
 
 
-def spin(fn, success_predicate, *args, **kwargs):
+def spin(fn, success_predicate, wait_time=WAIT_TIME_IN_SECONDS, *args, **kwargs):
     now = time.time()
-    end_time = now + WAIT_TIME_IN_SECONDS
+    end_time = now + wait_time
     while now < end_time:
         print("%s: %.01fs left" % (time.strftime("%H:%M:%S %Z", time.localtime(now)), end_time - now))
         result = fn(*args, **kwargs)
@@ -111,10 +128,13 @@ def spin(fn, success_predicate, *args, **kwargs):
     return result
 
 
-def install(additional_options = {}):
+def install(additional_options = {}, package_version = None):
     merged_options = _nested_dict_merge(DEFAULT_OPTIONS_DICT, additional_options)
-    print('Installing {} with options: {}'.format(PACKAGE_NAME, merged_options))
-    shakedown.install_package_and_wait(PACKAGE_NAME, options_json=merged_options)
+    print('Installing {} with options: {} {}'.format(PACKAGE_NAME, merged_options, package_version))
+    shakedown.install_package_and_wait(
+        PACKAGE_NAME,
+        package_version,
+        options_json=merged_options)
 
 
 def uninstall():

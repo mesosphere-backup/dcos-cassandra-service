@@ -2,15 +2,28 @@ package com.mesosphere.dcos.cassandra.common.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.config.Configuration;
+import org.apache.mesos.config.SerializationUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Object representation of the scheduler configuration that's serialized to the config store.
+ *
+ * Enables the {@code ignoreUnknown} setting to ensure that removed fields do not cause config
+ * deserialization to fail. For example, if an old configuration still specifies "placement_strategy",
+ * this setting prevents that now-unknown field from breaking the parsing operation.
+ *
+ * @see JsonIgnoreProperties#ignoreUnknown()
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CassandraSchedulerConfiguration implements Configuration {
 
   @JsonCreator
@@ -18,7 +31,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @JsonProperty("executor") final ExecutorConfig executorConfig,
     @JsonProperty("servers") final int servers,
     @JsonProperty("seeds") final int seeds,
-    @JsonProperty("placement_strategy") final String placementStrategy,
+    @JsonProperty("placement_constraint") final String placementConstraint,
     @JsonProperty("cassandra") final CassandraConfig cassandraConfig,
     @JsonProperty("cluster_task") final ClusterTaskConfig clusterTaskConfig,
     @JsonProperty("api_port") final int apiPort,
@@ -26,13 +39,14 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @JsonProperty("external_dc_sync_ms") final long externalDcSyncMs,
     @JsonProperty("external_dcs") final String externalDcs,
     @JsonProperty("dc_url") final String dcUrl,
-    @JsonProperty("phase_strategy") final String phaseStrategy) {
+    @JsonProperty("phase_strategy") final String phaseStrategy,
+    @JsonProperty("enable_upgrade_sstable_endpoint") final boolean enableUpgradeSSTableEndpoint) {
 
     return new CassandraSchedulerConfiguration(
       executorConfig,
       servers,
       seeds,
-      placementStrategy,
+      placementConstraint,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,
@@ -40,7 +54,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       externalDcSyncMs,
       externalDcs,
       dcUrl,
-      phaseStrategy
+      phaseStrategy,
+      enableUpgradeSSTableEndpoint
     );
   }
 
@@ -51,7 +66,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
   @JsonIgnore
   private final int seeds;
   @JsonIgnore
-  private final String placementStrategy;
+  private final String placementConstraint;
   @JsonIgnore
   private final CassandraConfig cassandraConfig;
   @JsonIgnore
@@ -68,23 +83,26 @@ public class CassandraSchedulerConfiguration implements Configuration {
   private final String dcUrl;
   @JsonIgnore
   private final String phaseStrategy;
+  @JsonIgnore
+  private final boolean enableUpgradeSSTableEndpoint;
 
   private CassandraSchedulerConfiguration(
     ExecutorConfig executorConfig,
     int servers,
     int seeds,
-    String placementStrategy,
+    String placementConstraint,
     CassandraConfig cassandraConfig,
     ClusterTaskConfig clusterTaskConfig,
     int apiPort, ServiceConfig serviceConfig,
     long externalDcSyncMs,
     String externalDcs,
     String dcUrl,
-    String phaseStrategy) {
+    String phaseStrategy,
+    boolean enableUpgradeSSTableEndpoint) {
     this.executorConfig = executorConfig;
     this.servers = servers;
     this.seeds = seeds;
-    this.placementStrategy = placementStrategy;
+    this.placementConstraint = placementConstraint;
     this.cassandraConfig = cassandraConfig;
     this.clusterTaskConfig = clusterTaskConfig;
     this.apiPort = apiPort;
@@ -93,6 +111,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     this.externalDcs = externalDcs;
     this.dcUrl = dcUrl;
     this.phaseStrategy = phaseStrategy;
+    this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
   }
 
   @JsonProperty("executor")
@@ -110,9 +129,9 @@ public class CassandraSchedulerConfiguration implements Configuration {
     return seeds;
   }
 
-  @JsonProperty("placement_strategy")
-  public String getPlacementStrategy() {
-    return placementStrategy;
+  @JsonProperty("placement_constraint")
+  public String getPlacementConstraint() {
+    return placementConstraint;
   }
 
   @JsonProperty("cassandra")
@@ -155,6 +174,9 @@ public class CassandraSchedulerConfiguration implements Configuration {
     return phaseStrategy;
   }
 
+  @JsonProperty("enable_upgrade_sstable_endpoint")
+  public boolean getEnableUpgradeSSTableEndpoint() { return enableUpgradeSSTableEndpoint; }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -164,8 +186,9 @@ public class CassandraSchedulerConfiguration implements Configuration {
       seeds == that.seeds &&
       apiPort == that.apiPort &&
       externalDcSyncMs == that.externalDcSyncMs &&
+      enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
       Objects.equals(executorConfig, that.executorConfig) &&
-      Objects.equals(placementStrategy, that.placementStrategy) &&
+      Objects.equals(placementConstraint, that.placementConstraint) &&
       Objects.equals(cassandraConfig, that.cassandraConfig) &&
       Objects.equals(clusterTaskConfig, that.clusterTaskConfig) &&
       Objects.equals(serviceConfig, that.serviceConfig) &&
@@ -180,7 +203,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       executorConfig,
       servers,
       seeds,
-      placementStrategy,
+      placementConstraint,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,
@@ -188,7 +211,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       externalDcSyncMs,
       externalDcs,
       dcUrl,
-      phaseStrategy);
+      phaseStrategy,
+      enableUpgradeSSTableEndpoint);
   }
 
   @JsonIgnore
@@ -207,8 +231,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
   @Override
   public byte[] getBytes() throws ConfigStoreException {
     try {
-      return JsonUtils.MAPPER.writeValueAsBytes(this);
-    } catch (JsonProcessingException e) {
+      return SerializationUtils.toJsonString(this).getBytes(StandardCharsets.UTF_8);
+    } catch (IOException e) {
       e.printStackTrace();
       throw new ConfigStoreException(e);
     }
@@ -216,7 +240,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
 
   @JsonIgnore
   @Override
-  public String toJsonString() throws Exception {
+  public String toJsonString() throws ConfigStoreException {
     return JsonUtils.toJsonString(this);
   }
 }

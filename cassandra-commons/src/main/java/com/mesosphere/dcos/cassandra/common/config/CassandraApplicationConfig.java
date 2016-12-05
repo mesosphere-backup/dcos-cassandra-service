@@ -17,7 +17,6 @@ package com.mesosphere.dcos.cassandra.common.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -25,12 +24,13 @@ import com.google.protobuf.ByteString;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static com.mesosphere.dcos.cassandra.common.util.JsonUtils.MAPPER;
-import static com.mesosphere.dcos.cassandra.common.util.JsonUtils.YAML_MAPPER;
+import org.apache.mesos.config.SerializationUtils;
 
 /**
  * CassandraApplicationConfig is the configuration class for the
@@ -303,9 +303,9 @@ public class CassandraApplicationConfig {
    * @return A CassandraApplicationConfig parsed from bytes.
    * @throws IOException if a configuration can not be parsed from bytes.
    */
-  public static CassandraApplicationConfig parse(byte[] bytes)
-    throws IOException {
-    return MAPPER.readValue(bytes, CassandraApplicationConfig.class);
+  public static CassandraApplicationConfig parse(byte[] bytes) throws IOException {
+    return SerializationUtils.fromJsonString(
+            new String(bytes, StandardCharsets.UTF_8), CassandraApplicationConfig.class);
   }
 
   /**
@@ -1614,13 +1614,13 @@ public class CassandraApplicationConfig {
   }
 
   public void writeDaemonConfiguration(final Path path) throws IOException {
-    YAML_MAPPER.writeValue(path.toFile(), toMap());
+    Files.write(path, SerializationUtils.toYamlString(toMap()).getBytes(StandardCharsets.UTF_8));
   }
 
   public byte[] toByteArray() {
     try {
-      return MAPPER.writeValueAsBytes(this);
-    } catch (JsonProcessingException ex) {
+      return SerializationUtils.toJsonString(this).getBytes(StandardCharsets.UTF_8);
+    } catch (IOException ex) {
       throw new IllegalStateException("Failed to produce value JSON " +
         "from application configuration", ex);
     }
@@ -1628,7 +1628,6 @@ public class CassandraApplicationConfig {
   }
 
   public ByteString toByteString() {
-
     return ByteString.copyFrom(toByteArray());
   }
 

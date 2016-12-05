@@ -73,7 +73,7 @@
 ,"SERVICE_PRINCIPAL": "{{service.principal}}"
 ,"SERVICE_USER": "{{service.user}}"
 ,"SERVICE_VERSION":"1.0.0"
-,"CASSANDRA_VERSION":"3.0.9"
+,"CASSANDRA_VERSION":"3.0.10"
 ,"CASSANDRA_CLUSTER_NAME":"{{cassandra.cluster_name}}"
 ,"CASSANDRA_AUTHENTICATOR":"{{cassandra.authenticator}}"
 ,"CASSANDRA_AUTHORIZER":"{{cassandra.authorizer}}"
@@ -167,7 +167,7 @@
 {{/service.data_center_url}}
 ,"NODES":"{{nodes.count}}"
 ,"SEED_NODES":"{{nodes.seeds}}"
-,"PLACEMENT_STRATEGY":"{{service.placement_strategy}}"
+,"PLACEMENT_CONSTRAINT":"{{service.placement_constraint}}"
 ,"PHASE_STRATEGY":"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"
 ,"API_PORT":"{{service.api_port}}"
 }

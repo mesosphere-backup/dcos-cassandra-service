@@ -1,109 +1,100 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan;
 
-import com.google.common.collect.ImmutableList;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
-import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
-import org.apache.mesos.scheduler.DefaultObservable;
-import org.apache.mesos.scheduler.Observable;
-import org.apache.mesos.scheduler.Observer;
-import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.Plan;
 
+import org.apache.mesos.scheduler.plan.DefaultPlan;
+import org.apache.mesos.scheduler.plan.Phase;
+import org.apache.mesos.scheduler.plan.ReconciliationPhase;
+import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
+import org.apache.mesos.scheduler.plan.strategy.Strategy;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CassandraPlan extends DefaultObservable implements Plan, Observer {
+/**
+ * Extension of {@link DefaultPlan} which also includes any active maintenance tasks.
+ *
+ * TODO(nick): Use separate plan(s) for maintenance tasks, and use a plain DefaultPlan for deployment.
+ * This requires use of a PlanCoordinator upstream, which in turn requires updating
+ * CassandraRecoveryScheduler to work as a recovery plan, which in turn ... In any case, it'd be best
+ * to wait for upstreamed maintenance task support and just switch whole-hog to that.
+ */
+public class CassandraPlan extends DefaultPlan {
 
-    public static final CassandraPlan create(
-            final DefaultConfigurationManager defaultConfigurationManager,
-            final DeploymentManager deployment,
-            final BackupManager backup,
-            final RestoreManager restore,
-            final CleanupManager cleanup,
-            final RepairManager repair) {
-
-        return new CassandraPlan(
-                defaultConfigurationManager,
-                deployment,
-                backup,
-                restore,
-                cleanup,
-                repair
-        );
-    }
-
-    private final DefaultConfigurationManager defaultConfigurationManager;
-    private final DeploymentManager deployment;
-    private final List<ClusterTaskManager<?>> managers;
+    private final CassandraDaemonPhase deploy;
+    private final List<ClusterTaskManager<?, ?>> clusterTaskManagers;
 
     public CassandraPlan(
             final DefaultConfigurationManager defaultConfigurationManager,
-            final DeploymentManager deployment,
-            final BackupManager backup,
-            final RestoreManager restore,
-            final CleanupManager cleanup,
-            final RepairManager repair) {
-        this.defaultConfigurationManager = defaultConfigurationManager;
-        this.deployment = deployment;
+            final ReconciliationPhase reconciliation,
+            final SyncDataCenterPhase syncDc,
+            final CassandraDaemonPhase deploy,
+            final List<ClusterTaskManager<?, ?>> clusterTaskManagers) {
+        super("cassandra",
+                Arrays.asList(reconciliation, syncDc, deploy),
+                null /* strategy retrieval is overridden below */,
+                defaultConfigurationManager.getErrors().stream()
+                    .map(error -> error.getMessage())
+                    .collect(Collectors.toList()));
+        this.deploy = deploy;
         // Note: This ordering defines the ordering of the phases below:
-        this.managers = Arrays.asList(backup, restore, cleanup, repair);
-
-        this.deployment.subscribe(this);
-        for (ClusterTaskManager<?> manager: this.managers) {
+        this.clusterTaskManagers = clusterTaskManagers;
+        for (ClusterTaskManager<?, ?> manager: this.clusterTaskManagers) {
             manager.subscribe(this);
         }
     }
 
     @Override
-    public List<? extends Phase> getPhases() {
-        ImmutableList.Builder<Phase> builder =
-                ImmutableList.<Phase>builder().addAll(deployment.getPhases());
-        for (ClusterTaskManager<?> manager : managers) {
-            builder.addAll(manager.getPhases());
+    public List<Phase> getChildren() {
+        // copy super.getChildren() rather than appending in-place:
+        List<Phase> phases = new ArrayList<>();
+        phases.addAll(super.getChildren()); // should contain phases: reconciliation, syncDc, and deploy
+        if (clusterTaskManagers != null) { // may be null when DefaultPlan's constructor is calling getChildren()
+            for (ClusterTaskManager<?, ?> manager : clusterTaskManagers) {
+                phases.addAll(manager.getPhases());
+            }
         }
-        return builder.build();
+        return phases;
     }
 
+    /**
+     * TODO(nick): Remove this custom override once PlanUtils.getStatus() checks for non-empty errors in the parent.
+     */
     @Override
-    public List<String> getErrors() {
-        return ImmutableList.<String>builder()
-                .addAll(defaultConfigurationManager
-                        .getErrors()
-                        .stream()
-                        .map(error -> error.getMessage())
-                        .collect(Collectors.toList()))
-                .addAll(deployment.getErrors())
-                .build();
+    public Status getStatus() {
+        if (!getErrors().isEmpty()) {
+            return Status.ERROR;
+        }
+        return super.getStatus();
+    }
+
+    /**
+     * HACK: SerialStrategy is stateful, keeping track of plan phases. This plan meanwhile changes phases
+     * dynamically depending on any maintenance tasks that are being performed, so we constantly recreate the
+     * strategy so that it accurately reflects current plan contents. Otherwise it will ignore e.g. any
+     * newly-started maintenance tasks.
+     *
+     * TODO(nick): Switch to upstreamed maintenance operation support once that's available.
+     */
+    @Override
+    public Strategy<Phase> getStrategy() {
+        return new SerialStrategy<>();
     }
 
     @Override
     public boolean isComplete() {
-        if (!deployment.isComplete()) {
+        if (!deploy.isComplete()) {
             return false;
         }
-        for (ClusterTaskManager<?> manager : managers) {
-            if (manager.isInProgress() && !manager.isComplete()) {
+        for (ClusterTaskManager<?, ?> manager : clusterTaskManagers) {
+            if (manager.isInProgress()) {
                 return false;
             }
         }
         return true;
-    }
-
-    public void update() {
-        for (ClusterTaskManager<?> manager : managers) {
-            if (manager.isComplete()) {
-                manager.stop();
-            }
-        }
-    }
-
-    @Override
-    public void update(Observable observable) {
-        notifyObservers();
     }
 }

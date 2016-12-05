@@ -3,8 +3,10 @@ package com.mesosphere.dcos.cassandra.common.config;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
+
 import io.dropwizard.lifecycle.Managed;
+
+import org.apache.mesos.state.JsonSerializer;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
@@ -12,8 +14,8 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class IdentityManager implements Managed {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(IdentityManager.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IdentityManager.class);
+    private static final JsonSerializer SERVICECONFIG_SERIALIZER = new JsonSerializer();
     public static final String IDENTITY = "serviceConfig";
 
     private volatile ServiceConfig serviceConfig;
@@ -38,9 +40,9 @@ public class IdentityManager implements Managed {
         return serviceConfig;
     }
 
-    public synchronized void register(String id) throws SerializationException {
+    public synchronized void register(String id) {
         final ServiceConfig registeredServiceConfig = serviceConfig.register(id);
-        this.stateStore.storeProperty(IDENTITY,  ServiceConfig.JSON_SERIALIZER.serialize(registeredServiceConfig));
+        this.stateStore.storeProperty(IDENTITY, SERVICECONFIG_SERIALIZER.serialize(registeredServiceConfig));
         this.serviceConfig = serviceConfig.register(id);
     }
 
@@ -51,7 +53,7 @@ public class IdentityManager implements Managed {
 
         try {
             final byte[] bytesOfIdentity = stateStore.fetchProperty(IDENTITY);
-            final ServiceConfig persisted = ServiceConfig.JSON_SERIALIZER.deserialize(bytesOfIdentity);
+            final ServiceConfig persisted = SERVICECONFIG_SERIALIZER.deserialize(bytesOfIdentity, ServiceConfig.class);
 
             LOGGER.info("Retrieved persisted serviceConfig = {}", persisted);
 
@@ -63,7 +65,7 @@ public class IdentityManager implements Managed {
         }
 
         LOGGER.info("Persisting serviceConfig = {}", this.serviceConfig);
-        stateStore.storeProperty(IDENTITY, ServiceConfig.JSON_SERIALIZER.serialize(this.serviceConfig));
+        stateStore.storeProperty(IDENTITY, SERVICECONFIG_SERIALIZER.serialize(this.serviceConfig));
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
 
 import javax.ws.rs.Consumes;
@@ -16,23 +16,22 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public class RepairResource {
 
-    private final ClusterTaskRunner<RepairRequest> runner;
+    private final ClusterTaskRunner<RepairRequest, RepairContext> runner;
 
-    @Inject
     public RepairResource(final RepairManager manager) {
-        runner = new ClusterTaskRunner<>(manager, "Repair");
+        this.runner = new ClusterTaskRunner<>(manager, "Repair");
     }
 
     @PUT
     @Timed
-    @Path("/start")
+    @Path("start")
     public Response start(RepairRequest request) {
         return runner.start(request);
     }
 
     @PUT
     @Timed
-    @Path("/stop")
+    @Path("stop")
     public Response stop() {
         return runner.stop();
     }

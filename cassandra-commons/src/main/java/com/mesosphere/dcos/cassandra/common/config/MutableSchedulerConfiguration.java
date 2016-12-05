@@ -11,7 +11,7 @@ public class MutableSchedulerConfiguration extends Configuration {
   private ExecutorConfig executorConfig;
   private int servers;
   private int seeds;
-  private String placementStrategy;
+  private String placementConstraint;
   private CassandraConfig cassandraConfig;
   private ClusterTaskConfig clusterTaskConfig;
   private int apiPort;
@@ -34,7 +34,7 @@ public class MutableSchedulerConfiguration extends Configuration {
   private String externalDcs;
   private String dcUrl;
   private String phaseStrategy;
-
+  private boolean enableUpgradeSSTableEndpoint;
 
   @JsonProperty("mesos")
   public MesosConfig getMesosConfig() {
@@ -112,14 +112,14 @@ public class MutableSchedulerConfiguration extends Configuration {
     this.servers = servers;
   }
 
-  @JsonProperty("placement_strategy")
-  public String getPlacementStrategy() {
-    return placementStrategy;
+  @JsonProperty("placement_constraint")
+  public String getPlacementConstraint() {
+    return placementConstraint;
   }
 
-  @JsonProperty("placement_strategy")
-  public void setPlacementStrategy(String placementStrategy) {
-    this.placementStrategy = placementStrategy;
+  @JsonProperty("placement_constraint")
+  public void setPlacementConstraint(String placementConstraint) {
+    this.placementConstraint = placementConstraint;
   }
 
   @JsonProperty("phase_strategy")
@@ -183,13 +183,21 @@ public class MutableSchedulerConfiguration extends Configuration {
     this.externalDcs = externalDcs;
   }
 
+  @JsonProperty("enable_upgrade_sstable_endpoint")
+  public boolean getEnableUpgradeSStableEndpoint() { return enableUpgradeSSTableEndpoint; }
+
+  @JsonProperty("enable_upgrade_sstable_endpoint")
+  public void setEnableUpgradeSSTableEndpoint(boolean enableUpgradeSSTableEndpoint) {
+    this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
+  }
+
   @JsonIgnore
   public CassandraSchedulerConfiguration createConfig() {
     return CassandraSchedulerConfiguration.create(
       executorConfig,
       servers,
       seeds,
-      placementStrategy,
+      placementConstraint,
       cassandraConfig,
       clusterTaskConfig,
       apiPort,
@@ -197,7 +205,8 @@ public class MutableSchedulerConfiguration extends Configuration {
       externalDcSyncMs,
       externalDcs,
       dcUrl,
-      phaseStrategy
+      phaseStrategy,
+      enableUpgradeSSTableEndpoint
     );
   }
 
@@ -210,8 +219,9 @@ public class MutableSchedulerConfiguration extends Configuration {
       seeds == that.seeds &&
       apiPort == that.apiPort &&
       externalDcSyncMs == that.externalDcSyncMs &&
+      enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
       Objects.equals(executorConfig, that.executorConfig) &&
-      Objects.equals(placementStrategy, that.placementStrategy) &&
+      Objects.equals(placementConstraint, that.placementConstraint) &&
       Objects.equals(cassandraConfig, that.cassandraConfig) &&
       Objects.equals(clusterTaskConfig, that.clusterTaskConfig) &&
       Objects.equals(serviceConfig, that.serviceConfig) &&
@@ -223,8 +233,8 @@ public class MutableSchedulerConfiguration extends Configuration {
 
   @Override
   public int hashCode() {
-    return Objects.hash(executorConfig, servers, seeds, placementStrategy, cassandraConfig,
+    return Objects.hash(executorConfig, servers, seeds, placementConstraint, cassandraConfig,
       clusterTaskConfig, apiPort, serviceConfig, mesosConfig, curatorConfig,
-      externalDcSyncMs, externalDcs, dcUrl);
+      externalDcSyncMs, externalDcs, dcUrl, enableUpgradeSSTableEndpoint);
   }
 }

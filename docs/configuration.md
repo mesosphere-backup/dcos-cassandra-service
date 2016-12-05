@@ -38,9 +38,8 @@ The response will look similar to this:
     "errors": [],
     "phases": [
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
                     "message": "Reconciliation complete",
                     "name": "Reconciliation",
@@ -54,27 +53,24 @@ The response will look similar to this:
         {
 	        "id": "e90ad90b-fd71-4a1d-a63b-599003ea46f5",
 	         "name": "Sync Data Center",
-	         "blocks": [],
+	         "steps": [],
 	         "status": "Complete"
         },
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": true,
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
                     "message": "Deploying Cassandra node node-0",
                     "name": "node-0",
                     "status": "Pending"
                 },
                 {
-                    "has_decision_point": true,
                     "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
                     "message": "Deploying Cassandra node node-1",
                     "name": "node-1",
                     "status": "Pending"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
                     "message": "Deploying Cassandra node node-2",
                     "name": "node-2",
@@ -104,9 +100,8 @@ If you query the plan again, the response will look like this (notice `status: "
     "errors": [],
     "phases": [
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
                     "message": "Reconciliation complete",
                     "name": "Reconciliation",
@@ -120,27 +115,24 @@ If you query the plan again, the response will look like this (notice `status: "
         {
 	        "id": "e90ad90b-fd71-4a1d-a63b-599003ea46f5",
 	         "name": "Sync Data Center",
-	         "blocks": [],
+	         "steps": [],
 	         "status": "Complete"
         },
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
                     "message": "Deploying Cassandra node node-0",
                     "name": "node-0",
                     "status": "Complete"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
                     "message": "Deploying Cassandra node node-1",
                     "name": "node-1",
                     "status": "Pending"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
                     "message": "Deploying Cassandra node node-2",
                     "name": "node-2",
@@ -156,7 +148,7 @@ If you query the plan again, the response will look like this (notice `status: "
 }
 ```
 
-**Note:** The interrupt command can’t stop a block that is `InProgress`, but it will stop the change on the subsequent blocks.
+**Note:** The interrupt command can’t stop a step that is `InProgress`, but it will stop the change on the subsequent steps.
 
 Enter the `continue` command to resume the update process.
 
@@ -171,9 +163,8 @@ After you execute the continue operation, the plan will look like this:
     "errors": [],
     "phases": [
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "738122a7-8b52-4d45-a2b0-41f625f04f87",
                     "message": "Reconciliation complete",
                     "name": "Reconciliation",
@@ -187,27 +178,24 @@ After you execute the continue operation, the plan will look like this:
         {
 	        "id": "e90ad90b-fd71-4a1d-a63b-599003ea46f5",
 	         "name": "Sync Datacenter",
-	         "blocks": [],
+	         "steps": [],
 	         "status": "Complete"
         },
         {
-            "blocks": [
+            "steps": [
                 {
-                    "has_decision_point": false,
                     "id": "440485ec-eba2-48a3-9237-b0989dbe9f68",
                     "message": "Deploying Cassandra node node-0",
                     "name": "node-0",
                     "status": "Complete"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "84251eb9-218c-4700-a03c-50018b90d5a8",
                     "message": "Deploying Cassandra node node-1",
                     "name": "node-1",
                     "status": "Complete"
                 },
                 {
-                    "has_decision_point": false,
                     "id": "aad765fe-5aa5-4d4e-bf66-abbb6a15e125",
                     "message": "Deploying Cassandra node node-2",
                     "name": "node-2",

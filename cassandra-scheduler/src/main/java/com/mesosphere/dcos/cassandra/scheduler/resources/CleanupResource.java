@@ -1,7 +1,7 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Inject;
+import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 
 import javax.ws.rs.Consumes;
@@ -16,23 +16,22 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public class CleanupResource {
 
-    private final ClusterTaskRunner<CleanupRequest> runner;
+    private final ClusterTaskRunner<CleanupRequest, CleanupContext> runner;
 
-    @Inject
     public CleanupResource(final CleanupManager manager) {
-        runner = new ClusterTaskRunner<>(manager, "Cleanup");
+        this.runner = new ClusterTaskRunner<>(manager, "Cleanup");
     }
 
     @PUT
     @Timed
-    @Path("/start")
+    @Path("start")
     public Response start(CleanupRequest request) {
         return runner.start(request);
     }
 
     @PUT
     @Timed
-    @Path("/stop")
+    @Path("stop")
     public Response stop() {
         return runner.stop();
     }

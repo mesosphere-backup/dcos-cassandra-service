@@ -2,18 +2,16 @@ package com.mesosphere.dcos.cassandra.scheduler;
 
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPhaseStrategies;
-import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlanManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.BackupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.backup.RestoreManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.cleanup.CleanupManager;
 import com.mesosphere.dcos.cassandra.scheduler.plan.repair.RepairManager;
+import com.mesosphere.dcos.cassandra.scheduler.plan.upgradesstable.UpgradeSSTableManager;
 import com.mesosphere.dcos.cassandra.scheduler.seeds.SeedsManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import io.dropwizard.configuration.ConfigurationFactory;
@@ -28,12 +26,9 @@ import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.dcos.Capabilities;
-import org.apache.mesos.reconciliation.DefaultReconciler;
-import org.apache.mesos.reconciliation.Reconciler;
-import org.apache.mesos.scheduler.plan.Block;
 import org.apache.mesos.scheduler.plan.Phase;
-import org.apache.mesos.scheduler.plan.PlanManager;
-import org.apache.mesos.scheduler.plan.ReconciliationPhase;
+import org.apache.mesos.scheduler.plan.Status;
+import org.apache.mesos.scheduler.plan.Step;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.testing.QueuedSchedulerDriver;
 import org.junit.After;
@@ -46,8 +41,8 @@ import org.mockito.MockitoAnnotations;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -59,18 +54,17 @@ public class CassandraSchedulerTest {
 
     private CassandraScheduler scheduler;
     private ConfigurationManager configurationManager;
-    private PlanManager planManager;
     private PersistentOfferRequirementProvider offerRequirementProvider;
     private CassandraState cassandraState;
-    private Reconciler reconciler;
-    private EventBus eventBus;
     private SchedulerClient client;
     private BackupManager backup;
     private RestoreManager restore;
     private CleanupManager cleanup;
     private RepairManager repair;
+    private UpgradeSSTableManager upgrade;
     private SeedsManager seeds;
-    private ExecutorService executorService;
+    private Capabilities capabilities;
+    private ScheduledExecutorService executorService;
     private MesosConfig mesosConfig;
     private Protos.FrameworkID frameworkId;
     private Protos.MasterInfo masterInfo;
@@ -87,7 +81,7 @@ public class CassandraSchedulerTest {
         beforeHelper("scheduler.yml");
     }
 
-    public void beforeHelper(String configName) throws Exception {
+    private void beforeHelper(String configName) throws Exception {
         MockitoAnnotations.initMocks(this);
         mesosConfig = Mockito.mock(MesosConfig.class);
 
@@ -98,14 +92,12 @@ public class CassandraSchedulerTest {
         restore = Mockito.mock(RestoreManager.class);
         cleanup = Mockito.mock(CleanupManager.class);
         repair = Mockito.mock(RepairManager.class);
+        upgrade = Mockito.mock(UpgradeSSTableManager.class);
         seeds = Mockito.mock(SeedsManager.class);
+        capabilities = Mockito.mock(Capabilities.class);
 
-        executorService = Executors.newCachedThreadPool();
+        executorService = Executors.newSingleThreadScheduledExecutor();
         frameworkId = TestUtils.generateFrameworkId();
-        eventBus = new EventBus();
-
-        planManager = new CassandraPlanManager(
-                new CassandraPhaseStrategies("org.apache.mesos.scheduler.plan.DefaultInstallStrategy"));
 
         factory = new ConfigurationFactory<>(
                 MutableSchedulerConfiguration.class,
@@ -120,8 +112,6 @@ public class CassandraSchedulerTest {
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource(configName).getFile());
-
-        final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
 
         stateStore = new CuratorStateStore(
                 "/" + config.getServiceConfig().getName(),
@@ -141,31 +131,29 @@ public class CassandraSchedulerTest {
         configurationManager = new ConfigurationManager(
                 new CassandraDaemonTask.Factory(mockCapabilities),
                 defaultConfigurationManager);
-
-        final ClusterTaskConfig clusterTaskConfig = configurationManager.getTargetConfig().getClusterTaskConfig();
         cassandraState = new CassandraState(
                 configurationManager,
-                clusterTaskConfig,
+                configurationManager.getTargetConfig().getClusterTaskConfig(),
                 stateStore);
-        reconciler = new DefaultReconciler(cassandraState.getStateStore());
 
-        offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager, cassandraState);
+        offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager);
         scheduler = new CassandraScheduler(
                 configurationManager,
                 mesosConfig,
                 offerRequirementProvider,
-                planManager,
                 cassandraState,
                 client,
-                eventBus,
                 backup,
                 restore,
                 cleanup,
                 repair,
+                upgrade,
+                true,
                 seeds,
                 executorService,
                 stateStore,
-                defaultConfigurationManager);
+                defaultConfigurationManager,
+                capabilities);
 
         masterInfo = TestUtils.generateMasterInfo();
 
@@ -179,67 +167,84 @@ public class CassandraSchedulerTest {
         scheduler.registered(driver, frameworkId, masterInfo);
         final Protos.FrameworkID frameworkID = stateStore.fetchFrameworkId().get();
         assertEquals(frameworkID, this.frameworkId);
-        final Phase currentPhase = planManager.getCurrentPhase().get();
-        assertTrue(currentPhase instanceof ReconciliationPhase);
-        assertEquals(1, currentPhase.getBlocks().size());
+
+        Collection<? extends Step> allSteps = getAllSteps();
+        assertEquals(allSteps.toString(), 4, allSteps.size());
+        assertEquals("Reconciliation", allSteps.iterator().next().getName());
+
+        Collection<? extends Step> incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 3, incompleteSteps.size());
+        assertEquals("node-0", incompleteSteps.iterator().next().getName());
+        assertEquals("node-0", getNextStep().getName());
     }
 
     @Test
     public void install() {
         scheduler.registered(driver, frameworkId, Protos.MasterInfo.getDefaultInstance());
         runReconcile(driver);
-        final Phase currentPhase = planManager.getCurrentPhase().get();
-        assertEquals("Deploy", currentPhase.getName());
-        assertEquals(3, currentPhase.getBlocks().size());
+
+        Collection<? extends Step> incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 3, incompleteSteps.size());
+        assertEquals("node-0", getNextStep().getName());
 
         // node-0
         final Protos.Offer offer1 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
         scheduler.resourceOffers(driver, Arrays.asList(offer1));
-        Block currentBlock = planManager.getCurrentBlock().get();
-        assertEquals("node-0", currentBlock.getName());
-        assertTrue(currentBlock.isInProgress());
+
+        incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 3, incompleteSteps.size());
+        assertEquals("node-0", getNextStep().getName());
+        assertEquals(Status.IN_PROGRESS, getNextStep().getStatus());
+
         Collection<QueuedSchedulerDriver.OfferOperations> offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
         Collection<Protos.Offer.Operation> ops = offerOps.iterator().next().getOperations();
         launchAll(ops, scheduler, driver);
-        assertTrue(currentBlock.isComplete());
+
+        assertEquals("node-1", getNextStep().getName());
 
         // node-1
         final Protos.Offer offer2 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
         scheduler.resourceOffers(driver, Arrays.asList(offer2));
-        currentBlock = planManager.getCurrentBlock().get();
-        assertEquals("node-1", currentBlock.getName());
-        assertTrue(currentBlock.isInProgress());
+
+        incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 2, incompleteSteps.size());
+        assertEquals("node-1", getNextStep().getName());
+        assertEquals(Status.IN_PROGRESS, getNextStep().getStatus());
+
         offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
         ops = offerOps.iterator().next().getOperations();
         launchAll(ops, scheduler, driver);
-        assertTrue(currentBlock.isComplete());
+
+        assertEquals("node-2", getNextStep().getName());
 
         // node-2
         final Protos.Offer offer3 = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
         scheduler.resourceOffers(driver, Arrays.asList(offer3));
-        currentBlock = planManager.getCurrentBlock().get();
-        assertEquals("node-2", currentBlock.getName());
-        assertTrue(currentBlock.isInProgress());
+
+        incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 1, incompleteSteps.size());
+        assertEquals("node-2", getNextStep().getName());
+        assertEquals(Status.IN_PROGRESS, getNextStep().getStatus());
+
         offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
         ops = offerOps.iterator().next().getOperations();
         launchAll(ops, scheduler, driver);
-        assertTrue(currentBlock.isComplete());
+
+        assertTrue(getIncompleteSteps().isEmpty());
     }
 
     @Test
     public void installAndRecover() throws Exception {
         install();
-        final Optional<Phase> currentPhase = planManager.getCurrentPhase();
-        final Optional<Block> currentBlock = planManager.getCurrentBlock();
 
-        assertTrue(!currentPhase.isPresent());
-        assertTrue(!currentBlock.isPresent());
+        Collection<? extends Step> incompleteSteps = getIncompleteSteps();
+        assertTrue(incompleteSteps.isEmpty());
 
         final CassandraDaemonTask task = cassandraState.getDaemons().get("node-0");
         scheduler.statusUpdate(driver,
@@ -272,20 +277,16 @@ public class CassandraSchedulerTest {
     @Test
     public void installAndUpdate() throws Exception {
         install();
-        Optional<Phase> currentPhase = planManager.getCurrentPhase();
-        Optional<Block> currentBlock = planManager.getCurrentBlock();
 
-        assertTrue(!currentPhase.isPresent());
-        assertTrue(!currentBlock.isPresent());
+        Collection<? extends Step> incompleteSteps = getIncompleteSteps();
+        assertTrue(incompleteSteps.isEmpty());
 
         beforeHelper("update-scheduler.yml");
 
         update();
-        currentPhase = planManager.getCurrentPhase();
-        currentBlock = planManager.getCurrentBlock();
 
-        assertTrue(!currentPhase.isPresent());
-        assertTrue(!currentBlock.isPresent());
+        incompleteSteps = getIncompleteSteps();
+        assertTrue(incompleteSteps.isEmpty());
 
         final CassandraDaemonTask task = cassandraState.getDaemons().get("node-0");
         assertTrue(task.getExecutor().getURIs().contains("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin-updated.tar.gz"));
@@ -310,17 +311,16 @@ public class CassandraSchedulerTest {
         assertTrue(!driver.isSuppressed());
     }
 
-    public void update() {
+    private void update() {
         scheduler.registered(driver, frameworkId, Protos.MasterInfo.getDefaultInstance());
         runReconcile(driver);
-        final Phase currentPhase = planManager.getCurrentPhase().get();
-        assertEquals("Deploy", currentPhase.getName());
-        assertEquals(3, currentPhase.getBlocks().size());
 
-        Block currentBlock = planManager.getCurrentBlock().get();
-        assertEquals("node-0", currentBlock.getName());
-        assertTrue("expected current block to be in Pending due to offer carried over in reconcile stage",
-                currentBlock.isPending());
+        Collection<? extends Step> incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 3, incompleteSteps.size());
+        assertEquals("node-0", getNextStep().getName());
+        assertEquals("expected current step to be in Pending due to offer carried over in reconcile stage",
+                Status.PENDING, getNextStep().getStatus());
+
         Collection<QueuedSchedulerDriver.OfferOperations> offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 0, offerOps.size());
@@ -338,15 +338,20 @@ public class CassandraSchedulerTest {
                         node0.getTaskInfo().getTaskId(),
                         Protos.TaskState.TASK_KILLED));
         scheduler.resourceOffers(driver, Arrays.asList(offer1));
-        currentBlock = planManager.getCurrentBlock().get();
-        assertEquals("node-0", currentBlock.getName());
-        assertTrue("expected current block to be in progress", currentBlock.isInProgress());
+
+        incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 3, incompleteSteps.size());
+        assertEquals("node-0", getNextStep().getName());
+        assertEquals("expected current step to be in progress",
+                Status.IN_PROGRESS, getNextStep().getStatus());
+
         offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
         ops = offerOps.iterator().next().getOperations();
         launchAll(ops, scheduler, driver);
-        assertTrue(currentBlock.isComplete());
+
+        assertEquals("node-1", getNextStep().getName());
 
         // Roll out node-1
         final CassandraTask node1 = cassandraState.get("node-1").get();
@@ -358,16 +363,20 @@ public class CassandraSchedulerTest {
         scheduler.statusUpdate(driver, TestUtils.generateStatus(node1.getTaskInfo().getTaskId(),
                 Protos.TaskState.TASK_KILLED));
         scheduler.resourceOffers(driver, Arrays.asList(offer2));
-        currentBlock = planManager.getCurrentBlock().get();
-        assertEquals("node-1", currentBlock.getName());
-        assertTrue("expected current block to be in progress",
-                currentBlock.isInProgress());
+
+        incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 2, incompleteSteps.size());
+        assertEquals("node-1", getNextStep().getName());
+        assertEquals("expected current step to be in progress",
+                Status.IN_PROGRESS, getNextStep().getStatus());
+
         offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
         ops = offerOps.iterator().next().getOperations();
         launchAll(ops, scheduler, driver);
-        assertTrue(currentBlock.isComplete());
+
+        assertEquals("node-2", getNextStep().getName());
 
         // Roll out node-2
         final CassandraTask node2 = cassandraState.get("node-2").get();
@@ -379,19 +388,23 @@ public class CassandraSchedulerTest {
         scheduler.statusUpdate(driver, TestUtils.generateStatus(node2.getTaskInfo().getTaskId(),
                 Protos.TaskState.TASK_KILLED));
         scheduler.resourceOffers(driver, Arrays.asList(offer3));
-        currentBlock = planManager.getCurrentBlock().get();
-        assertEquals("node-2", currentBlock.getName());
-        assertTrue("expected current block to be in progress",
-                currentBlock.isInProgress());
+
+        incompleteSteps = getIncompleteSteps();
+        assertEquals(incompleteSteps.toString(), 1, incompleteSteps.size());
+        assertEquals("node-2", getNextStep().getName());
+        assertEquals("expected current step to be in progress",
+                Status.IN_PROGRESS, getNextStep().getStatus());
+
         offerOps = driver.drainAccepted();
         assertEquals("expected accepted offer carried over from reconcile stage",
                 1, offerOps.size());
         ops = offerOps.iterator().next().getOperations();
         launchAll(ops, scheduler, driver);
-        assertTrue(currentBlock.isComplete());
+
+        assertTrue(getIncompleteSteps().isEmpty());
     }
 
-    public static void launchAll(
+    private static void launchAll(
             final Collection<Protos.Offer.Operation> operations,
             final Scheduler scheduler,
             final SchedulerDriver driver) {
@@ -404,12 +417,8 @@ public class CassandraSchedulerTest {
                         Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL)));
     }
 
-    public void runReconcile(QueuedSchedulerDriver driver) {
-        Phase currentPhase = planManager.getCurrentPhase().get();
-        assertTrue(currentPhase instanceof ReconciliationPhase);
-        assertEquals(1, currentPhase.getBlocks().size());
-
-        while (currentPhase.getName().equals("Reconciliation") && !currentPhase.isComplete()) {
+    private void runReconcile(QueuedSchedulerDriver driver) {
+        while (!scheduler.getReconciler().isReconciled()) {
 
             final Protos.Offer offer = TestUtils.generateOffer(frameworkId.getValue(), 4, 10240, 10240);
             scheduler.resourceOffers(driver, Arrays.asList(offer));
@@ -420,14 +429,39 @@ public class CassandraSchedulerTest {
             } else {
                 taskStatuses.forEach(status -> scheduler.statusUpdate(driver, status));
             }
-            currentPhase = planManager.getCurrentPhase().get();
 
-            if (currentPhase.getName().equals("Reconciliation") && !currentPhase.isComplete()) {
+            if (!scheduler.getReconciler().isReconciled()) {
                 final Collection<Protos.OfferID> declined = driver.drainDeclined();
                 assertEquals(1, declined.size());
                 assertEquals(declined.iterator().next(), offer.getId());
             }
         }
+    }
+
+    private Collection<? extends Step> getAllSteps() {
+        List<Step> steps = new ArrayList<>();
+        for (Phase phase : scheduler.getPlanManager().getPlan().getChildren()) {
+            steps.addAll(phase.getChildren());
+        }
+        return steps;
+    }
+
+    private Collection<? extends Step> getIncompleteSteps() {
+        List<Step> steps = new ArrayList<>();
+        for (Phase phase : scheduler.getPlanManager().getPlan().getChildren()) {
+            for (Step step : phase.getChildren()) {
+                if (!step.isComplete()) {
+                    steps.add(step);
+                }
+            }
+        }
+        return steps;
+    }
+
+    private Step getNextStep() {
+        Collection<? extends Step> steps = scheduler.getPlanManager().getCandidates(Collections.emptyList());
+        assertFalse(steps.toString(), steps.isEmpty());
+        return steps.iterator().next();
     }
 
     @After

@@ -15,48 +15,29 @@
  */
 package com.mesosphere.dcos.cassandra.common.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.io.IOException;
+
+import org.apache.mesos.config.SerializationUtils;
 
 /**
  * Contains static Json manipulation utilities.
  */
 public class JsonUtils {
 
-    private JsonUtils(){}
-
-    /**
-     * An Object mapper that can be used for mapping Objects to and from YAML.
-     */
-    public static final ObjectMapper YAML_MAPPER = new ObjectMapper(
-            new YAMLFactory()).registerModule(new GuavaModule())
-            .registerModule(new Jdk8Module());
-
-    /**
-     * An Object mapper that can be used for mapping Objects to and from JSON.
-     */
-    public static final ObjectMapper MAPPER = new ObjectMapper()
-            .registerModule(new GuavaModule())
-            .registerModule(new JavaTimeModule())
-            .registerModule(new Jdk8Module());
+    private JsonUtils() {
+        // do not instantiate
+    }
 
     /**
      * Gets a JSON representation of value.
-     * @param value The value that will be converted to JSON.
-     * @param <T> The type of value.
-     * @return A JSON representation of value or the empty string if JSON
-     * conversion fails.
+     *
+     * TODO(nick): Replace with SerializationUtils.toJsonStringOrEmpty() once that's available
      */
-    public static <T> String toJsonString(T value){
-
+    public static <T> String toJsonString(T value) {
         try {
-            return MAPPER.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
-           return "";
+            return SerializationUtils.toJsonString(value);
+        } catch (IOException e) {
+            return "";
         }
     }
 }

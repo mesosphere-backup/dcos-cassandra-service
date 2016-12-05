@@ -1,6 +1,5 @@
 package com.mesosphere.dcos.cassandra.common.offer;
 
-import com.google.inject.Inject;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.offer.InvalidRequirementException;
@@ -15,10 +14,6 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
     private static final Logger LOGGER = LoggerFactory.getLogger(
             ClusterTaskOfferRequirementProvider.class);
 
-    @Inject
-    public ClusterTaskOfferRequirementProvider() {
-    }
-
     @Override
     public OfferRequirement getNewOfferRequirement(String type, Protos.TaskInfo taskInfo) {
         LOGGER.info("Getting new offer requirement for nodeId: {}",
@@ -31,10 +26,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
-            return new OfferRequirement(
-                    type,
-                    Arrays.asList(taskInfo),
-                    Optional.of(execInfo));
+            return OfferRequirement.create(type, Arrays.asList(taskInfo), Optional.of(execInfo));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
@@ -50,10 +42,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
-            return new OfferRequirement(
-                    type,
-                    Arrays.asList(taskInfo),
-                    Optional.of(execInfo));
+            return OfferRequirement.create(type, Arrays.asList(taskInfo), Optional.of(execInfo));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;
@@ -73,7 +62,7 @@ public class ClusterTaskOfferRequirementProvider implements CassandraOfferRequir
         taskInfo = Protos.TaskInfo.newBuilder(taskInfo).clearExecutor().build();
 
         try {
-            return new OfferRequirement(type, Arrays.asList(taskInfo), Optional.of(execInfo));
+            return OfferRequirement.create(type, Arrays.asList(taskInfo), Optional.of(execInfo));
         } catch (InvalidRequirementException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return null;

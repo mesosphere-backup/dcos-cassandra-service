@@ -7,7 +7,6 @@ import com.mesosphere.dcos.cassandra.common.config.MutableSchedulerConfiguration
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.scheduler.health.RegisteredCheck;
 import com.mesosphere.dcos.cassandra.scheduler.health.ServersCheck;
-import com.mesosphere.dcos.cassandra.scheduler.resources.*;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -15,8 +14,6 @@ import io.dropwizard.java8.Java8Bundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.apache.mesos.scheduler.plan.api.PlanResource;
-import org.apache.mesos.state.api.StateResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,31 +68,12 @@ public class Main extends Application<MutableSchedulerConfiguration> {
     registerHealthChecks(environment, injector);
   }
 
-  private void registerJerseyResources(Environment environment, Injector injector) {
-    environment.jersey().register(
-      injector.getInstance(ServiceConfigResource.class));
-    environment.jersey().register(
-      injector.getInstance(SeedsResource.class));
-    environment.jersey().register(
-      injector.getInstance(ConfigurationResource.class));
-    environment.jersey().register(
-      injector.getInstance(TasksResource.class));
-    environment.jersey().register(
-      injector.getInstance(BackupResource.class));
-    environment.jersey().register(
-      injector.getInstance(PlanResource.class));
-    environment.jersey().register(
-      injector.getInstance(RestoreResource.class));
-    environment.jersey().register(
-      injector.getInstance(CleanupResource.class));
-    environment.jersey().register(
-      injector.getInstance(RepairResource.class));
-    environment.jersey().register(
-      injector.getInstance(DataCenterResource.class));
-    environment.jersey().register(
-      injector.getInstance(ConnectionResource.class));
-    environment.jersey().register(
-      injector.getInstance(StateResource.class));
+  private void registerJerseyResources(Environment environment, Injector injector) throws Exception {
+    CassandraScheduler scheduler = injector.getInstance(CassandraScheduler.class);
+    scheduler.registerFramework();
+    for (Object o : scheduler.getResources()) {
+      environment.jersey().register(o);
+    }
   }
 
   private void registerManagedObjects(Environment environment, Injector injector) {
@@ -103,8 +81,6 @@ public class Main extends Application<MutableSchedulerConfiguration> {
       injector.getInstance(ConfigurationManager.class));
     environment.lifecycle().manage(
       injector.getInstance(CassandraState.class));
-    environment.lifecycle().manage(
-      injector.getInstance(CassandraScheduler.class));
   }
 
   private void registerHealthChecks(Environment environment,

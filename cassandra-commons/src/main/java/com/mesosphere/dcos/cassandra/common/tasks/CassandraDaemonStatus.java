@@ -16,13 +16,9 @@
 package com.mesosphere.dcos.cassandra.common.tasks;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import org.apache.mesos.Protos;
 
 import java.util.Objects;
-import java.util.Optional;
-
 
 /**
  * CassandraDaemonStatus extends CassandraTaskStatus to implement the status

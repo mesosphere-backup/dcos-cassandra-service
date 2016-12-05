@@ -110,7 +110,7 @@ cassandra:
      commitlog_total_space_in_mb : ${CASSANDRA_COMMITLOG_TOTAL_SPACE_IN_MB:-8192}
 nodes: ${NODES:-3}
 seed_nodes: ${SEED_NODES:-2}
-placement_strategy: ${PLACEMENT_STRATEGY:-NODE}
+placement_constraint: "${PLACEMENT_CONSTRAINT:-}"
 phase_strategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
 api_port : ${API_PORT:-8080}
 dc_sync_ms : ${DC_SYNC_MS:-60000}
