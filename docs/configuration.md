@@ -276,9 +276,9 @@ The service configuration object contains properties that MUST be specified duri
     <td>The authentication principal for the Cassandra cluster.</td>
   </tr>
   <tr>
-    <td>placement_strategy</td>
+    <td>placement_constraint</td>
     <td>string</td>
-    <td>The name of the placement strategy of the Cassandra nodes.</td>
+    <td>A Marathon-style placement constraint to be used when deploying the Cassandra nodes. For example, "rack_id:LIKE:rack_[1-5],hostname:UNLIKE:avoid_host_.*". See <a href="https://mesosphere.github.io/marathon/docs/constraints.html">Marathon documentation</a> for more details, but note that constraints must be of the form "field1:operator1[:value1],field2:operator2[:value2]" when used here. Changing this setting after initial deployment is experimental.</td>
   </tr>
 
   <tr>
