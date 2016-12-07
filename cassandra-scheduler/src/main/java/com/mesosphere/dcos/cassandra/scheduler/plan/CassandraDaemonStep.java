@@ -152,7 +152,7 @@ public class CassandraDaemonStep extends DefaultStep {
         try {
             final String taskName = org.apache.mesos.offer.TaskUtils.toTaskName(status.getTaskId());
             if (!getName().equals(taskName)) {
-                LOGGER.info("TaskStatus was meant for step: {} and doesn't affect step {}. Status: {}",
+                LOGGER.debug("TaskStatus was meant for step: {} and doesn't affect step {}. Status: {}",
                         taskName, getName(), TextFormat.shortDebugString(status));
                 return;
             }
