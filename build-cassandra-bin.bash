@@ -24,7 +24,7 @@ fi
 # VERSION SETTINGS
 CASSANDRA_VERSION="3.0.10"
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
-STATSD_REPORTER_VERSION="4.1.2-SNAPSHOT"
+STATSD_REPORTER_VERSION="4.1.2-SNAPSHOT" # Custom version due to usage of metrics-core-3.1.0 interface in Cassandra 2.2+
 REPORTER_CONFIG_VERSION="3.0.3"
 SEED_PROVIDER_VERSION="1.0.18"
 READYTALK_MVN_REPO_DOWNLOAD_URL="https://dl.bintray.com/readytalk/maven/com/readytalk"
