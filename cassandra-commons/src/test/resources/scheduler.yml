@@ -1,5 +1,5 @@
 executor:
-  command : ${EXECUTOR_COMMAND:-"./executor/bin/cassandra-executor server executor/conf/executor.yml"}
+  command : ${EXECUTOR_COMMAND:-"export LD_LIBRARY_PATH=$MESOS_SANDBOX/libmesos-bundle/lib && export MESOS_NATIVE_JAVA_LIBRARY=$(ls $MESOS_SANDBOX/libmesos-bundle/lib/libmesos-*.so) && ./executor/bin/cassandra-executor server executor/conf/executor.yml"}
   arguments : ${EXECUTOR_ARGS:-[]}
   cpus : ${EXECUTOR_CPUS:-0.1}
   memory_mb : ${EXECUTOR_MEMORY_MB:-768}
@@ -9,6 +9,7 @@ executor:
   jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
   executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
   cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
+  libmesos_location: ${EXECUTOR_LIBMESOS_LOCATION:-'http://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.8.7-1.0.2.tar.bz2'}
 cluster_task:
   cpus: ${CLUSTER_TASK_CPUS:-1}
   memory_mb: ${CLUSTER_TASK_MEMORY_MB:-256}

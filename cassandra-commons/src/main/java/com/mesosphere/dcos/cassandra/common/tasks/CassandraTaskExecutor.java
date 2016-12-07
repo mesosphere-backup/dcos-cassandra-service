@@ -116,10 +116,12 @@ public class CassandraTaskExecutor {
                 arguments,
                 uris,
                 ImmutableMap.<String, String>builder()
-                    .put("JAVA_HOME", javaHome)
-                    .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
-                    .put("EXECUTOR_API_PORT", Integer.toString(apiPort))
-                    .build()))
+                        .put("LD_LIBRARY_PATH", "$MESOS_SANDBOX/libmesos-bundle/lib")
+                        .put("MESOS_NATIVE_JAVA_LIBRARY", "$(ls $MESOS_SANDBOX/libmesos-bundle/lib/libmesos-*.so)")
+                        .put("JAVA_HOME", javaHome)
+                        .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
+                        .put("EXECUTOR_API_PORT", Integer.toString(apiPort))
+                        .build()))
             .addAllResources(
                 Arrays.asList(
                     createCpus(cpus, role, principal),
@@ -254,6 +256,8 @@ public class CassandraTaskExecutor {
                         config.getArguments(),
                         config.getURIs(),
                         ImmutableMap.<String, String>builder()
+                                .put("LD_LIBRARY_PATH", "$MESOS_SANDBOX/libmesos-bundle/lib")
+                                .put("MESOS_NATIVE_JAVA_LIBRARY", "$(ls $MESOS_SANDBOX/libmesos-bundle/lib/libmesos-*.so)")
                                 .put("JAVA_HOME", config.getJavaHome())
                                 .put("JAVA_OPTS", "-Xmx" + config.getHeapMb() + "M")
                                 .put("EXECUTOR_API_PORT", Integer.toString(config.getApiPort()))
