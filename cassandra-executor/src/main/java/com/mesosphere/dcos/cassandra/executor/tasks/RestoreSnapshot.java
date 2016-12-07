@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.nio.file.FileVisitOption;
@@ -132,9 +131,10 @@ public class RestoreSnapshot implements ExecutorTask {
 
                         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                         String line;
-                        while ((line = reader.readLine()) != null)
+                        while ((line = reader.readLine()) != null) {
                             LOGGER.info(line);
-
+                        }
+                        
                         int exitCode = process.waitFor();
                         LOGGER.info("Command exit code: {}", exitCode);
 
@@ -204,18 +204,5 @@ public class RestoreSnapshot implements ExecutorTask {
     @Override
     public void stop(Future<?> future) {
         future.cancel(true);
-    }
-
-    private static String streamToString(InputStream stream) throws Exception {
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(stream));
-        StringBuilder builder = new StringBuilder();
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-            builder.append(System.getProperty("line.separator"));
-        }
-
-        return builder.toString();
     }
 }
