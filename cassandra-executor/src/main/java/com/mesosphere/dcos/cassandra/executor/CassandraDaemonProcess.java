@@ -202,7 +202,7 @@ public class CassandraDaemonProcess extends ProcessTask {
     @Override
     public void stop(Future<?> future) {
         try {
-            // Drain the Cassandra node that we are trying to kill so that the it shuts down gracefully
+            // Drain the Cassandra node that we are trying to kill so that it shuts down gracefully
             // and clients do not receive timeout exceptions.
             LOGGER.info("Draining cassandra node before killing it");
             drain();
