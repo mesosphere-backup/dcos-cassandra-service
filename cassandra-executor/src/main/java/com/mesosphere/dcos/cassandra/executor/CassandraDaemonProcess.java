@@ -24,6 +24,7 @@ import org.apache.cassandra.tools.NodeProbe;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.executor.ProcessTask;
+import org.apache.mesos.offer.TaskUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
 
 /**
  * The CassandraDaemonProcess launches the Cassandra process process,
@@ -146,9 +148,9 @@ public class CassandraDaemonProcess extends ProcessTask {
      * and a process watchdog. After calling this method the Cassandra
      * process is running and the NodeProbe instance is connected.
      *
-     * @param taskInfo The CassandraDaemonTask info that corresponds to the process.
+     * @param taskInfo     The CassandraDaemonTask that corresponds to the process.
      * @param scheduledExecutorService The ScheduledExecutorService to use for background
-     *                                 Runnables (The watchdog and status reporter).
+     *                 Runnables (The watchdog and status reporter).
      * @param driver   The ExecutorDriver for the CassandraExecutor.
      * @return A CassandraDaemonProcess constructed from the
      * @throws IOException If an error occurs attempting to start the
@@ -159,21 +161,38 @@ public class CassandraDaemonProcess extends ProcessTask {
             final Protos.TaskInfo taskInfo,
             final ExecutorDriver driver) throws IOException {
 
-        CassandraDaemonTask cassandraTask = (CassandraDaemonTask) CassandraTask.parse(taskInfo);
-        CassandraPaths cassandraPaths = CassandraPaths.create(cassandraTask.getConfig().getVersion());
-        cassandraTask.getConfig().getLocation().writeProperties(cassandraPaths.cassandraLocation());
+        try {
+            CassandraDaemonTask cassandraTask = (CassandraDaemonTask) CassandraTask.parse(taskInfo);
+            CassandraPaths cassandraPaths = CassandraPaths.create(cassandraTask.getConfig().getVersion());
 
-        cassandraTask.getConfig().getApplication().toBuilder()
-                .setListenAddress(getListenAddress())
-                .setRpcAddress(getListenAddress())
-                .build().writeDaemonConfiguration(cassandraPaths.cassandraConfig());
+            cassandraTask.getConfig().getLocation().writeProperties(cassandraPaths.cassandraLocation());
 
-        cassandraTask.getConfig().getHeap().writeHeapSettings(cassandraPaths.heapConfig());
+            cassandraTask.getConfig().getApplication().toBuilder()
+                    .setListenAddress(getListenAddress())
+                    .setRpcAddress(getListenAddress())
+                    .build().writeDaemonConfiguration(cassandraPaths.cassandraConfig());
 
+            cassandraTask.getConfig().getHeap().writeHeapSettings(cassandraPaths.heapConfig());
 
-        ProcessBuilder processBuilder = createDaemon(cassandraPaths, cassandraTask, MetricsConfig.writeMetricsConfig(cassandraPaths.conf()));
-
-        return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, driver, taskInfo, processBuilder, true);
+            ProcessBuilder processBuilder = createDaemon(cassandraPaths, cassandraTask, MetricsConfig.writeMetricsConfig(cassandraPaths.conf()));
+            return new CassandraDaemonProcess(scheduledExecutorService, cassandraTask, driver, taskInfo, processBuilder, true);
+        } catch (IOException ex) {
+            // CustomExecutor does not appropriately handle this error case,
+            // ProcessTask does provide the appropriate scaffolding to safely init,
+            // Scheduler expects these errors to kill the executor.
+            // Note also that the `ProcessTask` class calls `System.exit(), abort here is
+            // probably cleaner
+            LOGGER.error("Failed to initialize daemon process", ex);
+            TaskUtils.sendStatus(
+                    driver,
+                    Protos.TaskState.TASK_FAILED,
+                    taskInfo.getTaskId(),
+                    taskInfo.getSlaveId(),
+                    taskInfo.getExecutor().getExecutorId(),
+                    ex.getMessage());
+            driver.abort();
+            throw ex;
+        }
     }
 
     private CassandraDaemonProcess(
@@ -208,7 +227,7 @@ public class CassandraDaemonProcess extends ProcessTask {
         }
     }
 
-    private static ProcessBuilder createDaemon(CassandraPaths cassandraPaths, CassandraDaemonTask cassandraDaemonTask, boolean metricsEnabled) throws IOException {
+    private static ProcessBuilder createDaemon(CassandraPaths cassandraPaths, CassandraDaemonTask cassandraDaemonTask, boolean metricsEnabled) throws UnknownHostException {
 
         final ProcessBuilder builder = new ProcessBuilder(
             cassandraPaths.cassandraRun().toString(),
