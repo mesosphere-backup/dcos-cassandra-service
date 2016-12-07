@@ -68,13 +68,13 @@ public class CassandraState extends SchedulerState implements Managed {
         // retrieval of tasks
         try {
             synchronized (getStateStore()) {
-                LOGGER.info("Loading data from persistent store");
+                LOGGER.debug("Loading data from persistent store");
                 final Collection<Protos.TaskInfo> taskInfos = getStateStore().fetchTasks();
 
                 for (Protos.TaskInfo taskInfo : taskInfos) {
                     try {
                         final CassandraTask cassandraTask = CassandraTask.parse(TaskUtils.unpackTaskInfo(taskInfo));
-                        LOGGER.info("Loaded task: {}, type: {}, hostname: {}",
+                        LOGGER.debug("Loaded task: {}, type: {}, hostname: {}",
                                 cassandraTask.getName(), cassandraTask.getType().name(), cassandraTask.getHostname());
                         builder.put(cassandraTask.getName(), cassandraTask);
                     } catch (IOException e) {
