@@ -40,6 +40,8 @@ public class ConnectionResource {
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
         builder.put("address", connectAddress());
         builder.put("dns", connectDns());
+        builder.put("hosts", hosts());
+        builder.put("native-port", nativePort());
         try {
             if (capabilities.supportsNamedVips()) {
                 builder.put("vip", toVip(configurationManager.getTargetConfig().getServiceConfig()));
@@ -51,13 +53,32 @@ public class ConnectionResource {
     }
 
     @GET
+    @Path("/hosts")
+    public List<String> hosts() {
+        return toRunningDaemons(state.getDaemons()).stream()
+            .map(daemon -> daemon.getHostname())
+            .collect(Collectors.toList());
+    }
+
+    @GET
+    @Path("/native-port")
+    public int nativePort() throws ConfigStoreException {
+       return configurationManager.getTargetConfig()
+               .getCassandraConfig()
+               .getApplication()
+               .getNativeTransportPort();
+    }
+
+    @GET
     @Path("/address")
+    @Deprecated
     public List<String> connectAddress() {
         return toRunningAddresses(state.getDaemons());
     }
 
     @GET
     @Path("/dns")
+    @Deprecated
     public List<String> connectDns() throws ConfigStoreException {
         return toRunningDns(
                 state.getDaemons(), configurationManager.getTargetConfig().getServiceConfig());

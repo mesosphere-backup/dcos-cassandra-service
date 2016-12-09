@@ -30,7 +30,13 @@ The response is as below.
          "node-0.cassandra.mesos:9042",
          "node-1.cassandra.mesos:9042",
          "node-2.cassandra.mesos:9042"
-    ]
+    ],
+    "hosts": [
+         "10.0.0.47",
+         "10.0.0.50",
+         "10.0.0.49"
+    ],
+    "native-port": 9043
 
 }
 ```
@@ -81,12 +87,13 @@ Cluster cluster = null;
 try {
 
    List<InetSocketAddress> addresses = Arrays.asList(
-       new InetSocketAddress("10.0.0.47", 9042),
-       new InetSocketAddress("10.0.0.48", 9042),
-       new InetSocketAddress("10.0.0.45", 9042));
+       new InetAddress("10.0.0.47"),
+       new InetAddress("10.0.0.48"),
+       new InetAddress("10.0.0.45"));
 
     cluster = Cluster.builder()
-            .addContactPointsWithPorts(addresses)
+            .addContactPoints(addresses)
+            .withPort(9042)
             .build();
     Session session = cluster.connect();
 
