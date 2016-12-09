@@ -14,6 +14,15 @@ plugins {
 }
 apply from: "$rootDir/gradle/universe.gradle"
 
+ext {
+    cliVersion = "0.1.0"
+    serviceVersion = "2.5.0"
+    mavenRep = {
+        url "$buildDir/repo"
+    }
+    isSnapshot = project.properties['Release'] ? false : true
+}
+
 allprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -24,16 +33,11 @@ allprojects {
     apply from: "$rootDir/gradle/spock.gradle"
 
     group = 'com.mesosphere.dcos'
-    version = '1.0.18'
+    version = '1.0.18' + (isSnapshot ? '-SNAPSHOT' : '')
 
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-}
-
-ext {
-  cliVersion = "0.1.0"
-  serviceVersion = "2.5.0"
 }
 
 configure(subprojects - project('seedprovider')) {
@@ -116,4 +120,21 @@ configure(project(':seedprovider')) {
 
 task cliVersion << {
     print cliVersion
+}
+
+if (project.hasProperty('RepositoryUrl' + (isSnapshot ? 'Snapshot' : 'Release'))) {
+    if (project.hasProperty('RepositoryUsername') &&
+        project.hasProperty('RepositoryPassword')) {
+        mavenRep = {
+            url isSnapshot ? RepositoryUrlSnapshot : RepositoryUrlRelease
+            credentials {
+                username RepositoryUsername
+                password RepositoryPassword
+            }
+        }
+    } else {
+        mavenRep = {
+            url RepositoryUrl
+        }
+    }
 }
