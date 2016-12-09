@@ -11,7 +11,7 @@ The only supported client for the DC/OS Cassandra Service is the Datastax Java C
 
 The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
-```
+```bash
 dcos cassandra --name=<service-name> connection
 ```
 
@@ -19,7 +19,7 @@ dcos cassandra --name=<service-name> connection
 
 The response is as below.
 
-```
+```json
 {
     "address": [
         "10.0.0.47:9042",
@@ -69,7 +69,7 @@ connected even if a node moves.
 ## Configuring the CQL Driver
 ### Adding the Driver to Your Application
 
-```
+```xml
 <dependency>
   <groupId>com.datastax.cassandra</groupId>
   <artifactId>cassandra-driver-core</artifactId>
@@ -82,7 +82,7 @@ The snippet above is the correct dependency for CQL driver to use with the DC/OS
 ## Connecting the CQL Driver.
 The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query. Run this script from anywhere where the private IP addresses of your nodes are reachable. Find the IP addresses of your nodes by running the `dcos cassandra connection` command from the DC/OS CLI.
 
-```
+```java
 Cluster cluster = null;
 try {
 
