@@ -24,7 +24,7 @@ fi
 # VERSION SETTINGS
 CASSANDRA_VERSION="3.0.10"
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
-STATSD_REPORTER_VERSION="4.1.2"
+STATSD_REPORTER_VERSION="4.1.2-SNAPSHOT" # Custom version due to usage of metrics-core-3.1.0 interface in Cassandra 2.2+
 REPORTER_CONFIG_VERSION="3.0.3"
 SEED_PROVIDER_VERSION="1.0.18"
 READYTALK_MVN_REPO_DOWNLOAD_URL="https://dl.bintray.com/readytalk/maven/com/readytalk"
@@ -54,11 +54,11 @@ function _package_github {
     if [ ! -f "$PROJECT_NAME/$3" ]; then
         echo "Building $PROJECT_NAME/$3 from $1:$2"
         if [ ! -d "$PROJECT_NAME" ]; then
-            time git clone "https://github.com/$1" --depth 1 && cd "$PROJECT_NAME" && git reset --hard $2
+            time git clone "https://github.com/$1" --branch "$2" --single-branch --depth 1  && cd "$PROJECT_NAME"
         else
             cd "$PROJECT_NAME"
         fi
-        time mvn -Dmaven.test.skip=true package
+        time ./gradlew build
         cd ..
     fi
 }
@@ -131,12 +131,14 @@ cp -v ../seedprovider/build/libs/seedprovider-${SEED_PROVIDER_VERSION}.jar ${LIB
 
 echo "##### Install StatsD metrics support #####"
 
-# StatsD Reporter: add stock libraries from maven repo
-_download "${READYTALK_MVN_REPO_DOWNLOAD_URL}/metrics${METRICS_INTERFACE_VERSION}-statsd/${STATSD_REPORTER_VERSION}/metrics${METRICS_INTERFACE_VERSION}-statsd-${STATSD_REPORTER_VERSION}.jar" "metrics${METRICS_INTERFACE_VERSION}-statsd-${STATSD_REPORTER_VERSION}.jar"
-cp -v "metrics${METRICS_INTERFACE_VERSION}-statsd-${STATSD_REPORTER_VERSION}.jar" ${LIB_DIR}
-_download "${READYTALK_MVN_REPO_DOWNLOAD_URL}/metrics-statsd-common/${STATSD_REPORTER_VERSION}/metrics-statsd-common-${STATSD_REPORTER_VERSION}.jar" "metrics-statsd-common-${STATSD_REPORTER_VERSION}.jar"
-cp -v "metrics-statsd-common-${STATSD_REPORTER_VERSION}.jar" ${LIB_DIR}
+# StatsD Reporter: custom build with newer version of metrics-core
+METRICS_STATSD_JAR="metrics${METRICS_INTERFACE_VERSION}-statsd/build/libs/metrics${METRICS_INTERFACE_VERSION}-statsd-${STATSD_REPORTER_VERSION}.jar"
+METRICS_STATSD_COMMON_JAR="metrics-statsd-common/build/libs/metrics-statsd-common-${STATSD_REPORTER_VERSION}.jar"
+_package_github "mesosphere/metrics-statsd" "metrics-core-3.1.0" ${METRICS_STATSD_JAR}
+cp -v "metrics-statsd/${METRICS_STATSD_JAR}" ${LIB_DIR}
+cp -v "metrics-statsd/${METRICS_STATSD_COMMON_JAR}" ${LIB_DIR}
 
+# Metrics Reporter Config: add stock libraries from maven repo
 _download "${MVN_CENTRAL_DOWNLOAD_URL}/com/addthis/metrics/reporter-config${METRICS_INTERFACE_VERSION}/${REPORTER_CONFIG_VERSION}/reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION}.jar" "reporter-config${METRICS_INTERFACE_VERSION}-${REPORTER_CONFIG_VERSION}.jar"
 
 _download "${MVN_CENTRAL_DOWNLOAD_URL}/com/addthis/metrics/reporter-config-base/${REPORTER_CONFIG_VERSION}/reporter-config-base-${REPORTER_CONFIG_VERSION}.jar" "reporter-config-base-${REPORTER_CONFIG_VERSION}.jar"

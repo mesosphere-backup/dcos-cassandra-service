@@ -36,6 +36,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -214,6 +215,21 @@ public class CassandraDaemonProcess extends ProcessTask {
                         open,
                         mode),
                 1, 1, TimeUnit.SECONDS);
+    }
+
+    // Override the stop function of ProcessTask to drain the Cassandra node before killing it.
+    @Override
+    public void stop(Future<?> future) {
+        try {
+            // Drain the Cassandra node that we are trying to kill so that it shuts down gracefully
+            // and clients do not receive timeout exceptions.
+            LOGGER.info("Draining cassandra node before killing it");
+            drain();
+        } catch (InterruptedException | ExecutionException | IOException e) {
+            e.printStackTrace();
+        }
+
+        super.stop(future);
     }
 
     private static String getReplaceIp(CassandraDaemonTask cassandraDaemonTask) throws UnknownHostException {
