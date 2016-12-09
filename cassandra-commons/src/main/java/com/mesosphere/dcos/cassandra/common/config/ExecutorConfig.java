@@ -220,6 +220,8 @@ public class ExecutorConfig {
                         that.getExecutorLocation()) &&
                 Objects.equals(getCassandraLocation(),
                         that.getCassandraLocation()) &&
+                Objects.equals(getLibmesosLocation(),
+                        that.getLibmesosLocation()) &&
                 Objects.equals(getJavaHome(), that.getJavaHome());
     }
 
@@ -228,7 +230,7 @@ public class ExecutorConfig {
         return Objects.hash(getCommand(), getArguments(), getCpus(),
                 getMemoryMb(),
                 getHeapMb(), getApiPort(),
-                getJreLocation(), getExecutorLocation(), getCassandraLocation(),
+                getJreLocation(), getExecutorLocation(), getCassandraLocation(), getLibmesosLocation(),
                 getJavaHome());
     }
 
