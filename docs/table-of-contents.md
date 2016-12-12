@@ -14,4 +14,5 @@
 - [Managing](managing.md)
 - [API Reference](api-reference.md)
 - [Troubleshooting](troubleshooting.md)
+- [Version Policy](version-policy.md)
 - [Limitations](limitations.md)
