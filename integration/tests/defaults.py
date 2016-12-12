@@ -3,6 +3,7 @@ import shakedown
 
 
 DEFAULT_NODE_COUNT = 3
+DEFAULT_TRANSPORT_PORT = 9042
 PACKAGE_NAME = 'cassandra'
 TASK_RUNNING_STATE = 'TASK_RUNNING'
 
@@ -17,6 +18,9 @@ if os.environ.get('SECURITY', '') == 'strict':
             "user": "nobody",
             "principal": PRINCIPAL,
             "secret_name": "secret"
+        },
+        "application": {
+            "native_transport_port" : DEFAULT_TRANSPORT_PORT
         }
     }
 else:

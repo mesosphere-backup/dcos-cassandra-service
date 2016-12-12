@@ -15,7 +15,7 @@ from tests.command import (
     uninstall,
     unset_ssl_verification,
 )
-from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME
+from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME, DEFAULT_TRANSPORT_PORT
 
 
 # install once up-front, reuse install for tests (MUCH FASTER):
@@ -35,9 +35,11 @@ def teardown_module():
 def test_connect():
     result = dcos.http.get(cassandra_api_url('connection'))
     body = result.json()
-    assert len(body) == 3
+    assert len(body) == 5
     assert len(body["address"]) == DEFAULT_NODE_COUNT
     assert len(body["dns"]) == DEFAULT_NODE_COUNT
+    assert len(body["hosts"]) == DEFAULT_NODE_COUNT
+    assert body["native-port"] == DEFAULT_TRANSPORT_PORT
     assert body["vip"] == 'node.{}.l4lb.thisdcos.directory:9042'.format(PACKAGE_NAME)
 
 

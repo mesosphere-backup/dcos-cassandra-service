@@ -11,7 +11,7 @@ The only supported client for the DC/OS Cassandra Service is the Datastax Java C
 
 The following command can be executed from the cli to retrieve a set of nodes to connect to.
 
-```
+```bash
 dcos cassandra --name=<service-name> connection
 ```
 
@@ -19,7 +19,7 @@ dcos cassandra --name=<service-name> connection
 
 The response is as below.
 
-```
+```json
 {
     "address": [
         "10.0.0.47:9042",
@@ -30,7 +30,13 @@ The response is as below.
          "node-0.cassandra.mesos:9042",
          "node-1.cassandra.mesos:9042",
          "node-2.cassandra.mesos:9042"
-    ]
+    ],
+    "hosts": [
+         "10.0.0.47",
+         "10.0.0.50",
+         "10.0.0.49"
+    ],
+    "native-port": 9043
 
 }
 ```
@@ -63,7 +69,7 @@ connected even if a node moves.
 ## Configuring the CQL Driver
 ### Adding the Driver to Your Application
 
-```
+```xml
 <dependency>
   <groupId>com.datastax.cassandra</groupId>
   <artifactId>cassandra-driver-core</artifactId>
@@ -76,17 +82,18 @@ The snippet above is the correct dependency for CQL driver to use with the DC/OS
 ## Connecting the CQL Driver.
 The code snippet below demonstrates how to connect the CQL driver to the cluster and perform a simple query. Run this script from anywhere where the private IP addresses of your nodes are reachable. Find the IP addresses of your nodes by running the `dcos cassandra connection` command from the DC/OS CLI.
 
-```
+```java
 Cluster cluster = null;
 try {
 
    List<InetSocketAddress> addresses = Arrays.asList(
-       new InetSocketAddress("10.0.0.47", 9042),
-       new InetSocketAddress("10.0.0.48", 9042),
-       new InetSocketAddress("10.0.0.45", 9042));
+       new InetAddress("10.0.0.47"),
+       new InetAddress("10.0.0.48"),
+       new InetAddress("10.0.0.45"));
 
     cluster = Cluster.builder()
-            .addContactPointsWithPorts(addresses)
+            .addContactPoints(addresses)
+            .withPort(9042)
             .build();
     Session session = cluster.connect();
 
