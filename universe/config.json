@@ -309,6 +309,12 @@
 					"description": "The port for inter-node communication.",
 					"default": 7000
 				},
+				"ssl_storage_port": {
+					"id": "http://cassandra/docs/mesosphere.com/cassandra/sslStoragePort",
+					"type": "integer",
+					"description": "The port for inter-node communication over SSL.",
+					"default": 7001
+				}
 				"start_native_transport": {
 					"id": "http://cassandra/docs/mesosphere.com/cassandra/startNativeTransport",
 					"type": "boolean",
