@@ -128,6 +128,7 @@ public class CassandraApplicationConfig {
   public static final String INTERNODE_AUTHENTICATOR_KEY = "internode_authenticator";
   public static final String COMMITLOG_TOTAL_SPACE_IN_MB_KEY = "commitlog_total_space_in_mb";
   public static final String SEEDS_URL_KEY = "seeds_url";
+  public static final String OTC_COALESCING_STRATEGY = "otc_coalescing_strategy";
 
   public static final String  ROLES_UPDATE_INTERVAL_IN_MS_KEY = "roles_update_interval_in_ms";
   public static final String  PERMISSIONS_UPDATE_INTERVAL_IN_MS_KEY = "permissions_update_interval_in_ms";
@@ -195,6 +196,7 @@ public class CassandraApplicationConfig {
       )
     );
   public static final String DEFAULT_SEEDS_URL = "https://cassandara.marathon.mesos:9000";
+  public static final String DEFAULT_OTC_COALESCING_STRATEGY = "TIMEHORIZON";
   public static final int DEFAULT_CONCURRENT_READS = 32;
   public static final int DEFAULT_CONCURRENT_WRITES = 32;
   public static final int DEFAULT_CONCURRENT_COUNTER_WRITES = 32;
@@ -390,6 +392,7 @@ public class CassandraApplicationConfig {
     @JsonProperty(COMMITLOG_SYNC_PERIOD_IN_MS_KEY) final int commitlogSyncPeriodInMs,
     @JsonProperty(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY) final int commitlogSegmentSizeInMb,
     @JsonProperty(SEEDS_URL_KEY) final String seedsUrl,
+    @JsonProperty(OTC_COALESCING_STRATEGY) final String otcCoalescingStrategy,
     @JsonProperty(CONCURRENT_READS_KEY) final int concurrentReads,
     @JsonProperty(CONCURRENT_WRITES_KEY) final int concurrentWrites,
     @JsonProperty(CONCURRENT_COUNTER_WRITES_KEY) final int concurrentCounterWrites,
@@ -502,6 +505,7 @@ public class CassandraApplicationConfig {
       commitlogSyncPeriodInMs,
       commitlogSegmentSizeInMb,
       seedsUrl,
+      otcCoalescingStrategy,
       concurrentReads,
       concurrentWrites,
       concurrentCounterWrites,
@@ -642,6 +646,8 @@ public class CassandraApplicationConfig {
   private final int commitlogSegmentSizeInMb;
   @JsonProperty(SEEDS_URL_KEY)
   private final String seedsUrl;
+  @JsonProperty(OTC_COALESCING_STRATEGY)
+  private final String otcCoalescingStrategy;
   @JsonProperty(CONCURRENT_READS_KEY)
   private final int concurrentReads;
   @JsonProperty(CONCURRENT_WRITES_KEY)
@@ -838,6 +844,7 @@ public class CassandraApplicationConfig {
     int commitlogSyncPeriodInMs,
     int commitlogSegmentSizeInMb,
     String seedsUrl,
+    String otcCoalescingStrategy,
     int concurrentReads,
     int concurrentWrites,
     int concurrentCounterWrites,
@@ -948,6 +955,7 @@ public class CassandraApplicationConfig {
     this.commitlogSyncPeriodInMs = commitlogSyncPeriodInMs;
     this.commitlogSegmentSizeInMb = commitlogSegmentSizeInMb;
     this.seedsUrl = seedsUrl;
+    this.otcCoalescingStrategy = otcCoalescingStrategy;
     this.concurrentReads = concurrentReads;
     this.concurrentWrites = concurrentWrites;
     this.concurrentCounterWrites = concurrentCounterWrites;
@@ -1509,6 +1517,7 @@ public class CassandraApplicationConfig {
     map.put(COMMITLOG_SYNC_PERIOD_IN_MS_KEY, commitlogSyncPeriodInMs);
     map.put(COMMITLOG_SEGMENT_SIZE_IN_MB_KEY, commitlogSegmentSizeInMb);
     map.put(SEED_PROVIDER_KEY, createDcosSeedProvider(seedsUrl));
+    map.put(OTC_COALESCING_STRATEGY, otcCoalescingStrategy);
     map.put(CONCURRENT_READS_KEY, concurrentReads);
     map.put(CONCURRENT_WRITES_KEY, concurrentWrites);
     map.put(CONCURRENT_COUNTER_WRITES_KEY, concurrentCounterWrites);
@@ -1854,6 +1863,7 @@ public class CassandraApplicationConfig {
     private int commitlogSyncPeriodInMs;
     private int commitlogSegmentSizeInMb;
     private String seedsUrl;
+    private String otcCoalescingStrategy;
     private int concurrentReads;
     private int concurrentWrites;
     private int concurrentCounterWrites;
@@ -2020,6 +2030,7 @@ public class CassandraApplicationConfig {
       concurrentMaterializedViewWrites = DEFAULT_CONCURRENT_MATERIALIZED_VIEW_WRITES;
       commitlogTotalSpaceInMb = DEFAULT_COMMITLOG_TOTAL_SPACE_IN_MB;
       seedsUrl = DEFAULT_SEEDS_URL;
+      otcCoalescingStrategy = DEFAULT_OTC_COALESCING_STRATEGY;
 
       rolesUpdateIntervalInMs = DEFAULT_ROLES_UPDATE_INTERVAL_IN_MS;
       permissionsUpdateIntervalInMs = DEFAULT_PERMISSIONS_UPDATE_INTERVAL_IN_MS;
@@ -2081,6 +2092,7 @@ public class CassandraApplicationConfig {
       this.commitlogSyncPeriodInMs = config.commitlogSyncPeriodInMs;
       this.commitlogSegmentSizeInMb = config.commitlogSegmentSizeInMb;
       this.seedsUrl = config.seedsUrl;
+      this.otcCoalescingStrategy = config.otcCoalescingStrategy;
       this.concurrentWrites = config.concurrentWrites;
       this.concurrentReads = config.concurrentReads;
       this.concurrentCounterWrites = config.concurrentCounterWrites;
@@ -2262,8 +2274,13 @@ public class CassandraApplicationConfig {
     public int getCommitlogSegmentSizeInMb() {
       return commitlogSegmentSizeInMb;
     }
+
     public String getSeedsUrl() {
       return seedsUrl;
+    }
+
+    public String getOtcCoalescingStrategy() {
+      return otcCoalescingStrategy;
     }
 
     public int getConcurrentReads() {
@@ -2607,6 +2624,11 @@ public class CassandraApplicationConfig {
       return this;
     }
 
+    public Builder setOtcCoalescingStrategy(String otcCoalescingStrategy) {
+      this.otcCoalescingStrategy = otcCoalescingStrategy;
+      return this;
+    }
+
     public Builder setConcurrentReads(int concurrentReads) {
       this.concurrentReads = concurrentReads;
       return this;
@@ -2904,6 +2926,7 @@ public class CassandraApplicationConfig {
         commitlogSyncPeriodInMs,
         commitlogSegmentSizeInMb,
         seedsUrl,
+        otcCoalescingStrategy,
         concurrentReads,
         concurrentWrites,
         concurrentCounterWrites,
