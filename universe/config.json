@@ -314,7 +314,7 @@
 					"type": "integer",
 					"description": "The port for inter-node communication over SSL.",
 					"default": 7001
-				}
+				},
 				"start_native_transport": {
 					"id": "http://cassandra/docs/mesosphere.com/cassandra/startNativeTransport",
 					"type": "boolean",
