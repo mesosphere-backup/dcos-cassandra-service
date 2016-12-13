@@ -22,7 +22,8 @@ def as_json(fn):
     def wrapper(*args, **kwargs):
         try:
             return json.loads(fn(*args, **kwargs))
-        except ValueError:
+        except ValueError as e:
+            print("ValueError: {}".format(e))
             return None
 
     return wrapper
@@ -69,26 +70,26 @@ def get_cassandra_config():
 
 @as_json
 def get_dcos_command(command):
-    result, error = shakedown.run_dcos_command(command)
-    if error:
+    stdout, _, rc = shakedown.run_dcos_command(command)
+    if rc:
         raise RuntimeError(
             'command dcos {} {} failed'.format(command, PACKAGE_NAME)
         )
 
-    return result
+    return stdout
 
 
 @as_json
 def get_cassandra_command(command):
-    result, error = shakedown.run_dcos_command(
+    stdout, _, rc = shakedown.run_dcos_command(
         '{} {}'.format(PACKAGE_NAME, command)
     )
-    if error:
+    if rc:
         raise RuntimeError(
             'command dcos {} {} failed'.format(command, PACKAGE_NAME)
         )
 
-    return result
+    return stdout 
 
 
 def marathon_api_url(basename):
