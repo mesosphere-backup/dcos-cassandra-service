@@ -70,10 +70,10 @@ def get_cassandra_config():
 
 @as_json
 def get_dcos_command(command):
-    stdout, _, rc = shakedown.run_dcos_command(command)
+    stdout, stderr, rc = shakedown.run_dcos_command(command)
     if rc:
         raise RuntimeError(
-            'command dcos {} {} failed'.format(command, PACKAGE_NAME)
+            'command dcos {} {} failed: {} {}'.format(command, PACKAGE_NAME, stdout, stderr)
         )
 
     return stdout
@@ -81,12 +81,12 @@ def get_dcos_command(command):
 
 @as_json
 def get_cassandra_command(command):
-    stdout, _, rc = shakedown.run_dcos_command(
+    stdout, stderr, rc = shakedown.run_dcos_command(
         '{} {}'.format(PACKAGE_NAME, command)
     )
     if rc:
         raise RuntimeError(
-            'command dcos {} {} failed'.format(command, PACKAGE_NAME)
+            'command dcos {} {} failed: {} {}'.format(command, PACKAGE_NAME, stdout, stderr)
         )
 
     return stdout 
