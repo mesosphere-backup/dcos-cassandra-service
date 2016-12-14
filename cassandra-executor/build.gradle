@@ -1,4 +1,5 @@
 apply plugin: 'application'
+apply plugin: 'maven-publish'
 mainClassName = 'com.mesosphere.dcos.cassandra.executor.Main'
 
 ext {
@@ -24,9 +25,31 @@ dependencies {
     testCompile "junit:junit:${junitVer}"
 }
 
+def projectVersion = project.version
 distributions {
     main {
         baseName = 'executor'
-        version = ""
+        version = ''
     }
 }
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact("$buildDir/distributions/executor.zip") {
+                extension 'zip'
+                version = projectVersion
+            }
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven parent.mavenRep
+    }
+}
+
+publishToMavenLocal.dependsOn(build)
+publish.dependsOn(build)
+

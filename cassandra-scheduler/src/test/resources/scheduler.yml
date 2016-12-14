@@ -141,6 +141,7 @@ cassandra:
      streaming_socket_timeout_in_ms : ${CASSANDRA_STREAMING_SOCKET_TIMOUT_IN_MS:-86400000}
      enable_scripted_user_defined_functions : ${CASSANDRA_ENABLE_SCRIPTED_USER_DEFINED_FUNCTIONS:-false}
      max_value_size_in_mb : ${CASSANDRA_MAX_VALUE_SIZE_IN_MB:-256}
+     otc_coalescing_strategy : ${CASSANDRA_OTC_COALESCING_STRATEGY:-"DISABLED"}
 nodes: ${NODES:-3}
 seed_nodes: ${SEED_NODES:-2}
 placement_constraint: "${PLACEMENT_CONSTRAINT:-}"

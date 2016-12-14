@@ -1,13 +1,36 @@
 apply plugin: 'application'
+apply plugin: 'maven-publish'
 mainClassName = 'com.mesosphere.dcos.cassandra.scheduler.Main'
 
 dependencies {
     compile project(':cassandra-commons')
 }
 
+def projectVersion = project.version
 distributions {
     main {
         baseName = 'scheduler'
-        version = ""
+        version = ''
     }
 }
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact("$buildDir/distributions/scheduler.zip") {
+                extension 'zip'
+                version = projectVersion
+            }
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven parent.mavenRep
+    }
+}
+
+publishToMavenLocal.dependsOn(build)
+publish.dependsOn(build)
+
