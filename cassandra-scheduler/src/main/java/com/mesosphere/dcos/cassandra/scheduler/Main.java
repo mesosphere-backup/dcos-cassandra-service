@@ -93,6 +93,7 @@ public class Main extends Application<MutableSchedulerConfiguration> {
 
 
   private void logConfiguration(MutableSchedulerConfiguration config) {
+    LOGGER.info("Full configuration: {}", config);
 
     LOGGER.info("Framework ServiceConfig = {}",
       config.getServiceConfig());

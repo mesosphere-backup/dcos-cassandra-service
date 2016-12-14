@@ -45,7 +45,8 @@ public class CassandraDaemonTaskTest {
                 "java-home",
                 new URI("http://jre-location"),
                 new URI("http://executor-location"),
-                new URI("http://cassandra-location"));
+                new URI("http://cassandra-location"),
+                new URI("http://libmesos-location"));
 
         testTaskExecutor = CassandraTaskExecutor.create(
                 "test-framework-id",
@@ -196,7 +197,8 @@ public class CassandraDaemonTaskTest {
                 "java-home",
                 new URI("http://jre-location"),
                 new URI("http://executor-location"),
-                new URI("http://cassandra-location-updated"));
+                new URI("http://cassandra-location-updated"),
+                new URI("http://libmesos-location"));
 
         testTaskExecutor = CassandraTaskExecutor.create(
                 "test-framework-id",
@@ -210,7 +212,7 @@ public class CassandraDaemonTaskTest {
                 updatedTestExecutorConfig,
                 TEST_CONFIG_ID);
         Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
-        Assert.assertEquals(3, updatedTask.getExecutor().getURIs().size());
+        Assert.assertEquals(4, updatedTask.getExecutor().getURIs().size());
         Assert.assertTrue(updatedTask.getExecutor().getURIs().contains("http://cassandra-location-updated"));
     }
 

@@ -26,7 +26,8 @@ public class ExecutorConfig {
             String javaHome,
             URI jreLocation,
             URI executorLocation,
-            URI cassandraLocation) {
+            URI cassandraLocation,
+            URI libmesosLocation) {
 
         return new ExecutorConfig(
                 command,
@@ -38,7 +39,8 @@ public class ExecutorConfig {
                 javaHome,
                 jreLocation,
                 executorLocation,
-                cassandraLocation);
+                cassandraLocation,
+                libmesosLocation);
     }
 
     @JsonCreator
@@ -53,6 +55,7 @@ public class ExecutorConfig {
             @JsonProperty("jre_location") String jreLocation,
             @JsonProperty("executor_location") String executorLocation,
             @JsonProperty("cassandra_location") String cassandraLocation,
+            @JsonProperty("libmesos_location") String libmesosLocation,
             @JsonProperty("emc_ecs_workaround") boolean emcEcsWorkaround)
             throws URISyntaxException, UnsupportedEncodingException {
 
@@ -66,7 +69,8 @@ public class ExecutorConfig {
                 javaHome,
                 URI.create(jreLocation),
                 URI.create(executorLocation),
-                URI.create(cassandraLocation));
+                URI.create(cassandraLocation),
+                URI.create(libmesosLocation));
 
         return config;
     }
@@ -92,6 +96,7 @@ public class ExecutorConfig {
     private final URI jreLocation;
     private final URI executorLocation;
     private final URI cassandraLocation;
+    private final URI libmesosLocation;
 
     @JsonProperty("java_home")
     private final String javaHome;
@@ -106,7 +111,8 @@ public class ExecutorConfig {
             String javaHome,
             URI jreLocation,
             URI executorLocation,
-            URI cassandraLocation) {
+            URI cassandraLocation,
+            URI libmesosLocation) {
 
         this.command = command;
         this.arguments = arguments;
@@ -117,10 +123,11 @@ public class ExecutorConfig {
         this.jreLocation = jreLocation;
         this.executorLocation = executorLocation;
         this.cassandraLocation = cassandraLocation;
+        this.libmesosLocation = libmesosLocation;
         this.javaHome = javaHome;
     }
 
-
+    @JsonIgnore
     public int getApiPort() {
         return apiPort;
     }
@@ -129,6 +136,7 @@ public class ExecutorConfig {
         return arguments;
     }
 
+    @JsonIgnore
     public URI getCassandraLocation() {
         return cassandraLocation;
     }
@@ -141,6 +149,7 @@ public class ExecutorConfig {
         return cpus;
     }
 
+    @JsonIgnore
     public URI getExecutorLocation() {
         return executorLocation;
     }
@@ -153,8 +162,14 @@ public class ExecutorConfig {
         return javaHome;
     }
 
+    @JsonIgnore
     public URI getJreLocation() {
         return jreLocation;
+    }
+
+    @JsonIgnore
+    public URI getLibmesosLocation() {
+        return libmesosLocation;
     }
 
     public int getMemoryMb() {
@@ -176,12 +191,19 @@ public class ExecutorConfig {
         return cassandraLocation.toString();
     }
 
+    @JsonProperty("libmesos_location")
+    public String getLibmesosLocationString() {
+        return libmesosLocation.toString();
+    }
+
+
     @JsonIgnore
     public Set<String> getURIs() {
         Set<String> uris = new HashSet<String>();
         uris.add(executorLocation.toString());
         uris.add(cassandraLocation.toString());
         uris.add(jreLocation.toString());
+        uris.add(libmesosLocation.toString());
 
         return uris;
     }
@@ -202,6 +224,8 @@ public class ExecutorConfig {
                         that.getExecutorLocation()) &&
                 Objects.equals(getCassandraLocation(),
                         that.getCassandraLocation()) &&
+                Objects.equals(getLibmesosLocation(),
+                        that.getLibmesosLocation()) &&
                 Objects.equals(getJavaHome(), that.getJavaHome());
     }
 
@@ -210,7 +234,7 @@ public class ExecutorConfig {
         return Objects.hash(getCommand(), getArguments(), getCpus(),
                 getMemoryMb(),
                 getHeapMb(), getApiPort(),
-                getJreLocation(), getExecutorLocation(), getCassandraLocation(),
+                getJreLocation(), getExecutorLocation(), getCassandraLocation(), getLibmesosLocation(),
                 getJavaHome());
     }
 
