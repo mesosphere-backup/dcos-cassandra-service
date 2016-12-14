@@ -127,7 +127,7 @@ public class ExecutorConfig {
         this.javaHome = javaHome;
     }
 
-
+    @JsonIgnore
     public int getApiPort() {
         return apiPort;
     }
@@ -136,6 +136,7 @@ public class ExecutorConfig {
         return arguments;
     }
 
+    @JsonIgnore
     public URI getCassandraLocation() {
         return cassandraLocation;
     }
@@ -148,6 +149,7 @@ public class ExecutorConfig {
         return cpus;
     }
 
+    @JsonIgnore
     public URI getExecutorLocation() {
         return executorLocation;
     }
@@ -160,10 +162,12 @@ public class ExecutorConfig {
         return javaHome;
     }
 
+    @JsonIgnore
     public URI getJreLocation() {
         return jreLocation;
     }
 
+    @JsonIgnore
     public URI getLibmesosLocation() {
         return libmesosLocation;
     }
