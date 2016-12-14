@@ -192,6 +192,6 @@ logging:
       archivedFileCount: 5
       archivedLogFilenamePattern: ${LOG_FILE:-dcos-cassandra-service.log}.%d
       timeZone: UTC
-httpClient:
+http_client:
   timeout: ${HTTP_CLIENT_TIMEOUT:-500ms}
   connectionTimeout: ${HTTP_CLIENT_CONNECTION_TIMEOUT:-500ms}

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+import io.dropwizard.client.HttpClientConfiguration;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.config.Configuration;
 import org.apache.mesos.config.SerializationUtils;
@@ -40,7 +41,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @JsonProperty("external_dcs") final String externalDcs,
     @JsonProperty("dc_url") final String dcUrl,
     @JsonProperty("phase_strategy") final String phaseStrategy,
-    @JsonProperty("enable_upgrade_sstable_endpoint") final boolean enableUpgradeSSTableEndpoint) {
+    @JsonProperty("enable_upgrade_sstable_endpoint") final boolean enableUpgradeSSTableEndpoint,
+    @JsonProperty("http_client") final HttpClientConfiguration httpClientConfiguration) {
 
     return new CassandraSchedulerConfiguration(
       executorConfig,
@@ -55,7 +57,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       externalDcs,
       dcUrl,
       phaseStrategy,
-      enableUpgradeSSTableEndpoint
+      enableUpgradeSSTableEndpoint,
+      httpClientConfiguration
     );
   }
 
@@ -85,6 +88,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
   private final String phaseStrategy;
   @JsonIgnore
   private final boolean enableUpgradeSSTableEndpoint;
+  @JsonIgnore
+  private final HttpClientConfiguration httpClientConfiguration;
 
   private CassandraSchedulerConfiguration(
     ExecutorConfig executorConfig,
@@ -98,7 +103,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
     String externalDcs,
     String dcUrl,
     String phaseStrategy,
-    boolean enableUpgradeSSTableEndpoint) {
+    boolean enableUpgradeSSTableEndpoint,
+    HttpClientConfiguration httpClientConfiguration) {
     this.executorConfig = executorConfig;
     this.servers = servers;
     this.seeds = seeds;
@@ -112,6 +118,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     this.dcUrl = dcUrl;
     this.phaseStrategy = phaseStrategy;
     this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
+    this.httpClientConfiguration = httpClientConfiguration;
   }
 
   @JsonProperty("executor")
@@ -177,6 +184,9 @@ public class CassandraSchedulerConfiguration implements Configuration {
   @JsonProperty("enable_upgrade_sstable_endpoint")
   public boolean getEnableUpgradeSSTableEndpoint() { return enableUpgradeSSTableEndpoint; }
 
+  @JsonProperty("http_client")
+  public HttpClientConfiguration getHttpClientConfiguration() { return httpClientConfiguration; }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -194,7 +204,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       Objects.equals(serviceConfig, that.serviceConfig) &&
       Objects.equals(externalDcs, that.externalDcs) &&
       Objects.equals(dcUrl, that.dcUrl) &&
-      Objects.equals(phaseStrategy, that.phaseStrategy);
+      Objects.equals(phaseStrategy, that.phaseStrategy) &&
+      Objects.equals(httpClientConfiguration, that.httpClientConfiguration);
   }
 
   @Override
@@ -212,7 +223,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       externalDcs,
       dcUrl,
       phaseStrategy,
-      enableUpgradeSSTableEndpoint);
+      enableUpgradeSSTableEndpoint,
+      httpClientConfiguration);
   }
 
   @JsonIgnore
