@@ -70,13 +70,8 @@ def get_cassandra_config():
 
 @as_json
 def get_dcos_command(command):
-<<<<<<< 3ee634fd56925888aff5a09f195e8f0235c5c81a
     stdout, stderr, rc = shakedown.run_dcos_command(command)
     if rc:
-=======
-    stdout, stderr, return_code = shakedown.run_dcos_command(command)
-    if return_code:
->>>>>>> shakedown incompatibility
         raise RuntimeError(
             'command dcos {} {} failed: {} {}'.format(command, PACKAGE_NAME, stdout, stderr)
         )
@@ -86,26 +81,15 @@ def get_dcos_command(command):
 
 @as_json
 def get_cassandra_command(command):
-<<<<<<< 3ee634fd56925888aff5a09f195e8f0235c5c81a
     stdout, stderr, rc = shakedown.run_dcos_command(
         '{} {}'.format(PACKAGE_NAME, command)
     )
     if rc:
-=======
-    stdout, stderr, return_code = shakedown.run_dcos_command(
-        '{} {}'.format(PACKAGE_NAME, command)
-    )
-    if return_code:
->>>>>>> shakedown incompatibility
         raise RuntimeError(
             'command dcos {} {} failed: {} {}'.format(command, PACKAGE_NAME, stdout, stderr)
         )
 
-<<<<<<< 3ee634fd56925888aff5a09f195e8f0235c5c81a
-    return stdout 
-=======
     return stdout
->>>>>>> shakedown incompatibility
 
 
 def marathon_api_url(basename):
