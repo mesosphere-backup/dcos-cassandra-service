@@ -89,7 +89,7 @@ def get_cassandra_command(command):
             'command dcos {} {} failed: {} {}'.format(command, PACKAGE_NAME, stdout, stderr)
         )
 
-    return stdout 
+    return stdout
 
 
 def marathon_api_url(basename):
