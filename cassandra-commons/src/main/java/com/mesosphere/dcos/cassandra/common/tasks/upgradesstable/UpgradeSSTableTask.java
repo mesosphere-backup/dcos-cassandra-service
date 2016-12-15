@@ -109,7 +109,7 @@ public class UpgradeSSTableTask extends CassandraTask {
 
     @Override
     public UpgradeSSTableTask update(CassandraTaskStatus status) {
-        if (status.getType() == TYPE.UPGRADESSTABLE &&
+        if (status.getTaskType() == TYPE.UPGRADESSTABLE &&
             getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }

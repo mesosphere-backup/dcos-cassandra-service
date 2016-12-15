@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.protobuf.TextFormat;
+import com.mesosphere.dcos.cassandra.common.CassandraProtos;
 import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
@@ -73,7 +74,22 @@ public class CassandraState extends SchedulerState implements Managed {
 
                 for (Protos.TaskInfo taskInfo : taskInfos) {
                     try {
-                        final CassandraTask cassandraTask = CassandraTask.parse(TaskUtils.unpackTaskInfo(taskInfo));
+                        Protos.TaskInfo unpackedInfo = TaskUtils.unpackTaskInfo(taskInfo);
+                        final CassandraTask cassandraTask = CassandraTask.parse(unpackedInfo);
+
+                        final boolean isTemplateTask = CassandraTemplateTask.isTemplateTaskName(taskInfo.getName());
+                        final CassandraProtos.CassandraData oldCassandraData =
+                                CassandraProtos.CassandraData.parseFrom(unpackedInfo.getData());
+                        if (isTemplateTask && oldCassandraData.getType() != CassandraTask.TYPE.TEMPLATE.ordinal()) {
+                            CassandraData data = CassandraData.parse(unpackedInfo.getData(), isTemplateTask);
+                            Protos.TaskInfo updatedUnpackedInfo =
+                                    Protos.TaskInfo.newBuilder(unpackedInfo).setData(data.getBytes()).build();
+
+                            LOGGER.info("Writing updated TaskInfo for task {} to StateStore to fix corrupted " +
+                                    "CassandraTask.TYPE Enum.", taskInfo.getName());
+                            getStateStore().storeTasks(Arrays.asList(TaskUtils.packTaskInfo(updatedUnpackedInfo)));
+                        }
+
                         LOGGER.debug("Loaded task: {}, type: {}, hostname: {}",
                                 cassandraTask.getName(), cassandraTask.getType().name(), cassandraTask.getHostname());
                         builder.put(cassandraTask.getName(), cassandraTask);
@@ -574,7 +590,22 @@ public class CassandraState extends SchedulerState implements Managed {
                     }
 
                     if (status.hasData()) {
-                        cassandraTask = cassandraTask.update(CassandraTaskStatus.parse(status));
+                        final boolean isTemplateTask = CassandraTemplateTask.isTemplateTaskName(
+                                cassandraTask.getName());
+                        CassandraTaskStatus cassandraTaskStatus = CassandraTaskStatus.parse(status, isTemplateTask);
+                        cassandraTask = cassandraTask.update(cassandraTaskStatus);
+
+                        final CassandraProtos.CassandraData oldCassandraData =
+                                CassandraProtos.CassandraData.parseFrom(status.getData());
+                        if (isTemplateTask && oldCassandraData.getType() != CassandraTask.TYPE.TEMPLATE.ordinal()) {
+                            CassandraData data = CassandraData.parse(status.getData(), isTemplateTask);
+                            Protos.TaskStatus updatedStatus =
+                                    Protos.TaskStatus.newBuilder(status).setData(data.getBytes()).build();
+
+                            LOGGER.info("Writing updated TaskStatus for task {} to StateStore to fix corrupted " +
+                                    "CassandraTask.TYPE Enum.", cassandraTask.getName());
+                            getStateStore().storeStatus(updatedStatus);
+                        }
                     } else {
                         cassandraTask = cassandraTask.update(status.getState());
                     }
