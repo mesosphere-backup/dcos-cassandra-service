@@ -20,6 +20,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairStatus;
 import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableStatus;
+import org.apache.cassandra.thrift.Cassandra;
 import org.apache.mesos.Protos;
 
 import java.io.IOException;
@@ -89,9 +90,9 @@ public abstract class CassandraTaskStatus {
         return Protos.TaskState.TASK_FINISHED.equals(state);
     }
 
-    public static CassandraTaskStatus parse(final Protos.TaskStatus status)
+    public static CassandraTaskStatus parse(final Protos.TaskStatus status, final boolean isTemplateTask)
         throws IOException {
-        CassandraData data = CassandraData.parse(status.getData());
+        CassandraData data = CassandraData.parse(status.getData(), isTemplateTask);
         switch (data.getType()) {
             case CASSANDRA_DAEMON:
                 return CassandraDaemonStatus.create(status);
@@ -126,7 +127,7 @@ public abstract class CassandraTaskStatus {
     }
 
     protected CassandraData getData() {
-        return CassandraData.parse(status.getData());
+        return CassandraData.parse(status.getData(), this instanceof TemplateTaskStatus);
     }
 
     /**
@@ -169,11 +170,11 @@ public abstract class CassandraTaskStatus {
     }
 
     /**
-     * Gets the TYPE.
+     * Gets the task TYPE.
      *
      * @return The TYPE of task associated with the status.
      */
-    public CassandraTask.TYPE getType() {
+    public CassandraTask.TYPE getTaskType() {
         return getData().getType();
     }
 

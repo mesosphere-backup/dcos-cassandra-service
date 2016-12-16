@@ -116,10 +116,10 @@ public class CassandraTaskExecutor {
                 arguments,
                 uris,
                 ImmutableMap.<String, String>builder()
-                    .put("JAVA_HOME", javaHome)
-                    .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
-                    .put("EXECUTOR_API_PORT", Integer.toString(apiPort))
-                    .build()))
+                        .put("JAVA_HOME", javaHome)
+                        .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
+                        .put("EXECUTOR_API_PORT", Integer.toString(apiPort))
+                        .build()))
             .addAllResources(
                 Arrays.asList(
                     createCpus(cpus, role, principal),

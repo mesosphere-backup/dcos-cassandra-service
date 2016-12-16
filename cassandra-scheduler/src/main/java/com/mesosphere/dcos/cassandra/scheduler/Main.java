@@ -51,8 +51,6 @@ public class Main extends Application<MutableSchedulerConfiguration> {
   @Override
   public void run(MutableSchedulerConfiguration configuration,
                   Environment environment) throws Exception {
-
-
     logConfiguration(configuration);
 
     final SchedulerModule baseModule = new SchedulerModule(
@@ -93,6 +91,7 @@ public class Main extends Application<MutableSchedulerConfiguration> {
 
 
   private void logConfiguration(MutableSchedulerConfiguration config) {
+    LOGGER.info("Full configuration: {}", config);
 
     LOGGER.info("Framework ServiceConfig = {}",
       config.getServiceConfig());
