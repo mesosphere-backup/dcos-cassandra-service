@@ -239,13 +239,13 @@ public class ClusterTaskOfferRequirementProviderTest {
             config.getExecutorConfig().getExecutorLocation().toString(),
             cmd.getUrisList().get(0).getValue());
         Assert.assertEquals(
-                config.getExecutorConfig().getLibmesosLocation().toString(),
+                config.getExecutorConfig().getCassandraLocation().toString(),
                 cmd.getUrisList().get(1).getValue());
         Assert.assertEquals(
-            config.getExecutorConfig().getCassandraLocation().toString(),
+            config.getExecutorConfig().getJreLocation().toString(),
             cmd.getUrisList().get(2).getValue());
         Assert.assertEquals(
-            config.getExecutorConfig().getJreLocation().toString(),
+            config.getExecutorConfig().getLibmesosLocation().toString(),
             cmd.getUrisList().get(3).getValue());
     }
 
