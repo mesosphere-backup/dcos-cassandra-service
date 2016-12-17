@@ -29,12 +29,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.Future;
 
 /**
@@ -79,7 +80,7 @@ public class RestoreSnapshot implements ExecutorTask {
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
                     "Started restoring snapshot");
 
-            if (context.getRestoreType().equals("new")) {
+            if (Objects.equals(context.getRestoreType(), new String("new"))) {
                 final String keyspaceDirectory =
                         context.getLocalLocation() + File.separator +
                                 context.getName() + File.separator +
@@ -125,21 +126,23 @@ public class RestoreSnapshot implements ExecutorTask {
 
                         final ProcessBuilder processBuilder = new ProcessBuilder(
                                 command);
+                        processBuilder.redirectErrorStream(true);
                         Process process = processBuilder.start();
+
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            LOGGER.info(line);
+                        }
+                        
                         int exitCode = process.waitFor();
-
-                        String stdout = streamToString(process.getInputStream());
-                        String stderr = streamToString(process.getErrorStream());
-
                         LOGGER.info("Command exit code: {}", exitCode);
-                        LOGGER.info("Command stdout: {}", stdout);
-                        LOGGER.info("Command stderr: {}", stderr);
 
                         // Send TASK_ERROR
                         if (exitCode != 0) {
                             final String errMessage = String.format(
-                                    "Error restoring snapshot. Exit code: %s Stdout: %s Stderr: %s",
-                                    (exitCode + ""), stdout, stderr);
+                                    "Error restoring snapshot. Exit code: %s",
+                                    (exitCode + ""));
                             LOGGER.error(errMessage);
                             sendStatus(driver, Protos.TaskState.TASK_ERROR,
                                     errMessage);
@@ -151,6 +154,14 @@ public class RestoreSnapshot implements ExecutorTask {
                     }
                     LOGGER.info("Successfully bulk loaded keyspace: {}",
                             keyspaceName);
+                }
+                // cleanup downloaded snapshot directory recursively.
+                Path rootPath = Paths.get(context.getLocalLocation() + File.separator + context.getName());
+                if (rootPath.toFile().exists()) {
+                    Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS)
+                            .sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
                 }
             } else {
                 // run nodetool refresh rather than SSTableLoader, as on performance test
@@ -193,18 +204,5 @@ public class RestoreSnapshot implements ExecutorTask {
     @Override
     public void stop(Future<?> future) {
         future.cancel(true);
-    }
-
-    private static String streamToString(InputStream stream) throws Exception {
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(stream));
-        StringBuilder builder = new StringBuilder();
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-            builder.append(System.getProperty("line.separator"));
-        }
-
-        return builder.toString();
     }
 }
