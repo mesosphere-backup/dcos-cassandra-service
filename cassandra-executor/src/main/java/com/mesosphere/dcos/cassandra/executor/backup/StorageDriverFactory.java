@@ -4,6 +4,7 @@ import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupSchemaTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupUploadTask;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSchemaTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +16,6 @@ public class StorageDriverFactory {
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageDriverFactory.class);
 
   public static BackupStorageDriver createStorageDriver(CassandraTask cassandraTask) {
-
     String externalLocation = null;
     switch (cassandraTask.getType()) {
       case BACKUP_SNAPSHOT:
@@ -24,12 +24,13 @@ public class StorageDriverFactory {
       case BACKUP_SCHEMA:
         externalLocation = ((BackupSchemaTask)cassandraTask).getBackupRestoreContext().getExternalLocation();
         break;
+    case SCHEMA_RESTORE:
+        externalLocation = ((RestoreSchemaTask)cassandraTask).getBackupRestoreContext().getExternalLocation();
+        break;
+    case SNAPSHOT_DOWNLOAD:
+        externalLocation = ((DownloadSnapshotTask)cassandraTask).getBackupRestoreContext().getExternalLocation();
+        break;
     }
-    return getBackupStorageDriver(externalLocation);
-  }
-
-  public static BackupStorageDriver createStorageDriver(DownloadSnapshotTask downloadSnapshotTask) {
-    final String externalLocation = downloadSnapshotTask.getBackupRestoreContext().getExternalLocation();
     return getBackupStorageDriver(externalLocation);
   }
 

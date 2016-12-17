@@ -20,30 +20,23 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.Constants;
 import com.amazonaws.services.s3.model.*;
-import com.amazonaws.services.s3.model.ListObjectsV2Request;
-import com.amazonaws.services.s3.model.ListObjectsV2Result;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import org.apache.commons.logging.Log;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -243,7 +236,7 @@ public class S3StorageDriver implements BackupStorageDriver {
         final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
 
         try {
-            if (ctx.getRestoreType().equals("new")) {
+            if (Objects.equals(ctx.getRestoreType(), new String("new"))) {
                 final Map<String, Long> snapshotFileKeys = listSnapshotFiles(amazonS3Client,
                         bucketName,
                         backupName + File.separator + nodeId);
@@ -299,6 +292,20 @@ public class S3StorageDriver implements BackupStorageDriver {
             LOGGER.error("Error downloading the file {} : {}", destinationFile, e);
             throw new Exception(e);
         }
+    }
+
+    @Override
+    public String downloadSchema(BackupRestoreContext ctx) throws Exception {
+        final String nodeId = ctx.getNodeId();
+        final AmazonS3Client amazonS3Client = getAmazonS3Client(ctx);
+        final String key = getPrefixKey(ctx) + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
+
+        S3Object object = amazonS3Client.getObject(
+                new GetObjectRequest(getBucketName(ctx), key));
+        InputStream objectData = object.getObjectContent();
+        String schema = IOUtils.toString(objectData, "UTF-8");
+        objectData.close();
+        return schema;
     }
 
     private static Map<String, Long> listSnapshotFiles(AmazonS3Client amazonS3Client,

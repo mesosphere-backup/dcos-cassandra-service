@@ -106,6 +106,8 @@ public abstract class CassandraTaskStatus {
                 return DownloadSnapshotStatus.create(status);
             case SNAPSHOT_RESTORE:
                 return RestoreSnapshotStatus.create(status);
+            case SCHEMA_RESTORE:
+                return RestoreSchemaStatus.create(status);
             case CLEANUP:
                 return CleanupStatus.create(status);
             case REPAIR:

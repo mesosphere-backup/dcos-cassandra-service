@@ -46,4 +46,12 @@ public interface BackupStorageDriver {
      * @throws Exception If the upload fails.
      */
     void uploadSchema(BackupRestoreContext ctx, String schema) throws Exception;
+
+    /**
+     * Reads the schema file.
+     * @param ctx
+     * @return  String.
+     * @throws Exception
+     */
+    String downloadSchema(BackupRestoreContext ctx) throws Exception;
 }

@@ -24,6 +24,12 @@ import org.apache.mesos.executor.ExecutorTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.Future;
 
@@ -74,6 +80,14 @@ public class DownloadSnapshot implements ExecutorTask {
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
                     "Started downloading snapshot");
 
+            // cleanup downloaded snapshot directory recursively if exists.
+            Path rootPath = Paths.get(context.getLocalLocation() + File.separator + context.getName());
+            if (rootPath.toFile().exists()) {
+                Files.walk(rootPath, FileVisitOption.FOLLOW_LINKS)
+                        .sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            }
             backupStorageDriver.download(context);
 
             // Send TASK_FINISHED

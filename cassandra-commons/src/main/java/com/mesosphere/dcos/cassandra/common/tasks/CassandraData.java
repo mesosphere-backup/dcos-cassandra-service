@@ -82,20 +82,20 @@ public class CassandraData {
     }
 
     public static final CassandraData createBackupSchemaData(
-        final String hostname,
-        final BackupRestoreContext context) {
+            final String hostname,
+            final BackupRestoreContext context) {
 
         return new CassandraData(
-            CassandraTask.TYPE.BACKUP_SCHEMA,
-            hostname,
-            context.getNodeId(),
-            context.getName(),
-            context.getExternalLocation(),
-            context.getLocalLocation(),
-            context.getAccountId(),
-            context.getSecretKey(),
-            context.getUsesEmc(),
-            context.getRestoreType());
+                CassandraTask.TYPE.BACKUP_SCHEMA,
+                hostname,
+                context.getNodeId(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getLocalLocation(),
+                context.getAccountId(),
+                context.getSecretKey(),
+                context.getUsesEmc(),
+                context.getRestoreType());
     }
 
     public static final CassandraData createBackupSchemaStatusData() {
@@ -181,6 +181,26 @@ public class CassandraData {
 
     public static final CassandraData createRestoreSnapshotStatusData() {
         return new CassandraData(CassandraTask.TYPE.SNAPSHOT_RESTORE);
+    }
+
+    public static final CassandraData createRestoreSchemaData(
+            final String hostname,
+            final BackupRestoreContext context) {
+        return new CassandraData(
+                CassandraTask.TYPE.SCHEMA_RESTORE,
+                hostname,
+                context.getNodeId(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getLocalLocation(),
+                context.getAccountId(),
+                context.getSecretKey(),
+                context.getUsesEmc(),
+                context.getRestoreType());
+    }
+
+    public static final CassandraData createRestoreSchemaStatusData() {
+        return new CassandraData(CassandraTask.TYPE.SCHEMA_RESTORE);
     }
 
     public static final CassandraData createUpgradeSSTableData(
