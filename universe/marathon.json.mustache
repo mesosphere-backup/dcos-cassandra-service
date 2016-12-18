@@ -16,7 +16,7 @@
 "uris": [
   "{{resource.assets.uris.scheduler-zip}}",
   "{{resource.assets.uris.jre-tar-gz}}",
-  "{{resource.assets.uris.libmesos-bundle-tar-bz2}}"
+  "{{resource.assets.uris.libmesos-bundle-tar-gz}}"
 ],
 "healthChecks": [
   {
@@ -156,7 +156,7 @@
 ,"EXECUTOR_JRE_LOCATION":"{{resource.assets.uris.jre-tar-gz}}"
 ,"EXECUTOR_LOCATION":"{{resource.assets.uris.executor-zip}}"
 ,"EXECUTOR_CASSANDRA_LOCATION":"{{resource.assets.uris.apache-cassandra-bin-tar-gz}}"
-,"EXECUTOR_LIBMESOS_LOCATION": "{{resource.assets.uris.libmesos-bundle-tar-bz2}}"
+,"EXECUTOR_LIBMESOS_LOCATION": "{{resource.assets.uris.libmesos-bundle-tar-gz}}"
 ,"CASSANDRA_LOCATION_DATA_CENTER":"{{service.data_center}}"
 ,"CLUSTER_TASK_CPUS":"{{task.cpus}}"
 ,"CLUSTER_TASK_MEMORY_MB":"{{task.mem}}"
