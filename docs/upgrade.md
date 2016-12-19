@@ -12,9 +12,22 @@ enterprise: 'yes'
 
    The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress by making a REST request identical to the one used to follow the progress of a configuration upgrade. See the Configuring section for more information.
 
-**Note:** The upgrade process will cause all of your Cassandra node processes to restart.
+**Note:** The upgrade process will cause all of your Cassandra node
+processes to restart.
 
-**If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Apache Cassandra from an older version (pre `1.0.13-X.Y.Z`), here is the upgrade path:**
+# Specific Version Instructions
+
+**If you are upgrading from DC/OS Apache Cassandra 1.0.18, you must
+upgrade to 1.0.20 or higher.  Do not upgrade to 1.0.19 (See
+https://github.com/mesosphere/dcos-cassandra-service/pull/346 for details)**
+
+**If you are upgrading from DC/OS Apache Cassandra 1.0.19, you must
+  upgrade to 1.0.21 or higher.  Do not upgrade to 1.0.20 (See
+  https://github.com/mesosphere/dcos-cassandra-service/pull/346 for details)**
+
+**If you are upgrading to or beyond 1.0.13-X.Y.Z of DC/OS Apache
+  Cassandra from an older version (pre `1.0.13-X.Y.Z`), here is the
+  upgrade path:**
 
 1. Perform the backup operation on your currently running Cassandra Service. Note the backup name and backup location. See the Backup and Restore section for more information.
 1. Install a new Cassandra Service instance. See the Install and Customize section for more information.
