@@ -37,9 +37,9 @@ enterprise: 'no'
 
     Now that you are inside your DC/OS cluster, you can connect to your Cassandra cluster directly.
 
-1. Launch a docker container containing `cqlsh` to connect to your cassandra cluster. Use one of the nodes you retrieved from the `connection` command:
+1. Launch a docker container containing `cqlsh` to connect to your cassandra cluster:
 
-        core@ip-10-0-6-153 ~ $ docker run -ti cassandra:3.0.7 cqlsh --cqlversion="3.4.0" 10.0.2.136
+        core@ip-10-0-6-153 ~ $ docker run -ti cassandra:3.0.7 cqlsh --cqlversion="3.4.0" node-0.cassandra.mesos
         cqlsh>
 
 1. You are now connected to your Cassandra cluster. Create a sample keyspace called `demo`:
