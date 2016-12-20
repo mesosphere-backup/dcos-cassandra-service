@@ -253,6 +253,8 @@ public class ConfigurationManagerTest {
                 768,
                 512,
                 9000,
+                "HOST",
+                "DCOS",
                 "./jre",
                 URI.create("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz"),
                 URI.create("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip"),
