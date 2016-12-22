@@ -36,18 +36,13 @@ import java.util.Optional;
 public class BackupUploadTask extends CassandraTask {
 
     /**
-     * The name prefix for BackupUploadTasks.
-     */
-    public static final String NAME_PREFIX = "upload-";
-
-    /**
      * Gets the name of a BackupUploadTask for a CassandraDaemonTask.
      *
      * @param daemonName The name of the CassandraDaemonTask.
      * @return The name of the BackupUploadTask for daemonName.
      */
     public static final String nameForDaemon(final String daemonName) {
-        return NAME_PREFIX + daemonName;
+        return daemonName;
     }
 
     /**
