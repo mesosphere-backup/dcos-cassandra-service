@@ -119,6 +119,10 @@ public abstract class CassandraTask {
          * Task that backup schema for cassandra daemon.
          */
         BACKUP_SCHEMA,
+        /**
+         * Task that restores the schema on a node.
+         */
+        SCHEMA_RESTORE,
     }
 
     /**
@@ -129,7 +133,8 @@ public abstract class CassandraTask {
      * @throws IOException If a CassandraTask can not be parsed from info.
      */
     public static CassandraTask parse(final Protos.TaskInfo info) {
-        CassandraData data = CassandraData.parse(info.getData());
+        final boolean isTemplateTask = CassandraTemplateTask.isTemplateTaskName(info.getName());
+        CassandraData data = CassandraData.parse(info.getData(), isTemplateTask);
         switch (data.getType()) {
             case CASSANDRA_DAEMON:
                 return CassandraDaemonTask.parse(info);
@@ -143,6 +148,8 @@ public abstract class CassandraTask {
                 return DownloadSnapshotTask.parse(info);
             case SNAPSHOT_RESTORE:
                 return RestoreSnapshotTask.parse(info);
+            case SCHEMA_RESTORE:
+                return RestoreSchemaTask.parse(info);
             case CLEANUP:
                 return CleanupTask.parse(info);
             case REPAIR:
@@ -166,10 +173,10 @@ public abstract class CassandraTask {
         return TaskUtils.toTaskId(name);
     }
 
-    private final Protos.TaskInfo info;
+    protected final Protos.TaskInfo info;
 
     protected CassandraData getData() {
-        return CassandraData.parse(info.getData());
+        return CassandraData.parse(info.getData(), false);
     }
 
     protected Protos.TaskInfo.Builder getBuilder() {

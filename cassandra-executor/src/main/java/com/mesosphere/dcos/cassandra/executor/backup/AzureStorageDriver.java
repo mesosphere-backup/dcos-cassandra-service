@@ -221,6 +221,12 @@ public class AzureStorageDriver implements BackupStorageDriver {
     }
   }
 
+  @Override
+  public String downloadSchema(BackupRestoreContext ctx) throws Exception {
+    // ToDo : Add the download schema to Azure.
+    return new String("");
+  }
+
   private String getContainerName(String externalLocation) {
     return externalLocation.substring("azure://".length()).replace("/", "");
   }

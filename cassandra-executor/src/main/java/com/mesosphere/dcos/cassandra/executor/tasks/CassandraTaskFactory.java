@@ -88,12 +88,19 @@ public class CassandraTaskFactory implements ExecutorTaskFactory {
                     driver,
                     (DownloadSnapshotTask) cassandraTask,
                     StorageDriverFactory.createStorageDriver(
-                    (DownloadSnapshotTask) cassandraTask));
+                                cassandraTask));
             case SNAPSHOT_RESTORE:
                 return new RestoreSnapshot(
                     driver,
                     (RestoreSnapshotTask) cassandraTask,
                     cassandra);
+            case SCHEMA_RESTORE:
+                return new RestoreSchema(
+                    driver,
+                    cassandra,
+                    (RestoreSchemaTask) cassandraTask,
+                    StorageDriverFactory.createStorageDriver(
+                                cassandraTask));
             case CLEANUP:
                 return new Cleanup(
                     driver,

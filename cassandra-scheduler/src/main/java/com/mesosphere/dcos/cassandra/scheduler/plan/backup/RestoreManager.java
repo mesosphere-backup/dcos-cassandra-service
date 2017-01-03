@@ -44,14 +44,28 @@ public class RestoreManager extends ClusterTaskManager<BackupRestoreRequest, Bac
     @Override
     protected List<Phase> createPhases(BackupRestoreContext context) {
         return Arrays.asList(
+                createRestoreSchemaPhase(context, cassandraState, provider),
                 createDownloadSnapshotPhase(context, cassandraState, provider),
                 createRestoreSnapshotPhase(context, cassandraState, provider));
     }
 
     @Override
     protected void clearTasks() throws PersistenceException {
+        cassandraState.remove(cassandraState.getRestoreSchemaTasks().keySet());
         cassandraState.remove(cassandraState.getDownloadSnapshotTasks().keySet());
         cassandraState.remove(cassandraState.getRestoreSnapshotTasks().keySet());
+    }
+
+    private static Phase createRestoreSchemaPhase(
+            BackupRestoreContext context,
+            CassandraState cassandraState,
+            ClusterTaskOfferRequirementProvider provider) {
+        final List<String> daemons = new ArrayList<>(cassandraState.getDaemons().keySet());
+        Collections.sort(daemons);
+        List<Step> steps = daemons.stream()
+                .map(daemon -> new RestoreSchemaStep(daemon, cassandraState, provider, context))
+                .collect(Collectors.toList());
+        return new DefaultPhase("RestoreSchema", steps, new SerialStrategy<>(), Collections.emptyList());
     }
 
     private static Phase createDownloadSnapshotPhase(

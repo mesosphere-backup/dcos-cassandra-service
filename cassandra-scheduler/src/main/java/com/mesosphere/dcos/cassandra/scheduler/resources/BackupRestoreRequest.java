@@ -83,7 +83,9 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   public String getRestoreType() {
-    if (restoreType != null && !restoreType.isEmpty()) {
+
+
+    if (StringUtils.isNotBlank(restoreType)) {
       return restoreType;
     } else {
       return "existing";

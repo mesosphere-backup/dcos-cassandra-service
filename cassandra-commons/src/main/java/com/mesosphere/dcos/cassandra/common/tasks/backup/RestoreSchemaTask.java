@@ -10,59 +10,55 @@ import org.apache.mesos.offer.TaskUtils;
 import java.util.Optional;
 
 /**
- * BackupSchemaTask extends CassandraTask to implement a task that
- * back's up schema for cassandra process.
- * The task can only be launched successfully if the CassandraDaemonTask is
- * running on the targeted slave.
- * Back's up schema for all customer created keyspaces
- * and column families.
+ * Restore SchemaTask extends CassandraTask to implement a task that
+ * restores the schema of a set of key spaces and column families for a
+ * Cassandra cluster to a node. The task can only be launched successfully if
+ * the CassandraDaemonTask is running on the targeted slave.
  */
-public class BackupSchemaTask extends CassandraTask{
+public class RestoreSchemaTask extends CassandraTask {
 
     /**
-     * The name prefix for BackupSchemaTasks.
+     * Prefix for the name of RestoreSchemaTasks.
      */
-    public static final String NAME_PREFIX = "backupschema-";
+    public static final String NAME_PREFIX = "restoreschema-";
 
     /**
-     * Gets the name of a BackupSchemaTask for a CassandraDaemonTask.
+     * Gets the name of a RestoreSchemaTask for a CassandraDaemonTask.
      *
      * @param daemonName The name of the CassandraDaemonTask.
-     * @return The name of the BackupSchemaTask for daemonName.
+     * @return The name of the  RestoreSchemaTask for daemonName.
      */
     public static final String nameForDaemon(final String daemonName) {
         return NAME_PREFIX + daemonName;
     }
 
     /**
-     * Gets the name of a BackupSchemaTask for a CassandraDaemonTask.
+     * Gets the name of a RestoreSchemaTask for a CassandraDaemonTask.
      *
-     * @param daemon The CassandraDaemonTask for which the schema will be
-     *               backed up.
-     * @return The name of the BackupSchemaTask for daemon.
+     * @param daemon The CassandraDaemonTask for which the Schema will be
+     *               uploaded.
+     * @return The name of the  RestoreSchemaTask for daemon.
      */
     public static final String nameForDaemon(final CassandraDaemonTask daemon) {
         return nameForDaemon(daemon.getName());
     }
 
-
-    public static BackupSchemaTask parse(final Protos.TaskInfo info) {
-        return new BackupSchemaTask(info);
+    public static RestoreSchemaTask parse(final Protos.TaskInfo info){
+        return new RestoreSchemaTask(info);
     }
 
-
-    public static BackupSchemaTask create(
+    public static RestoreSchemaTask create(
             final Protos.TaskInfo template,
             final CassandraDaemonTask daemon,
             final BackupRestoreContext context) {
 
-        String name = nameForDaemon(daemon);
-        CassandraData data = CassandraData.createBackupSchemaData(
+        CassandraData data = CassandraData.createRestoreSchemaData(
                 "",
                 context
                         .forNode(daemon.getName())
                         .withLocalLocation(daemon.getVolumePath() + "/data"));
 
+        String name = nameForDaemon(daemon);
         Protos.TaskInfo completedTemplate = Protos.TaskInfo.newBuilder(template)
                 .setName(name)
                 .setTaskId(TaskUtils.toTaskId(name))
@@ -71,33 +67,33 @@ public class BackupSchemaTask extends CassandraTask{
 
         completedTemplate = org.apache.mesos.offer.TaskUtils.clearTransient(completedTemplate);
 
-        return new BackupSchemaTask(completedTemplate);
+        return new RestoreSchemaTask(completedTemplate);
     }
 
     /**
-     * Constructs a new BackupSchemaTask.
+     * Constructs a new RestoreSchemaTask.
      */
-    protected BackupSchemaTask(final Protos.TaskInfo info) {
+    protected RestoreSchemaTask(final Protos.TaskInfo info) {
         super(info);
     }
 
     @Override
-    public BackupSchemaTask update(Protos.Offer offer) {
-        return new BackupSchemaTask(getBuilder()
+    public RestoreSchemaTask update(Protos.Offer offer) {
+        return new RestoreSchemaTask(getBuilder()
                 .setSlaveId(offer.getSlaveId())
                 .setData(getData().withHostname(offer.getHostname()).getBytes())
                 .build());
     }
 
     @Override
-    public BackupSchemaTask updateId() {
-        return new BackupSchemaTask(getBuilder().setTaskId(createId(getName()))
+    public RestoreSchemaTask updateId() {
+        return new RestoreSchemaTask(getBuilder().setTaskId(createId(getName()))
                 .build());
     }
 
     @Override
-    public BackupSchemaTask update(CassandraTaskStatus status) {
-        if (status.getTaskType() == TYPE.BACKUP_SCHEMA &&
+    public RestoreSchemaTask update(CassandraTaskStatus status) {
+        if (status.getTaskType() == CassandraTask.TYPE.SCHEMA_RESTORE &&
                 getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }
@@ -105,13 +101,13 @@ public class BackupSchemaTask extends CassandraTask{
     }
 
     @Override
-    public BackupSchemaTask update(Protos.TaskState state) {
-        return new BackupSchemaTask(getBuilder().setData(
+    public RestoreSchemaTask update(Protos.TaskState state) {
+        return new RestoreSchemaTask(getBuilder().setData(
                 getData().withState(state).getBytes()).build());
     }
 
     @Override
-    public BackupSchemaStatus createStatus(
+    public RestoreSchemaStatus createStatus(
             Protos.TaskState state,
             Optional<String> message) {
 
@@ -120,12 +116,11 @@ public class BackupSchemaTask extends CassandraTask{
             builder.setMessage(message.get());
         }
 
-        return BackupSchemaStatus.create(builder
-                .setData(CassandraData.createBackupSchemaStatusData().getBytes())
+        return RestoreSchemaStatus.create(builder
+                .setData(CassandraData.createRestoreSchemaStatusData().getBytes())
                 .setState(state)
                 .build());
     }
-
 
     public BackupRestoreContext getBackupRestoreContext() {
         return getData().getBackupRestoreContext();

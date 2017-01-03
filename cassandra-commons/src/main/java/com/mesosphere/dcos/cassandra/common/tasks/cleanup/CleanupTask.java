@@ -109,7 +109,7 @@ public class CleanupTask extends CassandraTask {
 
     @Override
     public CleanupTask update(CassandraTaskStatus status) {
-        if (status.getType() == TYPE.CLEANUP &&
+        if (status.getTaskType() == TYPE.CLEANUP &&
             getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }

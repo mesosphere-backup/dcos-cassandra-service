@@ -1,14 +1,15 @@
 package com.mesosphere.dcos.cassandra.scheduler.plan.backup;
 
-import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
-import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
+import com.mesosphere.dcos.cassandra.common.serialization.SerializationException;
+import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
-
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.DownloadSnapshotTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSchemaTask;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.RestoreSnapshotTask;
+import com.mesosphere.dcos.cassandra.scheduler.resources.BackupRestoreRequest;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.when;
 public class RestoreManagerTest {
     private static final String RESTORE_NODE_0 = "restore-node-0";
     private static final String DOWNLOAD_NODE_0 = "download-node-0";
+    private static final String SCHEMA_NODE_0 = "restoreschema-node-0";
     private static final String NODE_0 = "node-0";
 
     @Mock private ClusterTaskOfferRequirementProvider mockProvider;
@@ -66,7 +68,7 @@ public class RestoreManagerTest {
         RestoreManager manager = new RestoreManager(mockCassandraState, mockProvider, mockState);
         assertTrue(manager.isComplete());
         assertFalse(manager.isInProgress());
-        assertEquals(2, manager.getPhases().size());
+        assertEquals(3, manager.getPhases().size());
     }
 
     @Test
@@ -82,12 +84,13 @@ public class RestoreManagerTest {
         when(mockCassandraState.getDaemons()).thenReturn(map);
         when(mockCassandraState.get(RESTORE_NODE_0)).thenReturn(Optional.of(daemonTask));
         when(mockCassandraState.get(DOWNLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.get(SCHEMA_NODE_0)).thenReturn(Optional.of(daemonTask));
 
         manager.start(emptyRequest());
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());
-        assertEquals(2, manager.getPhases().size());
+        assertEquals(3, manager.getPhases().size());
 
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
         // notify steps to check for TASK_FINISHED:
@@ -99,7 +102,7 @@ public class RestoreManagerTest {
 
         assertTrue(manager.isComplete());
         assertFalse(manager.isInProgress());
-        assertEquals(2, manager.getPhases().size());
+        assertEquals(3, manager.getPhases().size());
 
         manager.stop();
 
@@ -121,12 +124,13 @@ public class RestoreManagerTest {
         when(mockCassandraState.getDaemons()).thenReturn(map);
         when(mockCassandraState.get(RESTORE_NODE_0)).thenReturn(Optional.of(daemonTask));
         when(mockCassandraState.get(DOWNLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.get(SCHEMA_NODE_0)).thenReturn(Optional.of(daemonTask));
 
         manager.start(emptyRequest());
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());
-        assertEquals(2, manager.getPhases().size());
+        assertEquals(3, manager.getPhases().size());
 
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_FINISHED);
         // notify steps to check for TASK_FINISHED:
@@ -138,7 +142,7 @@ public class RestoreManagerTest {
 
         assertTrue(manager.isComplete());
         assertFalse(manager.isInProgress());
-        assertEquals(2, manager.getPhases().size());
+        assertEquals(3, manager.getPhases().size());
 
         Mockito.when(daemonTask.getState()).thenReturn(Protos.TaskState.TASK_RUNNING);
         Map<String, DownloadSnapshotTask> previousDownloadTasks =
@@ -147,6 +151,9 @@ public class RestoreManagerTest {
         Map<String, RestoreSnapshotTask> previousRestoreTasks =
                 new HashMap<String, RestoreSnapshotTask>();
         previousRestoreTasks.put("hi", RestoreSnapshotTask.parse(TaskInfo.getDefaultInstance()));
+        Map<String, RestoreSchemaTask> previousRestoreSchemaTasks = new HashMap<String, RestoreSchemaTask>();
+        previousRestoreSchemaTasks.put("hello", RestoreSchemaTask.parse(TaskInfo.getDefaultInstance()));
+        when(mockCassandraState.getRestoreSchemaTasks()).thenReturn(previousRestoreSchemaTasks);
         when(mockCassandraState.getDownloadSnapshotTasks()).thenReturn(previousDownloadTasks);
         when(mockCassandraState.getRestoreSnapshotTasks()).thenReturn(previousRestoreTasks);
 
@@ -154,10 +161,11 @@ public class RestoreManagerTest {
 
         verify(mockCassandraState).remove(Collections.singleton("hi"));
         verify(mockCassandraState).remove(Collections.singleton("hey"));
+        verify(mockCassandraState).remove(Collections.singleton("hello"));
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());
-        assertEquals(2, manager.getPhases().size());
+        assertEquals(3, manager.getPhases().size());
     }
 
     @Test
@@ -173,12 +181,13 @@ public class RestoreManagerTest {
         when(mockCassandraState.getDaemons()).thenReturn(map);
         when(mockCassandraState.get(RESTORE_NODE_0)).thenReturn(Optional.of(daemonTask));
         when(mockCassandraState.get(DOWNLOAD_NODE_0)).thenReturn(Optional.of(daemonTask));
+        when(mockCassandraState.get(SCHEMA_NODE_0)).thenReturn(Optional.of(daemonTask));
 
         manager.start(emptyRequest());
 
         assertFalse(manager.isComplete());
         assertTrue(manager.isInProgress());
-        assertEquals(2, manager.getPhases().size());
+        assertEquals(3, manager.getPhases().size());
 
         manager.stop();
 

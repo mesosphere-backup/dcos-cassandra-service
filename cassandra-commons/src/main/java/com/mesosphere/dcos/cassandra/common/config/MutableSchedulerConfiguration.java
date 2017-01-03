@@ -2,10 +2,12 @@ package com.mesosphere.dcos.cassandra.common.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import io.dropwizard.Configuration;
 import io.dropwizard.client.HttpClientConfiguration;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 
 public class MutableSchedulerConfiguration extends Configuration {
 
@@ -248,5 +250,10 @@ public class MutableSchedulerConfiguration extends Configuration {
     return Objects.hash(executorConfig, servers, seeds, placementConstraint, cassandraConfig,
       clusterTaskConfig, apiPort, serviceConfig, mesosConfig, curatorConfig,
       externalDcSyncMs, externalDcs, dcUrl, enableUpgradeSSTableEndpoint, httpClientConfiguration);
+  }
+
+  @Override
+  public String toString() {
+    return JsonUtils.toJsonString(this);
   }
 }

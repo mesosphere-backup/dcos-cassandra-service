@@ -24,7 +24,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.io.File;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
@@ -158,7 +160,8 @@ public class ConfigurationManagerTest {
                 17,
                 "/java/home",
                 URI.create("/jre/location"), URI.create("/executor/location"),
-                URI.create("/cassandra/location"));
+                URI.create("/cassandra/location"),
+                URI.create("/libmesos/location"));
         int updatedServers = original.getServers() + 10;
         int updatedSeeds = original.getSeeds() + 5;
 
@@ -167,7 +170,6 @@ public class ConfigurationManagerTest {
                         new FileConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false, true)),
                 Resources.getResource("scheduler.yml").getFile());
-
 
         mutable.setSeeds(updatedSeeds);
         mutable.setServers(updatedServers);
@@ -199,6 +201,69 @@ public class ConfigurationManagerTest {
         assertEquals(updatedServers, targetConfig.getServers());
 
         assertEquals(updatedSeeds, targetConfig.getSeeds());
+    }
+
+    @Test
+    public void serializeDeserializeExecutorConfig() throws Exception {
+        MutableSchedulerConfiguration mutable = configurationFactory.build(
+                new SubstitutingSourceProvider(
+                        new FileConfigurationSourceProvider(),
+                        new EnvironmentVariableSubstitutor(false, true)),
+                Resources.getResource("scheduler.yml").getFile());
+        final CassandraSchedulerConfiguration original = mutable.createConfig();
+        final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
+
+        mutable.setCassandraConfig(
+                mutable.getCassandraConfig()
+                        .mutable().setJmxPort(8000).setCpus(0.6).setMemoryMb(10000).build());
+
+        RetryPolicy retryPolicy =
+                (curatorConfig.getOperationTimeout().isPresent()) ?
+                        new RetryUntilElapsed(
+                                curatorConfig.getOperationTimeoutMs()
+                                        .get()
+                                        .intValue()
+                                , (int) curatorConfig.getBackoffMs()) :
+                        new RetryForever((int) curatorConfig.getBackoffMs());
+
+        StateStore stateStore = new CuratorStateStore(
+                original.getServiceConfig().getName(),
+                server.getConnectString(),
+                retryPolicy);
+
+        DefaultConfigurationManager configurationManager =
+                new DefaultConfigurationManager(CassandraSchedulerConfiguration.class,
+                        original.getServiceConfig().getName(),
+                        connectString,
+                        original,
+                        new ConfigValidator(),
+                        stateStore);
+
+        configurationManager.store(original);
+        ConfigurationManager manager = new ConfigurationManager(taskFactory, configurationManager);
+        CassandraSchedulerConfiguration targetConfig =
+                (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
+
+        ExecutorConfig expectedExecutorConfig = new ExecutorConfig(
+                "export LD_LIBRARY_PATH=$MESOS_SANDBOX/libmesos-bundle/lib && export MESOS_NATIVE_JAVA_LIBRARY=$(ls $MESOS_SANDBOX/libmesos-bundle/lib/libmesos-*.so) && ./executor/bin/cassandra-executor server executor/conf/executor.yml",
+                new ArrayList<>(),
+                0.1,
+                768,
+                512,
+                9000,
+                "./jre",
+                URI.create("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz"),
+                URI.create("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip"),
+                URI.create("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz"),
+                URI.create("http://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.8.7-1.0.2.tar.gz"));
+
+        manager.start();
+
+        assertEquals(original.getCassandraConfig(), targetConfig.getCassandraConfig());
+
+        assertEquals(expectedExecutorConfig, targetConfig.getExecutorConfig());
+
+        manager.stop();
     }
 
     @Test

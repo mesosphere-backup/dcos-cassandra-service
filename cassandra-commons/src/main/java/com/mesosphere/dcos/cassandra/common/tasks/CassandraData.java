@@ -9,6 +9,8 @@ import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
 import com.mesosphere.dcos.cassandra.common.tasks.repair.RepairContext;
 import com.mesosphere.dcos.cassandra.common.tasks.upgradesstable.UpgradeSSTableContext;
 import org.apache.mesos.Protos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,9 +19,10 @@ import java.util.List;
  * CassandraData encapsulates command task and status data
  */
 public class CassandraData {
+    private final Logger LOGGER = LoggerFactory.getLogger(CassandraData.class);
 
-    public static final CassandraData parse(final ByteString bytes) {
-        return new CassandraData(bytes);
+    public static final CassandraData parse(final ByteString bytes, final boolean isTemplateTask) {
+        return new CassandraData(bytes, isTemplateTask);
     }
 
     public static final CassandraData createTemplateData() {
@@ -79,20 +82,20 @@ public class CassandraData {
     }
 
     public static final CassandraData createBackupSchemaData(
-        final String hostname,
-        final BackupRestoreContext context) {
+            final String hostname,
+            final BackupRestoreContext context) {
 
         return new CassandraData(
-            CassandraTask.TYPE.BACKUP_SCHEMA,
-            hostname,
-            context.getNodeId(),
-            context.getName(),
-            context.getExternalLocation(),
-            context.getLocalLocation(),
-            context.getAccountId(),
-            context.getSecretKey(),
-            context.getUsesEmc(),
-            context.getRestoreType());
+                CassandraTask.TYPE.BACKUP_SCHEMA,
+                hostname,
+                context.getNodeId(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getLocalLocation(),
+                context.getAccountId(),
+                context.getSecretKey(),
+                context.getUsesEmc(),
+                context.getRestoreType());
     }
 
     public static final CassandraData createBackupSchemaStatusData() {
@@ -180,6 +183,26 @@ public class CassandraData {
         return new CassandraData(CassandraTask.TYPE.SNAPSHOT_RESTORE);
     }
 
+    public static final CassandraData createRestoreSchemaData(
+            final String hostname,
+            final BackupRestoreContext context) {
+        return new CassandraData(
+                CassandraTask.TYPE.SCHEMA_RESTORE,
+                hostname,
+                context.getNodeId(),
+                context.getName(),
+                context.getExternalLocation(),
+                context.getLocalLocation(),
+                context.getAccountId(),
+                context.getSecretKey(),
+                context.getUsesEmc(),
+                context.getRestoreType());
+    }
+
+    public static final CassandraData createRestoreSchemaStatusData() {
+        return new CassandraData(CassandraTask.TYPE.SCHEMA_RESTORE);
+    }
+
     public static final CassandraData createUpgradeSSTableData(
             final String hostname,
             final UpgradeSSTableContext context) {
@@ -198,9 +221,17 @@ public class CassandraData {
 
     private final CassandraProtos.CassandraData data;
 
-    private CassandraData(final ByteString bytes) {
+    private CassandraData(final ByteString bytes, final boolean isTemplateTask) {
         try {
-            this.data = CassandraProtos.CassandraData.parseFrom(bytes);
+            CassandraProtos.CassandraData data = CassandraProtos.CassandraData.parseFrom(bytes);
+            CassandraProtos.CassandraData.Builder builder = CassandraProtos.CassandraData.newBuilder(data);
+            if (isTemplateTask && builder.getType() != CassandraTask.TYPE.TEMPLATE.ordinal()) {
+                LOGGER.info("Parsing CassandraData from corrupted CassandraTask.TYPE Enum.  I've detected that the " +
+                        "task for this data should be of type CassandraTask.TYPE.TEMPLATE, but actually has type {}." +
+                        "  Forcing type CassandraTask.TYPE.TEMPLATE.", CassandraTask.TYPE.values()[builder.getType()]);
+                builder.setType(CassandraTask.TYPE.TEMPLATE.ordinal());
+            }
+            this.data = builder.build();
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid ByteString passed to " +
                 "CassandraData", e);
