@@ -28,6 +28,11 @@ def teardown_module(module):
 
 @pytest.mark.sanity
 def test_upgrade_downgrade():
+    # Ensure both Universe and the test repo exist.
+    if len(shakedown.get_package_repos()) != 2:
+        print('No cassandra test repo found.  Skipping test_upgrade_downgrade')
+        return
+
     test_repo_name, test_repo_url = get_test_repo_info()
     test_version = get_pkg_version()
     print('Found test version: {}'.format(test_version))
