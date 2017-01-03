@@ -20,9 +20,15 @@ import org.slf4j.LoggerFactory;
 public class Main extends Application<MutableSchedulerConfiguration> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+  private static final int EXIT_CODE = 7;
 
   public static void main(String[] args) throws Exception {
-    new Main().run(args);
+    try {
+      new Main().run(args);
+    } catch (Exception e) {
+      LOGGER.error("Caught exception while trying to run main: exiting framework process with code: " + EXIT_CODE);
+      System.exit(EXIT_CODE);
+    }
   }
 
   public Main() {
