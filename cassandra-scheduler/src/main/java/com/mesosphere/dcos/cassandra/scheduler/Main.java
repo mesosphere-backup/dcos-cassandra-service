@@ -14,20 +14,20 @@ import io.dropwizard.java8.Java8Bundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.mesos.scheduler.SchedulerErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Main extends Application<MutableSchedulerConfiguration> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-  private static final int EXIT_CODE = 7;
 
   public static void main(String[] args) throws Exception {
     try {
       new Main().run(args);
     } catch (Exception e) {
-      LOGGER.error("Caught exception while trying to run main: exiting framework process with code: " + EXIT_CODE);
-      System.exit(EXIT_CODE);
+      LOGGER.error("Caught exception while trying to run main: exiting framework process");
+      System.exit(SchedulerErrorCode.ERROR.ordinal());
     }
   }
 
