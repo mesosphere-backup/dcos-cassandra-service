@@ -127,8 +127,8 @@ cassandra:
      native_transport_max_concurrent_connections_per_ip : ${CASSANDRA_NATIVE_TRANSPORT_MAX_CONCURRENT_CONNECTIONS_PER_IP:--1}
      rpc_min_threads : ${CASSANDRA_RPC_MIN_THREADS:-16}
      rpc_max_threads : ${CASSANDRA_RPC_MAX_THREADS:-2048}
-     rpc_send_buff_size_in_bytes : ${CASSANDRA_RPC_SEND_BUFF_SIZE_IN_BYTES:-0}
-     rpc_recv_buff_size_in_bytes : ${CASSANDRA_RPC_RECV_BUFF_SIZE_IN_BYTES:-0}
+     rpc_send_buff_size_in_bytes : ${CASSANDRA_RPC_SEND_BUFF_SIZE_IN_BYTES:-16384}
+     rpc_recv_buff_size_in_bytes : ${CASSANDRA_RPC_RECV_BUFF_SIZE_IN_BYTES:-16384}
      concurrent_compactors : ${CASSANDRA_CONCURRENT_COMPACTORS:-1}
      stream_throughput_outbound_megabits_per_sec : ${CASSANDRA_STREAM_THROUGHPUT_OUTBOUND_MEGABITS_PER_SEC:-200}
      inter_dc_stream_throughput_outbound_megabits_per_sec : ${CASSANDRA_INTER_DC_STREAM_THROUGHPUT_OUTBOUND_MEGABITS_PER_SEC:-200}
