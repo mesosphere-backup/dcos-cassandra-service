@@ -283,8 +283,8 @@ public class CassandraApplicationConfig {
   public static final int DEFAULT_NATIVE_TRANSPORT_MAX_CONCURRENT_CONNECTIONS_PER_IP = -1;
   public static final int DEFAULT_RPC_MIN_THREADS = 16;
   public static final int DEFAULT_RPC_MAX_THREADS = 2048;
-  public static final int DEFAULT_RPC_SEND_BUFF_SIZE_IN_BYTES = 0;
-  public static final int DEFAULT_RPC_RECV_BUFF_SIZE_IN_BYTES = 0;
+  public static final int DEFAULT_RPC_SEND_BUFF_SIZE_IN_BYTES = 16384;
+  public static final int DEFAULT_RPC_RECV_BUFF_SIZE_IN_BYTES = 16384;
   public static final int DEFAULT_CONCURRENT_COMPACTORS = 1;
   public static final int DEFAULT_STREAM_THROUGHPUT_OUTBOUND_MEGABITS_PER_SEC = 200;
   public static final int DEFAULT_INTER_DC_STREAM_THROUGHPUT_OUTBOUND_MEGABITS_PER_SEC = 200;
