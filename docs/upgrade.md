@@ -7,7 +7,7 @@ enterprise: 'yes'
 
 # Overview
 
-We support upgrade/rollback between each version only.  Concretely, to upgrade from version 2 to version 4, you must also install version 3.  
+We support upgrade/rollback between adjacent versions only.  Concretely, to upgrade from version 2 to version 4, you must upgrade from 2 -> 3, then from 3 ->4.  
 
 # Upgrade Instructions
 
