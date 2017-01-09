@@ -30,7 +30,7 @@ class ClusterTaskRunner<R extends ClusterTaskRequest, C extends ClusterTaskConte
     Response start(R request) {
         LOGGER.info("Processing start {} request: {}", taskName, request);
         try {
-            if (!request.isValid()) {
+            if (request == null || !request.isValid()) {
                 return Response.status(Response.Status.BAD_REQUEST).build();
             } else if (!manager.isInProgress()) {
                 manager.start(request);
