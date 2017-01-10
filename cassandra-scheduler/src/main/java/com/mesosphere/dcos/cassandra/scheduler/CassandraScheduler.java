@@ -417,9 +417,12 @@ public class CassandraScheduler implements Scheduler, Observer {
                 "Scheduler has operations to perform." :
                 "Scheduler has no operations to perform.");
         if (hasOperations) {
-            LOGGER.info("Reviving offers.");
-            driver.reviveOffers();
-            cassandraState.setSuppressed(false);
+            // Revive offers only if they were previously suppressed.
+            if (cassandraState.isSuppressed()) {
+                LOGGER.info("Reviving offers.");
+                driver.reviveOffers();
+                cassandraState.setSuppressed(false);
+            }
         } else {
             LOGGER.info("Suppressing offers.");
             driver.suppressOffers();
