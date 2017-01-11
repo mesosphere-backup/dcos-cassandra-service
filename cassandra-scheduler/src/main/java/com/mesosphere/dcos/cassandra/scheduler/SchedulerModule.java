@@ -12,9 +12,7 @@ import com.mesosphere.dcos.cassandra.common.serialization.Serializer;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
-
 import io.dropwizard.client.HttpClientBuilder;
-import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.setup.Environment;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.RetryForever;
@@ -103,8 +101,8 @@ public class SchedulerModule extends AbstractModule {
                 .annotatedWith(Names.named("ConfiguredEnableUpgradeSSTableEndpoint"))
                 .to(configuration.getEnableUpgradeSSTableEndpoint());
 
-        HttpClientConfiguration httpClient = new HttpClientConfiguration();
-        bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(httpClient).build("http-client"));
+        bind(HttpClient.class).toInstance(new HttpClientBuilder(environment).using(
+                configuration.getHttpClientConfiguration()).build("http-client"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(curatorConfig);
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
