@@ -1,9 +1,10 @@
 package com.mesosphere.dcos.cassandra.common.util;
 
-import java.util.*;
 import org.apache.mesos.Protos.*;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.util.Algorithms;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TaskUtils {
@@ -30,10 +31,10 @@ public class TaskUtils {
     }
 
     public static Collection<CommandInfo.URI> createURIs(
-        final Set<String> uris) {
+        final Set<String> uris, boolean cacheFetchedUris) {
         return uris.stream()
             .map(uri -> CommandInfo.URI.newBuilder()
-                .setCache(false)
+                .setCache(cacheFetchedUris)
                 .setExecutable(false)
                 .setExtract(true)
                 .setValue(uri).build())
@@ -44,11 +45,12 @@ public class TaskUtils {
         final String command,
         final List<String> arguments,
         final Set<String> uris,
+        boolean cacheFetchedUris,
         final Map<String, String> environment) {
         return CommandInfo.newBuilder()
             .setValue(command)
             .addAllArguments(arguments)
-            .addAllUris(createURIs(uris))
+            .addAllUris(createURIs(uris, cacheFetchedUris))
             .setEnvironment(createEnvironment(environment)).build();
     }
 
