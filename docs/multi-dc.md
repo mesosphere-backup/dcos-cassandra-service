@@ -16,9 +16,9 @@ Install the cluster as described in the Install and Customize section. If all vi
 
 The `service.data_center_url` will automatically be set to the Mesos DNS address of the cluster (i.e., `http://<service.name>.marathon.mesos:<api_port>/v1/datacenter`) if left blank. For example, if the default service name and api port are used, the URL is set to `http://cassandra.marathon.mesos:9000/v1/datacenter`.
 
-If your Cassandra cluster spans multiple DC/OS clusters, perform the following steps to allow the Cassandra clusters to communicate with one another.
+If your Cassandra cluster spans multiple DC/OS clusters, perform the following steps to allow the Cassandra clusters to communicate with one another. For each of your datacenters:
 
-1. Set up a reverse proxy in your first datacenter, accessible from other datacenters, that routes to the Mesos DNS address of the DC/OS cluster.
+1. Set up a reverse proxy, accessible from other datacenters, that routes to the Mesos DNS address of the DC/OS cluster.
 
 1. Set that Mesos DNS address as your `service.data_center_url` and provide it to the subsequent datacenters in the `service.external_data_center_urls` list.
 
