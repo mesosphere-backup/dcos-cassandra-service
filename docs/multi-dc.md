@@ -12,16 +12,18 @@ enterprise: 'no'
 
 # Installing the Initial Datacenter
 
-Install the cluster as described in the Install and Customize section. If all virtual datacenters in the Cassandra cluster will reside in the same DC/OS cluster, no additional configuration is necessary.
+Install the cluster as described in the Install and Customize section. No additional configuration is necessary.
 
-If the cluster will span multiple DC/OS clusters, the `service.data_center_url` property of the cluster must be set to an address that is reachable and resolvable by the nodes in all subsequently installed deployments. Depending on the configuration of your DC/OS deployment, a good choice for this value may be the service router endpoint for the DC/OS Apache Cassandra Service (i.e. `<master-IP>/service/cassandra/v1/datacenter`). If all datacenters in the cluster reside in the same DC/OS cluster, the `service.data_center_url` will automatically be set to the Mesos DNS address of the cluster (i.e., `http://<service.name>.marathon.mesos:<api_port>/v1/datacenter`) if left blank. For example, if the default service name and api port are used, the URL is set to `http://cassandra.marathon.mesos:9000/v1/datacenter`.
+Tthe `service.data_center_url` will automatically be set to the Mesos DNS address of the cluster (i.e., `http://<service.name>.marathon.mesos:<api_port>/v1/datacenter`) if left blank. For example, if the default service name and api port are used, the URL is set to `http://cassandra.marathon.mesos:9000/v1/datacenter`.
+
+**Important:** We do not currently recommend creating Cassandra clusters that span multiple DC/OS clusters.
 
 # Installing Additional Datacenters
 Prior to installing additional datacenters, you MUST wait until at least one node per datacenter is active, and you SHOULD wait until at least the number of configured seed nodes is active.
 
-To install a second datacenter, you must set the `service.external_dcs` to include the values set in the `service.data_center_url` property of all prior installations for the cluster. If you have installed one datacenter, then only this should be included. If you have installed two datacenters, include the URLs of both as a comma-separated list.
+To install a second datacenter, you must set the `service.external_data_center_urls` to include the values set in the `service.data_center_url` property of all prior installations for the cluster. If you have installed one datacenter, then only this should be included. If you have installed two datacenters, include the URLs of both as a comma-separated list.
 
-The `service.cluster` property MUST be identical for all datacenters in the same cluster and the `service.data_center` MUST be unique for all datacenters in the cluster. As with the initial installation, if the cluster will span multiple DC/OS clusters, the `service.data_center_url` must be configured to a URL that is reachable and resolvable by the nodes in all previous deployments.
+The `cassandra.cluster_name` property MUST be identical for all datacenters in the same cluster and the `service.data_center` MUST be unique for all datacenters in the cluster. As with the initial installation, if the cluster will span multiple DC/OS clusters, the `service.data_center_url` must be configured to a URL that is reachable and resolvable by the nodes in all previous deployments.
 
 During the installation of additional datacenters, you will see a plan generated as below.
 
