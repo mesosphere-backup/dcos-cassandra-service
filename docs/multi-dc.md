@@ -20,7 +20,7 @@ If your Cassandra cluster spans multiple DC/OS clusters, perform the following s
 
 1. Set up a reverse proxy, accessible from other datacenters, that routes to the Mesos DNS address of the DC/OS cluster.
 
-1. Set that Mesos DNS address as your `service.data_center_url` and provide it to the subsequent datacenters in the `service.external_data_center_urls` list.
+1. Set that Mesos DNS address as your `service.data_center_url` and provide it to the other datacenters in the `service.external_data_center_urls` list.
 
 # Installing Additional Datacenters
 Prior to installing additional datacenters, you MUST wait until at least one node per datacenter is active, and you SHOULD wait until at least the number of configured seed nodes is active.
