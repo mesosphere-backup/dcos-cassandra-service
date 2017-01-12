@@ -9,11 +9,13 @@ DC/OS Apache Cassandra supports backup and restore from S3 storage for disaster 
 
 Cassandra takes a snapshot of your tables and ships them to a remote location. Once the snapshots have been uploaded to a remote location, you can restore the data to a new cluster, in the event of a disaster, or restore them to an existing cluster, in the event that a user error has caused a data loss.
 
+**Note:** Backup and restore is not guaranteed to work across arbitrary versions of the Cassandra service. For example restoring a backup from a 1.0.16 cluster to a 1.0.21 cluster will not work. It is recommended that backups be restored to clusters of the same version from which they were created.
+
 # Backup
 
 You can take a complete snapshot of your DC/OS Apache Cassandra ring and upload the artifacts to S3 or to Azure.
 
-**Note:** These instructions describe how to back up the _data_ in your Cassandra ring. You must back up your Cassandra _schemas_ manually.
+**Note:** These instructions describe how to back up the _data_ in your Cassandra ring. You must back up your Cassandra _schemas_ manually in versions prior to 1.0.21.
 
 ## S3 Backup
 
