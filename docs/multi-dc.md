@@ -12,11 +12,15 @@ enterprise: 'no'
 
 # Installing the Initial Datacenter
 
-Install the cluster as described in the Install and Customize section. No additional configuration is necessary.
+Install the cluster as described in the Install and Customize section. If all virtual datacenters in the Cassandra cluster will reside in the same DC/OS cluster, no additional configuration is necessary.
 
-Tthe `service.data_center_url` will automatically be set to the Mesos DNS address of the cluster (i.e., `http://<service.name>.marathon.mesos:<api_port>/v1/datacenter`) if left blank. For example, if the default service name and api port are used, the URL is set to `http://cassandra.marathon.mesos:9000/v1/datacenter`.
+The `service.data_center_url` will automatically be set to the Mesos DNS address of the cluster (i.e., `http://<service.name>.marathon.mesos:<api_port>/v1/datacenter`) if left blank. For example, if the default service name and api port are used, the URL is set to `http://cassandra.marathon.mesos:9000/v1/datacenter`.
 
-**Important:** We do not currently recommend creating Cassandra clusters that span multiple DC/OS clusters.
+If your Cassandra cluster spans multiple DC/OS clusters, perform the following steps to allow the Cassandra clusters to communicate with one another.
+
+1. Set up a reverse proxy in your first datacenter, accessible from other datacenters, that routes to the Mesos DNS address of the DC/OS cluster.
+
+1. Set that Mesos DNS address as your `service.data_center_url` and provide it to the subsequent datacenters in the `service.external_data_center_urls` list.
 
 # Installing Additional Datacenters
 Prior to installing additional datacenters, you MUST wait until at least one node per datacenter is active, and you SHOULD wait until at least the number of configured seed nodes is active.
