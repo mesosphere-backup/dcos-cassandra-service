@@ -27,7 +27,8 @@ public class ExecutorConfig {
             URI jreLocation,
             URI executorLocation,
             URI cassandraLocation,
-            URI libmesosLocation) {
+            URI libmesosLocation,
+            boolean cacheFetchedUris) {
 
         return new ExecutorConfig(
                 command,
@@ -40,7 +41,8 @@ public class ExecutorConfig {
                 jreLocation,
                 executorLocation,
                 cassandraLocation,
-                libmesosLocation);
+                libmesosLocation,
+                cacheFetchedUris);
     }
 
     @JsonCreator
@@ -56,7 +58,8 @@ public class ExecutorConfig {
             @JsonProperty("executor_location") String executorLocation,
             @JsonProperty("cassandra_location") String cassandraLocation,
             @JsonProperty("libmesos_location") String libmesosLocation,
-            @JsonProperty("emc_ecs_workaround") boolean emcEcsWorkaround)
+            @JsonProperty("emc_ecs_workaround") boolean emcEcsWorkaround,
+            @JsonProperty("cache_fetched_uris") boolean cacheFetchedUris)
             throws URISyntaxException, UnsupportedEncodingException {
 
         ExecutorConfig config = create(
@@ -70,7 +73,8 @@ public class ExecutorConfig {
                 URI.create(jreLocation),
                 URI.create(executorLocation),
                 URI.create(cassandraLocation),
-                URI.create(libmesosLocation));
+                URI.create(libmesosLocation),
+                cacheFetchedUris);
 
         return config;
     }
@@ -98,6 +102,9 @@ public class ExecutorConfig {
     private final URI cassandraLocation;
     private final URI libmesosLocation;
 
+    @JsonProperty("cache_fetched_uris")
+    private final boolean cacheFetchedUris;
+
     @JsonProperty("java_home")
     private final String javaHome;
 
@@ -112,7 +119,8 @@ public class ExecutorConfig {
             URI jreLocation,
             URI executorLocation,
             URI cassandraLocation,
-            URI libmesosLocation) {
+            URI libmesosLocation,
+            boolean cacheFetchedUris) {
 
         this.command = command;
         this.arguments = arguments;
@@ -124,6 +132,7 @@ public class ExecutorConfig {
         this.executorLocation = executorLocation;
         this.cassandraLocation = cassandraLocation;
         this.libmesosLocation = libmesosLocation;
+        this.cacheFetchedUris = cacheFetchedUris;
         this.javaHome = javaHome;
     }
 
@@ -196,6 +205,8 @@ public class ExecutorConfig {
         return libmesosLocation.toString();
     }
 
+    @JsonProperty("cache_fetched_uris")
+    public boolean getCacheFetchedURIs() { return cacheFetchedUris; }
 
     @JsonIgnore
     public Set<String> getURIs() {
@@ -217,6 +228,7 @@ public class ExecutorConfig {
                 getMemoryMb() == that.getMemoryMb() &&
                 getHeapMb() == that.getHeapMb() &&
                 getApiPort() == that.getApiPort() &&
+                getCacheFetchedURIs() == that.getCacheFetchedURIs() &&
                 Objects.equals(getCommand(), that.getCommand()) &&
                 Objects.equals(getArguments(), that.getArguments()) &&
                 Objects.equals(getJreLocation(), that.getJreLocation()) &&
@@ -232,10 +244,9 @@ public class ExecutorConfig {
     @Override
     public int hashCode() {
         return Objects.hash(getCommand(), getArguments(), getCpus(),
-                getMemoryMb(),
-                getHeapMb(), getApiPort(),
+                getMemoryMb(), getHeapMb(), getApiPort(),
                 getJreLocation(), getExecutorLocation(), getCassandraLocation(), getLibmesosLocation(),
-                getJavaHome());
+                getCacheFetchedURIs(), getJavaHome());
     }
 
     @Override

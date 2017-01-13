@@ -46,7 +46,8 @@ public class CassandraDaemonTaskTest {
                 new URI("http://jre-location"),
                 new URI("http://executor-location"),
                 new URI("http://cassandra-location"),
-                new URI("http://libmesos-location"));
+                new URI("http://libmesos-location"),
+                false);
 
         testTaskExecutor = CassandraTaskExecutor.create(
                 "test-framework-id",
@@ -109,6 +110,7 @@ public class CassandraDaemonTaskTest {
                 TEST_CONFIG_ID);
         Assert.assertNotEquals(normalizeCassandraTaskInfo(daemonTask), normalizeCassandraTaskInfo(updatedTask));
         Assert.assertEquals(newCpu, updatedTask.getConfig().getCpus(), 0.0);
+        Assert.assertTrue(allUrisAreCacheable(updatedTask.getTaskInfo().getExecutor().getCommand().getUrisList(), false));
     }
 
     @Test
@@ -198,7 +200,8 @@ public class CassandraDaemonTaskTest {
                 new URI("http://jre-location"),
                 new URI("http://executor-location"),
                 new URI("http://cassandra-location-updated"),
-                new URI("http://libmesos-location"));
+                new URI("http://libmesos-location"),
+                false);
 
         testTaskExecutor = CassandraTaskExecutor.create(
                 "test-framework-id",
@@ -250,6 +253,42 @@ public class CassandraDaemonTaskTest {
         Assert.assertEquals("tcp", discovery.getPorts().getPorts(0).getProtocol());
     }
 
+    @Test
+    public void testUpdateCacheFetchedUris() throws URISyntaxException {
+        CassandraDaemonTask daemonTask = testTaskFactory.create(
+                TEST_DAEMON_NAME,
+                TEST_CONFIG_NAME,
+                testTaskExecutor,
+                CassandraConfig.DEFAULT);
+
+        ExecutorConfig updatedTestExecutorConfig = ExecutorConfig.create(
+                "test-cmd",
+                Arrays.asList("arg0"),
+                1.0,
+                256,
+                500,
+                1000,
+                "java-home",
+                new URI("http://jre-location"),
+                new URI("http://executor-location"),
+                new URI("http://cassandra-location"),
+                new URI("http://libmesos-location"),
+                /* cacheFetchedUris */ true);
+
+        testTaskExecutor = CassandraTaskExecutor.create(
+                "test-framework-id",
+                TEST_DAEMON_NAME,
+                "test-role",
+                "test-principal",
+                updatedTestExecutorConfig);
+
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(
+                CassandraConfig.DEFAULT,
+                updatedTestExecutorConfig,
+                TEST_CONFIG_ID);
+        Assert.assertTrue(allUrisAreCacheable(updatedTask.getTaskInfo().getExecutor().getCommand().getUrisList(), true));
+    }
+
     private Protos.TaskInfo normalizeCassandraTaskInfo(CassandraDaemonTask daemonTask) {
         Protos.TaskInfo daemonTaskInfo = daemonTask.getTaskInfo();
         Protos.ExecutorInfo expectedExecutorInfo = Protos.ExecutorInfo.newBuilder(daemonTaskInfo.getExecutor())
@@ -270,5 +309,16 @@ public class CassandraDaemonTaskTest {
         }
 
         return null;
+    }
+
+    // Helper method that returns true iff all the @param uris in the given list have the cache property set to the
+    // given @param cacheable value.
+    private boolean allUrisAreCacheable(List<Protos.CommandInfo.URI> uris, boolean cacheable) {
+        for (Protos.CommandInfo.URI uri : uris) {
+            if (uri.getCache() != cacheable) {
+                return false;
+            }
+        }
+        return true;
     }
 }

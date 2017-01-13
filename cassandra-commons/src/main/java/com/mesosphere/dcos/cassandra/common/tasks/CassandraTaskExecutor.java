@@ -19,11 +19,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
-
-import java.util.*;
-
 import org.apache.mesos.Protos;
 import org.apache.mesos.executor.ExecutorUtils;
+
+import java.util.*;
 
 import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
 
@@ -61,6 +60,7 @@ public class CassandraTaskExecutor {
             config.getHeapMb(),
             config.getApiPort(),
             config.getURIs(),
+            config.getCacheFetchedURIs(),
             config.getJavaHome());
     }
 
@@ -81,17 +81,18 @@ public class CassandraTaskExecutor {
     /**
      * Constructs a CassandraTaskExecutor.
      *
-     * @param frameworkId The id of the executor's framework.
-     * @param name        The name of the executor.
-     * @param command     The command used to launch the executor.
-     * @param arguments   The arguments passed to the executor.
-     * @param cpus        The cpu shares allocated to the executor.
-     * @param memoryMb    The memory allocated to the executor in Mb.
-     * @param heapMb      The heap allocated to the executor in Mb.
-     * @param apiPort     The port the executor's API will listen on.
-     * @param uris        The URI's for the executor's resources.
-     * @param javaHome    The location of the local java installation for the
-     *                    executor.
+     * @param frameworkId       The id of the executor's framework.
+     * @param name              The name of the executor.
+     * @param command           The command used to launch the executor.
+     * @param arguments         The arguments passed to the executor.
+     * @param cpus              The cpu shares allocated to the executor.
+     * @param memoryMb          The memory allocated to the executor in Mb.
+     * @param heapMb            The heap allocated to the executor in Mb.
+     * @param apiPort           The port the executor's API will listen on.
+     * @param uris              The URI's for the executor's resources.
+     * @param cacheFetchedUris  Whether to cache the fetched URIs.
+     * @param javaHome          The location of the local java installation for the
+     *                          executor.
      */
     private CassandraTaskExecutor(
         String frameworkId,
@@ -105,6 +106,7 @@ public class CassandraTaskExecutor {
         int heapMb,
         int apiPort,
         Set<String> uris,
+        boolean cacheFetchedUris,
         String javaHome) {
 
         this.info = Protos.ExecutorInfo.newBuilder()
@@ -115,6 +117,7 @@ public class CassandraTaskExecutor {
             .setCommand(createCommandInfo(command,
                 arguments,
                 uris,
+                cacheFetchedUris,
                 ImmutableMap.<String, String>builder()
                         .put("JAVA_HOME", javaHome)
                         .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
@@ -253,6 +256,7 @@ public class CassandraTaskExecutor {
                 .setCommand(createCommandInfo(config.getCommand(),
                         config.getArguments(),
                         config.getURIs(),
+                        config.getCacheFetchedURIs(),
                         ImmutableMap.<String, String>builder()
                                 .put("JAVA_HOME", config.getJavaHome())
                                 .put("JAVA_OPTS", "-Xmx" + config.getHeapMb() + "M")
