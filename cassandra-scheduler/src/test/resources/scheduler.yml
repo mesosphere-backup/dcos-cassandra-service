@@ -172,6 +172,8 @@ zookeeper:
   connection_timeout_ms: 10000
   operation_timeout_ms: 10000
   backoff_ms: 10000
+  zkusername: ${ZOOKEEPER_SERVERS_USERNAME:-""}
+  zkpassword: ${ZOOKEEPER_SERVERS_PASSWORD:-""}
 server:
   type: simple
   adminContextPath: /admin
