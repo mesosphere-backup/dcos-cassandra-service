@@ -49,6 +49,8 @@ public class CassandraState extends SchedulerState implements Managed {
     private volatile Map<String, CassandraTask> tasks = Collections.emptyMap();
     // Maps TaskId -> Task Name
     private final Map<String, String> byId = new HashMap<>();
+    // Maps Task Name -> TaskStatus
+    private final Map<String, Optional<Protos.TaskStatus>> byStatus = new HashMap<>();
 
     @Inject
     public CassandraState(
@@ -92,6 +94,9 @@ public class CassandraState extends SchedulerState implements Managed {
 
                         LOGGER.debug("Loaded task: {}, type: {}, hostname: {}",
                                 cassandraTask.getName(), cassandraTask.getType().name(), cassandraTask.getHostname());
+
+                        Optional<Protos.TaskStatus> status = byStatus.get(cassandraTask.getName());
+                        cassandraTask.setTaskStatus(status != null && status.isPresent() ? status.get() : null);
                         builder.put(cassandraTask.getName(), cassandraTask);
                     } catch (IOException e) {
                         LOGGER.error("Error parsing task: {}. Reason: {}", TextFormat.shortDebugString(taskInfo), e);
@@ -117,6 +122,7 @@ public class CassandraState extends SchedulerState implements Managed {
         if (tasks.containsKey(name)) {
             byId.remove(tasks.get(name).getId());
         }
+
         tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
                 tasks.entrySet().stream()
                         .filter(entry -> !entry.getKey().equals(name))
@@ -564,7 +570,12 @@ public class CassandraState extends SchedulerState implements Managed {
                         new PersistenceException("Encountered malformed TaskID: " + task.getId()));
             }
 
+            Optional<Protos.TaskStatus> status = getStateStore().fetchStatus(task.getName());
+            task.setTaskStatus(status.isPresent() ? status.get() : null);
+
             byId.put(task.getId(), task.getName());
+            byStatus.put(task.getName(), status);
+
             tasks = ImmutableMap.<String, CassandraTask>builder().putAll(
                     tasks.entrySet().stream()
                             .filter(entry -> !entry.getKey().equals(task.getName()))

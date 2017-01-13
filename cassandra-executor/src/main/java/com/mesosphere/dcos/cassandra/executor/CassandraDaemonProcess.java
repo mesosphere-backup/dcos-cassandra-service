@@ -132,10 +132,9 @@ public class CassandraDaemonProcess extends ProcessTask {
 
         String address = System.getenv("LIBPROCESS_IP");
 
-        if (address == null || address.isEmpty()) {
+        if (address == null || address.isEmpty() || address.equals("0.0.0.0")) {
             address = InetAddress.getLocalHost().getHostAddress();
-            LOGGER.warn("LIBPROCESS_IP address not found defaulting to " +
-                    "localhost");
+            LOGGER.warn("LIBPROCESS_IP address not found defaulting to " + address);
         }
 
         LOGGER.info("Retrieved Cassandra Daemon listen address: address = {}",

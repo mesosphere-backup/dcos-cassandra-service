@@ -20,10 +20,16 @@ import com.google.common.collect.Sets;
 import com.google.protobuf.TextFormat;
 import com.mesosphere.dcos.cassandra.common.config.ExecutorConfig;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.*;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.dcos.Capabilities;
+import org.apache.mesos.dcos.DcosCluster;
 import org.apache.mesos.executor.ExecutorUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
 
@@ -35,6 +41,9 @@ import static com.mesosphere.dcos.cassandra.common.util.TaskUtils.*;
  * should be reused by Cluster tasks that operate on the Daemon.
  */
 public class CassandraTaskExecutor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraTaskExecutor.class);
+    private static final String CNI_NETWORK = "CNI";
 
     /**
      * Creates a new CassandraTaskExecutor.
@@ -54,14 +63,7 @@ public class CassandraTaskExecutor {
             name,
             role,
             principal,
-            config.getCommand(),
-            config.getArguments(),
-            config.getCpus(),
-            config.getMemoryMb(),
-            config.getHeapMb(),
-            config.getApiPort(),
-            config.getURIs(),
-            config.getJavaHome());
+            config);
     }
 
     /**
@@ -83,49 +85,47 @@ public class CassandraTaskExecutor {
      *
      * @param frameworkId The id of the executor's framework.
      * @param name        The name of the executor.
-     * @param command     The command used to launch the executor.
-     * @param arguments   The arguments passed to the executor.
-     * @param cpus        The cpu shares allocated to the executor.
-     * @param memoryMb    The memory allocated to the executor in Mb.
-     * @param heapMb      The heap allocated to the executor in Mb.
-     * @param apiPort     The port the executor's API will listen on.
-     * @param uris        The URI's for the executor's resources.
-     * @param javaHome    The location of the local java installation for the
-     *                    executor.
      */
     private CassandraTaskExecutor(
         String frameworkId,
         String name,
         String role,
         String principal,
-        String command,
-        List<String> arguments,
-        double cpus,
-        int memoryMb,
-        int heapMb,
-        int apiPort,
-        Set<String> uris,
-        String javaHome) {
+        ExecutorConfig config) {
 
-        this.info = Protos.ExecutorInfo.newBuilder()
-            .setFrameworkId(Protos.FrameworkID.newBuilder()
-                .setValue(frameworkId))
-            .setName(name)
-            .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
-            .setCommand(createCommandInfo(command,
-                arguments,
-                uris,
-                ImmutableMap.<String, String>builder()
-                        .put("JAVA_HOME", javaHome)
-                        .put("JAVA_OPTS", "-Xmx" + heapMb + "M")
-                        .put("EXECUTOR_API_PORT", Integer.toString(apiPort))
-                        .build()))
-            .addAllResources(
-                Arrays.asList(
-                    createCpus(cpus, role, principal),
-                    createMemoryMb(memoryMb, role, principal),
-                    createPorts(Arrays.asList(apiPort), role, principal)))
-            .build();
+        Protos.ExecutorInfo.Builder executorBuilder = Protos.ExecutorInfo.newBuilder();
+
+        Capabilities capabilities = new Capabilities(new DcosCluster());
+
+        try {
+            if (capabilities.supportsNamedVips() && CNI_NETWORK.equalsIgnoreCase(config.getNetworkMode())) {
+                executorBuilder.setContainer(Protos.ContainerInfo.newBuilder()
+                        .setType(Protos.ContainerInfo.Type.MESOS)
+                        .addNetworkInfos(Protos.NetworkInfo.newBuilder()
+                                .setName(config.getCniNetwork())));
+            }
+        } catch (IOException | URISyntaxException e) {
+            LOGGER.error("Unable to detect named VIP support: {}", e);
+        } finally {
+            executorBuilder.setFrameworkId(Protos.FrameworkID.newBuilder()
+                    .setValue(frameworkId))
+                    .setName(name)
+                    .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
+                    .setCommand(createCommandInfo(config.getCommand(),
+                            config.getArguments(),
+                            config.getURIs(),
+                            ImmutableMap.<String, String>builder()
+                                    .put("JAVA_HOME", config.getJavaHome())
+                                    .put("JAVA_OPTS", "-Xmx" + config.getHeapMb() + "M")
+                                    .put("EXECUTOR_API_PORT", Integer.toString(config.getApiPort()))
+                                    .build()))
+                    .addAllResources(
+                            Arrays.asList(
+                                    createCpus(config.getCpus(), role, principal),
+                                    createMemoryMb(config.getMemoryMb(), role, principal),
+                                    createPorts(Arrays.asList(config.getApiPort()), role, principal)));
+            this.info = executorBuilder.build();
+        }
     }
 
     CassandraTaskExecutor(final Protos.ExecutorInfo info) {
