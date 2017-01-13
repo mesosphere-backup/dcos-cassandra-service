@@ -22,10 +22,9 @@ import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Path;
-import java.util.Properties;
 
 /**
  * Location represents the rack and data center for a node in a Cassandra
@@ -117,35 +116,17 @@ public class Location {
     }
 
     /**
-     * Gets a properties object containing the properties parsed by a
-     * Cassandra daemon to determine its rack and data center.
-     *
-     * @return A Properties object indicating the rack and data center
-     * contained in the location.
-     */
-    public Properties toProperties() {
-
-        Properties properties = new Properties();
-        properties.setProperty("rack", rack);
-        properties.setProperty("dc", dataCenter);
-        return properties;
-    }
-
-    /**
      * Writes the Location as a Properties file.
      *
      * @param path The Path indicating where the Location will be written.
      * @throws IOException If the Location can not be written to path.
      */
     public void writeProperties(Path path) throws IOException {
-
         logger.info("Writing properties to path: " + path.toAbsolutePath());
-        FileOutputStream stream = new FileOutputStream(path.toFile());
-        try {
-            toProperties().store(stream, "DCOS got yo Cassandra!");
-        } finally {
-            stream.close();
-        }
+        PrintWriter writer = new PrintWriter(path.toString(), "UTF-8");
+        writer.println("dc=" + dataCenter);
+        writer.println("rack=" + rack);
+        writer.close();
     }
 
     /**
