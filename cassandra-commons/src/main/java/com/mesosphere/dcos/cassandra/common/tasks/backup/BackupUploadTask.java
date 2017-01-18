@@ -111,7 +111,7 @@ public class BackupUploadTask extends CassandraTask {
 
     @Override
     public BackupUploadTask update(CassandraTaskStatus status) {
-        if (status.getTaskType() == TYPE.BACKUP_UPLOAD &&
+        if (status.getType() == TYPE.BACKUP_UPLOAD &&
             getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }

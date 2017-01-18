@@ -210,7 +210,7 @@ public class CassandraDaemonTask extends CassandraTask {
 
     @Override
     public CassandraDaemonTask update(CassandraTaskStatus status) {
-        if (status.getTaskType() == TYPE.CASSANDRA_DAEMON &&
+        if (status.getType() == TYPE.CASSANDRA_DAEMON &&
             status.getId().equals(getId())) {
             CassandraDaemonStatus daemonStatus = (CassandraDaemonStatus) status;
             return new CassandraDaemonTask(
