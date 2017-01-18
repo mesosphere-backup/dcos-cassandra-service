@@ -164,7 +164,7 @@ public class CassandraStateTest {
         Assert.assertEquals(testHostName, originalDaemonTask.getHostname());
 
         CassandraDaemonTask movedDaemonTask = cassandraState.moveDaemon(originalDaemonTask);
-        CassandraData movedData = CassandraData.parse(movedDaemonTask.getTaskInfo().getData(), false);
+        CassandraData movedData = CassandraData.parse(movedDaemonTask.getTaskInfo().getData());
         String movedReplaceIp = movedData.getConfig().getReplaceIp();
         Assert.assertEquals(originalDaemonTask.getHostname(), movedReplaceIp);
     }

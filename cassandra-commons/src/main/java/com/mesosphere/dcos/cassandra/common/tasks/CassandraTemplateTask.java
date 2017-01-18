@@ -5,23 +5,16 @@ import com.mesosphere.dcos.cassandra.common.tasks.backup.TemplateTaskStatus;
 import org.apache.mesos.Protos;
 import org.apache.mesos.offer.ResourceUtils;
 import org.apache.mesos.offer.TaskUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 
 public class CassandraTemplateTask extends CassandraTask  {
-
     private static final String CLUSTER_TASK_TEMPLATE_SUFFIX = "-task-template";
 
     public static String toTemplateTaskName(String daemonTaskName) {
         return daemonTaskName + CLUSTER_TASK_TEMPLATE_SUFFIX;
-    }
-
-    public static boolean isTemplateTaskName(String taskName) {
-        return taskName.endsWith(CLUSTER_TASK_TEMPLATE_SUFFIX);
     }
 
     protected static Protos.SlaveID EMPTY_SLAVE_ID = Protos.SlaveID
@@ -92,12 +85,6 @@ public class CassandraTemplateTask extends CassandraTask  {
                 .setState(state)
                 .build());
     }
-
-    @Override
-    protected CassandraData getData() {
-        return CassandraData.parse(info.getData(), true);
-    }
-
 
     private static Protos.Resource getCpusResource(
             String role,

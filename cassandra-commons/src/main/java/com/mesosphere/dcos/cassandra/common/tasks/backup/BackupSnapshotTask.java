@@ -111,7 +111,7 @@ public class BackupSnapshotTask extends CassandraTask {
 
     @Override
     public BackupSnapshotTask update(CassandraTaskStatus status) {
-        if (status.getTaskType() == TYPE.BACKUP_SNAPSHOT &&
+        if (status.getType() == TYPE.BACKUP_SNAPSHOT &&
             getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }
