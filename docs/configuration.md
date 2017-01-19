@@ -9,12 +9,13 @@ enterprise: 'no'
 
 You can customize your cluster in-place when it is up and running.
 
-The Cassandra scheduler runs as a Marathon process and can be reconfigured by changing values within Marathon. These are the general steps to follow:
+The Cassandra scheduler runs as a Marathon process and can be reconfigured by changing values for the service from the DC/OS dashboard. These are the general steps to follow:
 
-1. View your Marathon dashboard at `http://<dcos_url>/marathon`
-2. In the list of `Applications`, click the name of the Cassandra service to be updated.
-3. Within the Cassandra instance details view, click the `Configuration` tab, then click the `Edit` button.
-4. In the dialog that appears, expand the `Environment Variables` section and update any field(s) to their desired value(s). For example, to increase the number of nodes, edit the value for `NODES`. Click `Change and deploy configuration` to apply any changes and cleanly reload the Cassandra scheduler. The Cassandra cluster itself will persist across the change.
+1. Go to the DC/OS dashboard.
+1. Click the **Services** tab, then the name of the Cassandra service to be updated.
+1. Within the Cassandra instance details view, click the menu in the upper right, then choose **Edit**.
+1. In the dialog that appears, click the **Environment** tab and update any field(s) to their desired value(s). For example, to increase the number of nodes, edit the value for `NODES`.
+1. Click **REVIEW & RUN** to apply any changes and cleanly reload the Cassandra scheduler. The Cassandra cluster itself will persist across the change.
 
 ## Configuration Deployment Strategy
 
@@ -213,7 +214,7 @@ After you execute the continue operation, the plan will look like this:
 
 # Configuration Options
 
-The following describes the most commonly used features of DC/OS Apache Cassandra and how to configure them via the DC/OS CLI and in Marathon. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DC/OS command line (See the Install and Customize section) or via modification to the Service Scheduler’s Marathon environment at runtime (See the Configuration Update section). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DC/OS scheduler.
+The following describes the most commonly used features of DC/OS Apache Cassandra and how to configure them via the DC/OS CLI and the DC/OS GUI. There are two methods of configuring a Cassandra cluster. The configuration may be specified using a JSON file during installation via the DC/OS command line (See the Install and Customize section) or via modification to the Service Scheduler’s DC/OS environment at runtime (See the Configuration Update section). Note that some configuration options may only be specified at installation time, but these generally relate only to the service’s registration and authentication with the DC/OS scheduler.
 
 ## Service Configuration
 
@@ -334,7 +335,6 @@ The service configuration object contains properties that MUST be specified duri
 </table>
 
 - **In the DC/OS CLI, options.json**: `name` = string (default: `cassandra`)
-- **In Marathon**: The service name cannot be changed after the cluster has started.
 
 ## Node Configuration
 
