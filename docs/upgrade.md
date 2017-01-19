@@ -2,7 +2,7 @@
 post_title: Upgrade
 menu_order: 20
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 # Overview
