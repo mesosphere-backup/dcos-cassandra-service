@@ -2,7 +2,7 @@
 post_title: Uninstall
 menu_order: 30
 feature_maturity: preview
-enterprise: 'yes'
+enterprise: 'no'
 ---
 
 
