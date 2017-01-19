@@ -142,8 +142,11 @@ public class CassandraScheduler implements Scheduler, Observer {
     public void registered(SchedulerDriver driver,
                            Protos.FrameworkID frameworkId,
                            Protos.MasterInfo masterInfo) {
-        // Return early if registered() has already been called once in the lifetime of this object.
+        // Call re-register and return early if registered() has already been called once
+        // in the lifetime of this object.
         if (!isSchedulerRegistered.compareAndSet(false, true)) {
+            LOGGER.info("Scheduler is already registered, calling reregistered()");
+            reregistered(driver, masterInfo);
             return;
         }
 
