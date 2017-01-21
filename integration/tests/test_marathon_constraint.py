@@ -44,7 +44,7 @@ def allow_incomplete_plan(status_code):
 
 @pytest.mark.sanity
 def test_marathon_rack_not_found():
-    install(additional_options = {'service':{'placement_constraint':'rack_id:LIKE:rack-foo-.*'}})
+    install(additional_options = {'service':{'placement_constraint':'rack_id:LIKE:rack-foo-.*'}}, wait=False)
     try:
         check_health(wait_time=60) # long enough for /plan to work and for a node to have been IN_PROGRESS
         assert False, "Should have failed healthcheck"
