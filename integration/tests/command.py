@@ -136,7 +136,7 @@ def install(additional_options = {}, package_version = None, wait = True):
         PACKAGE_NAME,
         package_version,
         options_json=merged_options,
-        waiit_for_completion=wait)
+        wait_for_completion=wait)
 
 
 def uninstall():
