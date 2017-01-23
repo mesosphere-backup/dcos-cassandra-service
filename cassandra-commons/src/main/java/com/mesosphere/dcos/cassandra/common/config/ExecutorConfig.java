@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -15,6 +16,8 @@ import java.util.Set;
 import java.util.Objects;
 
 public class ExecutorConfig {
+
+    public static final String DEFAULT_LIBMESOS_LOCATION = "http://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.8.7-1.0.2.tar.gz";
 
     public static ExecutorConfig create(
             String command,
@@ -62,6 +65,9 @@ public class ExecutorConfig {
             @JsonProperty("cache_fetched_uris") boolean cacheFetchedUris)
             throws URISyntaxException, UnsupportedEncodingException {
 
+        if (libmesosLocation == null || StringUtils.isEmpty(libmesosLocation)) {
+            libmesosLocation = DEFAULT_LIBMESOS_LOCATION;
+        }
         ExecutorConfig config = create(
                 command,
                 arguments,
