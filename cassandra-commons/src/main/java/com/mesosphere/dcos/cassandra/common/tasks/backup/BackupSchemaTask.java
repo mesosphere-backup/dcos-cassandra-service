@@ -97,7 +97,7 @@ public class BackupSchemaTask extends CassandraTask{
 
     @Override
     public BackupSchemaTask update(CassandraTaskStatus status) {
-        if (status.getTaskType() == TYPE.BACKUP_SCHEMA &&
+        if (status.getType() == TYPE.BACKUP_SCHEMA &&
                 getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }

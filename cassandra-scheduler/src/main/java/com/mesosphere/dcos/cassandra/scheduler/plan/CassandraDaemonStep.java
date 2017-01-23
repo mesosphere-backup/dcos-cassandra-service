@@ -40,7 +40,7 @@ public class CassandraDaemonStep extends DefaultStep {
         }
 
         if (status.get().hasData()) {
-            final CassandraData data = CassandraData.parse(status.get().getData(), false);
+            final CassandraData data = CassandraData.parse(status.get().getData());
             final CassandraMode mode = data.getMode();
             String hostName = data.getHostname();
             final boolean isModeNormal = CassandraMode.NORMAL.equals(mode);
@@ -165,7 +165,7 @@ public class CassandraDaemonStep extends DefaultStep {
                 return;
             }
             if (status.hasData()) {
-                final CassandraData cassandraData = CassandraData.parse(status.getData(), false);
+                final CassandraData cassandraData = CassandraData.parse(status.getData());
                 mode = cassandraData.getMode();
                 LOGGER.info("{} Step: {} received status: {} with mode: {}",
                         getStatus(), getName(), TextFormat.shortDebugString(status), cassandraData.getMode());

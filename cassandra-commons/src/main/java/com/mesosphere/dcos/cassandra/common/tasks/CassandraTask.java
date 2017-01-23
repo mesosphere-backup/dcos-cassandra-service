@@ -133,8 +133,7 @@ public abstract class CassandraTask {
      * @throws IOException If a CassandraTask can not be parsed from info.
      */
     public static CassandraTask parse(final Protos.TaskInfo info) {
-        final boolean isTemplateTask = CassandraTemplateTask.isTemplateTaskName(info.getName());
-        CassandraData data = CassandraData.parse(info.getData(), isTemplateTask);
+        CassandraData data = CassandraData.parse(info.getData());
         switch (data.getType()) {
             case CASSANDRA_DAEMON:
                 return CassandraDaemonTask.parse(info);
@@ -173,10 +172,10 @@ public abstract class CassandraTask {
         return TaskUtils.toTaskId(name);
     }
 
-    protected final Protos.TaskInfo info;
+    private final Protos.TaskInfo info;
 
     protected CassandraData getData() {
-        return CassandraData.parse(info.getData(), false);
+        return CassandraData.parse(info.getData());
     }
 
     protected Protos.TaskInfo.Builder getBuilder() {

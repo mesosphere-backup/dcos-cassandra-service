@@ -93,7 +93,7 @@ public class RestoreSchemaTask extends CassandraTask {
 
     @Override
     public RestoreSchemaTask update(CassandraTaskStatus status) {
-        if (status.getTaskType() == CassandraTask.TYPE.SCHEMA_RESTORE &&
+        if (status.getType() == CassandraTask.TYPE.SCHEMA_RESTORE &&
                 getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }

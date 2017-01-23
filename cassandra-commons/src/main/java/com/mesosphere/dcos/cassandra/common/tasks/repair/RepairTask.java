@@ -104,7 +104,7 @@ public class RepairTask extends CassandraTask {
 
     @Override
     public RepairTask update(CassandraTaskStatus status) {
-        if (status.getTaskType() == TYPE.REPAIR &&
+        if (status.getType() == TYPE.REPAIR &&
             getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }

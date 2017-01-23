@@ -106,7 +106,7 @@ public class DownloadSnapshotTask extends CassandraTask {
 
     @Override
     public DownloadSnapshotTask update(CassandraTaskStatus status) {
-        if (status.getTaskType() == TYPE.SNAPSHOT_DOWNLOAD &&
+        if (status.getType() == TYPE.SNAPSHOT_DOWNLOAD &&
             getId().equalsIgnoreCase(status.getId())) {
             return update(status.getState());
         }
