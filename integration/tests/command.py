@@ -129,13 +129,14 @@ def spin(fn, success_predicate, wait_time=WAIT_TIME_IN_SECONDS, *args, **kwargs)
     return result
 
 
-def install(additional_options = {}, package_version = None):
+def install(additional_options = {}, package_version = None, wait = True):
     merged_options = _nested_dict_merge(DEFAULT_OPTIONS_DICT, additional_options)
     print('Installing {} with options: {} {}'.format(PACKAGE_NAME, merged_options, package_version))
     shakedown.install_package_and_wait(
         PACKAGE_NAME,
         package_version,
-        options_json=merged_options)
+        options_json=merged_options,
+        wait_for_completion=wait)
 
 
 def uninstall():
