@@ -32,7 +32,9 @@ public class MutableSchedulerConfiguration extends Configuration {
       10000L,
       10000L,
       Optional.empty(),
-      250L);
+      250L,
+      "",
+      "");
   private long externalDcSyncMs;
   private String externalDcs;
   private String dcUrl;
