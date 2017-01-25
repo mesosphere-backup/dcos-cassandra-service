@@ -74,7 +74,7 @@ public class CassandraConfig {
          *
          * @param config The CassandraConfig that will be copied.
          */
-        private Builder(CassandraConfig config) {
+        public Builder(CassandraConfig config) {
 
             this.version = config.version;
             this.cpus = config.cpus;
