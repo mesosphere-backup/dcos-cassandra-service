@@ -59,4 +59,4 @@ enterprise: 'no'
 
         cqlsh> SELECT * FROM demo.map;
 
- [2]: https://docs.mesosphere.com/1.8/administration/access-node/sshcluster/
+ [2]: https://docs.mesosphere.com/1.9/administration/access-node/sshcluster/

@@ -7,7 +7,7 @@ enterprise: 'no'
 
 # About installing Cassandra on Enterprise DC/OS
 
- In Enterprise DC/OS `strict` [security mode](https://docs.mesosphere.com/1.8/administration/installing/custom/configuration-parameters/#security), Cassandra requires a service account. In `permissive`, a service account is optional. Only someone with `superuser` permission can create the service account. Refer to [Provisioning Cassandra](https://docs.mesosphere.com/1.8/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) for instructions.
+ In Enterprise DC/OS `strict` [security mode](https://docs.mesosphere.com/1.9/administration/installing/custom/configuration-parameters/#security), Cassandra requires a service account. In `permissive`, a service account is optional. Only someone with `superuser` permission can create the service account. Refer to [Provisioning Cassandra](https://docs.mesosphere.com/1.9/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) for instructions.
 
 # Default Installation
 Prior to installing a default cluster, ensure that your DC/OS cluster has at least 3 agent nodes with 8 Gb of memory and 10 Gb of disk available on each agent. Also, ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
