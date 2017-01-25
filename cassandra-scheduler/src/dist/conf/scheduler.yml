@@ -5,7 +5,7 @@ executor:
   memory_mb : ${EXECUTOR_MEMORY_MB:-768}
   heap_mb : ${EXECUTOR_HEAP_MB:-512}
   api_port : ${EXECUTOR_API_PORT:-9000}
-  java_home : ${EXECUTOR_JAVA_HOME:-"./jre"}
+  java_home : ${EXECUTOR_JAVA_HOME:-"./jre1.8.0_121"}
   jre_location : ${EXECUTOR_JRE_LOCATION:-'https://downloads.mesosphere.com/java/jre-8u121-linux-x64.tar.gz'}
   executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
   cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
