@@ -67,7 +67,7 @@
 "MESOS_MODULES": "file:///opt/mesosphere/etc/mesos-scheduler-modules/dcos_authenticatee_module.json",
 "MESOS_AUTHENTICATEE": "com_mesosphere_dcos_ClassicRPCAuthenticatee",
 {{/service.secret_name}}
-"JAVA_HOME":"./jre"
+"JAVA_HOME":"./jre1.8.0_121"
 ,"JAVA_OPTS":"-Xmx{{service.heap}}M"
 ,"SERVICE_NAME":"{{service.name}}"
 ,"SERVICE_PRINCIPAL": "{{service.principal}}"
@@ -152,7 +152,7 @@
 ,"EXECUTOR_DISK_MB":"{{executor.disk}}"
 ,"EXECUTOR_HEAP_MB":"{{executor.heap}}"
 ,"EXECUTOR_API_PORT":"{{executor.api_port}}"
-,"EXECUTOR_JAVA_HOME":"./jre"
+,"EXECUTOR_JAVA_HOME":"./jre1.8.0_121"
 ,"EXECUTOR_JRE_LOCATION":"{{resource.assets.uris.jre-tar-gz}}"
 ,"EXECUTOR_LOCATION":"{{resource.assets.uris.executor-zip}}"
 ,"EXECUTOR_CASSANDRA_LOCATION":"{{resource.assets.uris.apache-cassandra-bin-tar-gz}}"

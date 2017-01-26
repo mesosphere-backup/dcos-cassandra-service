@@ -6,7 +6,7 @@ executor:
   heap_mb : ${EXECUTOR_HEAP_MB:-512}
   api_port : ${EXECUTOR_API_PORT:-9000}
   java_home : ${EXECUTOR_JAVA_HOME:-"./jre"}
-  jre_location : ${EXECUTOR_JRE_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz'}
+  jre_location : ${EXECUTOR_JRE_LOCATION:-'https://downloads.mesosphere.com/java/jre-8u121-linux-x64.tar.gz'}
   executor_location : ${EXECUTOR_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip'}
   cassandra_location : ${EXECUTOR_CASSANDRA_LOCATION:-'https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz'}
   libmesos_location: ${EXECUTOR_LIBMESOS_LOCATION:-'http://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.8.7-1.0.2.tar.gz'}
@@ -139,6 +139,8 @@ zookeeper:
   connection_timeout_ms: 10000
   operation_timeout_ms: 10000
   backoff_ms: 10000
+  zkusername: ${ZOOKEEPER_SERVERS_USERNAME:-""}
+  zkpassword: ${ZOOKEEPER_SERVERS_PASSWORD:-""}
 server:
   type: simple
   adminContextPath: /admin

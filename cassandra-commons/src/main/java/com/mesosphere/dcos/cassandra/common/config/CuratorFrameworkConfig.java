@@ -21,6 +21,10 @@ public class CuratorFrameworkConfig {
     private final Optional<Duration> operationTimeout;
     @JsonIgnore
     private final Duration backoff;
+    @JsonIgnore
+    private final String zkusername;
+    @JsonIgnore
+    private final String zkpassword;
 
     @JsonCreator
     public static CuratorFrameworkConfig create(
@@ -29,14 +33,18 @@ public class CuratorFrameworkConfig {
             @JsonProperty("connection_timeout_ms") Long connectionTimeoutMs,
             @JsonProperty("operation_timeout_ms")
             Optional<Long> operationTimeoutMs,
-            @JsonProperty("backoff_ms") Long backoffMs) {
+            @JsonProperty("backoff_ms") Long backoffMs,
+            @JsonProperty("zkusername") String zkusername,
+            @JsonProperty("zkpassword") String zkpassword) {
 
         return new CuratorFrameworkConfig(
                 servers,
                 Duration.ofMillis(sessionTimeoutMs),
                 Duration.ofMillis(connectionTimeoutMs),
                 operationTimeoutMs.map(Duration::ofMillis),
-                Duration.ofMillis(backoffMs));
+                Duration.ofMillis(backoffMs),
+                zkusername,
+                zkpassword);
 
     }
 
@@ -44,25 +52,33 @@ public class CuratorFrameworkConfig {
                                                 Duration sessionTimeout,
                                                 Duration connectionTimeout,
                                                 Optional<Duration> operationTimeout,
-                                                Duration backoff) {
+                                                Duration backoff,
+                                                String zkusername,
+                                                String zkpassword) {
         return new CuratorFrameworkConfig(
                 servers,
                 sessionTimeout,
                 connectionTimeout,
                 operationTimeout,
-                backoff);
+                backoff,
+                zkusername,
+                zkpassword);
     }
 
     public CuratorFrameworkConfig(String servers,
                                   Duration sessionTimeout,
                                   Duration connectionTimeout,
                                   Optional<Duration> operationTimeout,
-                                  Duration backoff) {
+                                  Duration backoff,
+                                  String zkusername,
+                                  String zkpassword) {
         this.servers = servers;
         this.sessionTimeout = sessionTimeout;
         this.connectionTimeout = connectionTimeout;
         this.operationTimeout = operationTimeout;
         this.backoff = backoff;
+        this.zkusername = zkusername;
+        this.zkpassword = zkpassword;
     }
 
     public String getServers() {
@@ -84,6 +100,10 @@ public class CuratorFrameworkConfig {
     public Duration getBackoff() {
         return backoff;
     }
+
+    public String getZkusername() { return zkusername; }
+
+    public String getZkpassword() { return zkpassword; }
 
     @JsonProperty("session_timeout_ms")
     public long getSessionTimeoutMs() {
@@ -119,11 +139,20 @@ public class CuratorFrameworkConfig {
                 Objects.equals(sessionTimeout, that.sessionTimeout) &&
                 Objects.equals(connectionTimeout, that.connectionTimeout) &&
                 Objects.equals(operationTimeout, that.operationTimeout) &&
-                Objects.equals(backoff, that.backoff);
+                Objects.equals(backoff, that.backoff) &&
+                Objects.equals(zkusername, that.zkusername) &&
+                Objects.equals(zkpassword, that.zkpassword);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(servers, sessionTimeout, connectionTimeout, operationTimeout, backoff);
+        return Objects.hash(
+                servers,
+                sessionTimeout,
+                connectionTimeout,
+                operationTimeout,
+                backoff,
+                zkusername,
+                zkpassword);
     }
 }

@@ -250,7 +250,7 @@ public class ConfigurationManagerTest {
                 512,
                 9000,
                 "./jre",
-                URI.create("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/jre/linux/server-jre-8u74-linux-x64.tar.gz"),
+                URI.create("https://downloads.mesosphere.com/java/jre-8u121-linux-x64.tar.gz"),
                 URI.create("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/executor.zip"),
                 URI.create("https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz"),
                 URI.create("http://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.8.7-1.0.2.tar.gz"),

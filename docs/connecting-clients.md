@@ -7,9 +7,9 @@ enterprise: 'no'
 
 The only supported client for the DC/OS Cassandra Service is the Datastax Java CQL Driver. Note that this means that Thrift RPC-based clients are not supported for use with this service and any legacy applications that use this communication mechanism are run at the user's risk.
 
-# Connection Info Using the CLI
+# Connection Info Using the DC/OS CLI
 
-The following command can be executed from the cli to retrieve a set of nodes to connect to.
+The following command can be executed from the CLI to retrieve a set of nodes to connect to.
 
 ```
 dcos cassandra --name=<service-name> connection

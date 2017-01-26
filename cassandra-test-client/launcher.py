@@ -99,7 +99,7 @@ DEFAULT_PORT=9042
               help="password to use when making requests to the DCOS cluster (if the cluster requires auth)")
 @click.option("--pkg-url", show_default=True, default="https://s3-us-west-2.amazonaws.com/cassandra-framework-dev/testing/apache-cassandra-2.2.5-bin.tar.gz",
               help="url of the cassandra package")
-@click.option("--jre-url", show_default=True, default="https://s3-eu-west-1.amazonaws.com/downloads.mesosphere.com/kafka/jre-8u72-linux-x64.tar.gz",
+@click.option("--jre-url", show_default=True, default="https://downloads.mesosphere.com/java/jre-8u121-linux-x64.tar.gz",
               help="url of the jre package")
 @click.option("--keyspace-override", default="",
               help="keyspace to use instead of a randomized default")

@@ -54,7 +54,7 @@ The plan below contains a configuration error that will not allow the installati
     "status": "Error"
 }
 ```
-To proceed with the installation or configuration update fix the indicated errors by updating the configuration as detailed in the Configuration Update section.
+To proceed with the installation or configuration update, fix the indicated errors by updating the configuration as detailed in the Configuration Update section.
 
 # Replacing a Permanently Failed Node
 The DC/OS Apache Cassandra Service is resilient to temporary node failures. However, if a DC/OS agent hosting a Cassandra node is permanently lost, manual intervention is required to replace the failed node. The following command should be used to replace the node residing on the failed server. If you perform this action via the REST API, see the REST API Authentication part of the REST API Reference section for information on how this request must be authenticated.
