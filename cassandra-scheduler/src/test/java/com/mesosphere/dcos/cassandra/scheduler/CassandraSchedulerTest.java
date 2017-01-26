@@ -311,6 +311,17 @@ public class CassandraSchedulerTest {
         assertTrue(!driver.isSuppressed());
     }
 
+    @Test
+    // Test calling register() multiple times as this happens when Mesos master gets re-elected.
+    public void testMultipleRegister() throws Exception {
+        install();
+        scheduler.registered(driver, frameworkId, masterInfo);
+        scheduler.registered(driver, frameworkId, masterInfo);
+
+        beforeHelper("update-scheduler.yml");
+        update();
+    }
+
     private void update() {
         scheduler.registered(driver, frameworkId, Protos.MasterInfo.getDefaultInstance());
         runReconcile(driver);
