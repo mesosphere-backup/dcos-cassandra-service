@@ -8,7 +8,7 @@ enterprise: 'no'
 # Manage Nodes
 
 ## Add a Node
-Increase the `NODES` value via Marathon as described in the Configuration Update section. This creates an update plan as described in that section. An additional node will be added as the last step of that plan. After a node has been added, you should run cleanup, as described in the [Cleanup](#cleanup) section of this page. It is safe to delay running cleanup until off-peak hours.
+Increase the `NODES` value from the DC/OS dashboard as described in the Configuration Update section. This creates an update plan as described in that section. An additional node will be added as the last step of that plan. After a node has been added, you should run cleanup, as described in the [Cleanup](#cleanup) section of this page. It is safe to delay running cleanup until off-peak hours.
 
 ## Node Status
 
@@ -211,6 +211,7 @@ The operation will end after the current node has finished its cleanup.
 
 ## Repair
 Over time the replicas stored in a Cassandra cluster may become out of sync. In Cassandra, hinted handoff and read repair maintain the consistency of replicas when a node is temporarily down and during the data read path. However, as part of regular cluster maintenance, or when a node is replaced, removed, or added, manual anti-entropy repair should be performed.
+
 Like cleanup, repair can be a CPU and disk intensive operation. When possible, it should be run during off peak hours. To minimize the impact on the cluster, the DC/OS Apache Cassandra Service will run a sequential, primary range, repair on each node of the cluster for the selected nodes, key spaces, and column families.
 
 To perform a repair from the CLI, enter the following command:
