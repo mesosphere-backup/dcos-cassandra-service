@@ -33,7 +33,7 @@ allprojects {
     apply from: "$rootDir/gradle/spock.gradle"
 
     group = 'com.mesosphere.dcos'
-    version = '1.0.18' + (isSnapshot ? '-SNAPSHOT' : '')
+    version = '1.0.23' + (isSnapshot ? '-SNAPSHOT' : '')
 
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
