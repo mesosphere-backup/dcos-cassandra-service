@@ -6,6 +6,7 @@ dependencies {
     compile 'mesosphere:dcos-commons:0.8.1.1'
     compile 'com.google.protobuf:protobuf-java:3.0.0'
     compile 'org.apache.cassandra:cassandra-all:2.2.4'
+    compile "com.github.stefanbirkner:system-rules:1.16.0"
 }
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"

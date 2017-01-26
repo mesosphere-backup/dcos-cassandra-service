@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.util.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -62,6 +63,10 @@ public class ExecutorConfig {
             @JsonProperty("cache_fetched_uris") boolean cacheFetchedUris)
             throws URISyntaxException, UnsupportedEncodingException {
 
+        // This check is compatibility with upgrades from 1.0.20 in which this configuration property is absent.
+        if (StringUtils.isEmpty(libmesosLocation)) {
+            libmesosLocation = System.getenv("EXECUTOR_LIBMESOS_LOCATION");
+        }
         ExecutorConfig config = create(
                 command,
                 arguments,

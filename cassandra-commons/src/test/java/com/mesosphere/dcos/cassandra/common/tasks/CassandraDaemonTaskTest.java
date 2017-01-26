@@ -6,10 +6,13 @@ import org.apache.mesos.dcos.Capabilities;
 import org.apache.mesos.offer.VolumeRequirement;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -22,6 +25,9 @@ import static org.mockito.Mockito.when;
  * This class tests the CassandraDaemonTask class.
  */
 public class CassandraDaemonTaskTest {
+    @ClassRule
+    public static final EnvironmentVariables ENV_VARS = new EnvironmentVariables();
+
     private static final String TEST_DAEMON_NAME = "test-daemon-task-name";
     private static final UUID TEST_CONFIG_ID = UUID.randomUUID();
     public static final String TEST_CONFIG_NAME = TEST_CONFIG_ID.toString();
@@ -287,6 +293,74 @@ public class CassandraDaemonTaskTest {
                 updatedTestExecutorConfig,
                 TEST_CONFIG_ID);
         Assert.assertTrue(allUrisAreCacheable(updatedTask.getTaskInfo().getExecutor().getCommand().getUrisList(), true));
+    }
+
+
+    @Test
+    public void testUpdateLibmesosLocation() throws URISyntaxException, UnsupportedEncodingException {
+        // Set the default environment variable to simulate the setting of this variable from parsing scheduler.yml
+        final String DEFAULT_LIBMESOS_LOCATION = "http://libmesos-default";
+        ENV_VARS.set("EXECUTOR_LIBMESOS_LOCATION", DEFAULT_LIBMESOS_LOCATION);
+
+        // Before the introduction of libmesosLocation variable, the executor config stored in zookeeper has
+        // null libmesosLocation and should be constructed and deserialized correctly.
+        ExecutorConfig testExecutorConfig = ExecutorConfig.create(
+                "test-cmd",
+                Arrays.asList("arg0"),
+                1.0,
+                256,
+                500,
+                1000,
+                "java-home",
+                "http://jre-location",
+                "http://executor-location",
+                "http://cassandra-location",
+                /* libmesosLocation */ null,
+                false,
+                false);
+
+        testTaskExecutor = CassandraTaskExecutor.create(
+                "test-framework-id",
+                TEST_DAEMON_NAME,
+                "test-role",
+                "test-principal",
+                testExecutorConfig);
+
+        CassandraDaemonTask daemonTask = testTaskFactory.create(
+                TEST_DAEMON_NAME,
+                TEST_CONFIG_NAME,
+                testTaskExecutor,
+                CassandraConfig.DEFAULT);
+        Assert.assertEquals(4, daemonTask.getExecutor().getURIs().size());
+        Assert.assertTrue(daemonTask.getExecutor().getURIs().contains(DEFAULT_LIBMESOS_LOCATION));
+
+        ExecutorConfig updatedTestExecutorConfig = ExecutorConfig.create(
+                "test-cmd",
+                Arrays.asList("arg0"),
+                1.0,
+                256,
+                500,
+                1000,
+                "java-home",
+                "http://jre-location",
+                "http://executor-location",
+                "http://cassandra-location",
+                "http://libmesos-location-new",
+                false,
+                false);
+
+        testTaskExecutor = CassandraTaskExecutor.create(
+                "test-framework-id",
+                TEST_DAEMON_NAME,
+                "test-role",
+                "test-principal",
+                updatedTestExecutorConfig);
+
+        CassandraDaemonTask updatedTask = daemonTask.updateConfig(
+                CassandraConfig.DEFAULT,
+                updatedTestExecutorConfig,
+                TEST_CONFIG_ID);
+        Assert.assertTrue(updatedTask.getExecutor().getURIs().contains("http://libmesos-location-new"));
     }
 
     private Protos.TaskInfo normalizeCassandraTaskInfo(CassandraDaemonTask daemonTask) {
