@@ -36,7 +36,7 @@ public class SeedsManager implements Runnable {
     private volatile ImmutableMap<String, DataCenterInfo> dataCenters;
     private final SchedulerClient client;
     private DefaultConfigurationManager configurationManager;
-    private StateStore stateStore;
+    private final StateStore stateStore;
 
     private boolean putLocalInfo(String url) {
         try {
@@ -81,7 +81,7 @@ public class SeedsManager implements Runnable {
                 ImmutableMap.<String, DataCenterInfo>builder();
         this.client = client;
         try {
-            synchronized (stateStore) {
+            synchronized (this.stateStore) {
                 LOGGER.info("Loading data from persistent store");
                 for (final String key : stateStore.fetchPropertyKeys()) {
                     if (!key.startsWith(DATA_CENTERS_KEY)) {

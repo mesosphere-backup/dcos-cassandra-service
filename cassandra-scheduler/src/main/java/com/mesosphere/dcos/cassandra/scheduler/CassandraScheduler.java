@@ -163,10 +163,7 @@ public class CassandraScheduler implements Scheduler, Observer {
             Plan plan = new CassandraPlan(
                     defaultConfigurationManager,
                     ReconciliationPhase.create(reconciler),
-                    SyncDataCenterPhase.create(
-                            new SeedsManager(
-                                    defaultConfigurationManager, cassandraState, executor, client, stateStore),
-                            executor),
+                    SyncDataCenterPhase.create(seeds, executor),
                     CassandraDaemonPhase.create(
                             cassandraState, offerRequirementProvider, client, defaultConfigurationManager),
                     Arrays.asList(
