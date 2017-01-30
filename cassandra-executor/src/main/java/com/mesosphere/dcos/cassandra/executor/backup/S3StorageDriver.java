@@ -154,15 +154,16 @@ public class S3StorageDriver implements BackupStorageDriver {
                 }
                 LOGGER.info("Entering keyspace: {}", keyspaceDir.getName());
                 for (File cfDir : getColumnFamilyDir(keyspaceDir)) {
-                    LOGGER.info("Entering column family: {}", cfDir.getName());
+                    LOGGER.info("Entering column family dir: {}", cfDir.getName());
                     File snapshotDir = new File(cfDir, "snapshots");
-                    if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir)) {
+                    File backupDir = new File(snapshotDir, backupName);
+                    if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir, backupDir)) {
                         LOGGER.info("Skipping directory: {}",
                                 snapshotDir.getAbsolutePath());
                         continue;
                     }
                     LOGGER.info(
-                            "Valid backup directories. Keyspace: {} | ColumnFamily: {} | Snapshot: {} | BackupName: {}",
+                            "Valid backup directories. KeyspaceDir: {} | ColumnFamilyDir: {} | SnapshotDir: {} | BackupName: {}",
                             keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(),
                             snapshotDir.getAbsolutePath(), backupName);
 
