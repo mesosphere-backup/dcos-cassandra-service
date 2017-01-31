@@ -31,10 +31,6 @@ $ dcos cassandra --name=<service-name> backup start \
 
 To upload to S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
 
-To check the status of the backup from the CLI, enter the following command:
-
-```
-$ dcos cassandra --name=<service-name> backup status
 ```
 
 To cancel a currently running backup from the CLI, enter the following command:
@@ -58,12 +54,6 @@ $ dcos cassandra --name=<service-name> backup start \
 ```
 
 To upload to Azure, you must specify the "azure://" protocol for the external location along with setting the Azure flags for Azure storage account and a secret key.
-
-To check the status of the backup from the CLI, enter the following command:
-
-```
-$ dcos cassandra --name=<service-name> backup status
-```
 
 To cancel a currently running backup from the CLI, enter the following command:
 

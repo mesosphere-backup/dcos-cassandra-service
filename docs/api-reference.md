@@ -106,7 +106,7 @@ In the above, the nodes list indicates the nodes on which cleanup will be perfor
 ```
 
 ```
-$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type:application/json" <master-IP>/service/cassandra/v1/cleanup/start --data @cleanup.json
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" -H "Content-Type:application/json" <master-IP>/service/cassandra/v1/cleanup/start --data @cleanup.json
 ```
 
 ## Repair
@@ -129,7 +129,7 @@ In the above, the nodes list indicates the nodes on which the repair will be per
 ```
 
 ```
-curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type:application/json" <master-IP>/service/cassandra/v1/repair/start --data @repair.json
+curl -X PUT -H "Authorization: token=$AUTH_TOKEN" -H "Content-Type:application/json" <master-IP>/service/cassandra/v1/repair/start --data @repair.json
 ```
 
 ## Backup
@@ -148,14 +148,7 @@ First, create the request payload, for example, in a file `backup.json`:
 Then, submit the request payload via `PUT` request to `/v1/backup/start`
 
 ```
-$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type: application/json" -d @backup.json <master-IP>/service/cassandra/v1/backup/start
-{"status":"started", message:""}
-```
-
-Check status of the backup:
-
-```
-$ curl -X GET -H "Authorization: token=$AUTH_TOKEN" http://cassandra.marathon.mesos:9000/v1/backup/status
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" -H "Content-Type: application/json" -d @backup.json <master-IP>/service/cassandra/v1/backup/start
 ```
 
 ## Restore
@@ -176,7 +169,7 @@ Next, create the request payload, for example, in a file `restore.json`:
 Next, submit the request payload via `PUT` request to `/v1/restore/start`
 
 ```
-$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "Content-Type: application/json" -d @restore.json <master-IP>/service/cassandra/v1/restore/start
+$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" -H "Content-Type: application/json" -d @restore.json <master-IP>/service/cassandra/v1/restore/start
 {"status":"started", message:""}
 ```
 
