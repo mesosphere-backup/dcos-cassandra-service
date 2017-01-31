@@ -149,13 +149,6 @@ Then, submit the request payload via `PUT` request to `/v1/backup/start`
 
 ```
 $ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" -H "Content-Type: application/json" -d @backup.json <master-IP>/service/cassandra/v1/backup/start
-{"status":"started", message:""}
-```
-
-Check status of the backup:
-
-```
-$ curl -X GET -H "Authorization: token=$AUTH_TOKEN" http://cassandra.marathon.mesos:9000/v1/backup/status
 ```
 
 ## Restore
