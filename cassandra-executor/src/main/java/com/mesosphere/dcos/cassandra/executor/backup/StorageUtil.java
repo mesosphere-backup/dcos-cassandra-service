@@ -27,7 +27,7 @@ public final class StorageUtil {
    * Filters unwanted keyspaces and column families
    */
   static boolean isValidBackupDir(File ksDir, File cfDir, File ssDir, File bkDir) {
-    if (!ssDir.exists() || !ssDir.isDirectory() || !bkDir.exists()) {
+    if (!ssDir.exists() || !ssDir.isDirectory() || !bkDir.exists() || !bkDir.isDirectory()) {
       return false;
     }
 
