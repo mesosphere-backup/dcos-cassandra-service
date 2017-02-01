@@ -78,12 +78,13 @@ public class AzureStorageDriver implements BackupStorageDriver {
       for (File cfDir : keyspaceDir.listFiles()) {
         logger.info("Entering column family: {}", cfDir.getName());
         File snapshotDir = new File(cfDir, "snapshots");
-        if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir)) {
+        File backupDir = new File(snapshotDir, backupName);
+        if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir, backupDir)) {
           logger.info("Skipping directory: {}", snapshotDir.getAbsolutePath());
           continue;
         }
         logger.info(
-          "Valid backup directories. Keyspace: {} | ColumnFamily: {} | Snapshot: {} | BackupName: {}",
+          "Valid backup directories. KeyspaceDir: {} | ColumnFamilyDir: {} | SnapshotDir: {} | BackupName: {}",
           keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(),
           snapshotDir.getAbsolutePath(), backupName);
 
