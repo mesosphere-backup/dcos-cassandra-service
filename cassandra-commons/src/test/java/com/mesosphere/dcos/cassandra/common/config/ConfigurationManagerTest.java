@@ -243,7 +243,7 @@ public class ConfigurationManagerTest {
                 (CassandraSchedulerConfiguration)configurationManager.getTargetConfig();
 
         ExecutorConfig expectedExecutorConfig = new ExecutorConfig(
-                "export LD_LIBRARY_PATH=$MESOS_SANDBOX/libmesos-bundle/lib && export MESOS_NATIVE_JAVA_LIBRARY=$(ls $MESOS_SANDBOX/libmesos-bundle/lib/libmesos-*.so) && ./executor/bin/cassandra-executor server executor/conf/executor.yml",
+                "export LD_LIBRARY_PATH=$MESOS_SANDBOX/libmesos-bundle/lib:$LD_LIBRARY_PATH && export MESOS_NATIVE_JAVA_LIBRARY=$(ls $MESOS_SANDBOX/libmesos-bundle/lib/libmesos-*.so) && ./executor/bin/cassandra-executor server executor/conf/executor.yml",
                 new ArrayList<>(),
                 0.1,
                 768,
