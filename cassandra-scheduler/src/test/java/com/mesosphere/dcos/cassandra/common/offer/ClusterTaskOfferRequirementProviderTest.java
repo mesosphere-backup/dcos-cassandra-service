@@ -26,6 +26,7 @@ import org.apache.mesos.state.StateStore;
 import org.junit.*;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -235,18 +236,21 @@ public class ClusterTaskOfferRequirementProviderTest {
 
         Protos.CommandInfo cmd = executorInfo.getCommand();
         Assert.assertEquals(4, cmd.getUrisList().size());
-        Assert.assertEquals(
-            config.getExecutorConfig().getExecutorLocation().toString(),
-            cmd.getUrisList().get(0).getValue());
+
+        List<Protos.CommandInfo.URI> urisList = new ArrayList<>(cmd.getUrisList());
+        urisList.sort((a, b) -> a.getValue().compareTo(b.getValue()));
         Assert.assertEquals(
             config.getExecutorConfig().getLibmesosLocation().toString(),
-            cmd.getUrisList().get(1).getValue());
-        Assert.assertEquals(
-            config.getExecutorConfig().getCassandraLocation().toString(),
-            cmd.getUrisList().get(2).getValue());
+            urisList.get(0).getValue());
         Assert.assertEquals(
             config.getExecutorConfig().getJreLocation().toString(),
-            cmd.getUrisList().get(3).getValue());
+            urisList.get(1).getValue());
+        Assert.assertEquals(
+            config.getExecutorConfig().getCassandraLocation().toString(),
+            urisList.get(2).getValue());
+        Assert.assertEquals(
+            config.getExecutorConfig().getExecutorLocation().toString(),
+            urisList.get(3).getValue());
     }
 
     @Test
