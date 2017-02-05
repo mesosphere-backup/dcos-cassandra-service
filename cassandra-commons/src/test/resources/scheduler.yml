@@ -155,3 +155,12 @@ logging:
       threshold: ALL
       timeZone: UTC
       target: stdout
+http_client:
+  timeout: ${HTTP_CLIENT_TIMEOUT:-500ms}
+  connectionTimeout: ${HTTP_CLIENT_CONNECTION_TIMEOUT:-500ms}
+metrics:
+  host: localhost
+  port: ${METRIC_PORT:-1111}
+  prefix: ${PREFIX:-'prefix'}
+  frequency: ${FREQUENCY:-10}
+  enabled: ${METRICS_ENABLED:-false}

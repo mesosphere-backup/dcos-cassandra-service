@@ -188,3 +188,9 @@ logging:
       threshold: ALL
       timeZone: UTC
       target: stdout
+metrics:
+  host: localhost
+  port: ${METRIC_PORT:-1111}
+  prefix: ${PREFIX:-'prefix'}
+  frequency: ${FREQUENCY:-10}
+  enabled: ${METRICS_ENABLED:-false}
