@@ -24,6 +24,10 @@ processes to restart.
 
 # Specific Version Instructions
 
+**If you are planning to upgrade to DC/OS Apache Cassandra 1.0.23 on Ubuntu or CentOS,
+you must upgrade to 1.0.24 instead.  Do not upgrade to 1.0.23, which may not
+work on those OSes.**
+
 **If you are upgrading specifically from DC/OS Apache Cassandra 1.0.18, you must
 upgrade to 1.0.20 or higher.  Do not upgrade to 1.0.19; this version is no longer 
 supported and will be deleted in the near future. (See
