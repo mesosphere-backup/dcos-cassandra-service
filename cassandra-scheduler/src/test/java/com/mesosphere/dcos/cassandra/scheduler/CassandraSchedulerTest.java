@@ -4,6 +4,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
+import com.mesosphere.dcos.cassandra.common.metrics.StatsDMetrics;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
@@ -73,6 +74,8 @@ public class CassandraSchedulerTest {
     private static TestingServer server;
     private QueuedSchedulerDriver driver;
     private ConfigurationFactory<MutableSchedulerConfiguration> factory;
+    private static MetricConfig metricConfig;
+    private static StatsDMetrics metrics;
 
     @Before
     public void beforeEach() throws Exception {
@@ -125,6 +128,9 @@ public class CassandraSchedulerTest {
                 new ConfigValidator(),
                 stateStore);
 
+        metricConfig = config.getMetricConfig();
+        metrics = new StatsDMetrics(metricConfig);
+
 
         Capabilities mockCapabilities = Mockito.mock(Capabilities.class);
         when(mockCapabilities.supportsNamedVips()).thenReturn(true);
@@ -134,7 +140,8 @@ public class CassandraSchedulerTest {
         cassandraState = new CassandraState(
                 configurationManager,
                 configurationManager.getTargetConfig().getClusterTaskConfig(),
-                stateStore);
+                stateStore,
+                metrics);
 
         offerRequirementProvider = new PersistentOfferRequirementProvider(defaultConfigurationManager);
         scheduler = new CassandraScheduler(

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
+import com.mesosphere.dcos.cassandra.common.metrics.StatsDMetrics;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import com.mesosphere.dcos.cassandra.scheduler.TestUtils;
@@ -58,6 +59,8 @@ public class CassandraDaemonStepTest {
     private static ClusterTaskConfig clusterTaskConfig;
     private static StateStore stateStore;
     private static DefaultConfigurationManager configurationManager;
+    private static MetricConfig metricConfig;
+    private static StatsDMetrics metrics;
 
     @Before
     public void beforeEach() throws Exception {
@@ -110,10 +113,14 @@ public class CassandraDaemonStepTest {
                         new ConfigValidator(),
                         stateStore);
 
+        metricConfig = config.getMetricConfig();
+        metrics = new StatsDMetrics(metricConfig);
+
         cassandraState = new CassandraState(
                 new ConfigurationManager(taskFactory, configurationManager),
                 clusterTaskConfig,
-                stateStore);
+                stateStore,
+                metrics);
     }
 
     @Test

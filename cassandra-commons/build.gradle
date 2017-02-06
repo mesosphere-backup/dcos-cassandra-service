@@ -7,6 +7,7 @@ dependencies {
     compile 'com.google.protobuf:protobuf-java:3.0.0'
     compile 'org.apache.cassandra:cassandra-all:2.2.4'
     compile "com.github.stefanbirkner:system-rules:1.16.0"
+    compile "com.timgroup:java-statsd-client:3.0.2"
 }
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"

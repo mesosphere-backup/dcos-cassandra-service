@@ -10,6 +10,7 @@ import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfigurati
 import com.mesosphere.dcos.cassandra.common.config.ClusterTaskConfig;
 import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.config.ServiceConfig;
+import com.mesosphere.dcos.cassandra.common.metrics.StatsDMetrics;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.*;
 import com.mesosphere.dcos.cassandra.common.tasks.cleanup.CleanupContext;
@@ -44,6 +45,7 @@ public class CassandraState extends SchedulerState implements Managed {
 
     private final ConfigurationManager configuration;
     private final ClusterTaskConfig clusterTaskConfig;
+    private final StatsDMetrics metrics;
 
     // Maps Task Name -> Task, where task name can be PREFIX-id
     private volatile Map<String, CassandraTask> tasks = Collections.emptyMap();
@@ -54,10 +56,12 @@ public class CassandraState extends SchedulerState implements Managed {
     public CassandraState(
             final ConfigurationManager configuration,
             final ClusterTaskConfig clusterTaskConfig,
-            final StateStore stateStore) {
+            final StateStore stateStore,
+            final StatsDMetrics metrics) {
         super(stateStore);
         this.configuration = configuration;
         this.clusterTaskConfig = clusterTaskConfig;
+        this.metrics = metrics;
 
         loadTasks();
     }
@@ -640,6 +644,10 @@ public class CassandraState extends SchedulerState implements Managed {
                     }
 
                     update(cassandraTask);
+                    if (cassandraTask.isTerminated()) {
+                        final String metricSuffix = this.getClass().getName() + cassandraTask.getName();
+                        metrics.gauge(metricSuffix, 1);
+                    }
                     LOGGER.info("Updated status for task {}", status.getTaskId().getValue());
                 } else {
                     LOGGER.info("Received status update for unrecorded task: " +
