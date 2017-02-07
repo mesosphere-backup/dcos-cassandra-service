@@ -41,9 +41,9 @@ cassandra:
      seeds_url: "${SEEDS_URL:-http://${SERVICE_NAME:-cassandra}.marathon.mesos:${API_PORT:-8080}/v1/seeds}"
      listen_address: "localhost"
      rpc_address: "localhost"
-     incremental_backups: false
-     auto_snapshot: false
-     snapshot_before_compaction: false
+     incremental_backups: ${CASSANDRA_INCREMENTAL_BACKUPS:-false}
+     auto_snapshot: ${CASSANDRA_AUTO_SNAPSHOT:-false}
+     snapshot_before_compaction: ${CASSANDRA_SNAPSHOT_BEFORE_COMPACTION:-false}
      enable_user_defined_functions: ${CASSANDRA_ENABLE_USER_DEFINED_FUNCTIONS:-false}
      endpoint_snitch : "GossipingPropertyFileSnitch"
      num_tokens : ${CASSANDRA_NUM_TOKENS:-256}
