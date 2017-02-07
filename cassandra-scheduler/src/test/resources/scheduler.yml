@@ -191,6 +191,6 @@ logging:
 metrics:
   host: localhost
   port: ${METRIC_PORT:-1111}
-  prefix: ${PREFIX:-'prefix'}
-  frequency: ${FREQUENCY:-10}
+  prefix: ${METRIC_PREFIX:-'prefix'}
+  frequency: ${METRIC_FREQUENCY:-10}
   enabled: ${METRICS_ENABLED:-false}

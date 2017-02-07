@@ -645,7 +645,7 @@ public class CassandraState extends SchedulerState implements Managed {
 
                     update(cassandraTask);
                     if (cassandraTask.isTerminated()) {
-                        final String metricSuffix = this.getClass().getName() + cassandraTask.getName();
+                        final String metricSuffix = this.getClass().getName() + "." + cassandraTask.getName();
                         metrics.gauge(metricSuffix, 1);
                     }
                     LOGGER.info("Updated status for task {}", status.getTaskId().getValue());

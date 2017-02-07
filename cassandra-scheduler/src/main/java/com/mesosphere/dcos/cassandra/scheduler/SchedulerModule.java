@@ -67,6 +67,10 @@ public class SchedulerModule extends AbstractModule {
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
 
+        StatsDMetrics metrics = new StatsDMetrics(
+                configuration.getMetricConfig());
+        bind(StatsDMetrics.class).toInstance(metrics);
+
         try {
             Capabilities capabilities = new Capabilities(new DcosCluster());
             bind(Capabilities.class).toInstance(capabilities);
@@ -106,7 +110,6 @@ public class SchedulerModule extends AbstractModule {
                 configuration.getHttpClientConfiguration()).build("http-client"));
         bind(ExecutorService.class).toInstance(Executors.newCachedThreadPool());
         bind(CuratorFrameworkConfig.class).toInstance(curatorConfig);
-        bind(StatsDMetrics.class).asEagerSingleton();
         bind(ClusterTaskConfig.class).toInstance(configuration.getClusterTaskConfig());
         bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(8));
         bind(SchedulerClient.class).asEagerSingleton();
