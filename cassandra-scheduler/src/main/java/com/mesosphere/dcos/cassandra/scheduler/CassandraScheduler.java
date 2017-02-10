@@ -27,6 +27,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.dcos.Capabilities;
+import org.apache.mesos.dcos.DCOSCertInstaller;
 import org.apache.mesos.offer.OfferAccepter;
 import org.apache.mesos.offer.OfferEvaluator;
 import org.apache.mesos.offer.ResourceCleaner;
@@ -136,6 +137,8 @@ public class CassandraScheduler implements Scheduler, Observer {
 
         this.offerFilters = Protos.Filters.newBuilder().setRefuseSeconds(mesosConfig.getRefuseSeconds()).build();
         LOGGER.info("Creating an offer filter with refuse_seconds = {}", mesosConfig.getRefuseSeconds());
+        // Install cert from $MESOS_SANDBOX/.ssl/ca.crt into JRE's keystore.
+        DCOSCertInstaller.installCertificate(System.getenv("JAVA_HOME"));
     }
 
     @Override
