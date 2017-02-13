@@ -203,11 +203,6 @@ public class CassandraStateTest {
                 stateStore.fetchStatus(updatedDaemonTask.getName()).get().getState());
     }
 
-    /*@Test
-    public void testStatsDMetricsCalled() throws Exception {
-
-    }*/
-
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) throws TaskException {
         Assert.assertEquals(testDaemonName, daemonTaskInfo.getName());
         Assert.assertEquals(4, daemonTaskInfo.getResourcesCount());

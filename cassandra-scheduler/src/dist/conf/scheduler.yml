@@ -200,8 +200,8 @@ http_client:
   timeout: ${HTTP_CLIENT_TIMEOUT:-500ms}
   connectionTimeout: ${HTTP_CLIENT_CONNECTION_TIMEOUT:-500ms}
 metrics:
-  host: localhost
-  port: ${METRIC_PORT:-1111}
-  prefix: ${METRIC_PREFIX:-'prefix'}
-  frequency: ${METRIC_FREQUENCY:-10}
+  host: ${METRICS_HOST:-localhost}
+  port: ${METRICs_PORT:-1111}
+  prefix: ${METRICs_PREFIX:-'cassandra-metrics'}
+  frequency: ${METRICs_FREQUENCY:-10}
   enabled: ${METRICS_ENABLED:-false}

@@ -31,7 +31,7 @@ public class MetricConfig {
 
     @JsonCreator
     public static MetricConfig create(
-            @JsonProperty("command") String host,
+            @JsonProperty("host") String host,
             @JsonProperty("arguments") int port,
             @JsonProperty("cpus") String prefix,
             @JsonProperty("memory_mb") int frequency,
