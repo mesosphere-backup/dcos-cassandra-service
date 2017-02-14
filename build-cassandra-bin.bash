@@ -22,7 +22,7 @@ if [ -z "$SED" ]; then
 fi
 
 # VERSION SETTINGS
-CASSANDRA_VERSION="3.0.10"
+CASSANDRA_VERSION="3.10"
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
 STATSD_REPORTER_VERSION="4.1.2-SNAPSHOT" # Custom version due to usage of metrics-core-3.1.0 interface in Cassandra 2.2+
 REPORTER_CONFIG_VERSION="3.0.3"
@@ -114,6 +114,7 @@ echo "##### Disable JMX_PORT in cassandra-env.sh #####"
 
 # "JMX_PORT=???" => "#DISABLED FOR DC/OS\n#JMX_PORT=???"
 $SED -i "s/\(^JMX_PORT=.*\)/#DISABLED FOR DC\/OS:\n#\1/g" "${CONF_DIR}"/cassandra-env.sh
+$SED -i '2i \\n#ENABLED FOR DC/OS\nallow_root=yes\n' "${CASSANDRA_DIST_NAME}/bin/cassandra"
 
 _sha1sum "${CONF_DIR}"/* &> confdir-after.txt || true
 
@@ -127,6 +128,7 @@ _sha1sum "${LIB_DIR}"/*.jar &> libdir-before.txt || true
 echo "##### Install custom seed provider #####"
 
 # Copy seedprovider lib from regular local build into cassandra-bin/lib
+cp ../seedprovider/build/libs/seedprovider.jar ../seedprovider/build/libs/seedprovider-${SEED_PROVIDER_VERSION}.jar
 cp -v ../seedprovider/build/libs/seedprovider-${SEED_PROVIDER_VERSION}.jar ${LIB_DIR}
 
 echo "##### Install StatsD metrics support #####"
