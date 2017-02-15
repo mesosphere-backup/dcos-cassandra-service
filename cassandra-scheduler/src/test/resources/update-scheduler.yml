@@ -187,7 +187,7 @@ logging:
       target: stdout
 metrics:
   host: ${METRICS_HOST:-localhost}
-  port: ${METRICs_PORT:-1111}
-  prefix: ${METRICs_PREFIX:-'cassandra-metrics'}
-  frequency: ${METRICs_FREQUENCY:-10}
+  port: ${METRICS_PORT:-1111}
+  prefix: ${METRICS_PREFIX:-'cassandra-metrics'}
+  frequency: ${METRICS_FREQUENCY:-10}
   enabled: ${METRICS_ENABLED:-false}
