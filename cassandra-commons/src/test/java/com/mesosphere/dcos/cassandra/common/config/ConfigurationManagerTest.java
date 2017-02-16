@@ -27,6 +27,7 @@ import java.net.URI;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.when;
 
 public class ConfigurationManagerTest {
@@ -68,6 +69,7 @@ public class ConfigurationManagerTest {
                 configFilePath);
         final CassandraSchedulerConfiguration original  = mutableConfig.createConfig();
         final CuratorFrameworkConfig curatorConfig = mutableConfig.getCuratorConfig();
+        final MetricConfig metricConfig = mutableConfig.getMetricConfig();
         RetryPolicy retryPolicy =
                 (curatorConfig.getOperationTimeout().isPresent()) ?
                         new RetryUntilElapsed(
@@ -103,6 +105,9 @@ public class ConfigurationManagerTest {
         assertEquals(original.getExecutorConfig(), targetConfig.getExecutorConfig());
         assertEquals(original.getServers(), targetConfig.getServers());
         assertEquals(original.getSeeds(), targetConfig.getSeeds());
+        assertEquals(metricConfig.getEnabled(), false);
+        assertNotEquals(metricConfig.getHost(), "127.0.0.1");
+        assertEquals(metricConfig.getHost(), "localhost");
     }
 
 

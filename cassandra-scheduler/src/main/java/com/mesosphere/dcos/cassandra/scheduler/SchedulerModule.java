@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.mesosphere.dcos.cassandra.common.config.*;
+import com.mesosphere.dcos.cassandra.common.metrics.StatsDMetrics;
 import com.mesosphere.dcos.cassandra.common.offer.ClusterTaskOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProvider;
 import com.mesosphere.dcos.cassandra.common.serialization.BooleanStringSerializer;
@@ -65,6 +66,10 @@ public class SchedulerModule extends AbstractModule {
                 curatorConfig.getServers(),
                 retryPolicy);
         bind(StateStore.class).toInstance(curatorStateStore);
+
+        StatsDMetrics metrics = new StatsDMetrics(
+                configuration.getMetricConfig());
+        bind(StatsDMetrics.class).toInstance(metrics);
 
         try {
             Capabilities capabilities = new Capabilities(new DcosCluster());

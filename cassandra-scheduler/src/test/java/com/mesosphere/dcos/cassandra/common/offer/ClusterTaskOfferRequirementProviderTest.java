@@ -4,6 +4,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
+import com.mesosphere.dcos.cassandra.common.metrics.StatsDMetrics;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraTask;
@@ -38,6 +39,7 @@ public class ClusterTaskOfferRequirementProviderTest {
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
     private static ClusterTaskConfig clusterTaskConfig;
+    private static MetricConfig metricConfig;
     private static CassandraState cassandraState;
     private static ClusterTaskOfferRequirementProvider provider;
     private static Protos.TaskInfo testTaskInfo;
@@ -51,13 +53,15 @@ public class ClusterTaskOfferRequirementProviderTest {
     private static final Integer testPortBegin = 7000;
     private static final Integer testPortEnd = 7001;
     private static StateStore stateStore;
+    private static StatsDMetrics metrics;
 
     @Before
     public void beforeEach() throws Exception {
         cassandraState = new CassandraState(
                 configuration,
                 clusterTaskConfig,
-                stateStore);
+                stateStore,
+                metrics);
 
         CassandraDaemonTask task = cassandraState.createDaemon("test-daemon");
         Protos.TaskInfo initTaskInfo = task.getTaskInfo();
@@ -124,6 +128,7 @@ public class ClusterTaskOfferRequirementProviderTest {
         ServiceConfig initial = config.getServiceConfig();
 
         clusterTaskConfig = config.getClusterTaskConfig();
+        metricConfig = config.getMetricConfig();
 
         final CuratorFrameworkConfig curatorConfig = mutable.getCuratorConfig();
         RetryPolicy retryPolicy =
@@ -160,6 +165,7 @@ public class ClusterTaskOfferRequirementProviderTest {
                 configurationManager);
 
         provider = new ClusterTaskOfferRequirementProvider();
+        metrics = new StatsDMetrics(metricConfig);
     }
 
     @After

@@ -42,7 +42,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @JsonProperty("dc_url") final String dcUrl,
     @JsonProperty("phase_strategy") final String phaseStrategy,
     @JsonProperty("enable_upgrade_sstable_endpoint") final boolean enableUpgradeSSTableEndpoint,
-    @JsonProperty("http_client") final HttpClientConfiguration httpClientConfiguration) {
+    @JsonProperty("http_client") final HttpClientConfiguration httpClientConfiguration,
+    @JsonProperty("metrics") final MetricConfig metricConfig) {
 
     return new CassandraSchedulerConfiguration(
       executorConfig,
@@ -58,7 +59,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       dcUrl,
       phaseStrategy,
       enableUpgradeSSTableEndpoint,
-      httpClientConfiguration
+      httpClientConfiguration,
+      metricConfig
     );
   }
 
@@ -90,6 +92,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
   private final boolean enableUpgradeSSTableEndpoint;
   @JsonIgnore
   private final HttpClientConfiguration httpClientConfiguration;
+  @JsonIgnore
+  private final MetricConfig metricConfig;
 
   private CassandraSchedulerConfiguration(
     ExecutorConfig executorConfig,
@@ -104,7 +108,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
     String dcUrl,
     String phaseStrategy,
     boolean enableUpgradeSSTableEndpoint,
-    HttpClientConfiguration httpClientConfiguration) {
+    HttpClientConfiguration httpClientConfiguration,
+    MetricConfig metricConfig) {
     this.executorConfig = executorConfig;
     this.servers = servers;
     this.seeds = seeds;
@@ -119,6 +124,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     this.phaseStrategy = phaseStrategy;
     this.enableUpgradeSSTableEndpoint = enableUpgradeSSTableEndpoint;
     this.httpClientConfiguration = httpClientConfiguration;
+    this.metricConfig = metricConfig;
   }
 
   @JsonProperty("executor")
@@ -187,6 +193,9 @@ public class CassandraSchedulerConfiguration implements Configuration {
   @JsonProperty("http_client")
   public HttpClientConfiguration getHttpClientConfiguration() { return httpClientConfiguration; }
 
+  @JsonProperty("metrics")
+  public MetricConfig getMetricConfig() { return metricConfig; }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -205,7 +214,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       Objects.equals(externalDcs, that.externalDcs) &&
       Objects.equals(dcUrl, that.dcUrl) &&
       Objects.equals(phaseStrategy, that.phaseStrategy) &&
-      Objects.equals(httpClientConfiguration, that.httpClientConfiguration);
+      Objects.equals(httpClientConfiguration, that.httpClientConfiguration) &&
+      Objects.equals(metricConfig, that.metricConfig);
   }
 
   @Override
@@ -224,7 +234,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
       dcUrl,
       phaseStrategy,
       enableUpgradeSSTableEndpoint,
-      httpClientConfiguration);
+      httpClientConfiguration,
+      metricConfig);
   }
 
   @JsonIgnore

@@ -41,6 +41,7 @@ public class MutableSchedulerConfiguration extends Configuration {
   private String phaseStrategy;
   private boolean enableUpgradeSSTableEndpoint;
   private HttpClientConfiguration httpClientConfiguration;
+  private MetricConfig metricConfig;
 
   @JsonProperty("mesos")
   public MesosConfig getMesosConfig() {
@@ -205,6 +206,14 @@ public class MutableSchedulerConfiguration extends Configuration {
     this.httpClientConfiguration = httpClientConfiguration;
   }
 
+  @JsonProperty("metrics")
+  public MetricConfig getMetricConfig() { return metricConfig; }
+
+  @JsonProperty("metrics")
+  public void setMetricConfig(MetricConfig metricConfig) {
+    this.metricConfig = metricConfig;
+  }
+
   @JsonIgnore
   public CassandraSchedulerConfiguration createConfig() {
     return CassandraSchedulerConfiguration.create(
@@ -221,7 +230,8 @@ public class MutableSchedulerConfiguration extends Configuration {
       dcUrl,
       phaseStrategy,
       enableUpgradeSSTableEndpoint,
-      httpClientConfiguration
+      httpClientConfiguration,
+      metricConfig
     );
   }
 
@@ -244,14 +254,15 @@ public class MutableSchedulerConfiguration extends Configuration {
       Objects.equals(curatorConfig, that.curatorConfig) &&
       Objects.equals(externalDcs, that.externalDcs) &&
       Objects.equals(dcUrl, that.dcUrl) &&
-      Objects.equals(httpClientConfiguration, that.httpClientConfiguration);
+      Objects.equals(httpClientConfiguration, that.httpClientConfiguration) &&
+      Objects.equals(metricConfig, that.mesosConfig);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(executorConfig, servers, seeds, placementConstraint, cassandraConfig,
       clusterTaskConfig, apiPort, serviceConfig, mesosConfig, curatorConfig,
-      externalDcSyncMs, externalDcs, dcUrl, enableUpgradeSSTableEndpoint, httpClientConfiguration);
+      externalDcSyncMs, externalDcs, dcUrl, enableUpgradeSSTableEndpoint, httpClientConfiguration, metricConfig);
   }
 
   @Override
