@@ -5,7 +5,7 @@
       "executor-zip":"{{artifact-dir}}/executor.zip",
       "jre-tar-gz":"https://downloads.mesosphere.com/java/jre-8u121-linux-x64.tar.gz",
       "apache-cassandra-bin-tar-gz":"https://downloads.mesosphere.com/cassandra/assets/apache-cassandra-3.0.10-bin-dcos.tar.gz",
-      "libmesos-bundle-tar-gz": "http://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.8.8-1.0.3-rc1-1.tar.gz"
+      "libmesos-bundle-tar-gz": "https://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.9-argus-1.1.x-3.tar.gz"
     }
   },
   "images": {
