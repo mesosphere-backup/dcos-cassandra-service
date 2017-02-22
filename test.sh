@@ -18,8 +18,10 @@ if [ -z "$CLUSTER_URL" ]; then
     export CLUSTER_URL=$(echo "${CLUSTER_INFO}" | jq .url)
     export CLUSTER_ID=$(echo "${CLUSTER_INFO}" | jq .id)
     export CLUSTER_AUTH_TOKEN=$(echo "${CLUSTER_INFO}" | jq .auth_token)
+    CLUSTER_CREATED="true"
 else
     echo "Using provided CLUSTER_URL as cluster: $CLUSTER_URL"
+    CLUSTER_CREATED=""
 fi
 
 echo Security: $SECURITY
@@ -39,6 +41,6 @@ fi
 
 # Tests succeeded. Out of courtesy, trigger a teardown of the cluster if we created it ourselves.
 # Don't wait for the cluster to complete teardown.
-if [ -n "${CLUSTER_ID}" ]; then
+if [ -n "${CLUSTER_CREATED}" ]; then
     ./dcos-commons-tools/launch_ccm_cluster.py trigger-stop ${CLUSTER_ID}
 fi
