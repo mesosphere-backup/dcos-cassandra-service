@@ -4,7 +4,6 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
-import com.mesosphere.dcos.cassandra.common.metrics.StatsDMetrics;
 import com.mesosphere.dcos.cassandra.common.persistence.PersistenceException;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraDaemonTask;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
@@ -47,11 +46,9 @@ public class CassandraTaskFactoryTest {
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
     private static ClusterTaskConfig clusterTaskConfig;
-    private static MetricConfig metricConfig;
     private static String testDaemonName = "test-daemon-name";
     private CassandraState cassandraState;
     private static StateStore stateStore;
-    private static StatsDMetrics metrics;
 
     @Mock ExecutorDriver executorDriver;
 
@@ -80,7 +77,6 @@ public class CassandraTaskFactoryTest {
 
         final CassandraSchedulerConfiguration targetConfig = config.createConfig();
         clusterTaskConfig = targetConfig.getClusterTaskConfig();
-        metricConfig = config.getMetricConfig();
 
         final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
         RetryPolicy retryPolicy =
@@ -115,13 +111,10 @@ public class CassandraTaskFactoryTest {
                 new CassandraDaemonTask.Factory(mockCapabilities),
                 configurationManager);
 
-        metrics = new StatsDMetrics(metricConfig);
-
         cassandraState = new CassandraState(
                 configuration,
                 clusterTaskConfig,
-                stateStore,
-                metrics);
+                stateStore);
 
         taskFactory = new CassandraTaskFactory(executorDriver);
     }
