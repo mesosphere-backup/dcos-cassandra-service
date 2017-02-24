@@ -4,7 +4,6 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.mesosphere.dcos.cassandra.common.config.*;
-import com.mesosphere.dcos.cassandra.common.metrics.StatsDMetrics;
 import com.mesosphere.dcos.cassandra.common.tasks.*;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -33,7 +32,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 /**
  * This class tests the CassandraState class.
@@ -44,13 +43,11 @@ public class CassandraStateTest {
     private static IdentityManager identity;
     private static ConfigurationManager configuration;
     private static ClusterTaskConfig clusterTaskConfig;
-    private static MetricConfig metricConfig;
     private static String testDaemonName = "test-daemon-name";
     private static String testHostName = "test-host-name";
     private static String testTaskId = "test-task-id__1234";
     private CassandraState cassandraState;
     private static StateStore stateStore;
-    private static StatsDMetrics metrics;
 
     @Before
     public void beforeEach() throws Exception {
@@ -76,7 +73,6 @@ public class CassandraStateTest {
         ServiceConfig initial = config.createConfig().getServiceConfig();
 
         final CassandraSchedulerConfiguration targetConfig = config.createConfig();
-        metricConfig = config.getMetricConfig();
         clusterTaskConfig = targetConfig.getClusterTaskConfig();
 
         final CuratorFrameworkConfig curatorConfig = config.getCuratorConfig();
@@ -113,13 +109,10 @@ public class CassandraStateTest {
                 new CassandraDaemonTask.Factory(mockCapabilities),
                 configurationManager);
 
-        metrics = Mockito.mock(StatsDMetrics.class);
-
         cassandraState = new CassandraState(
                 configuration,
                 clusterTaskConfig,
-                stateStore,
-                metrics);
+                stateStore);
     }
 
     @After
@@ -195,12 +188,6 @@ public class CassandraStateTest {
         Assert.assertEquals(
                 Protos.TaskState.TASK_RUNNING,
                 stateStore.fetchStatus(updatedDaemonTask.getName()).get().getState());
-
-        cassandraState.update(getTestFailTaskStatus(daemonTask));
-        verify(metrics, times(1)).gauge("com.mesosphere.dcos.cassandra.common.tasks.CassandraState.test-daemon-name", 1);
-        Assert.assertEquals(
-                Protos.TaskState.TASK_FAILED,
-                stateStore.fetchStatus(updatedDaemonTask.getName()).get().getState());
     }
 
     private void validateDaemonTaskInfo(Protos.TaskInfo daemonTaskInfo) throws TaskException {
@@ -249,22 +236,8 @@ public class CassandraStateTest {
                 .build();
     }
 
-    private Protos.TaskStatus getTestFailTaskStatus() {
-        return Protos.TaskStatus.newBuilder()
-                .setTaskId(Protos.TaskID.newBuilder()
-                        .setValue(testTaskId)
-                        .build())
-                .setState(Protos.TaskState.TASK_FAILED)
-                .build();
-    }
-
     private Protos.TaskStatus getTestTaskStatus(CassandraDaemonTask task) {
         final CassandraDaemonStatus status = task.createStatus(Protos.TaskState.TASK_RUNNING, CassandraMode.NORMAL, Optional.empty());
-        return status.getTaskStatus();
-    }
-
-    private Protos.TaskStatus getTestFailTaskStatus(CassandraDaemonTask task) {
-        final CassandraDaemonStatus status = task.createStatus(Protos.TaskState.TASK_FAILED, CassandraMode.NORMAL, Optional.empty());
         return status.getTaskStatus();
     }
 }
