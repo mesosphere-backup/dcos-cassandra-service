@@ -31,7 +31,8 @@ def setup_module():
 
 
 def teardown_module():
-    uninstall()
+    #uninstall()
+    pass
 
 
 def get_first(collection, pred):
@@ -75,6 +76,7 @@ def test_install():
 
 
 @pytest.mark.sanity
+@pytest.mark.special
 def test_env_unchanged():
     completed_plan = infinity_commons.get_and_verify_plan(
         lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value
