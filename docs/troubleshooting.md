@@ -69,7 +69,7 @@ Via API:
 $ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/replace?node=node-0"
 ```
 
-This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing a failed node, you should run Cleanup (See the Cleanup part of the Managing section for more information).
+This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing the failed node, you should run Repair and Cleanup. (See the Repair and Cleanup parts of the Managing section for more information).
 
 # Restarting a Node
 To restart a given Cassandra node please use following. If you perform this action via the REST API, see REST API Authentication part of the REST API Reference section for information on how this request must be authenticated.
