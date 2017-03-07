@@ -5,11 +5,29 @@ feature_maturity: preview
 enterprise: 'no'
 ---
 
-DC/OS Apache Cassandra supports backup and restore from S3 storage for disaster recovery purposes.
+DC/OS Apache Cassandra supports backup and restore to remote storage (AWS S3 and Microsoft Azure) for disaster recovery purposes.
 
-Cassandra takes a snapshot of your tables and ships them to a remote location. Once the snapshots have been uploaded to a remote location, you can restore the data to a new cluster, in the event of a disaster, or restore them to an existing cluster, in the event that a user error has caused a data loss.
+# How does it work?
 
-**Note:** Backup and restore is not guaranteed to work across arbitrary versions of the Cassandra service. For example restoring a backup from a 1.0.16 cluster to a 1.0.21 cluster will not work. It is recommended that backups be restored to clusters of the same version from which they were created.
+## Backup
+
+As part of the backup process, DC/OS Apache Cassandra does following:
+
+1. Takes a schema backup of keyspaces and uploads it to remote storage.
+2. Takes a snapshot of tables and uploads it to remote storage.
+
+Once the schema and snapshots have been uploaded to remote storage, you can restore the data to a new cluster in the event of a disaster, or restore them to an existing cluster if user error has caused a data loss.
+
+## Restore
+
+As part of the restore process, DC/OS Apache Cassandra does following:
+
+1. Downloads the schema backup for keyspaces from remote storage and applies it to the Cassandra database.
+2. Downloads snapshots of tables from remote storage and restores them.
+
+**Note:**
+* Backup and restore is not guaranteed to work across arbitrary versions of the Cassandra service. For example, restoring a backup from a 1.0.16 cluster to a 1.0.21 cluster will not work. It is recommended that backups be restored to clusters of the same version from which they were created.
+* Schema backup is currently only supported for S3 and is not available for Azure. If you are using Azure storage for backups, back up your schema manually.
 
 # Backup
 
@@ -31,7 +49,6 @@ $ dcos cassandra --name=<service-name> backup start \
 
 To upload to S3, you must specify the "s3://" protocol for the external location along with setting the S3 flags for access key and secret key.
 
-```
 
 To cancel a currently running backup from the CLI, enter the following command:
 
@@ -83,7 +100,9 @@ To restore from S3, you must specify the "s3://" protocol for the external locat
 
 Check the status of the restore:
 
-    $ dcos cassandra --name=<service-name> restore status
+```
+$ dcos cassandra --name=<service-name> restore status
+```
 
 ## Azure Restore
 
