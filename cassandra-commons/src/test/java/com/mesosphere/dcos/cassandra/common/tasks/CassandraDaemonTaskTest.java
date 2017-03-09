@@ -240,7 +240,7 @@ public class CassandraDaemonTaskTest {
         Assert.assertEquals(Protos.DiscoveryInfo.Visibility.EXTERNAL, discovery.getVisibility());
         Assert.assertEquals(1, discovery.getPorts().getPortsCount());
         Assert.assertEquals(9042, discovery.getPorts().getPorts(0).getNumber());
-        Assert.assertEquals("NativeTransport", discovery.getPorts().getPorts(0).getName());
+        Assert.assertEquals("nativetransport", discovery.getPorts().getPorts(0).getName());
     }
 
     @Test
