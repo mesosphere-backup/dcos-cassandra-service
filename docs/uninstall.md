@@ -11,10 +11,10 @@ enterprise: 'no'
 
 
 
-Uninstalling a cluster is straightforward. Replace `cassandra` with the name of the Cassandra instance to be uninstalled.
+Uninstalling a cluster is straightforward. Replace `app-id` with the name of the Cassandra instance to be uninstalled. If you have only one instance and are using the default package name (`cassandra`), you can omit `--app-id=<app-id>` in the command below.
 
 ```
-$ dcos package uninstall --app-id=cassandra
+$ dcos package uninstall --app-id=<app-id> cassandra
 ```
 
 Then, use the [framework cleaner script](https://docs.mesosphere.com/1.9/usage/managing-services/uninstall/) to remove your Cassandra instance from Zookeeper and destroy all data associated with it. The script requires several arguments. The default values are:
