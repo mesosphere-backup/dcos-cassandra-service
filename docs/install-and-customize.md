@@ -14,7 +14,7 @@ Cassandra for DC/OS is available in the Universe and can be installed by using e
     - `permissive` security mode a service account is optional. 
     - `disabled` security mode does not require a service account.
 - Minimum three agent nodes with eight GB of memory and ten GB of disk available on each agent.
-- Ports 7000, 7001, 7199, 9042, and 9160 are available.
+- Ports 7000, 7001, 7199, 9042, and 9160 must be available.
 
 # Default Installation
 The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with three replicas of each value and local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
