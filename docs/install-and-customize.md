@@ -9,7 +9,7 @@ Cassandra for DC/OS is available in the Universe and can be installed by using e
 
 ## Prerequisites
 
-- Depending on your security mode in Enterprise DC/OS, you may need to provision a service account before installing Cassandra. Only someone with `superuser` permission can create the service account.
+- Depending on your security mode in Enterprise DC/OS, you may [need to provision a service account](/1.9/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) before installing Cassandra. Only someone with `superuser` permission can create the service account.
     - `strict` [security mode](https://docs.mesosphere.com/1.9/administration/installing/custom/configuration-parameters/#security) requires a service account.  
     - `permissive` security mode a service account is optional. 
     - `disabled` security mode does not require a service account.
