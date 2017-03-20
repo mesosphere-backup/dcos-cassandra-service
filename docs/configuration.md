@@ -297,13 +297,13 @@ The service configuration object contains properties that MUST be specified duri
     <tr>
       <td>mem</td>
       <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
+      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 GB is a good choice.</td>
     </tr>
 
     <tr>
       <td>heap</td>
       <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
+      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 GB is a minimum for production installations.</td>
     </tr>
 
     <tr>
