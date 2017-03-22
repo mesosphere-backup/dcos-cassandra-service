@@ -188,7 +188,7 @@ Cassandra supports several maintenance operations including Cleanup, Repair, Bac
 <a name="cleanup"></a>
 ## Cleanup
 
-When nodes are added or removed from the ring, a node can lose part of its partition range. Cassandra does not automatically remove data when this happens. You can tube cleanup to remove the unnecessary data.
+When nodes are added or removed from the ring, a node can lose part of its partition range. Cassandra does not automatically remove data when this happens. You can perform a cleanup to remove the unnecessary data.
 
 Cleanup can be a CPU- and disk-intensive operation, so you may want to delay running cleanup until off-peak hours. The DC/OS Apache Cassandra service will minimize the aggregate CPU and disk utilization for the cluster by performing cleanup for each selected node sequentially.
 
