@@ -1,6 +1,6 @@
 ---
 post_title: Install and Customize
-menu_order: 20
+menu_order: 0
 feature_maturity: preview
 enterprise: 'no'
 ---
