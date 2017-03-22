@@ -1,19 +1,15 @@
 ---
 post_title: Quick Start
-menu_order: 0
+menu_order: 10
 feature_maturity: preview
 enterprise: 'no'
 ---
 
 
-1. Install a Cassandra cluster using DC/OS CLI:
-
-    **Note:** Your cluster must have at least 3 private nodes.
-
-        $ dcos package install cassandra
+1. Follow the installation instructions in this topic to perform a default installation of a Cassandra cluster.
 
 1. Once the cluster is installed, retrieve connection information by running the `connection` command:
-        
+
         $ dcos cassandra connection
         {
             "address": [
@@ -26,7 +22,7 @@ enterprise: 'no'
                  "node-1.cassandra.mesos:9042",
                  "node-2.cassandra.mesos:9042"
             ]
-        
+
         }
 
 1. [SSH into a DC/OS node][2]:
@@ -46,7 +42,7 @@ enterprise: 'no'
         cqlsh> CREATE KEYSPACE demo WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
 
 1. Create a sample table called `map` in our `demo` keyspace:
-        
+
         cqlsh> USE demo;CREATE TABLE map (key varchar, value varchar, PRIMARY KEY(key));
 
 1. Insert some data in the table:

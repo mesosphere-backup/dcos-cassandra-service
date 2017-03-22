@@ -297,13 +297,13 @@ The service configuration object contains properties that MUST be specified duri
     <tr>
       <td>mem</td>
       <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 Gb is a good choice.</td>
+      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 GiB is a good choice.</td>
     </tr>
 
     <tr>
       <td>heap</td>
       <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 Gb is a minimum for production installations.</td>
+      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 GiB is a minimum for production installations.</td>
     </tr>
 
     <tr>
@@ -397,7 +397,7 @@ Example node configuration:
   <tr>
     <td>heap.size</td>
     <td>integer</td>
-    <td>The maximum and minimum heap size used by the Cassandra process in MB. This value SHOULD be at least 2 GB, and it SHOULD be no larger than 80% of the allocated memory for the container. Specifying very large heaps, greater than 8 GB, is currently not a supported configuration.
+    <td>The maximum and minimum heap size used by the Cassandra process in MB. This value SHOULD be at least 2 GiB, and it SHOULD be no larger than 80% of the allocated memory for the container. Specifying very large heaps, greater than 8 GiB, is currently not a supported configuration.
     Note: The value of heap size should not be greater than the total memory configured for the container via <b>mem</b> param. If value of <b>mem</b> is greater than <b>heap.size</b> then Linux operating system will use the remaining memory, <b>mem</b> - <b>heap.size</b> for <a href="https://en.wikipedia.org/wiki/Page_cache">PageCache</a>
     </td>
   </tr>

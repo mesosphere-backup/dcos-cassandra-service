@@ -3,8 +3,8 @@
 ## Table of Contents
 
 - [Overview](index.md)
-- [Quick Start](quick-start.md)
 - [Install and Customize](install-and-customize.md)
+- [Kick the Tires](quick-start.md)
 - [Upgrade](upgrade.md)
 - [Uninstall](uninstall.md)
 - [Multi-Datacenter Deployments](multi-dc.md)
