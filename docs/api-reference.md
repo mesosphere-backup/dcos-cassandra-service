@@ -85,6 +85,16 @@ Retrieve node information by sending a GET request to `/v1/nodes/<node-#>/info`:
 ```
 $ curl -H "Authorization: token=$AUTH_TOKEN" <master-IP>/service/cassandra/v1/nodes/</node-#>/info
 ```
+
+## Service Status Info
+Send a GET request to the `/v1/state/properties/suppressed` endpoint to learn if Cassandra is in a `suppressed` state and not receiving offers. If a service does not need offers, Mesos can "suppress" it so that other services are not starved for resources. 
+
+You can use this request to troubleshoot: if you think Cassandra should be receiving resource offers, but is not, you can use this API call to see if Cassandra is suppressed.
+
+```
+curl -H "Authorization: token=$AUTH_TOKEN" "<master-IP>/service/cassandra/v1/state/properties/suppressed"
+```
+
 ## Cleanup
 
 First, create the request payload, for example, in a file `cleanup.json`:
