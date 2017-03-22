@@ -1,5 +1,5 @@
 ---
-post_title: Quick Start
+post_title: Kick the Tires
 menu_order: 10
 feature_maturity: preview
 enterprise: 'no'
