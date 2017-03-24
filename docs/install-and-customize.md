@@ -1,6 +1,6 @@
 ---
 post_title: Install and Customize
-menu_order: 20
+menu_order: 0
 feature_maturity: preview
 enterprise: 'no'
 ---
@@ -89,6 +89,7 @@ To start a minimal cluster with a single node, create a JSON options file that c
     }
 }
 ```
+
 This will create a single node cluster with 2 GB of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DC/OS Apache Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Apache Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 # Multiple Cassandra Cluster Installation
