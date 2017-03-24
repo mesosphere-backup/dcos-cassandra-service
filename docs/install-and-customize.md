@@ -11,15 +11,15 @@ Cassandra for DC/OS is available in the Universe and can be installed by using e
 
 - Depending on your security mode in Enterprise DC/OS, you may [need to provision a service account](/1.9/administration/id-and-access-mgt/service-auth/cass-auth/#give-perms) before installing Cassandra. Only someone with `superuser` permission can create the service account.
     - `strict` [security mode](https://docs.mesosphere.com/1.9/administration/installing/custom/configuration-parameters/#security) requires a service account.  
-    - `permissive` security mode a service account is optional.
+    - `permissive` security mode a service account is optional. 
     - `disabled` security mode does not require a service account.
-- A minimum of three agent nodes with eight GiB of memory and ten GiB of disk available on each agent.
+- Minimum three agent nodes with eight GB of memory and ten GB of disk available on each agent.
 - Ports 7000, 7001, 7199, 9042, and 9160 must be available.
 
 # Default Installation
-The default installation may not be sufficient for a production deployment, but all cluster operations will work.
+The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with three replicas of each value and local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
 
-To start a default cluster, run the following command on the DC/OS CLI. The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with 3 replicas of each value and local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
+To start a default cluster, run the following command on the DC/OS CLI. 
 
 ```
 $ dcos package install cassandra
@@ -89,7 +89,8 @@ To start a minimal cluster with a single node, create a JSON options file that c
     }
 }
 ```
-This will create a single node cluster with 2 GiB of memory and 4GiB of disk. Note that you will need an additional 512 Mb for the DC/OS Apache Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Apache Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
+
+This will create a single node cluster with 2 GB of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DC/OS Apache Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Apache Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 # Multiple Cassandra Cluster Installation
 
