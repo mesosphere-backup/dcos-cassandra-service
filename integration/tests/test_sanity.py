@@ -250,12 +250,13 @@ def test_node_is_replaced():
 
     # Check that we've created a new task with a new id, waiting until a new one comes up.
     def get_status():
-        return get_first(
-            get_dcos_command('task --json'), lambda t: t['name'] == 'node-0'
-        )['id']
+        first_node0 = get_first(get_dcos_command('task --json'), lambda t: t['name'] == 'node-0')
+        if first_node0:
+            return first_node0['id']
+        return None
 
     def success_predicate(task_id):
-        return task_id != replaced_node_task_id, 'Task ID for replaced node did not change'
+        return task_id and (task_id != replaced_node_task_id), 'Task ID for replaced node did not change'
 
     spin(get_status, success_predicate)
 
