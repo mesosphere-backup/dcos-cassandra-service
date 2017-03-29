@@ -36,7 +36,12 @@ def cassandra_api_url(basename, app_id='cassandra'):
 
 def check_health(wait_time=WAIT_TIME_IN_SECONDS):
     def fn():
-        return shakedown.get_service_tasks(PACKAGE_NAME)
+        try:
+            tasks = shakedown.get_service_tasks(PACKAGE_NAME)
+        except dcos.errors.DCOSHTTPException:
+            print('Failed to get tasks for service {}'.format(PACKAGE_NAME))
+            tasks = []
+        return tasks
 
     def success_predicate(tasks):
         running_tasks = [t for t in tasks if t['state'] == TASK_RUNNING_STATE]
