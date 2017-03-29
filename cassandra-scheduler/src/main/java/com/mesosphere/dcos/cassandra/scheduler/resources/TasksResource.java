@@ -78,7 +78,7 @@ public class TasksResource {
             Optional.ofNullable(state.getDaemons().get(name));
         if (!taskOption.isPresent()) {
             response.resume(
-                Response.status(Response.Status.NOT_FOUND));
+                Response.status(Response.Status.NOT_FOUND).build());
         } else {
             CassandraDaemonTask task = taskOption.get();
             client.status(task.getHostname(), task.getExecutor().getApiPort()
