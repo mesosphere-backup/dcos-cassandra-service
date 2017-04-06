@@ -5,6 +5,9 @@ feature_maturity: preview
 enterprise: 'no'
 ---
 
+### Deprecation Notice:
+As of DC/OS 1.9, remote access to JMX and StatsD has been deprecated in favor of built in DC/OS metrics functionality.
+
 # Changing Configuration at Runtime
 
 You can customize your cluster in-place when it is up and running.
