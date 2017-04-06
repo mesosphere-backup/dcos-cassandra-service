@@ -6,7 +6,7 @@ enterprise: 'no'
 ---
 
 ### Deprecation Notice:
-Remote access to JMX and StatsD has been deprecated and replaced with DC/OS built in metrics functionality as of DC/OS 1.9.
+As of DC/OS 1.9, remote access to JMX and StatsD has been deprecated in favor of built in DC/OS metrics functionality.
 
 # Changing Configuration at Runtime
 
