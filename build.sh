@@ -17,7 +17,7 @@ _notify_github() {
 
 # Build steps for Cassandra
 
-_notify_github pending "Build running"
+#_notify_github pending "Build running"
 
 # Scheduler/Executor (Java):
 
