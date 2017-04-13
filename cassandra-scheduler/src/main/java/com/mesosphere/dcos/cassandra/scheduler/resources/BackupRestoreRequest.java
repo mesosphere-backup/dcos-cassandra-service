@@ -33,6 +33,13 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
 
   @JsonProperty("restore_type")
   private String restoreType;
+  
+  @JsonProperty("username")
+  private String username;
+  
+  @JsonProperty("password")
+  private String password;
+  
 
   public String getName() {
     return name;
@@ -82,6 +89,28 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
     this.azureKey = azureKey;
   }
 
+  
+  public String getUsername() {
+	  if (StringUtils.isBlank(username)) {
+		  username= "nouser";
+	  }
+	  return username;
+  }
+  public void setUsername(String username) {
+	  this.username = username;
+  }
+  
+  public String getPassword() {
+	  if (StringUtils.isBlank(password)) {
+		  password= "nopassword";
+	  }
+	  return password;
+  }
+  
+  public void setPassword(String password) {
+	  this.password = password;
+  }
+  
   public String getRestoreType() {
 
 
@@ -139,6 +168,8 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
             ", azureKey='" + azureKey + '\'' +
             ", usesEmc='" + usesEmc + '\'' +
             ", restoreType='" + restoreType + '\'' +
+            ", username='" + username + '\'' +
+            ", password='" + password + '\'' +
             '}';
   }
 
@@ -162,7 +193,9 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
         accountId,
         secretKey,
         usesEmc(),
-        getRestoreType());
+        getRestoreType(),
+        getUsername(),
+        getPassword());
   }
 
   private static boolean isAzure(String externalLocation) {

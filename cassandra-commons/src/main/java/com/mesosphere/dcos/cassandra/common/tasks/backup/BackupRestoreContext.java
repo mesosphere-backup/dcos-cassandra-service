@@ -46,7 +46,11 @@ public class BackupRestoreContext implements ClusterTaskContext {
         @JsonProperty("uses_emc")
         final boolean usesEmc,
         @JsonProperty("restore_type")
-        final String restoreType) {
+        final String restoreType,
+        @JsonProperty("username")
+        final String username,
+        @JsonProperty("password")
+        final String password) {
 
         return new BackupRestoreContext(
             nodeId,
@@ -56,7 +60,9 @@ public class BackupRestoreContext implements ClusterTaskContext {
             accountId,
             secretKey,
             usesEmc,
-            restoreType);
+            restoreType,
+        	username,
+        	password);
     }
 
     @JsonProperty("node_id")
@@ -82,6 +88,12 @@ public class BackupRestoreContext implements ClusterTaskContext {
 
     @JsonProperty("restore_type")
     private final String restoreType;
+    
+    @JsonProperty("username")
+    private final String username;
+    
+    @JsonProperty("password")
+    private final String password;
 
     public BackupRestoreContext(final String nodeId,
                                 final String name,
@@ -90,7 +102,7 @@ public class BackupRestoreContext implements ClusterTaskContext {
                                 final String accountId,
                                 final String secretKey,
                                 final boolean usesEmc,
-                                final String restoreType) {
+                                final String restoreType, final String username, final String password) {
         this.nodeId = nodeId;
         this.externalLocation = externalLocation;
         this.name = name;
@@ -99,6 +111,8 @@ public class BackupRestoreContext implements ClusterTaskContext {
         this.secretKey = secretKey;
         this.usesEmc = usesEmc;
         this.restoreType = restoreType;
+        this.username = username;
+        this.password = password;
     }
 
     /**
@@ -179,6 +193,12 @@ public class BackupRestoreContext implements ClusterTaskContext {
      */
     @JsonProperty("restore_type")
     public String getRestoreType() { return restoreType; }
+    
+    @JsonProperty("username")
+    public String getUsername() { return username; }
+    
+    @JsonProperty("password")
+    public String getPassword() { return password; }
 
     @Override
     public String toString() {
@@ -198,7 +218,9 @@ public class BackupRestoreContext implements ClusterTaskContext {
                         that.getLocalLocation()) &&
                 Objects.equals(getAccountId(), that.getAccountId()) &&
                 Objects.equals(getSecretKey(), that.getSecretKey()) &&
-                Objects.equals(getRestoreType(), that.getRestoreType());
+                Objects.equals(getRestoreType(), that.getRestoreType()) && 
+                Objects.equals(getUsername(), that.getUsername()) &&
+                Objects.equals(getPassword(), that.getPassword());
     }
 
     @Override
@@ -217,7 +239,9 @@ public class BackupRestoreContext implements ClusterTaskContext {
             accountId,
             secretKey,
             usesEmc,
-            restoreType);
+            restoreType,
+            username,
+            password);
     }
 
     @JsonIgnore
@@ -230,6 +254,8 @@ public class BackupRestoreContext implements ClusterTaskContext {
             accountId,
             secretKey,
             usesEmc,
-            restoreType);
+            restoreType,
+            username,
+            password);
     }
 }
