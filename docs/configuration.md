@@ -228,7 +228,6 @@ The service configuration object contains properties that MUST be specified duri
     "service": {
         "name": "cassandra2",
         "cluster" : "dcos_cluster",
-        "role": "cassandra_role",
         "data_center" : "dc2",
         "principal": "cassandra_principal",
         "secret" : "/path/to/secret_file",
