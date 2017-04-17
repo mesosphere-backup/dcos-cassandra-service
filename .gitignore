@@ -44,7 +44,7 @@ cassandra-executor/volume/
 cassandra-bin-tmp/
 
 # Ignore tools
-dcos-commons-tools/
+#dcos-commons-tools/
 
 cassandra-scheduler/cassandra.yaml
 cassandra-executor/apache-cassandra-2.2.5/conf/cassandra-rackdc.properties
