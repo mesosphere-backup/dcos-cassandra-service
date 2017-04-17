@@ -7,7 +7,7 @@ export REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $REPO_ROOT_DIR
 
 # Grab dcos-commons build/release tools:
-rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
+#rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
 
 # GitHub notifier config
 _notify_github() {
@@ -46,7 +46,7 @@ cd $REPO_ROOT_DIR
 _notify_github success "Build succeeded"
 
 ./dcos-commons-tools/publish_aws.py \
-  cassandra \
+ mds-cassandra \
   universe/ \
   cassandra-scheduler/build/distributions/scheduler.zip \
   cassandra-executor/build/distributions/executor.zip \
