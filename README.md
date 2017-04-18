@@ -1,8 +1,9 @@
 # Build and upload artifacts to S3
-    Environment variables needed:
-      export AWS_UPLOAD_REGION=''
-      export S3_BUCKET=''
-      export S3_DIR_PATH=''
+
+     Environment variables needed:
+       export AWS_UPLOAD_REGION=''
+       export S3_BUCKET=''
+       export S3_DIR_PATH=''
       
      Tools Needed : Go, AWS Cli, Python3
      
