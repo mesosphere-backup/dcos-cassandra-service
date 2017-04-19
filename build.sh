@@ -11,7 +11,8 @@ cd $REPO_ROOT_DIR
 
 # GitHub notifier config
 _notify_github() {
-    $REPO_ROOT_DIR/dcos-commons-tools/github_update.py $1 build $2
+   # $REPO_ROOT_DIR/dcos-commons-tools/github_update.py $1 build $2
+   echo $2
 }
 
 # Build steps for Cassandra
