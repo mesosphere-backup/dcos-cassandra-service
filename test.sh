@@ -13,7 +13,11 @@ rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/d
 if [ -z "$CLUSTER_URL" ]; then
     echo "CLUSTER_URL is empty/unset, launching new cluster."
     export CCM_AGENTS=5
-    CLUSTER_INFO=$(./dcos-commons-tools/launch_ccm_cluster.py)
+    CLUSTERINFOFILE=./cluster_info.json
+    rm -f $CLUSTERINFOFILE
+    ./dcos-commons-tools/launch_ccm_cluster.py --output $CLUSTERINFOFILE
+    ls -l $CLUSTERINFOFILE
+    CLUSTER_INFO="$(cat $CLUSTERINFOFILE)"
     echo "Launched cluster: ${CLUSTER_INFO}"
     export CLUSTER_URL=$(echo "${CLUSTER_INFO}" | jq .url)
     export CLUSTER_ID=$(echo "${CLUSTER_INFO}" | jq .id)
