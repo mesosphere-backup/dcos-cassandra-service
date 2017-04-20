@@ -7,7 +7,7 @@ export REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $REPO_ROOT_DIR
 
 # Grab dcos-commons build/release tools:
-#rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
+rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
 
 # GitHub notifier config
 _notify_github() {
@@ -17,7 +17,7 @@ _notify_github() {
 
 # Build steps for Cassandra
 
-#_notify_github pending "Build running"
+_notify_github pending "Build running"
 
 # Scheduler/Executor (Java):
 
