@@ -211,6 +211,7 @@ def test_zk_killed():
 def test_partition():
     host = get_node_host()
 
+    _block_on_adminrouter()
     shakedown.partition_agent(host)
     shakedown.reconnect_agent(host)
 
