@@ -136,7 +136,9 @@ def _block_on_adminrouter():
         return ip, "Failed to fetch master ip"
 
     # wait for adminrouter to recover
-    spin(get_master_ip, is_up)
+    print("Ensuring adminrouter is up...")
+    ip = spin(get_master_ip, is_up)
+    print("Adminrouter is up.  Master IP: {}".format(ip))
 
 
 # install once up-front, reuse install for tests (MUCH FASTER):
