@@ -23,6 +23,8 @@ ext {
     isSnapshot = project.properties['Release'] ? false : true
 }
 
+def cassVer = System.properties['cassVer'] ?: "3.0.8"
+
 allprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -112,7 +114,7 @@ configure(project(':seedprovider')) {
     }
 
     dependencies {
-        compile 'org.apache.cassandra:cassandra-all:3.0.10'
+        compile "org.apache.cassandra:cassandra-all:${cassVer}"
 
     }
 }
