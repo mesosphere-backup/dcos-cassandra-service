@@ -7,11 +7,11 @@ export REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $REPO_ROOT_DIR
 
 # Grab dcos-commons build/release tools:
-rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
+#rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
 
 # GitHub notifier config
 _notify_github() {
-   # $REPO_ROOT_DIR/dcos-commons-tools/github_update.py $1 build $2
+   #$REPO_ROOT_DIR/dcos-commons-tools/github_update.py $1 build $2
    echo $2
 }
 
@@ -40,7 +40,7 @@ fi
 cd cli/ && ./build-cli.sh
 if [ $? -ne 0 ]; then
   _notify_github failure "CLI build failed"
-  exit 1
+ # exit 1
 fi
 cd $REPO_ROOT_DIR
 
@@ -54,4 +54,8 @@ _notify_github success "Build succeeded"
   cli/dcos-cassandra/dcos-cassandra-darwin \
   cli/dcos-cassandra/dcos-cassandra-linux \
   cli/dcos-cassandra/dcos-cassandra.exe \
+	resources/largeFiles/${LIB_MESOS_FILE_NAME} \
+	resources/largeFiles/${JRE_FILE_NAME} \
+	resources/changes.txt \
+	cassandra-bin-tmp/apache-cassandra-${FRAMEWORK_PLUS_CASSANDRA_VERSION}-bin-dcos.tar.gz \
   cli/python/dist/*.whl

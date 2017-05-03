@@ -178,6 +178,7 @@ class GithubStatusUpdater(object):
 
     def _should_access_github(self):
         '''returns whether the local environment appears to be running in CI'''
+        return False
         if 'WORKSPACE' not in os.environ:
             # not running in CI. skip actually sending anything to GitHub
             return False

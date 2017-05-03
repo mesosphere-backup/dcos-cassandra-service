@@ -147,9 +147,12 @@ class UniversePackageBuilder(object):
 
     def _apply_templating_file(self, filepath):
         # basic checks to avoid files that we shouldn't edit:
-        if not filepath.endswith('.json'):
+        
+        ext = [".json", ".mustache"]
+                        
+        if not filepath.endswith(tuple(ext)):
             logger.warning('')
-            logger.warning('Ignoring non-json file: {}'.format(filepath))
+            logger.warning('Ignoring non-json and non-mustache file: {}'.format(filepath))
             return
         if os.stat(filepath).st_size > (1024 * 1024):
             logger.warning('')
@@ -211,11 +214,12 @@ class UniversePackageBuilder(object):
 
     def build_zip(self):
         '''builds a universe zip and returns its location on disk'''
-        scratchdir = tempfile.mkdtemp(prefix='stub-universe-tmp')
+        scratchdir = os.environ.get('TMPDIR') 
+        #tempfile.mkdtemp(prefix='stub-universe-tmp')
         treedir = self._create_tree(scratchdir)
         self._apply_templating_tree(scratchdir)
         zippath = self._create_zip(scratchdir)
-        shutil.rmtree(treedir)
+        #shutil.rmtree(treedir)
         return zippath
 
 

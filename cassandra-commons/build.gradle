@@ -1,11 +1,14 @@
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
+
+def cassVer = System.properties['cassVer'] ?: "3.0.8"
+
 apply plugin: 'com.google.protobuf'
 dependencies {
     compile 'mesosphere:dcos-commons:0.8.1.1'
     compile 'com.google.protobuf:protobuf-java:3.0.0'
-    compile 'org.apache.cassandra:cassandra-all:2.2.4'
+    compile "org.apache.cassandra:cassandra-all:${cassVer}"
     compile "com.github.stefanbirkner:system-rules:1.16.0"
 }
 protobuf {

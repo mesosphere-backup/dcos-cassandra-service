@@ -1,8 +1,9 @@
 {
-  "packagingVersion": "2.0",
-  "name": "cassandra",
+  "packagingVersion": "3.0",
+  "name": "mds-cassandra",
   "version": "{{package-version}}",
   "maintainer": "support@mesosphere.io",
+  "minDcosReleaseVersion": "1.7",
   "description": "Apache Cassandra running on DC/OS",
   "selected": true,
   "framework": true,

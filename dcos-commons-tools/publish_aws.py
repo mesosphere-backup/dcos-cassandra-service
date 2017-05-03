@@ -33,7 +33,7 @@ class AWSPublisher(object):
             package_name,
             input_dir_path,
             artifact_paths,
-            package_version = '1.0.25-3.0.10'):
+            package_version = os.environ.get('FRAMEWORK_VERSION', '')):
         self._dry_run = os.environ.get('DRY_RUN', '')
         self._pkg_name = package_name
         self._pkg_version = package_version
@@ -41,7 +41,7 @@ class AWSPublisher(object):
 
         self._aws_region = os.environ.get('AWS_UPLOAD_REGION', '')
         s3_bucket = os.environ.get('S3_BUCKET', 'infinity-artifacts')
-        s3_dir_path = os.environ.get('S3_DIR_PATH', 'autodelete7d')
+        s3_dir_path = 'dcos-frameworks' #os.environ.get('S3_DIR_PATH', 'dcos-frameworks')
         dir_name = package_version
 
         # sample s3_directory: 'infinity-artifacts/autodelete7d/kafka/20160815-134747-S6vxd0gRQBw43NNy'
