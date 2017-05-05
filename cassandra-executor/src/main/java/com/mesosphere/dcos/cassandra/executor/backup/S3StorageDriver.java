@@ -22,6 +22,7 @@ import com.amazonaws.services.s3.internal.Constants;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
+import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import org.apache.commons.io.IOUtils;
@@ -207,8 +208,16 @@ public class S3StorageDriver implements BackupStorageDriver {
                                  File snapshotDirectory) throws Exception {
         try {
             final String fileKey = key + "/" + keyspaceName + "/" + cfName + "/";
-            final MultipleFileUpload myUpload = tx.uploadDirectory(bucketName, fileKey, snapshotDirectory, true);
-            myUpload.waitForCompletion();
+            
+            //ObjectMetadataProvider For S3 server side encryption for each file
+			final MultipleFileUpload myUpload = tx.uploadDirectory(bucketName, fileKey, snapshotDirectory, true,
+					new ObjectMetadataProvider() {
+						@Override
+						public void provideObjectMetadata(File file, ObjectMetadata metadata) {
+							metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+						}
+					});
+			myUpload.waitForCompletion();
         } catch (Exception e) {
             LOGGER.error("Error occurred on uploading directory {} : {}", snapshotDirectory.getName(), e);
             throw new Exception(e);
@@ -222,7 +231,10 @@ public class S3StorageDriver implements BackupStorageDriver {
         final String key = getPrefixKey(ctx) + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
         final InputStream stream = new ByteArrayInputStream(schema.getBytes(StandardCharsets.UTF_8));
 
-        amazonS3Client.putObject(getBucketName(ctx), key, stream, new ObjectMetadata());
+        //Data encryption on s3 bucket
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+        amazonS3Client.putObject(getBucketName(ctx), key, stream, objectMetadata);
     }
 
     @Override
