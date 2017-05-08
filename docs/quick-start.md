@@ -1,6 +1,6 @@
 ---
-post_title: Usage Example
-menu_order: 10
+post_title: Quick Start
+menu_order: 20
 feature_maturity: preview
 enterprise: 'no'
 ---
