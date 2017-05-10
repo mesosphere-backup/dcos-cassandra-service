@@ -39,7 +39,7 @@ fi
 cd cli/ && ./build-cli.sh
 if [ $? -ne 0 ]; then
   _notify_github failure "CLI build failed"
-  exit 1
+ exit 1
 fi
 cd $REPO_ROOT_DIR
 

@@ -66,7 +66,8 @@ public class RestoreSchema implements ExecutorTask {
             sendStatus(driver, Protos.TaskState.TASK_RUNNING,
                     "Started restoring schema");
 
-            cluster = Cluster.builder().addContactPoint(daemon.getProbe().getEndpoint()).build();
+            //cluster = Cluster.builder().addContactPoint(daemon.getProbe().getEndpoint()).build();
+            cluster = Cluster.builder().addContactPoint(daemon.getProbe().getEndpoint()).withCredentials(context.getUsername(), context.getPassword()).build();
             session = cluster.connect();
             read = new Scanner(backupStorageDriver.downloadSchema(context));
             read.useDelimiter(";");
