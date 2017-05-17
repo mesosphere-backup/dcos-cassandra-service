@@ -242,97 +242,97 @@ The service configuration object contains properties that MUST be specified duri
 ```
 
 <table class="table">
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-  <tr>
-    <td>name</td>
-    <td>string</td>
-    <td>The name of the Cassandra service installation. This must be unique for each DC/OS Apache Cassandra service instance deployed on a DC/OS cluster.</td>
-  </tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>The name of the Cassandra service installation. This must be unique for each DC/OS Apache Cassandra service instance deployed on a DC/OS cluster.</td>
+</tr>
 
-  <tr>
-    <td>cluster</td>
-    <td>string</td>
-    <td>The cluster that the Cassandra service installation belongs to. Multiple DC/OS Apache Cassandra service instances may belong to the same cluster.</td>
-  </tr>
+<tr>
+<td>cluster</td>
+<td>string</td>
+<td>The cluster that the Cassandra service installation belongs to. Multiple DC/OS Apache Cassandra service instances may belong to the same cluster.</td>
+</tr>
 
-  <tr>
-    <td>data_center</td>
-    <td>string</td>
-    <td>The identifier of the datacenter that the DC/OS Apache Cassandra service will deploy. This MUST be unique for deployments supporting multiple datacenters. This
-    MAY be identical for multiple deployments on the same DC/OS cluster that support different clusters.</td>
-  </tr>
+<tr>
+<td>data_center</td>
+<td>string</td>
+<td>The identifier of the datacenter that the DC/OS Apache Cassandra service will deploy. This MUST be unique for deployments supporting multiple datacenters. This
+MAY be identical for multiple deployments on the same DC/OS cluster that support different clusters.</td>
+</tr>
 
-  <tr>
-    <td>user</td>
-    <td>string</td>
-    <td>The name of the operating system user account Cassandra tasks run as.</td>
-  </tr>
+<tr>
+<td>user</td>
+<td>string</td>
+<td>The name of the operating system user account Cassandra tasks run as.</td>
+</tr>
 
-  <tr>
-    <td>principal</td>
-    <td>string</td>
-    <td>The authentication principal for the Cassandra cluster.</td>
-  </tr>
-  <tr>
-    <td>placement_constraint</td>
-    <td>string</td>
-    <td>A Marathon-style placement constraint to be used when deploying the Cassandra nodes. For example, "rack_id:LIKE:rack_[1-5],hostname:UNLIKE:avoid_host_.*". See <a href="https://mesosphere.github.io/marathon/docs/constraints.html">Marathon documentation</a> for more details, but note that constraints must be of the form "field1:operator1[:value1],field2:operator2[:value2]" when used here. Changing this setting after initial deployment is experimental.</td>
-  </tr>
+<tr>
+<td>principal</td>
+<td>string</td>
+<td>The authentication principal for the Cassandra cluster.</td>
+</tr>
+<tr>
+<td>placement_constraint</td>
+<td>string</td>
+<td>A Marathon-style placement constraint to be used when deploying the Cassandra nodes. For example, "rack_id:LIKE:rack_[1-5],hostname:UNLIKE:avoid_host_.*". See <a href="https://mesosphere.github.io/marathon/docs/constraints.html">Marathon documentation</a> for more details, but note that constraints must be of the form "field1:operator1[:value1],field2:operator2[:value2]" when used here. Changing this setting after initial deployment is experimental.</td>
+</tr>
 
-  <tr>
-    <td>secret</td>
-    <td>string</td>
-    <td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DC/OS cluster. This parameter is optional, and should be omitted unless the DC/OS deployment is specifically configured for authentication.</td>
-  </tr>
+<tr>
+<td>secret</td>
+<td>string</td>
+<td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DC/OS cluster. This parameter is optional, and should be omitted unless the DC/OS deployment is specifically configured for authentication.</td>
+</tr>
 
-   <tr>
-      <td>cpus</td>
-      <td>number</td>
-      <td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service scheduler. </td>
-    </tr>
+<tr>
+<td>cpus</td>
+<td>number</td>
+<td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service scheduler. </td>
+</tr>
 
-    <tr>
-      <td>mem</td>
-      <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 GB is a good choice.</td>
-    </tr>
+<tr>
+<td>mem</td>
+<td>integer</td>
+<td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 GB is a good choice.</td>
+</tr>
 
-    <tr>
-      <td>heap</td>
-      <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 GB is a minimum for production installations.</td>
-    </tr>
+<tr>
+<td>heap</td>
+<td>integer</td>
+<td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 GB is a minimum for production installations.</td>
+</tr>
 
-    <tr>
-      <td>api_port</td>
-      <td>integer</td>
-      <td>The port that the scheduler will accept API requests on.</td>
-    </tr>
+<tr>
+<td>api_port</td>
+<td>integer</td>
+<td>The port that the scheduler will accept API requests on.</td>
+</tr>
 
-    <tr>
-    <td>data_center_url</td>
-    <td>string</td>
-    <td>This specifies the URL that the DC/OS Apache Cassandra service instance will advertise to other instances in the cluster.
-    If you are not configuring a multi datacenter deployment this should be omitted.
-    If you are configuring a multiple datacenter deployment inside the same DC/OS cluster, this should be omitted.
-    If you are configuring a multiple datacenter deployment inside diffrent DC/OS clusters, this value MUST be set to a URL that
-    is reachable and resolvable by the DC/OS Apache Cassandra instances in the remote datacenters. A good choice for this value is the admin
-    router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
-    </tr>
-    <tr>
-    <td>external_data_centers</td>
-    <td>string</td>
-    <td>This specifies the URLs of the external datacenters that contain a cluster the DC/OS Apache Cassandra service will join as a comma separated list.
-    This value should only be included when your deploying a DC/OS Apache Cassandra service instance that will extend an existing cluster. Otherwise, this
-    value should be omitted. If this value is specified, the URLs contained in the comma separated list MUST be resolvable and reachable from the deployed cluster.
-    In practice, they should be identical to the values specified in data_center_url configuration parameter for the instance whose cluster will be extended.
-    </td>
-  </tr>
+<tr>
+<td>data_center_url</td>
+<td>string</td>
+<td>This specifies the URL that the DC/OS Apache Cassandra service instance will advertise to other instances in the cluster.
+If you are not configuring a multi datacenter deployment this should be omitted.
+If you are configuring a multiple datacenter deployment inside the same DC/OS cluster, this should be omitted.
+If you are configuring a multiple datacenter deployment inside diffrent DC/OS clusters, this value MUST be set to a URL that
+is reachable and resolvable by the DC/OS Apache Cassandra instances in the remote datacenters. A good choice for this value is the admin
+router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
+</tr>
+<tr>
+<td>external_data_centers</td>
+<td>string</td>
+<td>This specifies the URLs of the external datacenters that contain a cluster the DC/OS Apache Cassandra service will join as a comma separated list.
+This value should only be included when your deploying a DC/OS Apache Cassandra service instance that will extend an existing cluster. Otherwise, this
+value should be omitted. If this value is specified, the URLs contained in the comma separated list MUST be resolvable and reachable from the deployed cluster.
+In practice, they should be identical to the values specified in data_center_url configuration parameter for the instance whose cluster will be extended.
+</td>
+</tr>
 
 </table>
 
