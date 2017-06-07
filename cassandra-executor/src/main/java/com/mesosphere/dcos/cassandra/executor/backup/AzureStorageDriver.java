@@ -41,8 +41,8 @@ import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutput
  */
 public class AzureStorageDriver implements BackupStorageDriver {
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
+private static final Logger LOGGER = LoggerFactory.getLogger(
+            AzureStorageDriver.class);
   private static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
   private static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
@@ -62,7 +62,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
     final File dataDirectory = new File(localLocation);
     if (container == null || !dataDirectory.isDirectory()) {
-      logger.error("Error uploading snapshots.  Unable to connect to {}, for container {} or Directory {} doesn't exist.",
+      LOGGER.error("Error uploading snapshots.  Unable to connect to {}, for container {} or Directory {} doesn't exist.",
         ctx.getExternalLocation(), containerName, localLocation);
       return;
     }
@@ -74,38 +74,38 @@ public class AzureStorageDriver implements BackupStorageDriver {
         // Only enter keyspace directory.
         continue;
       }
-      logger.info("Entering keyspace: {}", keyspaceDir.getName());
+      LOGGER.info("Entering keyspace: {}", keyspaceDir.getName());
       for (File cfDir : keyspaceDir.listFiles()) {
-        logger.info("Entering column family: {}", cfDir.getName());
+        LOGGER.info("Entering column family: {}", cfDir.getName());
         File snapshotDir = new File(cfDir, "snapshots");
         File backupDir = new File(snapshotDir, backupName);
         if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir, backupDir)) {
-          logger.info("Skipping directory: {}", snapshotDir.getAbsolutePath());
+          LOGGER.info("Skipping directory: {}", snapshotDir.getAbsolutePath());
           continue;
         }
-        logger.info(
+        LOGGER.info(
           "Valid backup directories. KeyspaceDir: {} | ColumnFamilyDir: {} | SnapshotDir: {} | BackupName: {}",
           keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(),
           snapshotDir.getAbsolutePath(), backupName);
 
         final Optional<File> snapshotDirectory = StorageUtil.getValidSnapshotDirectory(snapshotDir, backupName);
-        logger.info("Valid snapshot directory: {}", snapshotDirectory.isPresent());
+        LOGGER.info("Valid snapshot directory: {}", snapshotDirectory.isPresent());
 
         if (snapshotDirectory.isPresent()) {
-          logger.info("Going to upload directory: {}", snapshotDirectory.get().getAbsolutePath());
+          LOGGER.info("Going to upload directory: {}", snapshotDirectory.get().getAbsolutePath());
 
           uploadDirectory(snapshotDirectory.get().getAbsolutePath(), container, containerName, key,
             keyspaceDir.getName(), cfDir.getName());
 
         } else {
-          logger.warn(
+          LOGGER.warn(
             "Snapshots directory: {} doesn't contain the current backup directory: {}",
             snapshotDir.getName(), backupName);
         }
       }
     }
 
-    logger.info("Done uploading snapshots for backup: {}", backupName);
+    LOGGER.info("Done uploading snapshots for backup: {}", backupName);
   }
 
   private void uploadDirectory(String localLocation,
@@ -115,7 +115,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     String keyspaceName,
     String cfName) throws IOException {
 
-    logger.info(
+    LOGGER.info(
       "uploadDirectory() localLocation: {}, containerName: {}, key: {}, keyspaceName: {}, cfName: {}",
       localLocation, containerName, key, keyspaceName, cfName);
 
@@ -136,7 +136,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     BufferedOutputStream bufferedOutputStream = null;
     try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(sourceFile))) {
 
-      logger.info("Initiating upload for file: {} | key: {}",
+      LOGGER.info("Initiating upload for file: {} | key: {}",
         sourceFile.getAbsolutePath(), fileKey);
 
       final CloudPageBlob blob = container.getPageBlobReference(fileKey);
@@ -147,7 +147,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
 
     } catch (StorageException | URISyntaxException | IOException e) {
-      logger.error("Unable to store blob", e);
+      LOGGER.error("Unable to store blob", e);
     } finally {
       IOUtils.closeQuietly(compress);  // super important that the compress close is called first in order to flush
       IOUtils.closeQuietly(bufferedOutputStream);
@@ -175,14 +175,14 @@ public class AzureStorageDriver implements BackupStorageDriver {
     final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
 
     if (container == null) {
-      logger.error("Error uploading snapshots.  Unable to connect to {}, for container {}.",
+      LOGGER.error("Error uploading snapshots.  Unable to connect to {}, for container {}.",
         ctx.getExternalLocation(), containerName, localLocation);
       return;
     }
     String keyPrefix = String.format("%s/%s", backupName, nodeId);
 
     final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, keyPrefix);
-    logger.info("Snapshot files for this node: {}", snapshotFileKeys);
+    LOGGER.info("Snapshot files for this node: {}", snapshotFileKeys);
 
     for (String fileKey : snapshotFileKeys.keySet()) {
       downloadFile(localLocation, container, fileKey, snapshotFileKeys.get(fileKey));
@@ -191,13 +191,13 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
   private void downloadFile(String localLocation, CloudBlobContainer container, String fileKey, long originalSize) {
 
-    logger.info("Downloading |  Local location {} | fileKey: {} | Size: {}", localLocation, fileKey, originalSize);
+    LOGGER.info("Downloading |  Local location {} | fileKey: {} | Size: {}", localLocation, fileKey, originalSize);
 
     final String fileLocation = localLocation + File.separator + fileKey;
     File file = new File(fileLocation);
     // Only create parent directory once, if it doesn't exist.
     if (!createParentDir(file)) {
-      logger.error("Unable to create parent directories!");
+      LOGGER.error("Unable to create parent directories!");
       return;
     }
 
@@ -215,7 +215,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       IOUtils.copy(compress, bos, DEFAULT_PART_SIZE_DOWNLOAD);
 
     } catch (Exception e) {
-      logger.error("Unable to write file: {}", fileKey, e);
+      LOGGER.error("Unable to write file: {}", fileKey, e);
     } finally {
       IOUtils.closeQuietly(compress);
       IOUtils.closeQuietly(inputStream);
@@ -247,7 +247,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
         container = serviceClient.getContainerReference(containerName);
         container.createIfNotExists();
       } catch (StorageException | URISyntaxException | InvalidKeyException e) {
-        logger.error("Error connecting to container for account {} and container name {}", accountName, containerName, e);
+        LOGGER.error("Error connecting to container for account {} and container name {}", accountName, containerName, e);
       }
     }
 
@@ -259,7 +259,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     if (!parentDir.isDirectory()) {
       final boolean parentDirCreated = parentDir.mkdirs();
       if (!parentDirCreated) {
-        logger.error("Error creating parent directory for file: {}. Skipping to next");
+        LOGGER.error("Error creating parent directory for file: {}. Skipping to next");
         return false;
       }
     }
@@ -277,7 +277,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
         }
       }
     } catch (StorageException e) {
-      logger.error("Unable to retrieve metadata.", e);
+      LOGGER.error("Unable to retrieve metadata.", e);
       // all or none
       snapshotFiles = new HashMap<>();
     }
@@ -293,7 +293,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       try {
         size = Long.parseLong(map.get(ORIGINAL_SIZE_KEY));
       } catch (Exception e) {
-        logger.error("File size metadata missing or is not a number.");
+        LOGGER.error("File size metadata missing or is not a number.");
       }
     }
 
