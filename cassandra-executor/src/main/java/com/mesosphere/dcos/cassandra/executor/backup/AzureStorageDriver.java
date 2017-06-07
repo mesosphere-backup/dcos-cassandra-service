@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream.ORIGINAL_SIZE_KEY;
@@ -77,7 +78,7 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
         continue;
       }
       LOGGER.info("Entering keyspace: {}", keyspaceDir.getName());
-      for (File cfDir : keyspaceDir.listFiles()) {
+      for (File cfDir : getColumnFamilyDir(keyspaceDir)) {
         LOGGER.info("Entering column family: {}", cfDir.getName());
         File snapshotDir = new File(cfDir, "snapshots");
         File backupDir = new File(snapshotDir, backupName);
@@ -193,13 +194,14 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
   }
 
   @Override
-  public void download(BackupRestoreContext ctx) throws IOException {
+  public void download(BackupRestoreContext ctx) throws Exception {
 
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
     final String localLocation = ctx.getLocalLocation();
     final String backupName = ctx.getName();
     final String nodeId = ctx.getNodeId();
+    final File[] keyspaces = getNonSystemKeyspaces(ctx);
 
     final String containerName = StringUtils.lowerCase(getContainerName(ctx.getExternalLocation()));
     // https://<account_name>.blob.core.windows.net/<container_name>
@@ -210,47 +212,82 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
         ctx.getExternalLocation(), containerName);
       return;
     }
-    String keyPrefix = String.format("%s/%s", backupName, nodeId);
 
-    final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, keyPrefix);
-    LOGGER.info("Snapshot files for this node: {}", snapshotFileKeys);
-
-    for (String fileKey : snapshotFileKeys.keySet()) {
-      downloadFile(localLocation, container, fileKey, snapshotFileKeys.get(fileKey));
+    if (Objects.equals(ctx.getRestoreType(), new String("new"))) {
+      final String keyPrefix = String.format("%s/%s", backupName, nodeId);
+      final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, keyPrefix);
+      LOGGER.info("Snapshot files for this node: {}", snapshotFileKeys);
+      for (String fileKey : snapshotFileKeys.keySet()) {
+        downloadFile(container, fileKey, snapshotFileKeys.get(fileKey), localLocation + File.separator + fileKey);
+      }
+    } else {
+      for (File keyspace : keyspaces) {
+        for (File cfDir : getColumnFamilyDir(keyspace)) {
+          final String columnFamily = cfDir.getName().substring(0, cfDir.getName().indexOf("-"));
+          final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, 
+              backupName + "/" + nodeId + "/" + keyspace.getName() + "/" + columnFamily);
+          for (String fileKey : snapshotFileKeys.keySet()) {
+            final String destinationFile = cfDir.getAbsolutePath() + fileKey.substring(fileKey.lastIndexOf("/"));
+            downloadFile(container, fileKey, snapshotFileKeys.get(fileKey), destinationFile);
+            LOGGER.info("Keyspace {}, Column Family {}, FileKey {}, destination {}", keyspace, columnFamily, fileKey, destinationFile);
+          }
+        }
+      }
     }
   }
 
-  private void downloadFile(String localLocation, CloudBlobContainer container, String fileKey, long originalSize) {
+  private void downloadFile(CloudBlobContainer container, 
+                            String fileKey, 
+                            long originalSize, 
+                            String destinationFile) throws Exception {
+    try {
+      final File snapshotFile = new File(destinationFile);
+      // Only create parent directory once, if it doesn't exist.
+      final File parentDir = new File(snapshotFile.getParent());
+      if (!parentDir.isDirectory()) {
+        final boolean parentDirCreated = parentDir.mkdirs();
+        if (!parentDirCreated) {
+          LOGGER.error(
+            "Error creating parent directory for file: {}. Skipping to next",
+            destinationFile);
+          return;
+        }
+      }
 
-    LOGGER.info("Downloading |  Local location {} | fileKey: {} | Size: {}", localLocation, fileKey, originalSize);
+      snapshotFile.createNewFile();
 
-    final String fileLocation = localLocation + File.separator + fileKey;
-    File file = new File(fileLocation);
-    // Only create parent directory once, if it doesn't exist.
-    if (!createParentDir(file)) {
-      LOGGER.error("Unable to create parent directories!");
-      return;
-    }
+      InputStream inputStream = null;
+      SnappyInputStream compress = null;
 
-    InputStream inputStream = null;
-    SnappyInputStream compress = null;
+      try (FileOutputStream fileOutputStream = new FileOutputStream(snapshotFile, true);
+           BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream)) {
 
-    try (
-      FileOutputStream fileOutputStream = new FileOutputStream(file, true);
-      BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream)) {
+        final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
+        inputStream = new PageBlobInputStream(pageBlobReference);
+        compress = new SnappyInputStream(inputStream);
 
-      final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
-      inputStream = new PageBlobInputStream(pageBlobReference);
-      compress = new SnappyInputStream(inputStream);
-
-      IOUtils.copy(compress, bos, DEFAULT_PART_SIZE_DOWNLOAD);
-
+        IOUtils.copy(compress, bos, DEFAULT_PART_SIZE_DOWNLOAD);
+      } finally {
+        IOUtils.closeQuietly(compress);
+        IOUtils.closeQuietly(inputStream);
+      }
     } catch (Exception e) {
-      LOGGER.error("Unable to write file: {}", fileKey, e);
-    } finally {
-      IOUtils.closeQuietly(compress);
-      IOUtils.closeQuietly(inputStream);
+      LOGGER.error("Error downloading the file {} : {}", destinationFile, e);
+      throw new Exception(e);
     }
+  }
+
+  private File[] getNonSystemKeyspaces(BackupRestoreContext ctx) {
+    File file = new File(ctx.getLocalLocation());
+    File[] directories = file.listFiles(
+        (current, name) -> new File(current, name).isDirectory() &&
+                           name.compareTo("system") != 0);
+    return directories;
+  }
+
+  private static File[] getColumnFamilyDir(File keyspace) {
+    return keyspace.listFiles(
+        (current, name) -> new File(current, name).isDirectory());
   }
 
   @Override
@@ -315,18 +352,6 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
     }
 
     return container;
-  }
-
-  private boolean createParentDir(File file) {
-    final File parentDir = new File(file.getParent());
-    if (!parentDir.isDirectory()) {
-      final boolean parentDirCreated = parentDir.mkdirs();
-      if (!parentDirCreated) {
-        LOGGER.error("Error creating parent directory for file: {}. Skipping to next");
-        return false;
-      }
-    }
-    return true;
   }
 
   private Map<String, Long> getSnapshotFileKeys(CloudBlobContainer container, String keyPrefix) {
