@@ -18,12 +18,14 @@ import org.xerial.snappy.SnappyOutputStream;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
@@ -131,13 +133,22 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
 
   private void uploadFile(CloudBlobContainer container, String fileKey, File sourceFile) {
 
-    PageBlobOutputStream pageBlobOutputStream = null;
-    SnappyOutputStream compress = null;
-    BufferedOutputStream bufferedOutputStream = null;
     try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(sourceFile))) {
 
       LOGGER.info("Initiating upload for file: {} | key: {}",
         sourceFile.getAbsolutePath(), fileKey);
+      uploadStream(container, fileKey, inputStream);
+    } catch (IOException e) {
+      LOGGER.error("Unable to store blob", e);
+    }
+  }
+  
+  private void uploadStream(CloudBlobContainer container, String fileKey, InputStream inputStream) {
+
+    PageBlobOutputStream pageBlobOutputStream = null;
+    SnappyOutputStream compress = null;
+    BufferedOutputStream bufferedOutputStream = null;
+    try {
 
       final CloudPageBlob blob = container.getPageBlobReference(fileKey);
       pageBlobOutputStream = new PageBlobOutputStream(blob);
@@ -145,7 +156,6 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
 
       compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
       IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
-
     } catch (StorageException | URISyntaxException | IOException e) {
       LOGGER.error("Unable to store blob", e);
     } finally {
@@ -157,8 +167,29 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
 
   @Override
   public void uploadSchema(BackupRestoreContext ctx, String schema) {
-    // ToDo : Add the upload schema to Azure.
-    // Path: <backupname/node-id/schema.cql>
+    final String accountName = ctx.getAccountId();
+    final String accountKey = ctx.getSecretKey();
+    final String backupName = ctx.getName();
+    final String nodeId = ctx.getNodeId();
+
+    final String containerName = StringUtils.lowerCase(getContainerName(ctx.getExternalLocation()));
+    // https://<account_name>.blob.core.windows.net/<container_name>
+    final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
+
+    if (container == null) {
+      LOGGER.error("Error uploading schema.  Unable to connect to {}, for container {}.",
+        ctx.getExternalLocation(), containerName);
+      return;
+    }
+
+    final String key = backupName + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
+    uploadText(container, key, schema);
+  }
+
+  private void uploadText(CloudBlobContainer container, String fileKey, String text) {
+    final InputStream inputStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+    LOGGER.info("Initiating upload for schema | key: {}", fileKey);
+    uploadStream(container, fileKey, inputStream);
   }
 
   @Override
@@ -175,8 +206,8 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
     final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
 
     if (container == null) {
-      LOGGER.error("Error uploading snapshots.  Unable to connect to {}, for container {}.",
-        ctx.getExternalLocation(), containerName, localLocation);
+      LOGGER.error("Error downloading snapshots.  Unable to connect to {}, for container {}.",
+        ctx.getExternalLocation(), containerName);
       return;
     }
     String keyPrefix = String.format("%s/%s", backupName, nodeId);
@@ -224,8 +255,40 @@ private static final Logger LOGGER = LoggerFactory.getLogger(
 
   @Override
   public String downloadSchema(BackupRestoreContext ctx) throws Exception {
-    // ToDo : Add the download schema to Azure.
-    return new String("");
+    final String accountName = ctx.getAccountId();
+    final String accountKey = ctx.getSecretKey();
+    final String backupName = ctx.getName();
+    final String nodeId = ctx.getNodeId();
+
+    final String containerName = StringUtils.lowerCase(getContainerName(ctx.getExternalLocation()));
+    // https://<account_name>.blob.core.windows.net/<container_name>
+    final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
+
+    if (container == null) {
+      LOGGER.error("Error downloading snapshots.  Unable to connect to {}, for container {}.",
+        ctx.getExternalLocation(), containerName);
+      return new String("");
+    }
+
+    final String key = backupName + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
+
+    InputStream inputStream = null;
+    SnappyInputStream compress = null;
+    
+    try {
+      final CloudPageBlob pageBlobReference = container.getPageBlobReference(key);
+      inputStream = new PageBlobInputStream(pageBlobReference);
+      compress = new SnappyInputStream(inputStream);
+
+      return IOUtils.toString(compress, "UTF-8");
+
+    } catch (Exception e) {
+      LOGGER.error("Unable to read schema from: {}", key, e);
+      return new String("");
+    } finally {
+      IOUtils.closeQuietly(compress);
+      IOUtils.closeQuietly(inputStream);
+    }
   }
 
   private String getContainerName(String externalLocation) {
