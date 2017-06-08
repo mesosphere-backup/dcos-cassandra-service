@@ -45,7 +45,7 @@ cassandra:
      auto_snapshot: false
      snapshot_before_compaction: false
      enable_user_defined_functions: ${CASSANDRA_ENABLE_USER_DEFINED_FUNCTIONS:-false}
-     endpoint_snitch : "GossipingPropertyFileSnitch"
+     endpoint_snitch : ${CASSANDRA_ENDPOINT_SNITCH:-"GossipingPropertyFileSnitch"}
      num_tokens : ${CASSANDRA_NUM_TOKENS:-256}
      hinted_handoff_enabled : ${CASSANDRA_HINTED_HANDOFF_ENABLED:-true}
      max_hint_window_in_ms : ${CASSANDRA_MAX_HINT_WINDOW_IN_MS:-10800000}
@@ -145,6 +145,7 @@ cassandra:
      otc_coalescing_strategy : ${CASSANDRA_OTC_COALESCING_STRATEGY:-"TIMEHORIZON"}
 nodes: ${NODES:-3}
 seed_nodes: ${SEED_NODES:-2}
+zones: ${ZONES:-""}
 placement_constraint: "${PLACEMENT_CONSTRAINT:-}"
 phase_strategy: ${PHASE_STRATEGY:-"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"}
 api_port : ${API_PORT:-8080}

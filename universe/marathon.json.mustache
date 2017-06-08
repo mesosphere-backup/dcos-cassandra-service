@@ -134,6 +134,7 @@
 ,"CASSANDRA_TRUNCATE_REQUEST_TIMEOUT_IN_MS":"{{cassandra.truncate_request_timeout_in_ms}}"
 ,"CASSANDRA_REQUEST_TIMEOUT_IN_MS":"{{cassandra.request_timeout_in_ms}}"
 ,"CASSANDRA_CROSS_NODE_TIMEOUT":"false"
+,"CASSANDRA_ENDPOINT_SNITCH":"{{cassandra.endpoint_snitch}}"
 ,"CASSANDRA_DYNAMIC_SNITCH_UPDATE_INTERVAL_IN_MS":"{{cassandra.dynamic_snitch_update_interval_in_ms}}"
 ,"CASSANDRA_DYNAMIC_SNITCH_RESET_INTERVAL_IN_MS":"{{cassandra.dynamic_snitch_reset_interval_in_ms}}"
 ,"CASSANDRA_DYNAMIC_SNITCH_BADNESS_THRESHOLD":"{{cassandra.dynamic_snitch_badness_threshold}}"
@@ -168,6 +169,7 @@
 {{/service.data_center_url}}
 ,"NODES":"{{nodes.count}}"
 ,"SEED_NODES":"{{nodes.seeds}}"
+,"ZONES":"{{nodes.zones}}"
 ,"PLACEMENT_CONSTRAINT":"{{service.placement_constraint}}"
 ,"PHASE_STRATEGY":"org.apache.mesos.scheduler.plan.DefaultInstallStrategy"
 ,"API_PORT":"{{service.api_port}}"

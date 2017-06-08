@@ -3,12 +3,14 @@ package com.mesosphere.dcos.cassandra.common.offer;
 import com.google.inject.Inject;
 import com.mesosphere.dcos.cassandra.common.config.CassandraSchedulerConfiguration;
 import com.mesosphere.dcos.cassandra.common.config.DefaultConfigurationManager;
+import com.mesosphere.dcos.cassandra.common.placementrule.AvailiabilityZonePlacementRule;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraContainer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.OfferRequirement;
+import org.apache.mesos.offer.constrain.AndRule;
 import org.apache.mesos.offer.constrain.MarathonConstraintParser;
 import org.apache.mesos.offer.constrain.PassthroughRule;
 import org.apache.mesos.offer.constrain.PlacementRule;
@@ -23,7 +25,9 @@ public class PersistentOfferRequirementProvider {
             PersistentOfferRequirementProvider.class);
     private DefaultConfigurationManager configurationManager;
     public static final String CONFIG_TARGET_KEY = "config_target";
-
+    
+    private static Map<String, String> nodeToZoneCodeMap;
+    
     @Inject
     public PersistentOfferRequirementProvider(DefaultConfigurationManager configurationManager) {
         this.configurationManager = configurationManager;
@@ -32,6 +36,7 @@ public class PersistentOfferRequirementProvider {
     public Optional<OfferRequirement> getNewOfferRequirement(CassandraContainer container) {
         LOGGER.info("Getting new offer requirement for: ", container.getId());
 
+        LOGGER.info("Nodes to zone map: {}", nodeToZoneCodeMap.toString());
         Optional<PlacementRule> placementRule = Optional.empty();
         try {
             placementRule = getPlacementRule();
@@ -44,7 +49,17 @@ public class PersistentOfferRequirementProvider {
             final Collection<Protos.TaskInfo> taskInfos = container.getTaskInfos();
             final UUID targetName = configurationManager.getTargetName();
             final Collection<Protos.TaskInfo> updatedTaskInfos = updateConfigLabel(taskInfos, targetName.toString());
-
+            
+			if (nodeToZoneCodeMap != null && !nodeToZoneCodeMap.isEmpty()) {
+				String zone = nodeToZoneCodeMap.get(container.getDaemonTask().getName());
+				LOGGER.info("Zone : {}", zone);
+				if (zone != null) {
+					Optional<PlacementRule> availabilityZonePlacementRule = getAvailiabiltyZonePlacementRule(zone);
+					placementRule = availabilityZonePlacementRule;// mergeRules(placementRule,
+																	// availabilityZonePlacementRule);
+				}
+			}
+            
             return Optional.of(OfferRequirement.create(
                     container.getDaemonTask().getType().name(),
                     clearTaskIds(updatedTaskInfos),
@@ -53,7 +68,10 @@ public class PersistentOfferRequirementProvider {
         } catch (InvalidRequirementException | ConfigStoreException e) {
             LOGGER.error("Failed to construct OfferRequirement with Exception: ", e);
             return Optional.empty();
-        }
+        } catch (IOException e) {
+			LOGGER.error("Failed to construct OfferRequirement with Exception, zone issue: ", e);
+			return Optional.empty();
+		}
     }
 
     public Optional<OfferRequirement> getReplacementOfferRequirement(CassandraContainer container) {
@@ -70,6 +88,14 @@ public class PersistentOfferRequirementProvider {
         }
     }
 
+	private Optional<PlacementRule> getAvailiabiltyZonePlacementRule(String az) throws IOException {
+		return Optional.of(new AvailiabilityZonePlacementRule(az));
+	}
+	
+	private Optional<PlacementRule> mergeRules(Optional<PlacementRule> rule1, Optional<PlacementRule> rule2) {
+		AndRule andRule = new AndRule(rule1.get(), rule2.get());
+		return Optional.of(andRule);
+	}
     private Optional<PlacementRule> getPlacementRule() throws IOException {
         // Due to all cassandra nodes always requiring the same port, they will never colocate.
         // Therefore we don't bother with explicit node avoidance in placement rules here.
@@ -130,5 +156,9 @@ public class PersistentOfferRequirementProvider {
         return ExecutorInfo.newBuilder(executorInfo)
                 .setExecutorId(Protos.ExecutorID.newBuilder().setValue("").build())
                 .build();
+    }
+    
+    public static void setNodeToZoneInformationMap(Map<String, String> nodeToZoneCodeMap){
+		PersistentOfferRequirementProvider.nodeToZoneCodeMap = nodeToZoneCodeMap;
     }
 }
