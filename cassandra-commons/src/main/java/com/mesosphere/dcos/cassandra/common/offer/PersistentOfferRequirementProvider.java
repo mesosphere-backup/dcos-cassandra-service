@@ -35,8 +35,8 @@ public class PersistentOfferRequirementProvider {
 
     public Optional<OfferRequirement> getNewOfferRequirement(CassandraContainer container) {
         LOGGER.info("Getting new offer requirement for: ", container.getId());
-
-        LOGGER.info("Nodes to zone map: {}", nodeToZoneCodeMap.toString());
+        LOGGER.info("Nodes to zone map: {}", nodeToZoneCodeMap);
+        
         Optional<PlacementRule> placementRule = Optional.empty();
         try {
             placementRule = getPlacementRule();
