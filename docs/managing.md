@@ -15,7 +15,7 @@ Increase the `NODES` value from the DC/OS dashboard as described in the Configur
 It is sometimes useful to retrieve information about a Cassandra node for troubleshooting or to examine the node's properties. Use the following CLI command to request that a node report its status:
 
 ```
-$ dcos cassandra --name=<service-name> node status <nodeid>
+dcos cassandra --name=<service-name> node status <nodeid>
 ```
 
 This command queries the node status directly from the node. If the command fails to return, it may indicate that the node is troubled. Here, `nodeid` is the the sequential integer identifier of the node (e.g. 0, 1, 2 , ..., n).
@@ -118,7 +118,7 @@ Result:
 
 To view general information about a node, run the following command from the CLI.
 ```
-$ dcos cassandra --name=<service-name> node describe <nodeid>
+dcos cassandra --name=<service-name> node describe <nodeid>
 ```
 
 In contrast to the `status` command, `node describe` requests information from the DC/OS Apache Cassandra Service and not the Cassandra node.
@@ -195,7 +195,7 @@ Cleanup can be a CPU- and disk-intensive operation, so you may want to delay run
 To perform a cleanup from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> cleanup start --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+dcos cassandra --name=<service-name> cleanup start --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to cleanup, `<key_spaces>` is an optional comma-separated list of the key spaces to cleanup, and `<column-families>` is an optional comma-separated list of the column-families to cleanup.
@@ -204,7 +204,7 @@ If no arguments are specified a cleanup will be performed for all nodes, key spa
 To cancel a currently running cleanup from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> cleanup stop
+dcos cassandra --name=<service-name> cleanup stop
 ```
 
 The operation will end after the current node has finished its cleanup.
@@ -217,7 +217,7 @@ Like cleanup, repair can be a CPU and disk intensive operation. When possible, i
 To perform a repair from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> repair start --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
+dcos cassandra --name=<service-name> repair start --nodes=<nodes> --key_spaces=<key_spaces> --column_families=<column_families>
 ```
 
 Here, `<nodes>` is an optional comma-separated list indicating the nodes to repair, `<key_spaces>` is an optional comma-separated list of the key spaces to repair, and `<column-families>` is an optional comma-separated list of the column-families to repair.
@@ -226,7 +226,7 @@ If no arguments are specified a repair will be performed for all nodes, key spac
 To cancel a currently running repair from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> repair stop
+dcos cassandra --name=<service-name> repair stop
 ```
 
 The operation will end after the current node has finished its repair.

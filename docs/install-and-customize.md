@@ -22,7 +22,7 @@ The default installation may not be sufficient for a production deployment, but 
 To start a default cluster, run the following command on the DC/OS CLI. 
 
 ```
-$ dcos package install cassandra
+dcos package install cassandra
 ```
 
 This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires customizing the `name` at install time for each additional instance. See the Custom Installation section for more information.
@@ -31,7 +31,9 @@ If you have more than one Cassandra cluster, use the `--name` argument after ins
 
 **Note:** You can also install Cassandra from the Universe > Packages tab of the DC/OS web interface. If you install Cassandra from the web interface, you must install the Cassandra DC/OS CLI subcommands separately. From the DC/OS CLI, enter:
 
+```
 dcos package install cassandra --cli
+```
 
 # Custom Installation
 
@@ -51,7 +53,7 @@ Sample JSON options file named `sample-cassandra.json`:
 The command below creates a cluster using `sample-cassandra.json`:
 
 ```
-$ dcos package install --options=sample-cassandra.json cassandra
+dcos package install --options=sample-cassandra.json cassandra
 ```
 
 This cluster will have 10 nodes and 3 seeds instead of the default values of 3 nodes and 2 seeds.
@@ -101,14 +103,14 @@ This will create a single node cluster with 2 GB of memory and 4Gb of disk. Note
 Installing multiple Cassandra clusters is identical to installing a Cassandra cluster with a custom configuration as described above. Use a JSON options file to specify a unique `name` for each installation:
 
 ```
-$ cat cassandra1.json
+cat cassandra1.json
 {
    "service": {
        "name": "cassandra1"
    }
 }
 
-$ dcos package install cassandra --options=cassandra1.json
+dcos package install cassandra --options=cassandra1.json
 ```
 
 In order to avoid port conflicts, by default you cannot collocate more than one Cassandra instance on the same node.
@@ -174,7 +176,7 @@ When the DC/OS Cassandra service is initially installed it will generate an inst
 The plan can be viewed from the API via the REST endpoint. A curl example is provided below.
 
 ```
-$ curl -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan
+curl -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan
 ```
 
 ## Plan Errors
@@ -190,7 +192,7 @@ The second phase of the installation is the deploy phase. This phase will deploy
 In order to pause installation, issue a REST API request as shown below. The installation will pause after completing installation of the current node and wait for user input.
 
 ```
-$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 
@@ -198,7 +200,7 @@ $ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/ca
 If the installation has been paused, the REST API request below will resume installation at the next pending node.
 
 ```
-$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan/continue
+curl -X POST -H "Authorization: token=$AUTH_TOKEN" http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
  [5]: https://github.com/mesosphere/dcos-vagrant

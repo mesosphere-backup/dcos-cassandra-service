@@ -15,7 +15,7 @@ We support upgrade/rollback between adjacent versions only.  Concretely, to upgr
 1. Verify that you no longer see the Cassandra instance in the DC/OS web interface.
 1. From the DC/OS CLI, install the N+1 version of Cassandra (where N is your current version) with any customizations you require in a JSON options file:
 
-        $ dcos package install cassandra --options=/path/to/options.json
+        dcos package install cassandra --options=/path/to/options.json
 
 The command above will trigger the install of the new Cassandra version. You can follow the upgrade progress by making a REST request identical to the one used to follow the progress of a configuration upgrade. See the Configuring section for more information.
 

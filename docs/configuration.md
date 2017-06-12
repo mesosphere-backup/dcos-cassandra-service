@@ -32,7 +32,7 @@ This configuration update strategy is analogous to the installation procedure ab
 Make the REST request below to view the current plan. See REST API authentication of the REST API Reference section for information on how this request must be authenticated.
 
 ```
-$ curl -H "Authorization: token=$AUTH_TOKEN" -v http://<dcos_url>/service/cassandra/v1/plan
+curl -H "Authorization: token=$AUTH_TOKEN" -v http://<dcos_url>/service/cassandra/v1/plan
 ```
 
 The response will look similar to this:
@@ -93,7 +93,7 @@ The response will look similar to this:
 If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
 
 ```
-$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 
@@ -157,7 +157,7 @@ If you query the plan again, the response will look like this (notice `status: "
 Enter the `continue` command to resume the update process.
 
 ```
-$ curl -X -H "Authorization: token=$AUTH_TOKEN" POST http://<dcos_url>/service/cassandra/v1/plan/continue
+curl -X -H "Authorization: token=$AUTH_TOKEN" POST http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 After you execute the continue operation, the plan will look like this:
