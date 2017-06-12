@@ -40,7 +40,7 @@ You can take a complete snapshot of your DC/OS Apache Cassandra ring and upload 
 To perform a backup to S3, enter the following command on the DC/OS CLI:
 
 ```
-$ dcos cassandra --name=<service-name> backup start \
+dcos cassandra --name=<service-name> backup start \
     --backup_name=<backup-name> \
     --external_location=s3://<bucket-name> \
     --s3_access_key=<s3-access-key> \
@@ -53,7 +53,7 @@ To upload to S3, you must specify the "s3://" protocol for the external location
 To cancel a currently running backup from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> backup stop
+dcos cassandra --name=<service-name> backup stop
 ```
 
 The operation will end after the current node has finished its backup.
@@ -63,7 +63,7 @@ The operation will end after the current node has finished its backup.
 To perform a backup to Azure, enter the following command on the DC/OS CLI:
 
 ```
-$ dcos cassandra --name=<service-name> backup start \
+dcos cassandra --name=<service-name> backup start \
     --backup_name=<backup-name> \
     --external_location=azure://<container> \
     --azure_account=<account_name> \
@@ -75,7 +75,7 @@ To upload to Azure, you must specify the "azure://" protocol for the external lo
 To cancel a currently running backup from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> backup stop
+dcos cassandra --name=<service-name> backup stop
 ```
 
 The operation will end after the current node has finished its backup.
@@ -89,7 +89,7 @@ You can restore your DC/OS Apache Cassandra snapshots on a new Cassandra ring fr
 To restore, enter the following command on the DC/OS CLI:
 
 ```
-$ dcos cassandra --name=<service-name> restore start \
+dcos cassandra --name=<service-name> restore start \
     --backup_name=<backup-name> \
     --external_location=s3://<bucket-name> \
     --s3_access_key=<s3-access-key> \
@@ -101,7 +101,7 @@ To restore from S3, you must specify the "s3://" protocol for the external locat
 Check the status of the restore:
 
 ```
-$ dcos cassandra --name=<service-name> restore status
+dcos cassandra --name=<service-name> restore status
 ```
 
 ## Azure Restore
@@ -109,7 +109,7 @@ $ dcos cassandra --name=<service-name> restore status
 To restore, enter the following command on the DC/OS CLI:
 
 ```
-$ dcos cassandra --name=<service-name> restore start \
+dcos cassandra --name=<service-name> restore start \
     --backup_name=<backup-name> \
     --external_location=azure://<container-name> \
     --azure_account=<account_name> \
@@ -121,13 +121,13 @@ To restore from Azure, you must specify the "azure://" protocol for the external
 To check the status of the restore from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> restore status
+dcos cassandra --name=<service-name> restore status
 ```
 
 To cancel a currently running restore from the CLI, enter the following command:
 
 ```
-$ dcos cassandra --name=<service-name> restore stop
+dcos cassandra --name=<service-name> restore stop
 ```
 
 The operation will end after the current node has finished its restore.
