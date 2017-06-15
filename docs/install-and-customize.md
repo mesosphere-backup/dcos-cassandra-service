@@ -10,7 +10,7 @@ Cassandra for DC/OS is available in the Universe and can be installed by using e
 **Prerequisites:**
 
 -  [DC/OS and DC/OS CLI installed](https://docs.mesosphere.com/1.9/installing/) with a minimum of three agent nodes with eight GB of memory and ten GB of disk available on each agent.
--  Depending on your [security mode](https://docs.mesosphere.com/1.9/overview/security/security-modes/), Kafka requires a service authentication for access to DC/OS. For more information, see [Configuring DC/OS Access for Kafka](https://docs.mesosphere.com/service-docs/kafka/kafka-auth/).
+-  Depending on your [security mode](https://docs.mesosphere.com/1.9/overview/security/security-modes/), Cassandra requires a service authentication for access to DC/OS. For more information, see [Configuring DC/OS Access for Cassandra](https://docs.mesosphere.com/service-docs/cassandra/cassandra-auth/).
 
    | Security mode | Service Account |
    |---------------|-----------------------|
