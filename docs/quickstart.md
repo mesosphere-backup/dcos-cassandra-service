@@ -60,7 +60,7 @@ This tutorial will get you up and running in minutes with Cassandra. You will in
 
         You are now connected to your Cassandra cluster.
 
-    1.  Pull the Cassandra Docker container down to your node and start an interactive psuedo-TTY session. The CQL utility (cqlsh) is included in this container. Use one of the nodes you retrieved from the `connection` command.
+    1.  Pull the Cassandra Docker container down to your node and start an interactive pseudo-TTY session. The CQL utility (cqlsh) is included in this container. Use one of the nodes you retrieved from the `connection` command.
 
         ```bash
         docker run -ti cassandra:3.0.7 cqlsh --cqlversion="3.4.0" 10.0.3.71
