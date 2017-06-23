@@ -737,7 +737,7 @@ The partition key cache is a cache of the partition index for a Cassandra table.
   <tr>
     <td>key_cache_size_in_mb</td>
     <td>integer</td>
-    <td>The maximum size of the key cache in Mb. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0.</td>
+    <td>The maximum size of the key cache in MB. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0.</td>
   </tr>
 
 </table>
@@ -766,7 +766,7 @@ The following configuration properties are global for all row caches.
   <tr>
     <td>row_cache_size_in_mb</td>
     <td>integer</td>
-    <td>The maximum size of the key cache in Mb. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled.</td>
+    <td>The maximum size of the key cache in MB. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled.</td>
   </tr>
 
 </table>

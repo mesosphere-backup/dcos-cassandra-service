@@ -66,7 +66,7 @@ This cluster will have ten nodes and three seeds, instead of the default values 
 
 **Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
 
-To start a minimal cluster with a single node, create a JSON options file name `sample-cassandra-minimal.json`:
+To start a minimal cluster with a single node, create a JSON options file named `sample-cassandra-minimal.json`:
 
 ```
 {
@@ -98,7 +98,7 @@ To start a minimal cluster with a single node, create a JSON options file name `
 }
 ```
 
-This will create a single node cluster with two GB of memory and 4 Gb of disk. You will need an additional 512 Mb for the DC/OS Apache Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Apache Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
+This will create a single node cluster with two GB of memory and four GB of disk. You will need an additional 512 MB for the DC/OS Apache Cassandra Service executor and 128 MB for clusters tasks. The DC/OS Apache Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
 
 Install Cassandra with the configuration specified in the `sample-cassandra-minimal.json` file:
 

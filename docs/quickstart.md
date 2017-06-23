@@ -5,12 +5,12 @@ feature_maturity: preview
 enterprise: 'no'
 ---
 
-This tutorial will get you up and running in minutes with Cassandra. You will install the DC/OS Cassandra, create a key space, and insert data.
+This tutorial will get you up and running with Cassandra in minutes. You will install the DC/OS Cassandra, create a key space, and insert data.
 
 **Prerequisites:**
 
 -  [DC/OS and DC/OS CLI installed](https://docs.mesosphere.com/1.9/installing/) with a minimum of three agent nodes with eight GB of memory and ten GB of disk available on each agent.
--  Depending on your [security mode](https://docs.mesosphere.com/1.9/overview/security/security-modes/), Cassandra requires a service authentication for access to DC/OS. For more information, see [Configuring DC/OS Access for Cassandra](https://docs.mesosphere.com/service-docs/cassandra/cassandra-auth/).
+-  Depending on your [security mode](https://docs.mesosphere.com/1.9/overview/security/security-modes/), Cassandra requires service authentication for access to DC/OS. For more information, see [Configuring DC/OS Access for Cassandra](https://docs.mesosphere.com/service-docs/cassandra/cassandra-auth/).
 
    | Security mode | Service Account |
    |---------------|-----------------------|
