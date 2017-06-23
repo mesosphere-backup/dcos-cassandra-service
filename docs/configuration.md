@@ -14,11 +14,19 @@ You can customize your cluster in-place when it is up and running.
 
 The Cassandra scheduler runs as a Marathon process and can be reconfigured by changing values for the service from the DC/OS dashboard. These are the general steps to follow:
 
-1. Go to the DC/OS dashboard.
-1. Click the **Services** tab, then the name of the Cassandra service to be updated.
-1. Within the Cassandra instance details view, click the menu in the upper right, then choose **Edit**.
-1. In the dialog that appears, click the **Environment** tab and update any field(s) to their desired value(s). For example, to increase the number of nodes, edit the value for `NODES`.
-1. Click **REVIEW & RUN** to apply any changes and cleanly reload the Cassandra scheduler. The Cassandra cluster itself will persist across the change.
+1.  Go to the **Services** tab of the DC/OS GUI and click the name of the Cassandra service to be updated.
+
+    ![DC/OS GUI Cassandra](/img/cassandra-service-gui.png)
+    
+1.  Within the Cassandra instance details view, click the vertical ellipsis menu in the upper right, then choose **Edit**.
+
+    ![Edit menu](/img/cassandra-service-gui2.png)
+    
+1.  Click the **Environment** tab and make your updates. For example, to increase the number of nodes, edit the value for `NODES`.
+
+    ![](/img/cassandra-service-gui3.png)
+    
+1.  Click **REVIEW & RUN** to apply any changes and cleanly reload the Cassandra scheduler. The Cassandra cluster itself will persist across the change.
 
 ## Configuration Deployment Strategy
 
@@ -729,7 +737,7 @@ The partition key cache is a cache of the partition index for a Cassandra table.
   <tr>
     <td>key_cache_size_in_mb</td>
     <td>integer</td>
-    <td>The maximum size of the key cache in Mb. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0.</td>
+    <td>The maximum size of the key cache in MB. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0.</td>
   </tr>
 
 </table>
@@ -758,7 +766,7 @@ The following configuration properties are global for all row caches.
   <tr>
     <td>row_cache_size_in_mb</td>
     <td>integer</td>
-    <td>The maximum size of the key cache in Mb. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled.</td>
+    <td>The maximum size of the key cache in MB. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled.</td>
   </tr>
 
 </table>

@@ -7,25 +7,28 @@ enterprise: 'no'
 
 Cassandra for DC/OS is available in the Universe and can be installed by using either the web interface or the DC/OS CLI.
 
-## Prerequisites
+**Prerequisites:**
 
-- Depending on your security mode in Enterprise DC/OS, you may [need to provision a service account](https://docs.mesosphere.com/service-docs/cassandra/cass-auth/) before installing Cassandra. Only someone with `superuser` permission can create the service account.
-    - `strict` [security mode](https://docs.mesosphere.com/1.9/installing/custom/configuration-parameters/#security) requires a service account.  
-    - `permissive` security mode a service account is optional. 
-    - `disabled` security mode does not require a service account.
-- Minimum three agent nodes with eight GB of memory and ten GB of disk available on each agent.
+-  [DC/OS and DC/OS CLI installed](https://docs.mesosphere.com/1.9/installing/) with a minimum of three agent nodes with eight GB of memory and ten GB of disk available on each agent.
+-  Depending on your [security mode](https://docs.mesosphere.com/1.9/overview/security/security-modes/), Cassandra requires a service authentication for access to DC/OS. For more information, see [Configuring DC/OS Access for Cassandra](https://docs.mesosphere.com/service-docs/cassandra/cassandra-auth/).
+
+   | Security mode | Service Account |
+   |---------------|-----------------------|
+   | Disabled      | Not available   |
+   | Permissive    | Optional   |
+   | Strict        | Required |
 - Ports 7000, 7001, 7199, 9042, and 9160 must be available.
 
 # Default Installation
 The default installation may not be sufficient for a production deployment, but all cluster operations will work. If you are planning a production deployment with three replicas of each value and local quorum consistency for read and write operations (a very common use case), this configuration is sufficient for development and testing purposes and it may be scaled to a production deployment.
 
-To start a default cluster, run the following command on the DC/OS CLI. 
+Install the Cassandra package. This may take a few minutes.
 
-```
+```bash
 dcos package install cassandra
 ```
 
-This command creates a new Cassandra cluster with 3 nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires customizing the `name` at install time for each additional instance. See the Custom Installation section for more information.
+This command creates a new Cassandra cluster with three nodes. Two clusters cannot share the same name, so installing additional clusters beyond the default cluster requires customizing the `name` at install time for each additional instance. See the Custom Installation section for more information.
 
 If you have more than one Cassandra cluster, use the `--name` argument after install time to specify which Cassandra instance to query. All `dcos cassandra` CLI commands accept the `--name` argument. If you do not specify a service name, the CLI assumes the default value, `cassandra`.
 
@@ -37,11 +40,12 @@ dcos package install cassandra --cli
 
 # Custom Installation
 
-If you are ready to ship into production, you will likely need to customize the deployment to suit the workload requirements of your application(s). Customize the default deployment by creating a JSON file, then pass it to `dcos package install` using the `--options` parameter.
+If you are ready to ship into production, you need to customize the deployment to suit the workload requirements of your applications. Customize the default deployment by creating an options JSON file, then pass it to `dcos package install` using the `--options` parameter.
 
-Sample JSON options file named `sample-cassandra.json`:
 
-```
+Create a JSON options file named `sample-cassandra.json`:
+
+```json
 {
     "nodes": {
         "count": 10,
@@ -50,21 +54,19 @@ Sample JSON options file named `sample-cassandra.json`:
 }
 ```
 
-The command below creates a cluster using `sample-cassandra.json`:
+Install Cassandra with the configuration specified in the `sample-cassandra.json` file:
 
-```
+```bash
 dcos package install --options=sample-cassandra.json cassandra
 ```
 
-This cluster will have 10 nodes and 3 seeds instead of the default values of 3 nodes and 2 seeds.
-See the Configuration Options section for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
+This cluster will have ten nodes and three seeds, instead of the default values of three nodes and two seeds. See the [Configuration Options](#configuration-options) section for a list of fields that can be customized via an options JSON file when the Cassandra cluster is created.
 
 # Minimal Installation
-You may wish to install Cassandra on a local DC/OS cluster for development or testing purposes. For this, you can use [dcos-vagrant](https://github.com/mesosphere/dcos-vagrant). As with the default installation, you must ensure that ports 7000, 7001, 7199, 9042, and 9160 are available.
 
 **Note:** This configuration will not support replication of any kind, but it may be sufficient for early stage evaluation and development.
 
-To start a minimal cluster with a single node, create a JSON options file that contains the following:
+To start a minimal cluster with a single node, create a JSON options file named `sample-cassandra-minimal.json`:
 
 ```
 {
@@ -96,21 +98,30 @@ To start a minimal cluster with a single node, create a JSON options file that c
 }
 ```
 
-This will create a single node cluster with 2 GB of memory and 4Gb of disk. Note that you will need an additional 512 Mb for the DC/OS Apache Cassandra Service executor and 128 Mb for clusters tasks. The DC/OS Apache Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
+This will create a single node cluster with two GB of memory and four GB of disk. You will need an additional 512 MB for the DC/OS Apache Cassandra Service executor and 128 MB for clusters tasks. The DC/OS Apache Cassandra Service scheduler needs 512 MB to run, but it does not need to be deployed on the same host as the node.
+
+Install Cassandra with the configuration specified in the `sample-cassandra-minimal.json` file:
+
+```bash
+dcos package install --options=sample-cassandra-minimal.json cassandra
+```
 
 # Multiple Cassandra Cluster Installation
 
-Installing multiple Cassandra clusters is identical to installing a Cassandra cluster with a custom configuration as described above. Use a JSON options file to specify a unique `name` for each installation:
+To install multiple Cassandra clusters, create a JSON options file named `sample-cassandra-multiple.json` and specify a unique `name` for each installation:
 
-```
-cat cassandra1.json
+```json
 {
    "service": {
        "name": "cassandra1"
    }
 }
+```
 
-dcos package install cassandra --options=cassandra1.json
+Install Cassandra with the configuration specified in the `sample-cassandra-multiple.json` file:
+
+```bash
+dcos package install cassandra --options=sample-cassandra-multiple.json
 ```
 
 In order to avoid port conflicts, by default you cannot collocate more than one Cassandra instance on the same node.
@@ -119,7 +130,7 @@ In order to avoid port conflicts, by default you cannot collocate more than one 
 
 When the DC/OS Cassandra service is initially installed it will generate an installation plan as shown below. You can view, pause, and resume installation via the REST API. See the REST API authentication section of the REST API Reference for information on how this request must be authenticated.
 
-```
+```json
 {
     "errors": [],
     "phases": [
