@@ -61,12 +61,12 @@ The DC/OS Apache Cassandra Service is resilient to temporary node failures. Howe
 
 Via CLI:
 ```
-$ dcos cassandra --name=cassandra node replace 0
+dcos cassandra --name=cassandra node replace 0
 ```
 
 Via API:
 ```
-$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/replace?node=node-0"
+curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/replace?node=node-0"
 ```
 
 This will replace the node with a new node of the same name running on a different server. The new node will take over the token range owned by its predecessor. After replacing the failed node, you should run Repair and Cleanup. (See the Repair and Cleanup parts of the Managing section for more information).
@@ -76,12 +76,12 @@ To restart a given Cassandra node please use following. If you perform this acti
 
 CLI:
 ```
-$ dcos cassandra --name=cassandra node restart 0
+dcos cassandra --name=cassandra node restart 0
 ```
 
 API:
 ```
-$ curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/restart?node=node-0"
+curl -X PUT -H "Authorization: token=$AUTH_TOKEN" "<dcos_url>/service/cassandra/v1/nodes/restart?node=node-0"
 ```
 
 This will restart the node with the same name running on the same server.

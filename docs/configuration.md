@@ -14,11 +14,19 @@ You can customize your cluster in-place when it is up and running.
 
 The Cassandra scheduler runs as a Marathon process and can be reconfigured by changing values for the service from the DC/OS dashboard. These are the general steps to follow:
 
-1. Go to the DC/OS dashboard.
-1. Click the **Services** tab, then the name of the Cassandra service to be updated.
-1. Within the Cassandra instance details view, click the menu in the upper right, then choose **Edit**.
-1. In the dialog that appears, click the **Environment** tab and update any field(s) to their desired value(s). For example, to increase the number of nodes, edit the value for `NODES`.
-1. Click **REVIEW & RUN** to apply any changes and cleanly reload the Cassandra scheduler. The Cassandra cluster itself will persist across the change.
+1.  Go to the **Services** tab of the DC/OS GUI and click the name of the Cassandra service to be updated.
+
+    ![DC/OS GUI Cassandra](/img/cassandra-service-gui.png)
+    
+1.  Within the Cassandra instance details view, click the vertical ellipsis menu in the upper right, then choose **Edit**.
+
+    ![Edit menu](/img/cassandra-service-gui2.png)
+    
+1.  Click the **Environment** tab and make your updates. For example, to increase the number of nodes, edit the value for `NODES`.
+
+    ![](/img/cassandra-service-gui3.png)
+    
+1.  Click **REVIEW & RUN** to apply any changes and cleanly reload the Cassandra scheduler. The Cassandra cluster itself will persist across the change.
 
 ## Configuration Deployment Strategy
 
@@ -32,7 +40,7 @@ This configuration update strategy is analogous to the installation procedure ab
 Make the REST request below to view the current plan. See REST API authentication of the REST API Reference section for information on how this request must be authenticated.
 
 ```
-$ curl -H "Authorization: token=$AUTH_TOKEN" -v http://<dcos_url>/service/cassandra/v1/plan
+curl -H "Authorization: token=$AUTH_TOKEN" -v http://<dcos_url>/service/cassandra/v1/plan
 ```
 
 The response will look similar to this:
@@ -93,7 +101,7 @@ The response will look similar to this:
 If you want to interrupt a configuration update that is in progress, enter the `interrupt` command.
 
 ```
-$ curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
+curl -X POST -H "Authorization: token=$AUTH_TOKEN" http:/<dcos_url>/service/cassandra/v1/plan/interrupt
 ```
 
 
@@ -157,7 +165,7 @@ If you query the plan again, the response will look like this (notice `status: "
 Enter the `continue` command to resume the update process.
 
 ```
-$ curl -X -H "Authorization: token=$AUTH_TOKEN" POST http://<dcos_url>/service/cassandra/v1/plan/continue
+curl -X -H "Authorization: token=$AUTH_TOKEN" POST http://<dcos_url>/service/cassandra/v1/plan/continue
 ```
 
 After you execute the continue operation, the plan will look like this:
@@ -726,10 +734,11 @@ The partition key cache is a cache of the partition index for a Cassandra table.
 <td>The duration in seconds that keys are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O.</td>
 </tr>
 
+
 <tr>
 <td>key_cache_size_in_mb</td>
 <td>integer</td>
-<td>The maximum size of the key cache in Mb. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0.</td>
+<td>The maximum size of the key cache in MB. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0.</td>
 </tr>
 
 </table>
@@ -758,7 +767,7 @@ The following configuration properties are global for all row caches.
 <tr>
 <td>row_cache_size_in_mb</td>
 <td>integer</td>
-<td>The maximum size of the key cache in Mb. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled.</td>
+<td>The maximum size of the key cache in MB. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled.</td>
 </tr>
 
 </table>
