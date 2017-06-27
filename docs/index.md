@@ -1,6 +1,8 @@
 ---
-post_title: Cassandra
-menu_order: 50
+post_title: Cassandra version 1.0.25-3.0.10
+nav_title: v1.0.25-3.0.10
+menu_order: 0
+post_excerpt: ""
 feature_maturity: preview
 enterprise: 'no'
 ---
