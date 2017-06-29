@@ -250,97 +250,97 @@ The service configuration object contains properties that MUST be specified duri
 ```
 
 <table class="table">
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-  <tr>
-    <td>name</td>
-    <td>string</td>
-    <td>The name of the Cassandra service installation. This must be unique for each DC/OS Apache Cassandra service instance deployed on a DC/OS cluster.</td>
-  </tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>The name of the Cassandra service installation. This must be unique for each DC/OS Apache Cassandra service instance deployed on a DC/OS cluster.</td>
+</tr>
 
-  <tr>
-    <td>cluster</td>
-    <td>string</td>
-    <td>The cluster that the Cassandra service installation belongs to. Multiple DC/OS Apache Cassandra service instances may belong to the same cluster.</td>
-  </tr>
+<tr>
+<td>cluster</td>
+<td>string</td>
+<td>The cluster that the Cassandra service installation belongs to. Multiple DC/OS Apache Cassandra service instances may belong to the same cluster.</td>
+</tr>
 
-  <tr>
-    <td>data_center</td>
-    <td>string</td>
-    <td>The identifier of the datacenter that the DC/OS Apache Cassandra service will deploy. This MUST be unique for deployments supporting multiple datacenters. This
-    MAY be identical for multiple deployments on the same DC/OS cluster that support different clusters.</td>
-  </tr>
+<tr>
+<td>data_center</td>
+<td>string</td>
+<td>The identifier of the datacenter that the DC/OS Apache Cassandra service will deploy. This MUST be unique for deployments supporting multiple datacenters. This
+MAY be identical for multiple deployments on the same DC/OS cluster that support different clusters.</td>
+</tr>
 
-  <tr>
-    <td>user</td>
-    <td>string</td>
-    <td>The name of the operating system user account Cassandra tasks run as.</td>
-  </tr>
+<tr>
+<td>user</td>
+<td>string</td>
+<td>The name of the operating system user account Cassandra tasks run as.</td>
+</tr>
 
-  <tr>
-    <td>principal</td>
-    <td>string</td>
-    <td>The authentication principal for the Cassandra cluster.</td>
-  </tr>
-  <tr>
-    <td>placement_constraint</td>
-    <td>string</td>
-    <td>A Marathon-style placement constraint to be used when deploying the Cassandra nodes. For example, "rack_id:LIKE:rack_[1-5],hostname:UNLIKE:avoid_host_.*". See <a href="https://mesosphere.github.io/marathon/docs/constraints.html">Marathon documentation</a> for more details, but note that constraints must be of the form "field1:operator1[:value1],field2:operator2[:value2]" when used here. Changing this setting after initial deployment is experimental.</td>
-  </tr>
+<tr>
+<td>principal</td>
+<td>string</td>
+<td>The authentication principal for the Cassandra cluster.</td>
+</tr>
+<tr>
+<td>placement_constraint</td>
+<td>string</td>
+<td>A Marathon-style placement constraint to be used when deploying the Cassandra nodes. For example, "rack_id:LIKE:rack_[1-5],hostname:UNLIKE:avoid_host_.*". See <a href="https://mesosphere.github.io/marathon/docs/constraints.html">Marathon documentation</a> for more details, but note that constraints must be of the form "field1:operator1[:value1],field2:operator2[:value2]" when used here. Changing this setting after initial deployment is experimental.</td>
+</tr>
 
-  <tr>
-    <td>secret</td>
-    <td>string</td>
-    <td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DC/OS cluster. This parameter is optional, and should be omitted unless the DC/OS deployment is specifically configured for authentication.</td>
-  </tr>
+<tr>
+<td>secret</td>
+<td>string</td>
+<td>An optional path to the file containing the secret that the service will use to authenticate with the Mesos Master in the DC/OS cluster. This parameter is optional, and should be omitted unless the DC/OS deployment is specifically configured for authentication.</td>
+</tr>
 
-   <tr>
-      <td>cpus</td>
-      <td>number</td>
-      <td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service scheduler. </td>
-    </tr>
+<tr>
+<td>cpus</td>
+<td>number</td>
+<td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service scheduler. </td>
+</tr>
 
-    <tr>
-      <td>mem</td>
-      <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 GB is a good choice.</td>
-    </tr>
+<tr>
+<td>mem</td>
+<td>integer</td>
+<td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap. 2 GB is a good choice.</td>
+</tr>
 
-    <tr>
-      <td>heap</td>
-      <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 GB is a minimum for production installations.</td>
-    </tr>
+<tr>
+<td>heap</td>
+<td>integer</td>
+<td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. 1 GB is a minimum for production installations.</td>
+</tr>
 
-    <tr>
-      <td>api_port</td>
-      <td>integer</td>
-      <td>The port that the scheduler will accept API requests on.</td>
-    </tr>
+<tr>
+<td>api_port</td>
+<td>integer</td>
+<td>The port that the scheduler will accept API requests on.</td>
+</tr>
 
-    <tr>
-    <td>data_center_url</td>
-    <td>string</td>
-    <td>This specifies the URL that the DC/OS Apache Cassandra service instance will advertise to other instances in the cluster.
-    If you are not configuring a multi datacenter deployment this should be omitted.
-    If you are configuring a multiple datacenter deployment inside the same DC/OS cluster, this should be omitted.
-    If you are configuring a multiple datacenter deployment inside diffrent DC/OS clusters, this value MUST be set to a URL that
-    is reachable and resolvable by the DC/OS Apache Cassandra instances in the remote datacenters. A good choice for this value is the admin
-    router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
-    </tr>
-    <tr>
-    <td>external_data_centers</td>
-    <td>string</td>
-    <td>This specifies the URLs of the external datacenters that contain a cluster the DC/OS Apache Cassandra service will join as a comma separated list.
-    This value should only be included when your deploying a DC/OS Apache Cassandra service instance that will extend an existing cluster. Otherwise, this
-    value should be omitted. If this value is specified, the URLs contained in the comma separated list MUST be resolvable and reachable from the deployed cluster.
-    In practice, they should be identical to the values specified in data_center_url configuration parameter for the instance whose cluster will be extended.
-    </td>
-  </tr>
+<tr>
+<td>data_center_url</td>
+<td>string</td>
+<td>This specifies the URL that the DC/OS Apache Cassandra service instance will advertise to other instances in the cluster.
+If you are not configuring a multi datacenter deployment this should be omitted.
+If you are configuring a multiple datacenter deployment inside the same DC/OS cluster, this should be omitted.
+If you are configuring a multiple datacenter deployment inside diffrent DC/OS clusters, this value MUST be set to a URL that
+is reachable and resolvable by the DC/OS Apache Cassandra instances in the remote datacenters. A good choice for this value is the admin
+router URL (i.e. <dcos_url>/service/cassandra/v1/datacenter).  </td>
+</tr>
+<tr>
+<td>external_data_centers</td>
+<td>string</td>
+<td>This specifies the URLs of the external datacenters that contain a cluster the DC/OS Apache Cassandra service will join as a comma separated list.
+This value should only be included when your deploying a DC/OS Apache Cassandra service instance that will extend an existing cluster. Otherwise, this
+value should be omitted. If this value is specified, the URLs contained in the comma separated list MUST be resolvable and reachable from the deployed cluster.
+In practice, they should be identical to the values specified in data_center_url configuration parameter for the instance whose cluster will be extended.
+</td>
+</tr>
 
 </table>
 
@@ -369,66 +369,66 @@ Example node configuration:
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-   <tr>
-    <td>cpus</td>
-    <td>number</td>
-    <td>The number of cpu shares allocated to the container where the Cassandra process resides. Currently, due to a bug in Mesos, it is not safe to modify this parameter.</td>
-  </tr>
+<tr>
+<td>cpus</td>
+<td>number</td>
+<td>The number of cpu shares allocated to the container where the Cassandra process resides. Currently, due to a bug in Mesos, it is not safe to modify this parameter.</td>
+</tr>
 
-  <tr>
-    <td>mem</td>
-    <td>integer</td>
-    <td>The amount of memory, in MB, allocated to the container where the Cassandra process resides. This value MUST be larger than the specified max heap size. Make sure to allocate enough space for additional memory used by the JVM and other overhead.</td>
-  </tr>
+<tr>
+<td>mem</td>
+<td>integer</td>
+<td>The amount of memory, in MB, allocated to the container where the Cassandra process resides. This value MUST be larger than the specified max heap size. Make sure to allocate enough space for additional memory used by the JVM and other overhead.</td>
+</tr>
 
-  <tr>
-    <td>disk</td>
-    <td>integer</td>
-    <td>The amount of disk, in MB, allocated to a Cassandra node in the cluster. **Note:** Once this value is configured, it can not be changed.</td>
-  </tr>
+<tr>
+<td>disk</td>
+<td>integer</td>
+<td>The amount of disk, in MB, allocated to a Cassandra node in the cluster. **Note:** Once this value is configured, it can not be changed.</td>
+</tr>
 
-  <tr>
-    <td>disk_type</td>
-    <td>string</td>
-    <td>The type of disk to use for storing Cassandra data. Possible values: <b>ROOT</b> (default) and <b>MOUNT</b>. <b>Note:</b> Once this value is configured, it can not be changed.
-    <ul>
-    <li><b>ROOT:</b> Cassandra data is stored on the same volume as the agent work directory. And, the Cassandra node tasks will use the configured amount of <i>disk</i> space.</li>
-    <li><b>MOUNT:</b> Cassandra data will be stored on a dedicated volume attached to the agent. Dedicated MOUNT volumes have performance advantages and a disk error on these MOUNT volumes will be correctly reported to Cassandra.</li>
-    </ul>
-    </td>
-  </tr>
+<tr>
+<td>disk_type</td>
+<td>string</td>
+<td>The type of disk to use for storing Cassandra data. Possible values: <b>ROOT</b> (default) and <b>MOUNT</b>. <b>Note:</b> Once this value is configured, it can not be changed.
+<ul>
+<li><b>ROOT:</b> Cassandra data is stored on the same volume as the agent work directory. And, the Cassandra node tasks will use the configured amount of <i>disk</i> space.</li>
+<li><b>MOUNT:</b> Cassandra data will be stored on a dedicated volume attached to the agent. Dedicated MOUNT volumes have performance advantages and a disk error on these MOUNT volumes will be correctly reported to Cassandra.</li>
+</ul>
+</td>
+</tr>
 
-  <tr>
-    <td>heap.size</td>
-    <td>integer</td>
-    <td>The maximum and minimum heap size used by the Cassandra process in MB. This value SHOULD be at least 2 GiB, and it SHOULD be no larger than 80% of the allocated memory for the container. Specifying very large heaps, greater than 8 GiB, is currently not a supported configuration.
-    Note: The value of heap size should not be greater than the total memory configured for the container via <b>mem</b> param. If value of <b>mem</b> is greater than <b>heap.size</b> then Linux operating system will use the remaining memory, <b>mem</b> - <b>heap.size</b> for <a href="https://en.wikipedia.org/wiki/Page_cache">PageCache</a>
-    </td>
-  </tr>
+<tr>
+<td>heap.size</td>
+<td>integer</td>
+<td>The maximum and minimum heap size used by the Cassandra process in MB. This value SHOULD be at least 2 GiB, and it SHOULD be no larger than 80% of the allocated memory for the container. Specifying very large heaps, greater than 8 GiB, is currently not a supported configuration.
+Note: The value of heap size should not be greater than the total memory configured for the container via <b>mem</b> param. If value of <b>mem</b> is greater than <b>heap.size</b> then Linux operating system will use the remaining memory, <b>mem</b> - <b>heap.size</b> for <a href="https://en.wikipedia.org/wiki/Page_cache">PageCache</a>
+</td>
+</tr>
 
-  <tr>
-    <td>heap.new</td>
-    <td>integer</td>
-    <td>The young generation heap size in MB. This value should be set at roughly 100MB per allocated CPU core. Increasing the size of this value will generally increase the length of garbage collection pauses. Smaller values will increase the frequency of garbage collection pauses.</td>
-  </tr>
+<tr>
+<td>heap.new</td>
+<td>integer</td>
+<td>The young generation heap size in MB. This value should be set at roughly 100MB per allocated CPU core. Increasing the size of this value will generally increase the length of garbage collection pauses. Smaller values will increase the frequency of garbage collection pauses.</td>
+</tr>
 
-  <tr>
-    <td>count</td>
-    <td>integer</td>
-    <td>The number of nodes in the Cassandra cluster. This value MUST be between 3 and 100.</td>
-  </tr>
+<tr>
+<td>count</td>
+<td>integer</td>
+<td>The number of nodes in the Cassandra cluster. This value MUST be between 3 and 100.</td>
+</tr>
 
-  <tr>
-    <td>seeds</td>
-    <td>integer</td>
-    <td>The number of seed nodes that the service will use to seed the cluster. The service selects seed nodes dynamically based on the current state of the cluster. 2 - 5 seed nodes is generally sufficient.</td>
-  </tr>
+<tr>
+<td>seeds</td>
+<td>integer</td>
+<td>The number of seed nodes that the service will use to seed the cluster. The service selects seed nodes dynamically based on the current state of the cluster. 2 - 5 seed nodes is generally sufficient.</td>
+</tr>
 
 </table>
 
@@ -448,40 +448,40 @@ Example executor configuration:
 ```
 
 <table class="table">
-    <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
-   <tr>
-      <td>cpus</td>
-      <td>number</td>
-      <td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service executor. </td>
-    </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>cpus</td>
+<td>number</td>
+<td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service executor. </td>
+</tr>
 
-    <tr>
-      <td>mem</td>
-      <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
-    </tr>
+<tr>
+<td>mem</td>
+<td>integer</td>
+<td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service scheduler. This MUST be larger than the allocated heap.</td>
+</tr>
 
-    <tr>
-      <td>heap</td>
-      <td>integer</td>
-      <td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service executor.</td>
-    </tr>
+<tr>
+<td>heap</td>
+<td>integer</td>
+<td>The amount of heap, in MB, allocated for the DC/OS Apache Cassandra Service executor.</td>
+</tr>
 
-    <tr>
-      <td>disk</td>
-      <td>integer</td>
-      <td>The amount of disk, in MB, allocated for the DC/OS Apache Cassandra Service executor.</td>
-    </tr>
+<tr>
+<td>disk</td>
+<td>integer</td>
+<td>The amount of disk, in MB, allocated for the DC/OS Apache Cassandra Service executor.</td>
+</tr>
 
-    <tr>
-      <td>api_port</td>
-      <td>integer</td>
-      <td>The port that the executor will accept API requests on.</td>
-    </tr>
+<tr>
+<td>api_port</td>
+<td>integer</td>
+<td>The port that the executor will accept API requests on.</td>
+</tr>
 
 </table>
 
@@ -497,21 +497,21 @@ Example executor configuration:
 }
 ```
 <table class="table">
-    <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
-   <tr>
-      <td>cpus</td>
-      <td>number</td>
-      <td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service tasks. </td>
-    </tr>
-    <tr>
-      <td>mem</td>
-      <td>integer</td>
-      <td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service tasks.</td>
-    </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>cpus</td>
+<td>number</td>
+<td>The number of CPU shares allocated to the DC/OS Apache Cassandra Service tasks. </td>
+</tr>
+<tr>
+<td>mem</td>
+<td>integer</td>
+<td>The amount of memory, in MB, allocated for the DC/OS Apache Cassandra Service tasks.</td>
+</tr>
 </table>
 
 ## Cassandra Application Configuration
@@ -570,35 +570,35 @@ The IP address of the Cassandra node is determined automatically by the service 
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-   <tr>
-    <td>jmx_port</td>
-    <td>integer</td>
-    <td>The port on which the application will listen for JMX connections. Remote JMX connections are disabled due to security considerations.</td>
-  </tr>
+<tr>
+<td>jmx_port</td>
+<td>integer</td>
+<td>The port on which the application will listen for JMX connections. Remote JMX connections are disabled due to security considerations.</td>
+</tr>
 
-   <tr>
-    <td>storage_port</td>
-    <td>integer</td>
-    <td>The port the application uses for inter-node communication.</td>
-  </tr>
+<tr>
+<td>storage_port</td>
+<td>integer</td>
+<td>The port the application uses for inter-node communication.</td>
+</tr>
 
-   <tr>
-    <td>internode_compression</td>
-    <td>all,none,dc</td>
-    <td>If set to all, traffic between all nodes is compressed. If set to dc, traffic between datacenters is compressed. If set to none, no compression is used for internode communication.</td>
-  </tr>
+<tr>
+<td>internode_compression</td>
+<td>all,none,dc</td>
+<td>If set to all, traffic between all nodes is compressed. If set to dc, traffic between datacenters is compressed. If set to none, no compression is used for internode communication.</td>
+</tr>
 
-  <tr>
-    <td>native_transport_port</td>
-    <td>integer</td>
-    <td>The port the application uses for inter-node communication.</td>
-  </tr>
+<tr>
+<td>native_transport_port</td>
+<td>integer</td>
+<td>The port the application uses for inter-node communication.</td>
+</tr>
 
 </table>
 
@@ -608,23 +608,23 @@ The DC/OS Apache Cassandra service only supports the commitlog_sync model for co
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-   <tr>
-    <td>commitlog_sync_period_in_ms</td>
-    <td>integer</td>
-    <td>The time, in ms, between successive calls to the fsync system call. This defines the maximum window between write acknowledgement and a potential data loss.</td>
-  </tr>
+<tr>
+<td>commitlog_sync_period_in_ms</td>
+<td>integer</td>
+<td>The time, in ms, between successive calls to the fsync system call. This defines the maximum window between write acknowledgement and a potential data loss.</td>
+</tr>
 
-   <tr>
-    <td>commitlog_segment_size_in_mb</td>
-    <td>integer</td>
-    <td>The size of the commit log in MB. This property determines the maximum mutation size, defined as half the segment size. If a mutation's size exceeds the maximum mutation size, the mutation is rejected. Before increasing the commitlog segment size of the commitlog segments, investigate why the mutations are larger than expected.</td>
-  </tr>
+<tr>
+<td>commitlog_segment_size_in_mb</td>
+<td>integer</td>
+<td>The size of the commit log in MB. This property determines the maximum mutation size, defined as half the segment size. If a mutation's size exceeds the maximum mutation size, the mutation is rejected. Before increasing the commitlog segment size of the commitlog segments, investigate why the mutations are larger than expected.</td>
+</tr>
 
 </table>
 
@@ -632,23 +632,23 @@ The DC/OS Apache Cassandra service only supports the commitlog_sync model for co
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-   <tr>
-    <td>column_index_size_in_kb</td>
-    <td>integer</td>
-    <td>Index size  of rows within a partition. For very large rows, this value can be decreased to increase seek time. If key caching is enabled be careful when increasing this value, as the key cache may become overwhelmed.</td>
-  </tr>
+<tr>
+<td>column_index_size_in_kb</td>
+<td>integer</td>
+<td>Index size  of rows within a partition. For very large rows, this value can be decreased to increase seek time. If key caching is enabled be careful when increasing this value, as the key cache may become overwhelmed.</td>
+</tr>
 
-  <tr>
-    <td>index_summary_resize_interval_in_minutes</td>
-    <td>integer</td>
-    <td>How frequently index summaries should be re-sampled in minutes. This is done periodically to redistribute memory from the fixed-size pool to SSTables proportional their recent read rates.</td>
-  </tr>
+<tr>
+<td>index_summary_resize_interval_in_minutes</td>
+<td>integer</td>
+<td>How frequently index summaries should be re-sampled in minutes. This is done periodically to redistribute memory from the fixed-size pool to SSTables proportional their recent read rates.</td>
+</tr>
 
 </table>
 
@@ -658,29 +658,29 @@ Hinted handoff is the process by which Cassandra recovers consistency when a wri
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
-
-   <tr>
-    <td>hinted_handoff_enabled</td>
-    <td>boolean</td>
-    <td>If true, hinted handoff will be used to maintain consistency during node failure.</td>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
 <tr>
-    <td>max_hint_window_in_ms</td>
-    <td>integer</td>
-    <td>The maximum amount of time, in ms, that Cassandra will record hints for an unavailable node.</td>
-  </tr>
+<td>hinted_handoff_enabled</td>
+<td>boolean</td>
+<td>If true, hinted handoff will be used to maintain consistency during node failure.</td>
+</tr>
 
-  <tr>
-    <td>max_hint_delivery_threads</td>
-    <td>integer</td>
-    <td>The number of threads that deliver hints. The default value of 2 should be sufficient most use cases.</td>
-  </tr>
+<tr>
+<td>max_hint_window_in_ms</td>
+<td>integer</td>
+<td>The maximum amount of time, in ms, that Cassandra will record hints for an unavailable node.</td>
+</tr>
+
+<tr>
+<td>max_hint_delivery_threads</td>
+<td>integer</td>
+<td>The number of threads that deliver hints. The default value of 2 should be sufficient most use cases.</td>
+</tr>
 
 </table>
 
@@ -690,29 +690,29 @@ The endpoint snitch for the service is always the `GossipPropertyFileSnitch`, bu
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-   <tr>
-    <td>dynamic_snitch_badness_threshold</td>
-    <td>number</td>
-    <td>Controls how much worse a poorly performing node has to be before the dynamic snitch prefers other replicas over it. A value of 0.2 means Cassandra continues to prefer the static snitch values until the node response time is 20% worse than the best performing node. Until the threshold is reached, incoming requests are statically routed to the closest replica.</td>
-  </tr>
+<tr>
+<td>dynamic_snitch_badness_threshold</td>
+<td>number</td>
+<td>Controls how much worse a poorly performing node has to be before the dynamic snitch prefers other replicas over it. A value of 0.2 means Cassandra continues to prefer the static snitch values until the node response time is 20% worse than the best performing node. Until the threshold is reached, incoming requests are statically routed to the closest replica.</td>
+</tr>
 
-  <tr>
-    <td>dynamic_snitch_reset_interval_in_ms</td>
-    <td>integer</td>
-    <td>Time interval, in ms, to reset all node scores, allowing a bad node to recover.</td>
-  </tr>
+<tr>
+<td>dynamic_snitch_reset_interval_in_ms</td>
+<td>integer</td>
+<td>Time interval, in ms, to reset all node scores, allowing a bad node to recover.</td>
+</tr>
 
-   <tr>
-    <td>dynamic_snitch_update_interval_in_ms</td>
-    <td>integer</td>
-    <td>The time interval, in ms, for node score calculation. This is a CPU-intensive operation. Reduce this interval with caution.</td>
-  </tr>
+<tr>
+<td>dynamic_snitch_update_interval_in_ms</td>
+<td>integer</td>
+<td>The time interval, in ms, for node score calculation. This is a CPU-intensive operation. Reduce this interval with caution.</td>
+</tr>
 
 </table>
 
@@ -722,23 +722,24 @@ The partition key cache is a cache of the partition index for a Cassandra table.
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-   <tr>
-    <td>key_cache_save_period</td>
-    <td>integer</td>
-    <td>The duration in seconds that keys are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O.</td>
-  </tr>
+<tr>
+<td>key_cache_save_period</td>
+<td>integer</td>
+<td>The duration in seconds that keys are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O.</td>
+</tr>
 
-  <tr>
-    <td>key_cache_size_in_mb</td>
-    <td>integer</td>
-    <td>The maximum size of the key cache in MB. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0.</td>
-  </tr>
+
+<tr>
+<td>key_cache_size_in_mb</td>
+<td>integer</td>
+<td>The maximum size of the key cache in MB. When no value is set, the cache is set to the smaller of 5% of the available heap, or 100MB. To disable set to 0.</td>
+</tr>
 
 </table>
 
@@ -751,23 +752,23 @@ The following configuration properties are global for all row caches.
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-   <tr>
-    <td>row_cache_save_period</td>
-    <td>integer</td>
-    <td>The duration in seconds that rows are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O.</td>
-  </tr>
+<tr>
+<td>row_cache_save_period</td>
+<td>integer</td>
+<td>The duration in seconds that rows are saved in cache. Saved caches greatly improve cold-start speeds and has relatively little effect on I/O.</td>
+</tr>
 
-  <tr>
-    <td>row_cache_size_in_mb</td>
-    <td>integer</td>
-    <td>The maximum size of the key cache in MB. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled.</td>
-  </tr>
+<tr>
+<td>row_cache_size_in_mb</td>
+<td>integer</td>
+<td>The maximum size of the key cache in MB. Make sure to provide enough space to contain all the rows for tables that will have row caching enabled.</td>
+</tr>
 
 </table>
 
@@ -778,23 +779,23 @@ Further information regarding how to change authentication and authorization of 
 
 <table class="table">
 
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-  </tr>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
 
-  <tr>
-    <td>authenticator</td>
-    <td>string</td>
-    <td>The authentication backend. It implements IAuthenticator, which is used to identify users.</td>
-  </tr>
+<tr>
+<td>authenticator</td>
+<td>string</td>
+<td>The authentication backend. It implements IAuthenticator, which is used to identify users.</td>
+</tr>
 
-   <tr>
-    <td>authorizer</td>
-    <td>string</td>
-    <td>The authorization backend. It implements IAuthenticator, which limits access and provides permissions.</td>
-  </tr>
+<tr>
+<td>authorizer</td>
+<td>string</td>
+<td>The authorization backend. It implements IAuthenticator, which limits access and provides permissions.</td>
+</tr>
 
 </table>
 
@@ -807,46 +808,46 @@ In addition to time synchronization, Cassandra requires OS level configuration s
 
 <table class="table">
 
-  <tr>
-    <th>File</th>
-    <th>Setting</th>
-    <th>Value</th>
-    <th>Reason</th>
-  </tr>
+<tr>
+<th>File</th>
+<th>Setting</th>
+<th>Value</th>
+<th>Reason</th>
+</tr>
 
-   <tr>
-    <td>/etc/sysctl.conf</td>
-    <td>vm.max_map_count</td>
-    <td>1048575</td>
-    <td>Aside from calls to the system malloc implementation, Cassandra uses mmap directly to memory map files. Exceeding the number of allowed memory mappings will cause a Cassandra node to fail.</td>
-  </tr>
+<tr>
+<td>/etc/sysctl.conf</td>
+<td>vm.max_map_count</td>
+<td>1048575</td>
+<td>Aside from calls to the system malloc implementation, Cassandra uses mmap directly to memory map files. Exceeding the number of allowed memory mappings will cause a Cassandra node to fail.</td>
+</tr>
 
-   <tr>
-    <td>/etc/sysctl.conf</td>
-    <td>vm.swappiness</td>
-    <td>0</td>
-    <td>If the OS swaps out the Cassandra process, it can fail to respond to requests, resulting in the node being marked down by the cluster.</td>
-  </tr>
+<tr>
+<td>/etc/sysctl.conf</td>
+<td>vm.swappiness</td>
+<td>0</td>
+<td>If the OS swaps out the Cassandra process, it can fail to respond to requests, resulting in the node being marked down by the cluster.</td>
+</tr>
 
-  <tr>
-    <td>/etc/security/limits.conf</td>
-    <td>memlock</td>
-    <td>unlimited</td>
-    <td>A Cassandra node can fail to load and map SSTables due to insufficient memory mappings into process address space. This will cause the node to terminate.</td>
-  </tr>
+<tr>
+<td>/etc/security/limits.conf</td>
+<td>memlock</td>
+<td>unlimited</td>
+<td>A Cassandra node can fail to load and map SSTables due to insufficient memory mappings into process address space. This will cause the node to terminate.</td>
+</tr>
 
-  <tr>
-    <td>/etc/security/limits.conf</td>
-    <td>nofile</td>
-    <td>unlimited</td>
-    <td>If this value is too low, a Cassandra node will terminate due to insufficient file handles.</td>
-  </tr>
+<tr>
+<td>/etc/security/limits.conf</td>
+<td>nofile</td>
+<td>unlimited</td>
+<td>If this value is too low, a Cassandra node will terminate due to insufficient file handles.</td>
+</tr>
 
-  <tr>
-    <td>/etc/security/limits.conf, /etc/security/limits.d/90-nproc.conf</td>
-    <td>nproc</td>
-    <td>32768</td>
-    <td>A Cassandra node spawns many threads, which go towards kernel nproc count. If nproc is not set appropriately, the node will be killed.</td>
-  </tr>
+<tr>
+<td>/etc/security/limits.conf, /etc/security/limits.d/90-nproc.conf</td>
+<td>nproc</td>
+<td>32768</td>
+<td>A Cassandra node spawns many threads, which go towards kernel nproc count. If nproc is not set appropriately, the node will be killed.</td>
+</tr>
 
 </table>
