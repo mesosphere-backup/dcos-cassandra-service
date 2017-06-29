@@ -10,6 +10,8 @@ import org.apache.mesos.config.ConfigStoreException;
 import org.apache.mesos.scheduler.plan.DefaultPhase;
 import org.apache.mesos.scheduler.plan.Step;
 import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class CassandraDaemonPhase extends DefaultPhase {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraDaemonPhase.class);
 
     private static List<Step> createSteps(
             final CassandraState cassandraState,
@@ -54,6 +57,7 @@ public class CassandraDaemonPhase extends DefaultPhase {
                     createSteps(cassandraState, provider, configurationManager),
                     new ArrayList<>());
         } catch (Throwable e) {
+            LOGGER.error("Error creating CassandraDaemonPhase. ", e);
             return new CassandraDaemonPhase(new ArrayList<>(), Arrays.asList(String.format(
                     "Error creating CassandraDaemonStep : message = %s", e.getMessage())));
         }
