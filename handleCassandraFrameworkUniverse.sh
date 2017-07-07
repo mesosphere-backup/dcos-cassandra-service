@@ -88,6 +88,10 @@ export TEMPLATE_cassandra_version=$FRAMEWORK_PLUS_CASSANDRA_VERSION
 export TEMPLATE_lib_mesos_file_name=$LIB_MESOS_FILE_NAME
 export TEMPLATE_jre_extracted_file_name=$JRE_EXTRACTED_FILE_NAME
 
+export JRE_DWNLD_URL=$jre_dwnld_url  #https://artifactory.corp.adobe.com/artifactory/maven-multicloud-release-local/dcos/cassandra/artifacts/jre-8u121-linux-x64.tar.gz
+export APACHE_CASSANDRA_DWNLD_URL=$apache_cassandra_dwnld_url #https://artifactory.corp.adobe.com/artifactory/maven-multicloud-release-local/dcos/cassandra/artifacts/apache-cassandra-3.0.10-bin.tar.gz
+export APACHE_CASSANDRA_SHA1_DWNLD_URL=$apache_cassandra_sha1_dwnld_url  # https://artifactory.corp.adobe.com/artifactory/maven-multicloud-release-local/dcos/cassandra/artifacts/apache-cassandra-3.0.10-bin.tar.gz.sha1
+export LIB_MESOS_DWNLD_URL=$libmesos_dwnld_url #https://artifactory.corp.adobe.com/artifactory/maven-multicloud-release-local/dcos/cassandra/artifacts/libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
 
 
 

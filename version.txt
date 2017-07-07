@@ -5,6 +5,8 @@ jre_extracted_file_name=jre1.8.0_121
 jre_version=8.0_121
 libmesos_file_name=libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
 
-
-  
+apache_cassandra_dwnld_url=https://artifactory.corp.adobe.com/artifactory/maven-multicloud-release-local/dcos/cassandra/artifacts/apache-cassandra-3.0.10-bin.tar.gz
+apache_cassandra_sha1_dwnld_url=https://artifactory.corp.adobe.com/artifactory/maven-multicloud-release-local/dcos/cassandra/artifacts/apache-cassandra-3.0.10-bin.tar.gz.sha1
+jre_dwnld_url=https://artifactory.corp.adobe.com/artifactory/maven-multicloud-release-local/dcos/cassandra/artifacts/jre-8u121-linux-x64.tar.gz
+libmesos_dwnld_url=https://artifactory.corp.adobe.com/artifactory/maven-multicloud-release-local/dcos/cassandra/artifacts/libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
  
