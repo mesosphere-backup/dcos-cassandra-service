@@ -19,7 +19,9 @@ class BackupRestoreRequestSpec extends Specification {
     ""     | ""               | ""          | ""          || false
     ""     | "s3:"            | ""          | ""          || false
     null   | "s3:"            | ""          | ""          || false
+    "name" | "s3:"            | "abc"       | null        || false
     "name" | "s3:"            | ""          | ""          || true
+    "name" | "s3:"            | null        | null        || true
   }
 
   def "valid azure backup request check"() {
@@ -46,10 +48,5 @@ class BackupRestoreRequestSpec extends Specification {
     then:
     !request.isValid()
 
-    when:
-    request = new BackupRestoreRequest(name: "name", externalLocation: "s3:", azureAccount: "", azureKey: "")
-
-    then:
-    !request.isValid()
   }
 }

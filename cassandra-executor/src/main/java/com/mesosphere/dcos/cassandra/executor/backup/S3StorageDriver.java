@@ -15,20 +15,6 @@
  */
 package com.mesosphere.dcos.cassandra.executor.backup;
 
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.S3ClientOptions;
-import com.amazonaws.services.s3.internal.Constants;
-import com.amazonaws.services.s3.model.*;
-import com.amazonaws.services.s3.transfer.Download;
-import com.amazonaws.services.s3.transfer.MultipleFileUpload;
-import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -39,6 +25,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.internal.Constants;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.Download;
+import com.amazonaws.services.s3.transfer.MultipleFileUpload;
+import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 
 /**
  * Implements a BackupStorageDriver that provides upload and download
@@ -94,14 +102,22 @@ public class S3StorageDriver implements BackupStorageDriver {
         }
     }
 
-    private AmazonS3Client getAmazonS3Client(BackupRestoreContext ctx) throws URISyntaxException {
-        final String accessKey = ctx.getAccountId();
-        final String secretKey = ctx.getSecretKey();
+    AmazonS3Client getAmazonS3Client(BackupRestoreContext ctx) throws URISyntaxException {
         String endpoint = getEndpoint(ctx);
         LOGGER.info("endpoint: {}", endpoint);
 
-        final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
+        final String accessKey = ctx.getAccountId();
+        final String secretKey = ctx.getSecretKey();
+        final AmazonS3Client amazonS3Client;
+        //If access key and secret are provided, use them else use instance credentials
+        if(accessKey != null && secretKey != null) {
+            final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
+            amazonS3Client = new AmazonS3Client(basicAWSCredentials);
+        } else {
+            final InstanceProfileCredentialsProvider instanceProfileCredentials =
+                            new InstanceProfileCredentialsProvider(false);
+            amazonS3Client = new AmazonS3Client(instanceProfileCredentials);
+        }
         amazonS3Client.setEndpoint(endpoint);
 
         if (ctx.usesEmc()) {

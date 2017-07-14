@@ -1,11 +1,11 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskRequest;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
 
 public class BackupRestoreRequest implements ClusterTaskRequest {
   @JsonProperty("backup_name")
@@ -138,9 +138,7 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   private boolean isValidS3Request() {
-    return s3AccessKey != null
-            && s3SecretKey != null
-            && isValidS3ExternalLocation();
+    return s3AccessKey != null ? s3SecretKey != null && isValidS3ExternalLocation() : isValidS3ExternalLocation();
   }
 
   private boolean isValidS3ExternalLocation() {
