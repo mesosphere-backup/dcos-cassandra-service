@@ -46,6 +46,7 @@ cd $REPO_ROOT_DIR
 
 _notify_github success "Build succeeded"
 
+rm -rf downloaded/artifacts
 mkdir -p downloaded/artifacts/
 
 wget  ${LIB_MESOS_DWNLD_URL} -P downloaded/artifacts/
@@ -53,16 +54,16 @@ wget  ${JRE_DWNLD_URL} -P downloaded/artifacts/
 
 
 
-./dcos-commons-tools/publish_aws.py \
- mds-cassandra \
-  universe/ \
-  cassandra-scheduler/build/distributions/scheduler.zip \
-  cassandra-executor/build/distributions/executor.zip \
-  cli/dcos-cassandra/dcos-cassandra-darwin \
-  cli/dcos-cassandra/dcos-cassandra-linux \
-  cli/dcos-cassandra/dcos-cassandra.exe \
-	downloaded/artifacts/${LIB_MESOS_FILE_NAME} \
-	downloaded/artifacts/${JRE_FILE_NAME} \
-	resources/changes.txt \
-	cassandra-bin-tmp/apache-cassandra-${FRAMEWORK_PLUS_CASSANDRA_VERSION}-bin-dcos.tar.gz \
-  cli/python/dist/*.whl
+#./dcos-commons-tools/publish_aws.py \
+# mds-cassandra \
+#  universe/ \
+#  cassandra-scheduler/build/distributions/scheduler.zip \
+#  cassandra-executor/build/distributions/executor.zip \
+#  cli/dcos-cassandra/dcos-cassandra-darwin \
+#  cli/dcos-cassandra/dcos-cassandra-linux \
+#  cli/dcos-cassandra/dcos-cassandra.exe \
+#	downloaded/artifacts/${LIB_MESOS_FILE_NAME} \
+#	downloaded/artifacts/${JRE_FILE_NAME} \
+#	resources/changes.txt \
+#	cassandra-bin-tmp/apache-cassandra-${FRAMEWORK_PLUS_CASSANDRA_VERSION}-bin-dcos.tar.gz \
+#  cli/python/dist/*.whl
