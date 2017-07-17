@@ -41,11 +41,11 @@ rm -rf tempDownloadedLoc
 mkdir -p tempDownloadedLoc
 
 ## to check if devstable universe exists 
-./downloadArtefactsFromArtifactory.sh  tempDownloadedLoc ${REPO_URL} ${RELEASE_VERSION}
+bash downloadArtefactsFromArtifactory.sh  tempDownloadedLoc ${REPO_URL} ${RELEASE_VERSION}
 
 
 #uploading artefacts to maven artifactory
-./uploadArtifactsAndGenrateUniverseFiles.sh \
+bash uploadArtifactsAndGenrateUniverseFiles.sh \
 	tempDownloadedLoc/scheduler.zip \
 	tempDownloadedLoc/executor.zip \
 	tempDownloadedLoc/dcos-cassandra-darwin \
@@ -59,5 +59,5 @@ mkdir -p tempDownloadedLoc
 
 
 #adding universe files
-./addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} stg tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION}
+bash addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} stg tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION}
 
