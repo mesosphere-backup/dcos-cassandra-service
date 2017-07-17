@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -e 
 
 UNIVERSE_BRANCH=$1
