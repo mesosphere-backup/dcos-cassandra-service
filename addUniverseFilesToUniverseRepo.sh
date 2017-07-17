@@ -8,7 +8,7 @@ UNIVERSE_FILES_PATH=$3
 FRAMEWORK_VERSION=$4
 
 rm -rf universeRepo
-git clone https://github.com/adobe-mds/universe universeRepo
+git clone git@github.com:adobe-mds/universe.git universeRepo
 cd universeRepo
 git checkout  $UNIVERSE_BRANCH
 
