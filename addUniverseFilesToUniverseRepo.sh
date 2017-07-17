@@ -24,6 +24,7 @@ git add .
 git commit -m "framework file for cassandra added :${FRAMEWORK_VERSION}"
 git push origin $UNIVERSE_BRANCH
 
+cd ..
 
 #updating main branch
 git checkout version-3.x
