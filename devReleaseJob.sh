@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -e
 
 
@@ -20,7 +22,7 @@ export S3_BUCKET=$S3_BUCKET
 
 if [ "$createBranch" = true ]
 	then
-	    ./incrementFrameworkVersionAndCutBranch.sh
+	    bash incrementFrameworkVersionAndCutBranch.sh
 	else
 		git checkout mds-${RELEASE_VERSION}
 fi
@@ -34,7 +36,7 @@ fi
 
 
 #genrating artefacts
-./generateArtefacts.sh
+bash generateArtefacts.sh
 
 if [ $? -ne 0 ]; then
 	echo "Generating artifacts for framework failed." 
@@ -57,7 +59,7 @@ export FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSIO
 #######
 
 #uploading artefacts to maven artifactory
-./uploadArtefactsToArtifactory.sh \
+bash uploadArtefactsToArtifactory.sh \
 	cassandra-scheduler/build/distributions/scheduler.zip \
 	cassandra-executor/build/distributions/executor.zip \
 	cli/dcos-cassandra/dcos-cassandra-darwin \
