@@ -95,15 +95,12 @@ fi
 
 
 #adding universe files to repo.
-
-if [ "$createBranch" = true ];
-	then
-		./addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} dev tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION}
-		if [ $? -ne 0 ]; then
-			echo "cassandra framework : adding universe files to  universe repo failed" 
-			exit 1
-		fi
+./addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} dev tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION}
+if [ $? -ne 0 ]; then
+	echo "cassandra framework : adding universe files to  universe repo failed" 
+	exit 1
 fi
+
 
 
 
