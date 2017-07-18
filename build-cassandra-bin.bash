@@ -96,7 +96,7 @@ function _package_github {
 ###
 
 echo "##### Build seedprovider jar #####"
-./gradlew :seedprovider:jar --stacktrace --debug
+./gradlew :seedprovider:jar
 
 ###
 # Go into tmp dir
