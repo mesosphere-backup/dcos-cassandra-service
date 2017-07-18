@@ -21,8 +21,7 @@ mkdir  -p repo/packages/M/mds-cassandra/${FRAMEWORK_VERSION}
 cp  ../../${UNIVERSE_FILES_PATH}/*  repo/packages/M/mds-cassandra/${FRAMEWORK_VERSION}/
 
 git add .
-git commit -m "framework file for cassandra added :${FRAMEWORK_VERSION}"
-git push origin $UNIVERSE_BRANCH
+git diff-index --quiet HEAD || (git commit -m "framework file for cassandra added :${FRAMEWORK_VERSION}" && git push origin ${UNIVERSE_BRANCH})
 
 cd ..
 
