@@ -37,6 +37,9 @@ fi
 
 # CLI (Go):
 
+mkdir -p gopath
+export GOPATH=${PWD}/gopath
+
 cd cli/ && ./build-cli.sh
 if [ $? -ne 0 ]; then
   _notify_github failure "CLI build failed"
