@@ -16,13 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.xerial.snappy.SnappyInputStream;
 import org.xerial.snappy.SnappyOutputStream;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -154,11 +148,51 @@ public class AzureStorageDriver implements BackupStorageDriver {
       IOUtils.closeQuietly(pageBlobOutputStream);
     }
   }
+  private void uploadStream(CloudBlobContainer container, String fileKey, BufferedInputStream sourceStream) {
 
+    PageBlobOutputStream pageBlobOutputStream = null;
+    SnappyOutputStream compress = null;
+    BufferedOutputStream bufferedOutputStream = null;
+    try (BufferedInputStream inputStream = sourceStream) {
+
+      final CloudPageBlob blob = container.getPageBlobReference(fileKey);
+      pageBlobOutputStream = new PageBlobOutputStream(blob);
+      bufferedOutputStream = new BufferedOutputStream(pageBlobOutputStream);
+
+      compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
+      IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
+
+    } catch (StorageException | URISyntaxException | IOException e) {
+      logger.error("Unable to store blob", e);
+    } finally {
+      IOUtils.closeQuietly(compress);  // super important that the compress close is called first in order to flush
+      IOUtils.closeQuietly(bufferedOutputStream);
+      IOUtils.closeQuietly(pageBlobOutputStream);
+    }
+  }
   @Override
   public void uploadSchema(BackupRestoreContext ctx, String schema) {
-    // ToDo : Add the upload schema to Azure.
     // Path: <backupname/node-id/schema.cql>
+    final String accountName = ctx.getAccountId();
+    final String accountKey = ctx.getSecretKey();
+    final String backupName = ctx.getName();
+    final String nodeId = ctx.getNodeId();
+
+    final String key = String.format("%s/%s", backupName, nodeId);
+    final String containerName = StringUtils.lowerCase(getContainerName(ctx.getExternalLocation()));
+    // https://<account_name>.blob.core.windows.net/<container_name>
+    final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
+
+    final BufferedInputStream inputStream = new BufferedInputStream(IOUtils.toInputStream(schema),schema.length());
+    if (container == null) {
+      logger.error("Error uploading schema.  Unable to connect to {}, for container {}doesn't exist.",
+              ctx.getExternalLocation(), containerName);
+    }
+      String fileKey = key + "/schema.cql";
+      uploadStream(container, fileKey,inputStream);
+      return;
+
+
   }
 
   @Override
@@ -202,6 +236,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     }
 
     InputStream inputStream = null;
+
     SnappyInputStream compress = null;
 
     try (
@@ -223,9 +258,44 @@ public class AzureStorageDriver implements BackupStorageDriver {
   }
 
   @Override
-  public String downloadSchema(BackupRestoreContext ctx) throws Exception {
-    // ToDo : Add the download schema to Azure.
-    return new String("");
+  public String downloadSchema(BackupRestoreContext ctx) throws Exception { // Path: <backupname/node-id/schema.cql>
+    String schema="";
+    final String accountName = ctx.getAccountId();
+    final String accountKey = ctx.getSecretKey();
+    final String backupName = ctx.getName();
+    final String nodeId = ctx.getNodeId();
+
+    final String key = String.format("%s/%s", backupName, nodeId);
+    final String containerName = StringUtils.lowerCase(getContainerName(ctx.getExternalLocation()));
+    // https://<account_name>.blob.core.windows.net/<container_name>
+    final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
+    if (container == null) {
+      logger.error("Error downloading schema.  Unable to connect to {}, for container {}.",
+              ctx.getExternalLocation(), containerName);
+      return schema;
+    }
+    String fileKey = key + "/schema.cql";final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
+    if(!pageBlobReference.exists()){
+      logger.error("Error downloading schema.  Unable to find schema on container {}",
+              containerName);
+      return schema;
+    }
+    InputStream inputStream = null;
+    SnappyInputStream compress = null;
+    try
+    {
+      inputStream = new PageBlobInputStream(pageBlobReference);
+      compress = new SnappyInputStream(inputStream);
+      OutputStream outputStream = new ByteArrayOutputStream();
+      IOUtils.copy(compress,outputStream);
+      schema = outputStream.toString();
+  } catch (Exception e) {
+    logger.error("Unable to download schema : {}", fileKey, e);
+  } finally {
+      IOUtils.closeQuietly(compress);
+      IOUtils.closeQuietly(inputStream);
+    }
+    return schema;
   }
 
   private String getContainerName(String externalLocation) {
