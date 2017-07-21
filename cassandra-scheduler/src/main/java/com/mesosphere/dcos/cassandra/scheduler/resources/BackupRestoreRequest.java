@@ -58,6 +58,9 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   public String getS3AccessKey() {
+    if(s3AccessKey == null) {
+      return "";
+    }
     return s3AccessKey;
   }
 
@@ -66,6 +69,9 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   public String getS3SecretKey() {
+    if(s3SecretKey == null) {
+      return "";
+    }
     return s3SecretKey;
   }
 
