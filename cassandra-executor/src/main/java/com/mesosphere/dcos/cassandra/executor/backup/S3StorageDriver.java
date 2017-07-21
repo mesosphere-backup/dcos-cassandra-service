@@ -110,10 +110,12 @@ public class S3StorageDriver implements BackupStorageDriver {
         final String secretKey = ctx.getSecretKey();
         final AmazonS3Client amazonS3Client;
         //If access key and secret are provided, use them else use instance credentials
-        if(accessKey != null && secretKey != null) {
+        if(StringUtils.isNotBlank(accessKey) && StringUtils.isNotBlank(secretKey)) {
+            LOGGER.info("Using accessKey and secret for S3 authentication");
             final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
             amazonS3Client = new AmazonS3Client(basicAWSCredentials);
         } else {
+            LOGGER.info("Using instance profile provider for S3 authentication");
             final InstanceProfileCredentialsProvider instanceProfileCredentials =
                             new InstanceProfileCredentialsProvider(false);
             amazonS3Client = new AmazonS3Client(instanceProfileCredentials);
