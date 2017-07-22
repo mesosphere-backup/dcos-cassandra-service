@@ -2,6 +2,13 @@
 
 set -e
 
+
+if [ -z "$RELEASE_VERSION" ]; then
+    
+	echo " RELEASE_VERSION environment variable not set, exiting"
+	exit 1
+fi
+
 VERSION_FILE_NAME=version.txt
 TMPDIR_NAME=tmp
 rm -rf $TMPDIR_NAME
@@ -19,7 +26,7 @@ rm tempEnv.sh
 
 export CASSANDRA_VERSION=$apache_cassandra_version
 export CASSANDRA_FILE_NAME="apache-cassandra-${apache_cassandra_version}-bin.tar.gz" #CASSANDRA_FILE_NAME=apache-cassandra-3.0.10-bin.tar.gz
-export FRAMEWORK_VERSION=$mds_version
+export FRAMEWORK_VERSION=$RELEASE_VERSION
 
 echo "$FRAMEWORK_VERSION"
 
@@ -46,9 +53,6 @@ if [ $? -ne 0 ]; then
 	echo 'Error -----> creating customized Cassandra tar failed.'
   exit 1
 fi
-
-# sed -i "s/{cassVer}/${CASSANDRA_VERSION}/g" cassandra-scheduler/build.gradle
-# sed -i "s/{cassVer}/${CASSANDRA_VERSION}/g" cassandra-commons/build.gradle
 
 bash build.sh
 

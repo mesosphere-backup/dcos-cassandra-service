@@ -28,12 +28,12 @@ cat $VERSION_FILE_NAME | awk -f readProperties.awk > tempEnv.sh
 source tempEnv.sh
 rm tempEnv.sh
 
-export FRAMEWORK_VERSION=$mds_version
-export JRE_FILE_NAME=$jre_file_name  #ex : jre-8u121-linux-x64.tar.gz
-export LIB_MESOS_FILE_NAME=$libmesos_file_name #ex : libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
+FRAMEWORK_VERSION=$RELEASE_VERSION
+JRE_FILE_NAME=$jre_file_name  #ex : jre-8u121-linux-x64.tar.gz
+LIB_MESOS_FILE_NAME=$libmesos_file_name #ex : libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
 
-export CASSANDRA_VERSION=$apache_cassandra_version
-export FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSION}" # ex : 21-3.0.10
+CASSANDRA_VERSION=$apache_cassandra_version
+FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSION}" # ex : 1.0.0-3.0.10
 
 
 curl -u $MDSBOT_ARTIFACTORY_USERNAME:$MDSBOT_ARTIFACTORY_APIKEY -X PUT "${REPO_URL}/${ARTIFACTS_PATH}/scheduler.zip" -T $1

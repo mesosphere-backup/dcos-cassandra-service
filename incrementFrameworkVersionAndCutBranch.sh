@@ -23,16 +23,14 @@ source tempEnv.sh
 rm tempEnv.sh
 
 
-export FRAMEWORK_VERSION=$mds_version
+FRAMEWORK_VERSION=$RELEASE_VERSION
+FOLDER_NUMBER=$universe_folder_number
+NEW_FOLDER_NUMBER=$(expr $FOLDER_NUMBER + 1) 
+
+setProperty "universe_folder_number" $NEW_FOLDER_NUMBER $VERSION_FILE_NAME # updating $VERSION_FILE_NAME i.e folder_number in version.txt
 
 
-NEW_FRAMEWORK_VERSION=$(expr $FRAMEWORK_VERSION + 1) # ex : version=21
-export FRAMEWORK_VERSION=$NEW_FRAMEWORK_VERSION # ex : FRAMEWORK_VERSION now equal to 21
-
-setProperty "mds_version" $FRAMEWORK_VERSION $VERSION_FILE_NAME # updating $VERSION_FILE_NAME i.e mds_version in version.txt
-
-
-git add version.txt && git commit -m "dcos cassandra framework version updated to ${NEW_FRAMEWORK_VERSION}" && git push origin master
+git add version.txt && git commit -m "dcos cassandra framework version updated to ${FRAMEWORK_VERSION} and folder number incremented to ${NEW_FOLDER_NUMBER}" && git push origin master
 git checkout -b mds-${RELEASE_VERSION} && git push origin mds-${RELEASE_VERSION} 
 
 
