@@ -20,14 +20,7 @@ export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
 export S3_BUCKET=$S3_BUCKET
 
-if [ "$createBranch" = true ]
-	then
-	    bash incrementFrameworkVersionAndCutBranch.sh
-	else
-		git checkout mds-${RELEASE_VERSION}
-fi
-
-
+git checkout mds-${RELEASE_VERSION}
 
 if [ $? -ne 0 ]; then
 	echo "Failed : Increment framework version and cut branch." 
@@ -50,12 +43,13 @@ cat $VERSION_FILE_NAME | awk -f readProperties.awk > tempEnv.sh
 source tempEnv.sh
 rm tempEnv.sh
 
-export FRAMEWORK_VERSION=$mds_version
+export FRAMEWORK_VERSION=$RELEASE_VERSION
+UNIVERSE_FOLDER_NUMBER=$universe_folder_number
 export JRE_FILE_NAME=$jre_file_name  #ex : jre-8u121-linux-x64.tar.gz
 export LIB_MESOS_FILE_NAME=$libmesos_file_name #ex : libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
 
 export CASSANDRA_VERSION=$apache_cassandra_version
-export FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSION}" # ex : 21-3.0.10
+export FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSION}" # ex : 1.0.0-3.0.10
 #######
 
 #uploading artefacts to maven artifactory
@@ -95,7 +89,7 @@ fi
 
 
 #adding universe files to repo.
-./addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} dev tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION}
+./addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} dev tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION} ${UNIVERSE_FOLDER_NUMBER}
 if [ $? -ne 0 ]; then
 	echo "cassandra framework : adding universe files to  universe repo failed" 
 	exit 1

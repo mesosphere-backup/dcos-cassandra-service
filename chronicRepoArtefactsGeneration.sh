@@ -21,19 +21,23 @@ cat $VERSION_FILE_NAME | awk -f readProperties.awk > tempEnv.sh
 source tempEnv.sh
 rm tempEnv.sh
 
-FRAMEWORK_VERSION=$mds_version
-NEW_FRAMEWORK_VERSION=$(expr $FRAMEWORK_VERSION + 1) # ex : version=21
-export FRAMEWORK_VERSION=$NEW_FRAMEWORK_VERSION # ex : FRAMEWORK_VERSION now equal to 21
+FRAMEWORK_VERSION=$RELEASE_VERSION
 
-setProperty "mds_version" $FRAMEWORK_VERSION $VERSION_FILE_NAME # updating $VERSION_FILE_NAME i.e mds_version in version.txt
+FOLDER_NUMBER=$universe_folder_number
+NEW_FOLDER_NUMBER=$(expr $FOLDER_NUMBER + 1) # ex 
+FOLDER_NUMBER=$NEW_FOLDER_NUMBER # ex :
+
+setProperty "universe_folder_number" $FOLDER_NUMBER $VERSION_FILE_NAME # updating $VERSION_FILE_NAME i.e universe_folder_number in version.txt
  
 export JRE_FILE_NAME=$jre_file_name  #ex : jre-8u121-linux-x64.tar.gz
 export LIB_MESOS_FILE_NAME=$libmesos_file_name #ex : libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
 export CASSANDRA_VERSION=$apache_cassandra_version
-export FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSION}" # ex : 21-3.0.10
+export FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSION}" # ex : 1.0.0-3.0.10
 
 
 #genrating artefacts
+#below export RELEASE_VERSION is needed for ./generateArtefacts.sh 
+export RELEASE_VERSION=${RELEASE_VERSION}
 ./generateArtefacts.sh
 
 if [ $? -ne 0 ]; then
@@ -62,9 +66,9 @@ rm -rf universeRepo
 git clone https://github.com/adobe-mds/universe universeRepo
 cd universeRepo
 git checkout version-3.x
-rm  -rf dev/repo/packages/M/mds-cassandra/${FRAMEWORK_VERSION}
-mkdir  -p dev/repo/packages/M/mds-cassandra/${FRAMEWORK_VERSION}
-cp  ../tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0/*  dev/repo/packages/M/mds-cassandra/${FRAMEWORK_VERSION}/
+rm  -rf dev/repo/packages/M/mds-cassandra/${FOLDER_NUMBER}
+mkdir  -p dev/repo/packages/M/mds-cassandra/${FOLDER_NUMBER}
+cp  ../tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0/*  dev/repo/packages/M/mds-cassandra/${FOLDER_NUMBER}/
 
 #creating universe json
 

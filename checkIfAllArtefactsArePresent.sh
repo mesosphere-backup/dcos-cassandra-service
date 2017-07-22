@@ -4,20 +4,17 @@ if [ -z "$RELEASE_VERSION" ]; then
 	echo " RELEASE_VERSION environment variable not set, so setting default"
 fi
 
-
-ARTIFACTS_PATH=dcos/frameworks/mds-cassandra/${RELEASE_VERSION}
-
 VERSION_FILE_NAME=version.txt
 cat $VERSION_FILE_NAME | awk -f readProperties.awk > tempEnv.sh
 source tempEnv.sh
 rm tempEnv.sh
 
-export FRAMEWORK_VERSION=$mds_version
+export FRAMEWORK_VERSION=$RELEASE_VERSION
 export JRE_FILE_NAME=$jre_file_name  #ex : jre-8u121-linux-x64.tar.gz
 export LIB_MESOS_FILE_NAME=$libmesos_file_name #ex : libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
 
 export CASSANDRA_VERSION=$apache_cassandra_version
-export FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSION}" # ex : 21-3.0.10
+export FRAMEWORK_PLUS_CASSANDRA_VERSION="${FRAMEWORK_VERSION}-${CASSANDRA_VERSION}" # ex : 1.0.0-3.0.10
 
 LOCAL_PATH_TO_CHECK=$1
 

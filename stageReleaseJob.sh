@@ -29,7 +29,9 @@ cat $VERSION_FILE_NAME | awk -f readProperties.awk > tempEnv.sh
 source tempEnv.sh
 rm tempEnv.sh
 
-export FRAMEWORK_VERSION=$mds_version
+export FRAMEWORK_VERSION=$RELEASE_VERSION
+
+UNIVERSE_FOLDER_NUMBER=$universe_folder_number
 export JRE_FILE_NAME=$jre_file_name  #ex : jre-8u121-linux-x64.tar.gz
 export LIB_MESOS_FILE_NAME=$libmesos_file_name #ex : libmesos-bundle-1.9-argus-1.1.x-3.tar.gz
 
@@ -59,5 +61,5 @@ bash uploadArtifactsAndGenrateUniverseFiles.sh \
 
 
 #adding universe files
-bash addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} stg tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION}
+bash addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} stg tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION} ${UNIVERSE_FOLDER_NUMBER}
 
