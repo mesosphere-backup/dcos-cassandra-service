@@ -134,9 +134,18 @@ public class S3StorageDriver implements BackupStorageDriver {
     private TransferManager getS3TransferManager(BackupRestoreContext ctx) {
         final String accessKey = ctx.getAccountId();
         final String secretKey = ctx.getSecretKey();
-
-        final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        TransferManager tx = new TransferManager(basicAWSCredentials);
+        TransferManager tx;
+        //If access key and secret are provided, use them else use instance credentials
+        if(StringUtils.isNotBlank(accessKey) && StringUtils.isNotBlank(secretKey)) {
+            LOGGER.info("Using accessKey and secret for S3 authentication");
+            final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
+            tx = new TransferManager(basicAWSCredentials);
+        } else {
+            LOGGER.info("Using instance profile provider for S3 authentication");
+            final InstanceProfileCredentialsProvider instanceProfileCredentials =
+                            new InstanceProfileCredentialsProvider(false);
+            tx = new TransferManager(instanceProfileCredentials);
+        }
         return tx;
     }
 
