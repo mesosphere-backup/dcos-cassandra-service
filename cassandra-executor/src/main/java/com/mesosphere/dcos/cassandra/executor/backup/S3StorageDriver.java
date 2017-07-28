@@ -125,15 +125,12 @@ public class S3StorageDriver implements BackupStorageDriver {
         final String accessKey = ctx.getAccountId();
         final String secretKey = ctx.getSecretKey();
         final AmazonS3Client amazonS3Client = new AmazonS3Client(getAwsCredentialProvider(accessKey, secretKey));
-
         amazonS3Client.setEndpoint(endpoint);
-
         if (ctx.usesEmc()) {
             final S3ClientOptions options = new S3ClientOptions();
             options.setPathStyleAccess(true);
             amazonS3Client.setS3ClientOptions(options);
         }
-
         return amazonS3Client;
     }
 
