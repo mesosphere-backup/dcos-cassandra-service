@@ -102,7 +102,7 @@
 					"id": "http://cassandra/docs/mesosphere.com/node/cpus",
 					"type": "number",
 					"description": "The number of cpu shares allocated to the Cassandra process.",
-					"default": 1
+					"default": 0.5
 				},
 				"mem": {
 					"id": "http://cassandra/docs/mesosphere.com/node/mem",
