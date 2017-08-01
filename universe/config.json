@@ -102,19 +102,19 @@
 					"id": "http://cassandra/docs/mesosphere.com/node/cpus",
 					"type": "number",
 					"description": "The number of cpu shares allocated to the Cassandra process.",
-					"default": 0.5
+					"default": 1
 				},
 				"mem": {
 					"id": "http://cassandra/docs/mesosphere.com/node/mem",
 					"type": "integer",
 					"description": "The amount of memory, in MB, allocated to the Cassandra process.",
-					"default": 4096
+					"default": 2048
 				},
 				"disk": {
 					"id": "http://cassandra/docs/mesosphere.com/node/disk",
 					"type": "integer",
 					"description": "The amount of disk, in MB, allocated to the Cassandra process.",
-					"default": 10240
+					"default": 5120
 				},
 				"disk_type": {
 					"id": "http://cassandra/docs/mesosphere.com/node/diskType",
@@ -131,7 +131,7 @@
 							"id": "http://cassandra/docs/mesosphere.com/node/heap/size",
 							"type": "integer",
 							"description": "The amount of JVM heap, in MB, allocated to the Cassandra process.",
-							"default": 2048
+							"default": 1024
 						},
 						"new": {
 							"id": "http://cassandra/docs/mesosphere.com/node/heap/new",
