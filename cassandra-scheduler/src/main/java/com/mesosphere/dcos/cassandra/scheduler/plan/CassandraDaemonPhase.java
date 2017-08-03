@@ -52,7 +52,6 @@ public class CassandraDaemonPhase extends DefaultPhase {
 				nodeTaskNameToZoneCodeMap.put(names.get(i), nodeIndexToZoneCodeMap.get(i));
 			}
 			LOGGER.info("Node Index To Zone CodeMap :{}", nodeIndexToZoneCodeMap);
-			PersistentOfferRequirementProvider.setNodeToZoneInformationMap(nodeTaskNameToZoneCodeMap);
 		}
 		
         
