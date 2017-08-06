@@ -41,14 +41,17 @@ public class AvailiabilityZonePlacementRule implements PlacementRule {
         LOGGER.info("AvailiabilityZonePlacementRule filter with host: {}", hostname);
         for (Attribute attribute : attributes) {
             if (AVAILIABLITY_ZONE_ATTRIBUTE_NAME.equals(attribute.getName())) {
-                azKnown = true;
                 String zones = schedulerConfiguration.getZones();
+                if(StringUtils.isEmpty(zones)){
+                    azKnown = false;
+                }
                 if(isValidOffer(zones,hostname,attribute.getText().getValue())) {
                     return offer;
                 }
             }
         }
         if(!azKnown){
+            LOGGER.info("Az unknow , so not doing any filter");
             return offer;
         }
         return offer.toBuilder().clearResources().build();
@@ -56,6 +59,9 @@ public class AvailiabilityZonePlacementRule implements PlacementRule {
 
     private boolean isValidOffer(String zones, String hostname, String zoneName) {
         //Its in formatter node-0:AZ:hostip,node-1:AZ:hostIp
+        if(StringUtils.isEmpty(zones)){
+            return false;
+        }
         String[] azHostMap = zones.split(",");
         for(String text :azHostMap) {
             if(text.contains(hostname) && text.contains(zoneName)) {
