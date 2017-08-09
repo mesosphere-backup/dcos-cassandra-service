@@ -44,6 +44,8 @@ public class AvailiabilityZonePlacementRule implements PlacementRule {
                 String zones = schedulerConfiguration.getZones();
                 if(StringUtils.isEmpty(zones)){
                     azKnown = false;
+                } else {
+                    azKnown = true;
                 }
                 if(isValidOffer(zones,hostname,attribute.getText().getValue())) {
                     return offer;
