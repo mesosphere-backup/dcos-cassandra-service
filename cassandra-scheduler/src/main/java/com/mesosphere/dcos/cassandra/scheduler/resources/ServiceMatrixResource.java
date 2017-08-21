@@ -31,10 +31,12 @@ public class ServiceMatrixResource {
 
     @GET
     @Path("/status")
-    public Map<String, MatrixStatus> getStatus() throws Exception {
+    public MatrixStatusResponse getStatus() throws Exception {
+        LOGGER.info("Fetching Matrix Status for the cassandra with localhost , Make sure cassandra service is running on one of cassandra node");
         Map<String,MatrixStatus> result = new HashMap<String, MatrixStatus>();
         Map<String, String> loadMap = new HashMap<>();
         NodeProbe probe = new NodeProbe("127.0.0.1");
+        LOGGER.info("Node probe connected with JMX");
         
         loadMap = probe.getLoadMap();
         Map<InetAddress, Float> ownership = probe.getOwnership();
@@ -57,7 +59,16 @@ public class ServiceMatrixResource {
         }
     }
         
-        return result;
+        return getMatrixResponse(result);
+    }
+
+    private MatrixStatusResponse getMatrixResponse(Map<String, MatrixStatus> result) {
+       
+        MatrixStatusResponse response = new MatrixStatusResponse();
+        for(Map.Entry<String , MatrixStatus> entry: result.entrySet()) {
+            response.getMatrixStatusList().add(entry.getValue());
+        }
+        return response;
     }
 
 }
