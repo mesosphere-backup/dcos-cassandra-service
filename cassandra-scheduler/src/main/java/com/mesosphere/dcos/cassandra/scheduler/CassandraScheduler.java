@@ -178,6 +178,7 @@ public class CassandraScheduler implements Scheduler, Observer {
             // use add() to just throw if full:
             resourcesQueue.add(Arrays.asList(
                     new ServiceConfigResource(configurationManager),
+                    new ServiceMatrixResource(configurationManager),
                     new SeedsResource(seeds),
                     new ConfigurationResource(defaultConfigurationManager),
                     new TasksResource(capabilities, cassandraState, client, configurationManager),
