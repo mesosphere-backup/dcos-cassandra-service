@@ -98,6 +98,9 @@ function _package_github {
 echo "##### Build seedprovider jar #####"
 ./gradlew :seedprovider:jar
 
+echo "### Build mds snitch jar #####"
+./gradlew :mds-snitch:jar
+
 ###
 # Go into tmp dir
 ###
@@ -176,6 +179,7 @@ echo "##### Install custom seed provider #####"
 pwd
 # Copy seedprovider lib from regular local build into cassandra-bin/lib
 cp -v ../seedprovider/build/libs/seedprovider.jar ${LIB_DIR}
+cp -v ../mds-snitch/build/libs/mds-snitch.jar ${LIB_DIR}
 
 echo "##### Install StatsD metrics support #####"
 

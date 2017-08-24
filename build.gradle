@@ -106,7 +106,80 @@ configure(subprojects - project('seedprovider')) {
     processTestResources.dependsOn copyTestResources
 }
 
+configure(subprojects - project('mds-snitch')) {
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+          url "http://downloads.mesosphere.com/maven/"
+        }
+        maven {
+          url "http://downloads.mesosphere.com/maven-snapshot/"
+        }
+    }
+
+    ext {
+        dropwizardVer = '0.9.2'
+        guiceVer = '4.0'
+        mesosVer = '1.0.2'
+        junitVer = '4.12'
+        guavaVer = '19.0'
+        slf4jVer = '1.7.14'
+        curatorVer = '2.9.1'
+        dropwizardVer = '0.9.2'
+        logbackVer = '1.1.3'
+    }
+
+    dependencies {
+        compile "org.apache.mesos:mesos:${mesosVer}"
+        compile "org.slf4j:slf4j-api:${slf4jVer}"
+        compile "org.apache.curator:curator-framework:${curatorVer}"
+        compile "io.dropwizard:dropwizard-core:${dropwizardVer}"
+        compile "io.dropwizard.modules:dropwizard-java8:0.9.0-1"
+        compile "io.dropwizard:dropwizard-client:${dropwizardVer}"
+        compile "com.google.inject:guice:${guiceVer}"
+        compile "com.google.guava:guava:${guavaVer}"
+        compile "ch.qos.logback:logback-classic:${logbackVer}"
+        compile "ch.qos.logback:logback-core:${logbackVer}"
+        compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.6.1"
+        compile "junit:junit:${junitVer}"
+        testCompile "org.apache.curator:curator-test:${curatorVer}"
+        testCompile "io.dropwizard:dropwizard-testing:${dropwizardVer}"
+    }
+
+    // Print results on the fly
+    test {
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+
+    // Include unit test report in 'check'
+    // (jacoco itself depends on 'test')
+    check.dependsOn jacocoTestReport
+    jacocoTestReport {
+        reports {
+            html.destination "${buildDir}/jacoco"
+        }
+    }
+    
+}
+
 configure(project(':seedprovider')) {
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        compile "org.apache.cassandra:cassandra-all:${cassVer}"
+
+    }
+}
+
+configure(project(':mds-snitch')) {
 
     repositories {
         mavenLocal()
