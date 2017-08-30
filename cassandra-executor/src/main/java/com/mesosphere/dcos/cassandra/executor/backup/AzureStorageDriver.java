@@ -170,8 +170,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       pageBlobOutputStream = new PageBlobOutputStream(blob);
       bufferedOutputStream = new BufferedOutputStream(pageBlobOutputStream);
 
-        logger.info("Creating Snappy output stream");
-        compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
+      compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
       logger.info("Streams initialized. Starting upload");
       IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
       logger.info("Upload Complete");
