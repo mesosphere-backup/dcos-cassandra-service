@@ -289,8 +289,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
               ctx.getExternalLocation(), containerName);
       return schema;
     }
-    final String fileKey = key + "/schema.cql";
-    final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
+    final String fileKey = key + "/schema.cql";final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
     if(!pageBlobReference.exists()){
       logger.error("Error downloading schema.  Unable to find schema on container {}",
               containerName);
