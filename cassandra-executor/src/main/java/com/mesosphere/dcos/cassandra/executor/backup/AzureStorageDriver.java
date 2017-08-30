@@ -170,7 +170,8 @@ public class AzureStorageDriver implements BackupStorageDriver {
       pageBlobOutputStream = new PageBlobOutputStream(blob);
       bufferedOutputStream = new BufferedOutputStream(pageBlobOutputStream);
 
-      compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
+        logger.info("Creating Snappy output stream");
+        compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
       logger.info("Streams initialized. Starting upload");
       IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
       logger.info("Upload Complete");
@@ -288,7 +289,8 @@ public class AzureStorageDriver implements BackupStorageDriver {
               ctx.getExternalLocation(), containerName);
       return schema;
     }
-    final String fileKey = key + "/schema.cql";final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
+    final String fileKey = key + "/schema.cql";
+    final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
     if(!pageBlobReference.exists()){
       logger.error("Error downloading schema.  Unable to find schema on container {}",
               containerName);
