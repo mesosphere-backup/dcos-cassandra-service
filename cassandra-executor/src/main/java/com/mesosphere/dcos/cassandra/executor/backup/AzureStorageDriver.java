@@ -1,5 +1,31 @@
 package com.mesosphere.dcos.cassandra.executor.backup;
 
+import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream.ORIGINAL_SIZE_KEY;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.security.InvalidKeyException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xerial.snappy.SnappyInputStream;
+import org.xerial.snappy.SnappyOutputStream;
+
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 import com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobInputStream;
 import com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream;
@@ -9,23 +35,6 @@ import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudPageBlob;
 import com.microsoft.azure.storage.blob.ListBlobItem;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xerial.snappy.SnappyInputStream;
-import org.xerial.snappy.SnappyOutputStream;
-
-import java.io.*;
-import java.net.URISyntaxException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.security.InvalidKeyException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream.ORIGINAL_SIZE_KEY;
 
 /**
  * Implements a BackupStorageDriver that provides upload and download
@@ -35,13 +44,13 @@ import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutput
  */
 public class AzureStorageDriver implements BackupStorageDriver {
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AzureStorageDriver.class);
 
   private static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
   private static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
   @Override
-  public void upload(BackupRestoreContext ctx) throws IOException {
+  public void upload(final BackupRestoreContext ctx) throws IOException {
 
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
@@ -62,17 +71,17 @@ public class AzureStorageDriver implements BackupStorageDriver {
     }
 
     // Ex: data/<keyspace>/<cf>/snapshots/</snapshot-dir>/<files>
-    for (File keyspaceDir : dataDirectory.listFiles()) {
+    for (final File keyspaceDir : dataDirectory.listFiles()) {
       if (keyspaceDir.isFile()) {
         // Skip any files in the data directory.
         // Only enter keyspace directory.
         continue;
       }
       logger.info("Entering keyspace: {}", keyspaceDir.getName());
-      for (File cfDir : keyspaceDir.listFiles()) {
+      for (final File cfDir : keyspaceDir.listFiles()) {
         logger.info("Entering column family: {}", cfDir.getName());
-        File snapshotDir = new File(cfDir, "snapshots");
-        File backupDir = new File(snapshotDir, backupName);
+        final File snapshotDir = new File(cfDir, "snapshots");
+        final File backupDir = new File(snapshotDir, backupName);
         if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir, backupDir)) {
           logger.info("Skipping directory: {}", snapshotDir.getAbsolutePath());
           continue;
@@ -102,28 +111,28 @@ public class AzureStorageDriver implements BackupStorageDriver {
     logger.info("Done uploading snapshots for backup: {}", backupName);
   }
 
-  private void uploadDirectory(String localLocation,
-    CloudBlobContainer azureContainer,
-    String containerName,
-    String key,
-    String keyspaceName,
-    String cfName) throws IOException {
+  private void uploadDirectory(final String localLocation,
+    final CloudBlobContainer azureContainer,
+    final String containerName,
+    final String key,
+    final String keyspaceName,
+    final String cfName) throws IOException {
 
     logger.info(
       "uploadDirectory() localLocation: {}, containerName: {}, key: {}, keyspaceName: {}, cfName: {}",
       localLocation, containerName, key, keyspaceName, cfName);
 
     Files.walk(FileSystems.getDefault().getPath(localLocation)).forEach(filePath -> {
-        File file = filePath.toFile();
+        final File file = filePath.toFile();
         if (file.isFile()) {
-          String fileKey = key + "/" + keyspaceName + "/" + cfName + "/" + file.getName();
+          final String fileKey = key + "/" + keyspaceName + "/" + cfName + "/" + file.getName();
           uploadFile(azureContainer, fileKey, file);
         }
       }
     );
   }
 
-  private void uploadFile(CloudBlobContainer container, String fileKey, File sourceFile) {
+  private void uploadFile(final CloudBlobContainer container, final String fileKey, final File sourceFile) {
 
     PageBlobOutputStream pageBlobOutputStream = null;
     SnappyOutputStream compress = null;
@@ -137,9 +146,11 @@ public class AzureStorageDriver implements BackupStorageDriver {
       pageBlobOutputStream = new PageBlobOutputStream(blob);
       bufferedOutputStream = new BufferedOutputStream(pageBlobOutputStream);
 
+      logger.info("Creating Snappy output stream");
       compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
+      logger.info("Streams initialized. Starting upload");
       IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
-
+      logger.info("Upload Complete");
     } catch (StorageException | URISyntaxException | IOException e) {
       logger.error("Unable to store blob", e);
     } finally {
@@ -148,7 +159,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       IOUtils.closeQuietly(pageBlobOutputStream);
     }
   }
-  private void uploadStream(CloudBlobContainer container, String fileKey, BufferedInputStream sourceStream) {
+  private void uploadStream(final CloudBlobContainer container, final String fileKey, final BufferedInputStream sourceStream) {
 
     PageBlobOutputStream pageBlobOutputStream = null;
     SnappyOutputStream compress = null;
@@ -159,8 +170,11 @@ public class AzureStorageDriver implements BackupStorageDriver {
       pageBlobOutputStream = new PageBlobOutputStream(blob);
       bufferedOutputStream = new BufferedOutputStream(pageBlobOutputStream);
 
-      compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
+        logger.info("Creating Snappy output stream");
+        compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
+      logger.info("Streams initialized. Starting upload");
       IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
+      logger.info("Upload Complete");
 
     } catch (StorageException | URISyntaxException | IOException e) {
       logger.error("Unable to store blob", e);
@@ -171,7 +185,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     }
   }
   @Override
-  public void uploadSchema(BackupRestoreContext ctx, String schema) {
+  public void uploadSchema(final BackupRestoreContext ctx, final String schema) {
     // Path: <backupname/node-id/schema.cql>
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
@@ -188,7 +202,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       logger.error("Error uploading schema.  Unable to connect to {}, for container {}doesn't exist.",
               ctx.getExternalLocation(), containerName);
     }
-      String fileKey = key + "/schema.cql";
+      final String fileKey = key + "/schema.cql";
       uploadStream(container, fileKey,inputStream);
       return;
 
@@ -196,7 +210,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
   }
 
   @Override
-  public void download(BackupRestoreContext ctx) throws IOException {
+  public void download(final BackupRestoreContext ctx) throws IOException {
 
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
@@ -213,22 +227,23 @@ public class AzureStorageDriver implements BackupStorageDriver {
         ctx.getExternalLocation(), containerName, localLocation);
       return;
     }
-    String keyPrefix = String.format("%s/%s", backupName, nodeId);
+    final String keyPrefix = String.format("%s/%s", backupName, nodeId);
 
     final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, keyPrefix);
     logger.info("Snapshot files for this node: {}", snapshotFileKeys);
 
-    for (String fileKey : snapshotFileKeys.keySet()) {
+    for (final String fileKey : snapshotFileKeys.keySet()) {
       downloadFile(localLocation, container, fileKey, snapshotFileKeys.get(fileKey));
     }
   }
 
-  private void downloadFile(String localLocation, CloudBlobContainer container, String fileKey, long originalSize) {
+  private void downloadFile(
+                  final String localLocation, final CloudBlobContainer container, final String fileKey, final long originalSize) {
 
     logger.info("Downloading |  Local location {} | fileKey: {} | Size: {}", localLocation, fileKey, originalSize);
 
     final String fileLocation = localLocation + File.separator + fileKey;
-    File file = new File(fileLocation);
+    final File file = new File(fileLocation);
     // Only create parent directory once, if it doesn't exist.
     if (!createParentDir(file)) {
       logger.error("Unable to create parent directories!");
@@ -249,7 +264,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
       IOUtils.copy(compress, bos, DEFAULT_PART_SIZE_DOWNLOAD);
 
-    } catch (Exception e) {
+    } catch (final Exception e) {
       logger.error("Unable to write file: {}", fileKey, e);
     } finally {
       IOUtils.closeQuietly(compress);
@@ -258,7 +273,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
   }
 
   @Override
-  public String downloadSchema(BackupRestoreContext ctx) throws Exception { // Path: <backupname/node-id/schema.cql>
+  public String downloadSchema(final BackupRestoreContext ctx) throws Exception { // Path: <backupname/node-id/schema.cql>
     String schema="";
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
@@ -274,7 +289,8 @@ public class AzureStorageDriver implements BackupStorageDriver {
               ctx.getExternalLocation(), containerName);
       return schema;
     }
-    String fileKey = key + "/schema.cql";final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
+    final String fileKey = key + "/schema.cql";
+    final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
     if(!pageBlobReference.exists()){
       logger.error("Error downloading schema.  Unable to find schema on container {}",
               containerName);
@@ -286,10 +302,10 @@ public class AzureStorageDriver implements BackupStorageDriver {
     {
       inputStream = new PageBlobInputStream(pageBlobReference);
       compress = new SnappyInputStream(inputStream);
-      OutputStream outputStream = new ByteArrayOutputStream();
+      final OutputStream outputStream = new ByteArrayOutputStream();
       IOUtils.copy(compress,outputStream);
       schema = outputStream.toString();
-  } catch (Exception e) {
+  } catch (final Exception e) {
     logger.error("Unable to download schema : {}", fileKey, e);
   } finally {
       IOUtils.closeQuietly(compress);
@@ -298,11 +314,11 @@ public class AzureStorageDriver implements BackupStorageDriver {
     return schema;
   }
 
-  private String getContainerName(String externalLocation) {
+  private String getContainerName(final String externalLocation) {
     return externalLocation.substring("azure://".length()).replace("/", "");
   }
 
-  private CloudBlobContainer getCloudBlobContainer(String accountName, String accountKey, String containerName) {
+  private CloudBlobContainer getCloudBlobContainer(final String accountName, final String accountKey, final String containerName) {
     CloudBlobContainer container = null;
 
     if (StringUtils.isNotBlank(containerName)) {
@@ -312,7 +328,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
       try {
         final CloudStorageAccount account = CloudStorageAccount.parse(storageConnectionString);
-        CloudBlobClient serviceClient = account.createCloudBlobClient();
+        final CloudBlobClient serviceClient = account.createCloudBlobClient();
 
         container = serviceClient.getContainerReference(containerName);
         container.createIfNotExists();
@@ -324,7 +340,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     return container;
   }
 
-  private boolean createParentDir(File file) {
+  private boolean createParentDir(final File file) {
     final File parentDir = new File(file.getParent());
     if (!parentDir.isDirectory()) {
       final boolean parentDirCreated = parentDir.mkdirs();
@@ -336,17 +352,17 @@ public class AzureStorageDriver implements BackupStorageDriver {
     return true;
   }
 
-  private Map<String, Long> getSnapshotFileKeys(CloudBlobContainer container, String keyPrefix) {
+  private Map<String, Long> getSnapshotFileKeys(final CloudBlobContainer container, final String keyPrefix) {
     Map<String, Long> snapshotFiles = new HashMap<>();
 
     try {
-      for (ListBlobItem item : container.listBlobs(keyPrefix, true)) {
+      for (final ListBlobItem item : container.listBlobs(keyPrefix, true)) {
         if (item instanceof CloudPageBlob) {
-          CloudPageBlob cloudBlob = (CloudPageBlob) item;
+          final CloudPageBlob cloudBlob = (CloudPageBlob) item;
           snapshotFiles.put(cloudBlob.getName(), getOriginalFileSize(cloudBlob));
         }
       }
-    } catch (StorageException e) {
+    } catch (final StorageException e) {
       logger.error("Unable to retrieve metadata.", e);
       // all or none
       snapshotFiles = new HashMap<>();
@@ -354,15 +370,15 @@ public class AzureStorageDriver implements BackupStorageDriver {
     return snapshotFiles;
   }
 
-  private long getOriginalFileSize(CloudPageBlob pageBlobReference) throws StorageException {
+  private long getOriginalFileSize(final CloudPageBlob pageBlobReference) throws StorageException {
     long size = 0;
 
     pageBlobReference.downloadAttributes();
-    HashMap<String, String> map = pageBlobReference.getMetadata();
+    final HashMap<String, String> map = pageBlobReference.getMetadata();
     if (map != null && map.size() > 0) {
       try {
         size = Long.parseLong(map.get(ORIGINAL_SIZE_KEY));
-      } catch (Exception e) {
+      } catch (final Exception e) {
         logger.error("File size metadata missing or is not a number.");
       }
     }
