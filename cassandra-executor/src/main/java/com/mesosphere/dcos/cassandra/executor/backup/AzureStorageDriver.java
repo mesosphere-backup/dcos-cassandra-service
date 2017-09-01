@@ -153,7 +153,11 @@ public class AzureStorageDriver implements BackupStorageDriver {
       logger.info("Upload Complete");
     } catch (StorageException | URISyntaxException | IOException e) {
       logger.error("Unable to store blob", e);
-    } finally {
+    } catch (final Exception e)
+    {
+        logger.error("Exception during Upload", e);
+    }
+    finally {
       IOUtils.closeQuietly(compress);  // super important that the compress close is called first in order to flush
       IOUtils.closeQuietly(bufferedOutputStream);
       IOUtils.closeQuietly(pageBlobOutputStream);
@@ -178,7 +182,12 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
     } catch (StorageException | URISyntaxException | IOException e) {
       logger.error("Unable to store blob", e);
-    } finally {
+    }
+    catch (final Exception e)
+    {
+        logger.error("Exception during Upload", e);
+    }
+    finally {
       IOUtils.closeQuietly(compress);  // super important that the compress close is called first in order to flush
       IOUtils.closeQuietly(bufferedOutputStream);
       IOUtils.closeQuietly(pageBlobOutputStream);
