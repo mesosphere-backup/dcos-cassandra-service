@@ -16,6 +16,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,7 +51,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
   private static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
   @Override
-  public void upload(final BackupRestoreContext ctx) throws IOException {
+  public void upload(final BackupRestoreContext ctx) throws Exception {
 
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
@@ -116,8 +117,8 @@ public class AzureStorageDriver implements BackupStorageDriver {
     final String containerName,
     final String key,
     final String keyspaceName,
-    final String cfName) throws IOException {
-
+    final String cfName) throws Exception {
+      final LinkedList<Exception> exceptions = new LinkedList<>();
     logger.info(
       "uploadDirectory() localLocation: {}, containerName: {}, key: {}, keyspaceName: {}, cfName: {}",
       localLocation, containerName, key, keyspaceName, cfName);
@@ -126,13 +127,21 @@ public class AzureStorageDriver implements BackupStorageDriver {
         final File file = filePath.toFile();
         if (file.isFile()) {
           final String fileKey = key + "/" + keyspaceName + "/" + cfName + "/" + file.getName();
-          uploadFile(azureContainer, fileKey, file);
+          try {
+              uploadFile(azureContainer, fileKey, file);
+          }
+          catch (final Exception e)
+          {
+              exceptions.add(e);
+          }
         }
-      }
-    );
+      });
+    if(exceptions.size() >0)
+        throw new Exception(exceptions.toString());
+
   }
 
-  private void uploadFile(final CloudBlobContainer container, final String fileKey, final File sourceFile) {
+  private void uploadFile(final CloudBlobContainer container, final String fileKey, final File sourceFile) throws Exception{
 
     PageBlobOutputStream pageBlobOutputStream = null;
     SnappyOutputStream compress = null;
@@ -153,13 +162,18 @@ public class AzureStorageDriver implements BackupStorageDriver {
       logger.info("Upload Complete");
     } catch (StorageException | URISyntaxException | IOException e) {
       logger.error("Unable to store blob", e);
-    } finally {
+    } catch (final Exception e)
+    {
+        logger.error("Exception during Upload", e);
+        throw e;
+    }
+    finally {
       IOUtils.closeQuietly(compress);  // super important that the compress close is called first in order to flush
       IOUtils.closeQuietly(bufferedOutputStream);
       IOUtils.closeQuietly(pageBlobOutputStream);
     }
   }
-  private void uploadStream(final CloudBlobContainer container, final String fileKey, final BufferedInputStream sourceStream) {
+  private void uploadStream(final CloudBlobContainer container, final String fileKey, final BufferedInputStream sourceStream) throws Exception{
 
     PageBlobOutputStream pageBlobOutputStream = null;
     SnappyOutputStream compress = null;
@@ -178,14 +192,20 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
     } catch (StorageException | URISyntaxException | IOException e) {
       logger.error("Unable to store blob", e);
-    } finally {
+    }
+    catch (final Exception e)
+    {
+        logger.error("Exception during Upload", e);
+        throw e;
+    }
+    finally {
       IOUtils.closeQuietly(compress);  // super important that the compress close is called first in order to flush
       IOUtils.closeQuietly(bufferedOutputStream);
       IOUtils.closeQuietly(pageBlobOutputStream);
     }
   }
   @Override
-  public void uploadSchema(final BackupRestoreContext ctx, final String schema) {
+  public void uploadSchema(final BackupRestoreContext ctx, final String schema) throws Exception{
     // Path: <backupname/node-id/schema.cql>
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
