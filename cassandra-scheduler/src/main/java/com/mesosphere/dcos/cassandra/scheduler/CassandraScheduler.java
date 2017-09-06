@@ -12,6 +12,8 @@ import com.mesosphere.dcos.cassandra.common.offer.PersistentOfferRequirementProv
 import com.mesosphere.dcos.cassandra.common.offer.PersistentOperationRecorder;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.scheduler.client.SchedulerClient;
+import com.mesosphere.dcos.cassandra.scheduler.mds.resources.MdsServiceManageResource;
+import com.mesosphere.dcos.cassandra.scheduler.mds.resources.ServiceMatrixResource;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraDaemonPhase;
 import com.mesosphere.dcos.cassandra.scheduler.plan.CassandraPlan;
 import com.mesosphere.dcos.cassandra.scheduler.plan.SyncDataCenterPhase;
@@ -179,6 +181,7 @@ public class CassandraScheduler implements Scheduler, Observer {
             resourcesQueue.add(Arrays.asList(
                     new ServiceConfigResource(configurationManager),
                     new ServiceMatrixResource(configurationManager),
+                    new MdsServiceManageResource(capabilities, cassandraState, configurationManager),
                     new SeedsResource(seeds),
                     new ConfigurationResource(defaultConfigurationManager),
                     new TasksResource(capabilities, cassandraState, client, configurationManager),

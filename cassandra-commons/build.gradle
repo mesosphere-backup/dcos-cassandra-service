@@ -3,6 +3,7 @@ targetCompatibility = '1.8'
 
 
 def cassVer = System.properties['cassVer'] ?: "3.0.8"
+def cassandraDriverVersion = System.properties['cassandraDriverVersion'] ?: "3.1.0"
 
 apply plugin: 'com.google.protobuf'
 dependencies {
@@ -10,6 +11,7 @@ dependencies {
     compile 'com.google.protobuf:protobuf-java:3.0.0'
     compile "org.apache.cassandra:cassandra-all:${cassVer}"
     compile "com.github.stefanbirkner:system-rules:1.16.0"
+    compile "com.datastax.cassandra:cassandra-driver-core:${cassandraDriverVersion}"
 }
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"

@@ -1,4 +1,4 @@
-package com.mesosphere.dcos.cassandra.scheduler.resources;
+package com.mesosphere.dcos.cassandra.scheduler.mds.resources;
 
 public class MatrixStatus {
 

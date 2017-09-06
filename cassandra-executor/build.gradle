@@ -4,7 +4,6 @@ mainClassName = 'com.mesosphere.dcos.cassandra.executor.Main'
 
 ext {
     junitVer = '4.12'
-    datastaxVer = '3.1.0'
     awsVer = '1.11.49'
 }
 
@@ -19,8 +18,6 @@ dependencies {
     compile "com.amazonaws:aws-java-sdk:${awsVer}"
     compile "com.microsoft.azure:azure-storage:4.2.0"
     compile "commons-io:commons-io:2.5"
-    compile "com.datastax.cassandra:cassandra-driver-core:${datastaxVer}"
-
     compile 'org.xerial.snappy:snappy-java:1.1.2.1'
     // To override the junit compile dependency that cassandra brings in.
     compile "junit:junit:${junitVer}"

@@ -1,4 +1,4 @@
-package com.mesosphere.dcos.cassandra.scheduler.resources;
+package com.mesosphere.dcos.cassandra.scheduler.mds.resources;
 
 import java.util.ArrayList;
 import java.util.List;
