@@ -2,6 +2,7 @@ package com.mesosphere.dcos.cassandra.scheduler.mds.resources;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -30,6 +31,7 @@ import com.mesosphere.dcos.cassandra.scheduler.resources.ConnectionResource;
 public class MdsServiceManageResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MdsServiceManageResource.class);
+    private static int TIMEOUT = 30*1000;//30 sec 
     private final ConfigurationManager configurationManager;
     private final Capabilities capabilities;
     private final CassandraState state;
@@ -53,8 +55,9 @@ public class MdsServiceManageResource {
             session.execute("CREATE ROLE " + rolename + " WITH PASSWORD = '" + roleRequest.getPassword()
                             + "' AND SUPERUSER = " + roleRequest.isSuperuser() + " AND LOGIN = " + roleRequest.isLogin()
                             + ";");
+
             if (roleRequest.isGrantAllPermissions()) {
-                session.execute("GRANT ALL PERMISSIONS ON ALL KEYSPACES TO " + rolename + ";");
+                grantPermission(rolename, session);
             }
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -74,12 +77,32 @@ public class MdsServiceManageResource {
                             + "' AND SUPERUSER = " + roleRequest.isSuperuser() + " AND LOGIN = " + roleRequest.isLogin()
                             + ";");
             if (roleRequest.isGrantAllPermissions()) {
-                session.execute("GRANT ALL PERMISSIONS ON ALL KEYSPACES TO " + rolename + ";");
+                grantPermission(rolename, session);
             }
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
         return Response.status(Response.Status.OK).entity("Successfull").build();
+    }
+
+
+    private void grantPermission(final String rolename, Session session) throws InterruptedException {
+        long startTime = System.currentTimeMillis();
+        int count = 1;
+        while (true) {
+            try {
+                session.execute("GRANT ALL PERMISSIONS ON ALL KEYSPACES TO " + rolename + ";");
+                return;
+            } catch (Exception e) {
+                LOGGER.error("failed to grant permission , it because role is not populated");
+                if (System.currentTimeMillis() > (startTime + TIMEOUT)) {
+                    LOGGER.error("failed to gran permession");
+                    throw e;
+                }
+            }
+            TimeUnit.SECONDS.sleep(count);
+            count = count * 2;
+        }
     }
 
 
