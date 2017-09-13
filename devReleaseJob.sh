@@ -10,7 +10,8 @@ REPO_URL=$4
 AWS_SECRET_ACCESS_KEY=$5
 AWS_ACCESS_KEY_ID=$6
 S3_BUCKET=$7
-createBranch=$8
+
+ENVIRONMENT=dev
 
 export RELEASE_VERSION=$RELEASE_VERSION
 export MDSBOT_ARTIFACTORY_APIKEY=$MDSBOT_ARTIFACTORY_APIKEY
@@ -89,7 +90,7 @@ fi
 
 
 #adding universe files to repo.
-./addUniverseFilesToUniverseRepo.sh mds-${RELEASE_VERSION} dev tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION} ${UNIVERSE_FOLDER_NUMBER}
+bash addUniverseFilesToUniverseMainBranch.sh  $ENVIRONMENT tmp/stub-universe-mds-cassandra/repo/packages/M/mds-cassandra/0  ${FRAMEWORK_VERSION} ${UNIVERSE_FOLDER_NUMBER}
 if [ $? -ne 0 ]; then
 	echo "cassandra framework : adding universe files to  universe repo failed" 
 	exit 1
