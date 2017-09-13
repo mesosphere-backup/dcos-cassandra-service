@@ -21,6 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.exceptions.NoHostAvailableException;
+import com.datastax.driver.core.exceptions.QueryExecutionException;
+import com.datastax.driver.core.exceptions.QueryValidationException;
 import com.mesosphere.dcos.cassandra.common.config.ConfigurationManager;
 import com.mesosphere.dcos.cassandra.common.tasks.CassandraState;
 import com.mesosphere.dcos.cassandra.scheduler.resources.ConnectionResource;
@@ -59,8 +62,14 @@ public class MdsServiceManageResource {
             if (roleRequest.isGrantAllPermissions()) {
                 grantPermission(rolename, session);
             }
-        } catch (Exception e) {
+        } catch (NoHostAvailableException e) {
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(e.getMessage()).build();
+        }catch(QueryExecutionException  e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        }catch(QueryValidationException e){
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }catch(Exception e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
         return Response.status(Response.Status.OK).entity("Successfull").build();
 
@@ -79,8 +88,14 @@ public class MdsServiceManageResource {
             if (roleRequest.isGrantAllPermissions()) {
                 grantPermission(rolename, session);
             }
-        } catch (Exception e) {
+        } catch (NoHostAvailableException e) {
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(e.getMessage()).build();
+        }catch(QueryExecutionException  e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        }catch(QueryValidationException e){
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }catch(Exception e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
         return Response.status(Response.Status.OK).entity("Successfull").build();
     }
@@ -125,8 +140,14 @@ public class MdsServiceManageResource {
             LOGGER.info("Alter system auth query:" + query);
 
             session.execute(query);
-        } catch (Exception e) {
+        } catch (NoHostAvailableException e) {
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(e.getMessage()).build();
+        }catch(QueryExecutionException  e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        }catch(QueryValidationException e){
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }catch(Exception e){
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
 
         return Response.status(Response.Status.OK).entity("Successfull").build();
