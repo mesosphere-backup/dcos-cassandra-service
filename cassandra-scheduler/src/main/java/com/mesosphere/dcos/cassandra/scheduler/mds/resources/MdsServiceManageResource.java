@@ -34,7 +34,7 @@ import com.mesosphere.dcos.cassandra.scheduler.resources.ConnectionResource;
 public class MdsServiceManageResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MdsServiceManageResource.class);
-    private static int TIMEOUT = 30*1000;//30 sec 
+    private static int TIMEOUT = 30 * 1000;// 30 sec
     private final ConfigurationManager configurationManager;
     private final Capabilities capabilities;
     private final CassandraState state;
@@ -52,7 +52,8 @@ public class MdsServiceManageResource {
     @Path("/role/{rolename}")
     public Response addRole(@PathParam("rolename") final String rolename, RoleRequest roleRequest)
                     throws ConfigStoreException {
-        try (Session session = getSession(roleRequest.getCassandraAuth())) {
+        try (Session session = MdsCassandraUtills.getSession(roleRequest.getCassandraAuth(), capabilities, state,
+                        configurationManager)) {
             LOGGER.info("adding role:" + rolename + " role request:" + roleRequest);
 
             session.execute("CREATE ROLE " + rolename + " WITH PASSWORD = '" + roleRequest.getPassword()
@@ -64,11 +65,11 @@ public class MdsServiceManageResource {
             }
         } catch (NoHostAvailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(e.getMessage()).build();
-        }catch(QueryExecutionException  e){
+        } catch (QueryExecutionException e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
-        }catch(QueryValidationException e){
+        } catch (QueryValidationException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }catch(Exception e){
+        } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
         return Response.status(Response.Status.OK).entity("Successfull").build();
@@ -81,7 +82,8 @@ public class MdsServiceManageResource {
                     throws ConfigStoreException {
         LOGGER.info("alter role:" + rolename + " role request:" + roleRequest);
 
-        try (Session session = getSession(roleRequest.getCassandraAuth())) {
+        try (Session session = MdsCassandraUtills.getSession(roleRequest.getCassandraAuth(), capabilities, state,
+                        configurationManager)) {
             session.execute("ALTER ROLE " + rolename + " WITH PASSWORD = '" + roleRequest.getPassword()
                             + "' AND SUPERUSER = " + roleRequest.isSuperuser() + " AND LOGIN = " + roleRequest.isLogin()
                             + ";");
@@ -90,11 +92,11 @@ public class MdsServiceManageResource {
             }
         } catch (NoHostAvailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(e.getMessage()).build();
-        }catch(QueryExecutionException  e){
+        } catch (QueryExecutionException e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
-        }catch(QueryValidationException e){
+        } catch (QueryValidationException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }catch(Exception e){
+        } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
         return Response.status(Response.Status.OK).entity("Successfull").build();
@@ -131,7 +133,8 @@ public class MdsServiceManageResource {
                             .entity("Only system_auth key space is supported to alter").build();
         }
 
-        try (Session session = getSession(alterSysteAuthRequest.getCassandraAuth())) {
+        try (Session session = MdsCassandraUtills.getSession(alterSysteAuthRequest.getCassandraAuth(), capabilities,
+                        state, configurationManager)) {
             // session = getSession(alterSysteAuthRequest.getCassandraAuth());
             String dcRf = MdsCassandraUtills.getDataCenterVsReplicationFactorString(
                             alterSysteAuthRequest.getDataCenterVsReplicationFactor());
@@ -142,29 +145,14 @@ public class MdsServiceManageResource {
             session.execute(query);
         } catch (NoHostAvailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(e.getMessage()).build();
-        }catch(QueryExecutionException  e){
+        } catch (QueryExecutionException e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
-        }catch(QueryValidationException e){
+        } catch (QueryValidationException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }catch(Exception e){
+        } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
 
         return Response.status(Response.Status.OK).entity("Successfull").build();
-    }
-
-
-    private Session getSession(CassandraAuth cassandraAuth) throws ConfigStoreException {
-        final ConnectionResource connectionResource = new ConnectionResource(capabilities, state, configurationManager);
-        List<String> connectedNodes = connectionResource.connectAddress();
-        String conectionInfo = connectedNodes.get(0);
-        String[] hostAndPort = conectionInfo.split(":");
-        LOGGER.debug("connected node:" + hostAndPort);
-
-        InetSocketAddress addresses = new InetSocketAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1]));
-        Cluster cluster = Cluster.builder().addContactPointsWithPorts(addresses)
-                        .withCredentials(cassandraAuth.getUsername(), cassandraAuth.getPassword()).build();
-        Session session = cluster.connect();
-        return session;
     }
 }
