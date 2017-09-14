@@ -1,4 +1,4 @@
-universe_folder_number=5
+universe_folder_number=0
 apache_cassandra_version=3.0.10
 jre_file_name=jre-8u121-linux-x64.tar.gz
 jre_extracted_file_name=jre1.8.0_121
