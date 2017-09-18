@@ -1,11 +1,11 @@
 package com.mesosphere.dcos.cassandra.scheduler.resources;
 
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.dcos.cassandra.common.tasks.ClusterTaskRequest;
 import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
 
 public class BackupRestoreRequest implements ClusterTaskRequest {
   @JsonProperty("backup_name")
@@ -33,6 +33,13 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
 
   @JsonProperty("restore_type")
   private String restoreType;
+  
+  @JsonProperty("username")
+  private String username;
+  
+  @JsonProperty("password")
+  private String password;
+  
 
   public String getName() {
     return name;
@@ -51,6 +58,9 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   public String getS3AccessKey() {
+    if(s3AccessKey == null) {
+      return "";
+    }
     return s3AccessKey;
   }
 
@@ -59,6 +69,9 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   public String getS3SecretKey() {
+    if(s3SecretKey == null) {
+      return "";
+    }
     return s3SecretKey;
   }
 
@@ -82,6 +95,28 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
     this.azureKey = azureKey;
   }
 
+  
+  public String getUsername() {
+	  if (StringUtils.isBlank(username)) {
+		  username= "nouser";
+	  }
+	  return username;
+  }
+  public void setUsername(String username) {
+	  this.username = username;
+  }
+  
+  public String getPassword() {
+	  if (StringUtils.isBlank(password)) {
+		  password= "nopassword";
+	  }
+	  return password;
+  }
+  
+  public void setPassword(String password) {
+	  this.password = password;
+  }
+  
   public String getRestoreType() {
 
 
@@ -109,9 +144,7 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
   }
 
   private boolean isValidS3Request() {
-    return s3AccessKey != null
-            && s3SecretKey != null
-            && isValidS3ExternalLocation();
+    return s3AccessKey != null ? s3SecretKey != null && isValidS3ExternalLocation() : isValidS3ExternalLocation();
   }
 
   private boolean isValidS3ExternalLocation() {
@@ -139,6 +172,8 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
             ", azureKey='" + azureKey + '\'' +
             ", usesEmc='" + usesEmc + '\'' +
             ", restoreType='" + restoreType + '\'' +
+            ", username='" + username + '\'' +
+            ", password='" + password + '\'' +
             '}';
   }
 
@@ -162,7 +197,9 @@ public class BackupRestoreRequest implements ClusterTaskRequest {
         accountId,
         secretKey,
         usesEmc(),
-        getRestoreType());
+        getRestoreType(),
+        getUsername(),
+        getPassword());
   }
 
   private static boolean isAzure(String externalLocation) {

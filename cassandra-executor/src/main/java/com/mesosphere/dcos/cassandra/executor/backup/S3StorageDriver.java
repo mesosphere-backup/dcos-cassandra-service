@@ -15,19 +15,6 @@
  */
 package com.mesosphere.dcos.cassandra.executor.backup;
 
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.S3ClientOptions;
-import com.amazonaws.services.s3.internal.Constants;
-import com.amazonaws.services.s3.model.*;
-import com.amazonaws.services.s3.transfer.Download;
-import com.amazonaws.services.s3.transfer.MultipleFileUpload;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -38,6 +25,30 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.internal.Constants;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.Download;
+import com.amazonaws.services.s3.transfer.MultipleFileUpload;
+import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.mesosphere.dcos.cassandra.common.tasks.backup.BackupRestoreContext;
 
 /**
  * Implements a BackupStorageDriver that provides upload and download
@@ -93,31 +104,40 @@ public class S3StorageDriver implements BackupStorageDriver {
         }
     }
 
-    private AmazonS3Client getAmazonS3Client(BackupRestoreContext ctx) throws URISyntaxException {
-        final String accessKey = ctx.getAccountId();
-        final String secretKey = ctx.getSecretKey();
+    private AWSCredentialsProvider getAwsCredentialProvider(String accessKey, String secretKey) {
+        final AWSCredentialsProvider awsCredentialsProvider;
+        //If access key and secret are provided, use them else use instance credentials
+        if(StringUtils.isNotBlank(accessKey) && StringUtils.isNotBlank(secretKey)) {
+            LOGGER.info("Using accessKey and secret for S3 authentication");
+            final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
+            awsCredentialsProvider = new AWSStaticCredentialsProvider(basicAWSCredentials);
+        } else {
+            LOGGER.info("Using instance profile provider for S3 authentication");
+            awsCredentialsProvider = new InstanceProfileCredentialsProvider(false);
+        }
+        return awsCredentialsProvider;
+    }
+
+    AmazonS3Client getAmazonS3Client(BackupRestoreContext ctx) throws URISyntaxException {
         String endpoint = getEndpoint(ctx);
         LOGGER.info("endpoint: {}", endpoint);
 
-        final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        final AmazonS3Client amazonS3Client = new AmazonS3Client(basicAWSCredentials);
+        final String accessKey = ctx.getAccountId();
+        final String secretKey = ctx.getSecretKey();
+        final AmazonS3Client amazonS3Client = new AmazonS3Client(getAwsCredentialProvider(accessKey, secretKey));
         amazonS3Client.setEndpoint(endpoint);
-
         if (ctx.usesEmc()) {
             final S3ClientOptions options = new S3ClientOptions();
             options.setPathStyleAccess(true);
             amazonS3Client.setS3ClientOptions(options);
         }
-
         return amazonS3Client;
     }
 
     private TransferManager getS3TransferManager(BackupRestoreContext ctx) {
         final String accessKey = ctx.getAccountId();
         final String secretKey = ctx.getSecretKey();
-
-        final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        TransferManager tx = new TransferManager(basicAWSCredentials);
+        final TransferManager tx = new TransferManager(getAwsCredentialProvider(accessKey, secretKey));
         return tx;
     }
 
@@ -207,8 +227,16 @@ public class S3StorageDriver implements BackupStorageDriver {
                                  File snapshotDirectory) throws Exception {
         try {
             final String fileKey = key + "/" + keyspaceName + "/" + cfName + "/";
-            final MultipleFileUpload myUpload = tx.uploadDirectory(bucketName, fileKey, snapshotDirectory, true);
-            myUpload.waitForCompletion();
+            
+            //ObjectMetadataProvider For S3 server side encryption for each file
+			final MultipleFileUpload myUpload = tx.uploadDirectory(bucketName, fileKey, snapshotDirectory, true,
+					new ObjectMetadataProvider() {
+						@Override
+						public void provideObjectMetadata(File file, ObjectMetadata metadata) {
+							metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+						}
+					});
+			myUpload.waitForCompletion();
         } catch (Exception e) {
             LOGGER.error("Error occurred on uploading directory {} : {}", snapshotDirectory.getName(), e);
             throw new Exception(e);
@@ -222,7 +250,10 @@ public class S3StorageDriver implements BackupStorageDriver {
         final String key = getPrefixKey(ctx) + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
         final InputStream stream = new ByteArrayInputStream(schema.getBytes(StandardCharsets.UTF_8));
 
-        amazonS3Client.putObject(getBucketName(ctx), key, stream, new ObjectMetadata());
+        //Data encryption on s3 bucket
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+        amazonS3Client.putObject(getBucketName(ctx), key, stream, objectMetadata);
     }
 
     @Override

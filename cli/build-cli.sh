@@ -2,7 +2,8 @@
 
 CLI_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $CLI_DIR
-
+echo "GOPATH----$GOPATH"
+echo "go ---$(which go)"
 if [ -z "$GOPATH" -o -z "$(which go)" ]; then
   echo "Missing GOPATH environment variable or 'go' executable. Please configure a Go build environment."
   exit 1

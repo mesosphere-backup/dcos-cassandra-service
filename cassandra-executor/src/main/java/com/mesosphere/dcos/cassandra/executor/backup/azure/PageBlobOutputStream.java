@@ -30,6 +30,7 @@ public class PageBlobOutputStream extends FilterOutputStream {
   private long currentPageSize = PAGE_BLOB_PAGE_SIZE;
 
   private volatile IOException lastError;
+  private boolean closed = false;
 
   /**
    * Creates an output stream filter built on top of the Azure
@@ -64,9 +65,16 @@ public class PageBlobOutputStream extends FilterOutputStream {
   }
 
   @Override
+  public void flush() throws IOException {
+    // cannot flush untill close
+  }
+
+  @Override
   public void close() throws IOException {
 
     this.checkStreamState();
+    if(closed)
+      return;
 
     // top off page size
     // flush write does NOT occur unless full page is written
@@ -74,10 +82,15 @@ public class PageBlobOutputStream extends FilterOutputStream {
       byte[] pad = new byte[(int) (currentPageSize - count)];
       writePad(pad);
     }
-    super.close();
-
+    try {
+      super.flush();
+      super.close();
+    } finally {
+      closed = true;
+    }
     uploadMetadata();
   }
+
 
   private void writePad(byte[] pad) throws IOException {
     out.write(pad);

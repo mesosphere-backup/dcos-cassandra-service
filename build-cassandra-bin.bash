@@ -21,20 +21,48 @@ if [ -z "$SED" ]; then
     exit 1
 fi
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [ -z "$CASSANDRA_VERSION" ]; then
+    echo "Need to set CASSANDRA_VERSION environment variable"
+    exit 1
+fi 
+
+if [ -z "$FRAMEWORK_PLUS_CASSANDRA_VERSION" ]; then
+    echo "Need to set FRAMEWORK_PLUS_CASSANDRA_VERSION environment variable"
+    exit 1
+fi
+
+if [ -z "$FRAMEWORK_VERSION" ]; then
+    echo "Need to set FRAMEWORK_VERSION environment variable"
+    exit 1
+fi
+
+if [ -z "$CASSANDRA_FILE_NAME" ]; then
+    echo "Need to set CASSANDRA_FILE_NAME environment variable"
+    exit 1
+fi 
+
+
 # VERSION SETTINGS
-CASSANDRA_VERSION="3.0.10"
+
 METRICS_INTERFACE_VERSION="3" # Cassandra 2.2+ uses metrics3, while <= 2.1 uses metrics2.
 STATSD_REPORTER_VERSION="4.1.2-SNAPSHOT" # Custom version due to usage of metrics-core-3.1.0 interface in Cassandra 2.2+
 REPORTER_CONFIG_VERSION="3.0.3"
-SEED_PROVIDER_VERSION="1.0.18"
+SEED_PROVIDER_VERSION="" #"1.0.18"
 READYTALK_MVN_REPO_DOWNLOAD_URL="https://dl.bintray.com/readytalk/maven/com/readytalk"
 MVN_CENTRAL_DOWNLOAD_URL="https://repo1.maven.org/maven2"
 
 # PATHS AND FILENAME SETTINGS
+
 CASSANDRA_DIST_NAME="apache-cassandra-${CASSANDRA_VERSION}"
+CASSANDRA_CUSTOM_DIST_NAME="apache-cassandra-${FRAMEWORK_PLUS_CASSANDRA_VERSION}"
+
 CASSANDRA_STOCK_IMAGE="${CASSANDRA_DIST_NAME}-bin.tar.gz"
-CASSANDRA_CUSTOM_IMAGE="${CASSANDRA_DIST_NAME}-bin-dcos.tar.gz"
-CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL="https://archive.apache.org/dist/cassandra/${CASSANDRA_VERSION}/${CASSANDRA_STOCK_IMAGE}"
+CASSANDRA_CUSTOM_IMAGE="${CASSANDRA_CUSTOM_DIST_NAME}-bin-dcos.tar.gz"
+
+#CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL="https://archive.apache.org/dist/cassandra/${CASSANDRA_VERSION}/${CASSANDRA_STOCK_IMAGE}"
+
 
 function _sha1sum {
     # Try 'sha1sum' (Linux) with fallback to 'shasum' (OSX)
@@ -70,6 +98,9 @@ function _package_github {
 echo "##### Build seedprovider jar #####"
 ./gradlew :seedprovider:jar
 
+echo "### Build mds snitch jar #####"
+./gradlew :mds-snitch:jar
+
 ###
 # Go into tmp dir
 ###
@@ -81,22 +112,42 @@ cd "cassandra-bin-tmp"
 # Download and unpack stock cassandra-bin and verify with downloaded sha1 file
 ###
 
-_download $CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL.sha1 "${CASSANDRA_STOCK_IMAGE}.sha1"
-_download $CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL "${CASSANDRA_STOCK_IMAGE}"
-if [ "$(_sha1sum $CASSANDRA_STOCK_IMAGE | awk '{print $1}')" != "$(cat ${CASSANDRA_STOCK_IMAGE}.sha1)" ]; then
+#_download $CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL.sha1 "${CASSANDRA_STOCK_IMAGE}.sha1"
+#_download $CASSANDRA_STOCK_IMAGE_DOWNLOAD_URL "${CASSANDRA_STOCK_IMAGE}"
+
+
+###
+# Copy and unpack stock cassandra-bin and verify with downloaded sha1 file
+###
+
+#downloading apache cassandra
+echo "Going to download apache-cassandra tar"
+wget $APACHE_CASSANDRA_DWNLD_URL
+
+echo "Going to download apache-cassandra sha1"
+wget $APACHE_CASSANDRA_SHA1_DWNLD_URL
+
+#cp ${SCRIPT_DIR}/resources/largeFiles/${CASSANDRA_FILE_NAME} .
+#cp ${SCRIPT_DIR}/resources/largeFiles/${CASSANDRA_FILE_NAME}.sha1 .
+ 
+
+if [ "$(_sha1sum $CASSANDRA_FILE_NAME | awk '{print $1}')" != "$(cat ${CASSANDRA_FILE_NAME}.sha1)" ]; then
     echo "SHA1 MISMATCH: ${CASSANDRA_STOCK_IMAGE}"
     exit 1
 else
-    echo "Verified: ${CASSANDRA_STOCK_IMAGE}"
+    echo "Verified: ${CASSANDRA_FILE_NAME}"
 fi
 rm -rf $CASSANDRA_DIST_NAME
-tar xzf $CASSANDRA_STOCK_IMAGE
+tar xzf $CASSANDRA_FILE_NAME
+
+#rename apache cassandra package to another custom name ex: apache-cassandra-21-3.0.10
+mv $CASSANDRA_DIST_NAME $CASSANDRA_CUSTOM_DIST_NAME
 
 ###
 # Modify stock cassandra config
 ###
 
-CONF_DIR="${CASSANDRA_DIST_NAME}/conf"
+CONF_DIR="${CASSANDRA_CUSTOM_DIST_NAME}/conf"
 _sha1sum "${CONF_DIR}"/* &> confdir-before.txt || true
 
 # Remove default cassandra-rackdc.properties and cassandra-topology.properties.
@@ -121,13 +172,14 @@ _sha1sum "${CONF_DIR}"/* &> confdir-after.txt || true
 # Copy seed provider and statsd libraries into cassandra-bin's lib dir
 ###
 
-LIB_DIR="${CASSANDRA_DIST_NAME}/lib"
+LIB_DIR="${CASSANDRA_CUSTOM_DIST_NAME}/lib"
 _sha1sum "${LIB_DIR}"/*.jar &> libdir-before.txt || true
 
 echo "##### Install custom seed provider #####"
-
+pwd
 # Copy seedprovider lib from regular local build into cassandra-bin/lib
-cp -v ../seedprovider/build/libs/seedprovider-${SEED_PROVIDER_VERSION}.jar ${LIB_DIR}
+cp -v ../seedprovider/build/libs/seedprovider.jar ${LIB_DIR}
+cp -v ../mds-snitch/build/libs/mds-snitch.jar ${LIB_DIR}
 
 echo "##### Install StatsD metrics support #####"
 
@@ -158,7 +210,7 @@ _sha1sum "${LIB_DIR}"/*.jar &> libdir-after.txt || true
 ###
 
 rm -vf ${CASSANDRA_CUSTOM_IMAGE}
-tar czf ${CASSANDRA_CUSTOM_IMAGE} ${CASSANDRA_DIST_NAME}
+tar czf ${CASSANDRA_CUSTOM_IMAGE} ${CASSANDRA_CUSTOM_DIST_NAME}
 
 echo ""
 echo "#####"
@@ -166,8 +218,8 @@ echo ""
 echo "CREATED: $(pwd)/${CASSANDRA_CUSTOM_IMAGE}"
 echo ""
 pwd
-_sha1sum ${CASSANDRA_DIST_NAME}*.tar.gz
-ls -l ${CASSANDRA_DIST_NAME}*.tar.gz
+_sha1sum ${CASSANDRA_CUSTOM_DIST_NAME}*.tar.gz
+ls -l ${CASSANDRA_CUSTOM_DIST_NAME}*.tar.gz
 echo ""
 echo "Summary of conf/ changes:"
 diff confdir-before.txt confdir-after.txt || true

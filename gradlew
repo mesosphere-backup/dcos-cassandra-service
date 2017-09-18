@@ -7,7 +7,7 @@
 ##############################################################################
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS=""
+DEFAULT_JVM_OPTS="-Dorg.gradle.project.cassVer=${CASSANDRA_VERSION} -DcassVer=${CASSANDRA_VERSION} -DORG_GRADLE_PROJECT_cassVer=${CASSANDRA_VERSION}"
 
 APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
@@ -63,6 +63,8 @@ cd "$SAVED" >/dev/null
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
 # Determine the Java command to use to start the JVM.
+
+echo "$JAVA_HOME"
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
         # IBM's JDK on AIX uses strange locations for the executables
@@ -156,5 +158,7 @@ function splitJvmOpts() {
 }
 eval splitJvmOpts $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS
 JVM_OPTS[${#JVM_OPTS[*]}]="-Dorg.gradle.appname=$APP_BASE_NAME"
+
+echo "${JVM_OPTS[@]}"
 
 exec "$JAVACMD" "${JVM_OPTS[@]}" -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"

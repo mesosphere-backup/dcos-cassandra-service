@@ -37,7 +37,7 @@ import java.util.concurrent.Future;
  * using Datastax Java Driver.
  */
 public class BackupSchema implements ExecutorTask {
-  private static final Logger LOGGER = LoggerFactory.getLogger(
+	private static final Logger LOGGER = LoggerFactory.getLogger(
             BackupSchema.class);
     private CassandraDaemonProcess daemon;
     private ExecutorDriver driver;
@@ -81,7 +81,7 @@ public class BackupSchema implements ExecutorTask {
           sendStatus(driver, Protos.TaskState.TASK_RUNNING,
                   "Started taking schema backup");
 
-          cluster = Cluster.builder().addContactPoint(daemon.getProbe().getEndpoint()).build();
+          cluster = Cluster.builder().addContactPoint(daemon.getProbe().getEndpoint()).withCredentials(context.getUsername(), context.getPassword()).build();
           final List<String> keyspaces = StorageUtil.filterSystemKeyspaces(daemon.getNonSystemKeySpaces());
 
           if (keyspaces.size() > 0) {

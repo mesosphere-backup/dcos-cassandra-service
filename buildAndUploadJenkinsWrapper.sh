@@ -1,0 +1,2 @@
+source $DCOS_CASSANDRA_SERVICE_MERGE_ENV
+./build.sh

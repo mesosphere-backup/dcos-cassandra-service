@@ -41,6 +41,7 @@ public class MutableSchedulerConfiguration extends Configuration {
   private String phaseStrategy;
   private boolean enableUpgradeSSTableEndpoint;
   private HttpClientConfiguration httpClientConfiguration;
+  private String zones;
 
   @JsonProperty("mesos")
   public MesosConfig getMesosConfig() {
@@ -106,6 +107,16 @@ public class MutableSchedulerConfiguration extends Configuration {
   @JsonProperty("seed_nodes")
   public void setSeeds(int seeds) {
     this.seeds = seeds;
+  }
+  
+  @JsonProperty("zones")
+  public String getZones() {
+    return zones;
+  }
+
+  @JsonProperty("zones")
+  public void setZones(String seeds) {
+    this.zones = seeds;
   }
 
   @JsonProperty("nodes")
@@ -211,6 +222,7 @@ public class MutableSchedulerConfiguration extends Configuration {
       executorConfig,
       servers,
       seeds,
+      zones,
       placementConstraint,
       cassandraConfig,
       clusterTaskConfig,
@@ -232,6 +244,7 @@ public class MutableSchedulerConfiguration extends Configuration {
     MutableSchedulerConfiguration that = (MutableSchedulerConfiguration) o;
     return servers == that.servers &&
       seeds == that.seeds &&
+      Objects.equals(zones, that.zones) &&
       apiPort == that.apiPort &&
       externalDcSyncMs == that.externalDcSyncMs &&
       enableUpgradeSSTableEndpoint == that.enableUpgradeSSTableEndpoint &&
@@ -249,7 +262,7 @@ public class MutableSchedulerConfiguration extends Configuration {
 
   @Override
   public int hashCode() {
-    return Objects.hash(executorConfig, servers, seeds, placementConstraint, cassandraConfig,
+    return Objects.hash(executorConfig, servers, seeds, zones, placementConstraint, cassandraConfig,
       clusterTaskConfig, apiPort, serviceConfig, mesosConfig, curatorConfig,
       externalDcSyncMs, externalDcs, dcUrl, enableUpgradeSSTableEndpoint, httpClientConfiguration);
   }

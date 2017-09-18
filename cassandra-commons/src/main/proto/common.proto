@@ -91,4 +91,8 @@ message CassandraData{
     optional bool usesEmc = 17;
 
     optional string restoreType = 18;
+    
+    optional string username = 19;
+    
+    optional string password = 20;
 }

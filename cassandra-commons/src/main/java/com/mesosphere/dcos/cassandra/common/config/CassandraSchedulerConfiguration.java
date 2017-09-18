@@ -32,6 +32,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     @JsonProperty("executor") final ExecutorConfig executorConfig,
     @JsonProperty("servers") final int servers,
     @JsonProperty("seeds") final int seeds,
+    @JsonProperty("zones") final String zones,
     @JsonProperty("placement_constraint") final String placementConstraint,
     @JsonProperty("cassandra") final CassandraConfig cassandraConfig,
     @JsonProperty("cluster_task") final ClusterTaskConfig clusterTaskConfig,
@@ -48,6 +49,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
       executorConfig,
       servers,
       seeds,
+      zones,
       placementConstraint,
       cassandraConfig,
       clusterTaskConfig,
@@ -68,6 +70,8 @@ public class CassandraSchedulerConfiguration implements Configuration {
   private final int servers;
   @JsonIgnore
   private final int seeds;
+  @JsonIgnore
+  private final String zones;
   @JsonIgnore
   private final String placementConstraint;
   @JsonIgnore
@@ -95,6 +99,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     ExecutorConfig executorConfig,
     int servers,
     int seeds,
+    String zones,
     String placementConstraint,
     CassandraConfig cassandraConfig,
     ClusterTaskConfig clusterTaskConfig,
@@ -108,6 +113,7 @@ public class CassandraSchedulerConfiguration implements Configuration {
     this.executorConfig = executorConfig;
     this.servers = servers;
     this.seeds = seeds;
+    this.zones = zones;
     this.placementConstraint = placementConstraint;
     this.cassandraConfig = cassandraConfig;
     this.clusterTaskConfig = clusterTaskConfig;
@@ -130,6 +136,11 @@ public class CassandraSchedulerConfiguration implements Configuration {
   public int getServers() {
     return servers;
   }
+
+  @JsonProperty("zones")
+  public String getZones() {
+	return zones;
+}
 
   @JsonProperty("seeds")
   public int getSeeds() {
