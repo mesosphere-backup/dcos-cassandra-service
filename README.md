@@ -1,6 +1,6 @@
 # DEPRECATED
 
-This repository is now deprecated.  It has been replaced by a new version of the framework located in mesospehre/dcos-commons/frameworks/cassandra.  This repository will be deleted at the end of 2017.  
+**This repository is now deprecated.**  It has been replaced by a new version of the framework located in [mesosphere/dcos-commons](https://github.com/mesosphere/dcos-commons/tree/master/frameworks/cassandra).  This repository will be deleted at the end of 2017.
 
 # DC/OS Apache Cassandra Service Documentation
 
