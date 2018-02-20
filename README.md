@@ -1,3 +1,7 @@
+# NOTICE
+
+This repo is deprecated, replaced by mesosphere/dcos-commons/frameworks/cassandra. It will be archived in early 2018.
+
 # DC/OS Apache Cassandra Service Documentation
 
 All DC/OS Cassandra documentation is in the `/docs` folder of this repository.
