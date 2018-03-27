@@ -57,7 +57,7 @@ maintain the original address. If no security manager is installed, the default 
 behavior falls back to an implementation defined timeout. If a node moves in this case,
 the behavior is generally undefined. If you choose to use DNS to resolve entry points to
 the cluster, the safest method is to set networkaddress.cache.ttl to a reasonable value.
-As with the IP address method, the CQL driver still detect topology changes and reamin
+As with the IP address method, the CQL driver still detect topology changes and remain
 connected even if a node moves.
 
 ## Configuring the CQL Driver
