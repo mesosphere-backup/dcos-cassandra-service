@@ -125,11 +125,9 @@ public class CassandraDaemonTask extends CassandraTask {
     }
 
     private static CassandraConfig updateConfig(
-        final CassandraMode mode,
+        final Protos.TaskState state,
         final CassandraConfig config) {
-        // If the Cassandra daemon has transitioned to the NORMAL mode, remove the replaceIp so that the next
-        // time Cassandra starts, it does not have the startup argument -Dcassandra.replace_address=<replaceIp>.
-        if (CassandraMode.NORMAL.equals(mode)) {
+        if (Protos.TaskState.TASK_RUNNING.equals(state)) {
             return config.mutable().setReplaceIp("").build();
         } else {
             return config;
@@ -218,7 +216,7 @@ public class CassandraDaemonTask extends CassandraTask {
                     .setData(getData().updateDaemon(
                         daemonStatus.getState(),
                         daemonStatus.getMode(),
-                        updateConfig(daemonStatus.getMode(), getConfig())
+                        updateConfig(daemonStatus.getState(), getConfig())
                     ).getBytes()).build()
             );
         }
