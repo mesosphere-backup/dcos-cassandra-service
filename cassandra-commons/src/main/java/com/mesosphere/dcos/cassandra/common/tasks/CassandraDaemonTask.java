@@ -311,7 +311,7 @@ public class CassandraDaemonTask extends CassandraTask {
                     .setVisibility(DiscoveryInfo.Visibility.EXTERNAL)
                     .setName(clusterName + "." + nodeName);
             discoveryBuilder.getPortsBuilder().addPortsBuilder()
-                    .setName("NativeTransport")
+                    .setName("nativetransport")
                     .setNumber(nativePort);
             return discoveryBuilder.build();
         }
