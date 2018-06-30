@@ -322,6 +322,13 @@ public class CassandraSchedulerTest {
         update();
     }
 
+    @Test(expected = RuntimeException.class)
+    // Test that the scheduler throws a RuntimeException if the scheduler driver sends an error.
+    public void testSchedulerDriverError() throws Exception {
+        install();
+        scheduler.error(driver, "scheduler driver error");
+    }
+
     private void update() {
         scheduler.registered(driver, frameworkId, Protos.MasterInfo.getDefaultInstance());
         runReconcile(driver);

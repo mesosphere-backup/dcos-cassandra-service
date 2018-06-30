@@ -341,6 +341,8 @@ public class CassandraScheduler implements Scheduler, Observer {
     @Override
     public void error(SchedulerDriver driver, String message) {
         LOGGER.error("Scheduler driver error: {}", message);
+        // At this point the scheduler driver is already aborted, so there is no point staying alive.
+        throw new RuntimeException("Scheduler driver has been aborted because of error: " + message);
     }
 
     private List<Protos.Offer> filterAcceptedOffers(List<Protos.Offer> offers,
