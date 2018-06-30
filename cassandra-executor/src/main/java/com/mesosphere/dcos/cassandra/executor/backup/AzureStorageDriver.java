@@ -18,17 +18,20 @@ import org.xerial.snappy.SnappyOutputStream;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutputStream.ORIGINAL_SIZE_KEY;
@@ -41,8 +44,8 @@ import static com.mesosphere.dcos.cassandra.executor.backup.azure.PageBlobOutput
  */
 public class AzureStorageDriver implements BackupStorageDriver {
 
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
+private static final Logger LOGGER = LoggerFactory.getLogger(
+            AzureStorageDriver.class);
   private static final int DEFAULT_PART_SIZE_UPLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
   private static final int DEFAULT_PART_SIZE_DOWNLOAD = 4 * 1024 * 1024; // Chunk size set to 4MB
 
@@ -62,7 +65,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
     final File dataDirectory = new File(localLocation);
     if (container == null || !dataDirectory.isDirectory()) {
-      logger.error("Error uploading snapshots.  Unable to connect to {}, for container {} or Directory {} doesn't exist.",
+      LOGGER.error("Error uploading snapshots.  Unable to connect to {}, for container {} or Directory {} doesn't exist.",
         ctx.getExternalLocation(), containerName, localLocation);
       return;
     }
@@ -74,38 +77,38 @@ public class AzureStorageDriver implements BackupStorageDriver {
         // Only enter keyspace directory.
         continue;
       }
-      logger.info("Entering keyspace: {}", keyspaceDir.getName());
-      for (File cfDir : keyspaceDir.listFiles()) {
-        logger.info("Entering column family: {}", cfDir.getName());
+      LOGGER.info("Entering keyspace: {}", keyspaceDir.getName());
+      for (File cfDir : getColumnFamilyDir(keyspaceDir)) {
+        LOGGER.info("Entering column family: {}", cfDir.getName());
         File snapshotDir = new File(cfDir, "snapshots");
         File backupDir = new File(snapshotDir, backupName);
         if (!StorageUtil.isValidBackupDir(keyspaceDir, cfDir, snapshotDir, backupDir)) {
-          logger.info("Skipping directory: {}", snapshotDir.getAbsolutePath());
+          LOGGER.info("Skipping directory: {}", snapshotDir.getAbsolutePath());
           continue;
         }
-        logger.info(
+        LOGGER.info(
           "Valid backup directories. KeyspaceDir: {} | ColumnFamilyDir: {} | SnapshotDir: {} | BackupName: {}",
           keyspaceDir.getAbsolutePath(), cfDir.getAbsolutePath(),
           snapshotDir.getAbsolutePath(), backupName);
 
         final Optional<File> snapshotDirectory = StorageUtil.getValidSnapshotDirectory(snapshotDir, backupName);
-        logger.info("Valid snapshot directory: {}", snapshotDirectory.isPresent());
+        LOGGER.info("Valid snapshot directory: {}", snapshotDirectory.isPresent());
 
         if (snapshotDirectory.isPresent()) {
-          logger.info("Going to upload directory: {}", snapshotDirectory.get().getAbsolutePath());
+          LOGGER.info("Going to upload directory: {}", snapshotDirectory.get().getAbsolutePath());
 
           uploadDirectory(snapshotDirectory.get().getAbsolutePath(), container, containerName, key,
             keyspaceDir.getName(), cfDir.getName());
 
         } else {
-          logger.warn(
+          LOGGER.warn(
             "Snapshots directory: {} doesn't contain the current backup directory: {}",
             snapshotDir.getName(), backupName);
         }
       }
     }
 
-    logger.info("Done uploading snapshots for backup: {}", backupName);
+    LOGGER.info("Done uploading snapshots for backup: {}", backupName);
   }
 
   private void uploadDirectory(String localLocation,
@@ -115,7 +118,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
     String keyspaceName,
     String cfName) throws IOException {
 
-    logger.info(
+    LOGGER.info(
       "uploadDirectory() localLocation: {}, containerName: {}, key: {}, keyspaceName: {}, cfName: {}",
       localLocation, containerName, key, keyspaceName, cfName);
 
@@ -131,13 +134,22 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
   private void uploadFile(CloudBlobContainer container, String fileKey, File sourceFile) {
 
+    try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(sourceFile))) {
+
+      LOGGER.info("Initiating upload for file: {} | key: {}",
+        sourceFile.getAbsolutePath(), fileKey);
+      uploadStream(container, fileKey, inputStream);
+    } catch (IOException e) {
+      LOGGER.error("Unable to store blob", e);
+    }
+  }
+  
+  private void uploadStream(CloudBlobContainer container, String fileKey, InputStream inputStream) {
+
     PageBlobOutputStream pageBlobOutputStream = null;
     SnappyOutputStream compress = null;
     BufferedOutputStream bufferedOutputStream = null;
-    try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(sourceFile))) {
-
-      logger.info("Initiating upload for file: {} | key: {}",
-        sourceFile.getAbsolutePath(), fileKey);
+    try {
 
       final CloudPageBlob blob = container.getPageBlobReference(fileKey);
       pageBlobOutputStream = new PageBlobOutputStream(blob);
@@ -145,9 +157,8 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
       compress = new SnappyOutputStream(bufferedOutputStream, DEFAULT_PART_SIZE_UPLOAD);
       IOUtils.copy(inputStream, compress, DEFAULT_PART_SIZE_UPLOAD);
-
     } catch (StorageException | URISyntaxException | IOException e) {
-      logger.error("Unable to store blob", e);
+      LOGGER.error("Unable to store blob", e);
     } finally {
       IOUtils.closeQuietly(compress);  // super important that the compress close is called first in order to flush
       IOUtils.closeQuietly(bufferedOutputStream);
@@ -157,16 +168,8 @@ public class AzureStorageDriver implements BackupStorageDriver {
 
   @Override
   public void uploadSchema(BackupRestoreContext ctx, String schema) {
-    // ToDo : Add the upload schema to Azure.
-    // Path: <backupname/node-id/schema.cql>
-  }
-
-  @Override
-  public void download(BackupRestoreContext ctx) throws IOException {
-
     final String accountName = ctx.getAccountId();
     final String accountKey = ctx.getSecretKey();
-    final String localLocation = ctx.getLocalLocation();
     final String backupName = ctx.getName();
     final String nodeId = ctx.getNodeId();
 
@@ -175,57 +178,154 @@ public class AzureStorageDriver implements BackupStorageDriver {
     final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
 
     if (container == null) {
-      logger.error("Error uploading snapshots.  Unable to connect to {}, for container {}.",
-        ctx.getExternalLocation(), containerName, localLocation);
+      LOGGER.error("Error uploading schema.  Unable to connect to {}, for container {}.",
+        ctx.getExternalLocation(), containerName);
       return;
     }
-    String keyPrefix = String.format("%s/%s", backupName, nodeId);
 
-    final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, keyPrefix);
-    logger.info("Snapshot files for this node: {}", snapshotFileKeys);
+    final String key = backupName + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
+    uploadText(container, key, schema);
+  }
 
-    for (String fileKey : snapshotFileKeys.keySet()) {
-      downloadFile(localLocation, container, fileKey, snapshotFileKeys.get(fileKey));
+  private void uploadText(CloudBlobContainer container, String fileKey, String text) {
+    final InputStream inputStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+    LOGGER.info("Initiating upload for schema | key: {}", fileKey);
+    uploadStream(container, fileKey, inputStream);
+  }
+
+  @Override
+  public void download(BackupRestoreContext ctx) throws Exception {
+
+    final String accountName = ctx.getAccountId();
+    final String accountKey = ctx.getSecretKey();
+    final String localLocation = ctx.getLocalLocation();
+    final String backupName = ctx.getName();
+    final String nodeId = ctx.getNodeId();
+    final File[] keyspaces = getNonSystemKeyspaces(ctx);
+
+    final String containerName = StringUtils.lowerCase(getContainerName(ctx.getExternalLocation()));
+    // https://<account_name>.blob.core.windows.net/<container_name>
+    final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
+
+    if (container == null) {
+      LOGGER.error("Error downloading snapshots.  Unable to connect to {}, for container {}.",
+        ctx.getExternalLocation(), containerName);
+      return;
+    }
+
+    if (Objects.equals(ctx.getRestoreType(), new String("new"))) {
+      final String keyPrefix = String.format("%s/%s", backupName, nodeId);
+      final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, keyPrefix);
+      LOGGER.info("Snapshot files for this node: {}", snapshotFileKeys);
+      for (String fileKey : snapshotFileKeys.keySet()) {
+        downloadFile(container, fileKey, snapshotFileKeys.get(fileKey), localLocation + File.separator + fileKey);
+      }
+    } else {
+      for (File keyspace : keyspaces) {
+        for (File cfDir : getColumnFamilyDir(keyspace)) {
+          final String columnFamily = cfDir.getName().substring(0, cfDir.getName().indexOf("-"));
+          final Map<String, Long> snapshotFileKeys = getSnapshotFileKeys(container, 
+              backupName + "/" + nodeId + "/" + keyspace.getName() + "/" + columnFamily);
+          for (String fileKey : snapshotFileKeys.keySet()) {
+            final String destinationFile = cfDir.getAbsolutePath() + fileKey.substring(fileKey.lastIndexOf("/"));
+            downloadFile(container, fileKey, snapshotFileKeys.get(fileKey), destinationFile);
+            LOGGER.info("Keyspace {}, Column Family {}, FileKey {}, destination {}", keyspace, columnFamily, fileKey, destinationFile);
+          }
+        }
+      }
     }
   }
 
-  private void downloadFile(String localLocation, CloudBlobContainer container, String fileKey, long originalSize) {
+  private void downloadFile(CloudBlobContainer container, 
+                            String fileKey, 
+                            long originalSize, 
+                            String destinationFile) throws Exception {
+    try {
+      final File snapshotFile = new File(destinationFile);
+      // Only create parent directory once, if it doesn't exist.
+      final File parentDir = new File(snapshotFile.getParent());
+      if (!parentDir.isDirectory()) {
+        final boolean parentDirCreated = parentDir.mkdirs();
+        if (!parentDirCreated) {
+          LOGGER.error(
+            "Error creating parent directory for file: {}. Skipping to next",
+            destinationFile);
+          return;
+        }
+      }
 
-    logger.info("Downloading |  Local location {} | fileKey: {} | Size: {}", localLocation, fileKey, originalSize);
+      snapshotFile.createNewFile();
 
-    final String fileLocation = localLocation + File.separator + fileKey;
-    File file = new File(fileLocation);
-    // Only create parent directory once, if it doesn't exist.
-    if (!createParentDir(file)) {
-      logger.error("Unable to create parent directories!");
-      return;
-    }
+      InputStream inputStream = null;
+      SnappyInputStream compress = null;
 
-    InputStream inputStream = null;
-    SnappyInputStream compress = null;
+      try (FileOutputStream fileOutputStream = new FileOutputStream(snapshotFile, true);
+           BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream)) {
 
-    try (
-      FileOutputStream fileOutputStream = new FileOutputStream(file, true);
-      BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream)) {
+        final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
+        inputStream = new PageBlobInputStream(pageBlobReference);
+        compress = new SnappyInputStream(inputStream);
 
-      final CloudPageBlob pageBlobReference = container.getPageBlobReference(fileKey);
-      inputStream = new PageBlobInputStream(pageBlobReference);
-      compress = new SnappyInputStream(inputStream);
-
-      IOUtils.copy(compress, bos, DEFAULT_PART_SIZE_DOWNLOAD);
-
+        IOUtils.copy(compress, bos, DEFAULT_PART_SIZE_DOWNLOAD);
+      } finally {
+        IOUtils.closeQuietly(compress);
+        IOUtils.closeQuietly(inputStream);
+      }
     } catch (Exception e) {
-      logger.error("Unable to write file: {}", fileKey, e);
-    } finally {
-      IOUtils.closeQuietly(compress);
-      IOUtils.closeQuietly(inputStream);
+      LOGGER.error("Error downloading the file {} : {}", destinationFile, e);
+      throw new Exception(e);
     }
+  }
+
+  private File[] getNonSystemKeyspaces(BackupRestoreContext ctx) {
+    File file = new File(ctx.getLocalLocation());
+    File[] directories = file.listFiles(
+        (current, name) -> new File(current, name).isDirectory() &&
+                           name.compareTo("system") != 0);
+    return directories;
+  }
+
+  private static File[] getColumnFamilyDir(File keyspace) {
+    return keyspace.listFiles(
+        (current, name) -> new File(current, name).isDirectory());
   }
 
   @Override
   public String downloadSchema(BackupRestoreContext ctx) throws Exception {
-    // ToDo : Add the download schema to Azure.
-    return new String("");
+    final String accountName = ctx.getAccountId();
+    final String accountKey = ctx.getSecretKey();
+    final String backupName = ctx.getName();
+    final String nodeId = ctx.getNodeId();
+
+    final String containerName = StringUtils.lowerCase(getContainerName(ctx.getExternalLocation()));
+    // https://<account_name>.blob.core.windows.net/<container_name>
+    final CloudBlobContainer container = getCloudBlobContainer(accountName, accountKey, containerName);
+
+    if (container == null) {
+      LOGGER.error("Error downloading snapshots.  Unable to connect to {}, for container {}.",
+        ctx.getExternalLocation(), containerName);
+      return new String("");
+    }
+
+    final String key = backupName + "/" + nodeId + "/" + StorageUtil.SCHEMA_FILE;
+
+    InputStream inputStream = null;
+    SnappyInputStream compress = null;
+    
+    try {
+      final CloudPageBlob pageBlobReference = container.getPageBlobReference(key);
+      inputStream = new PageBlobInputStream(pageBlobReference);
+      compress = new SnappyInputStream(inputStream);
+
+      return IOUtils.toString(compress, "UTF-8");
+
+    } catch (Exception e) {
+      LOGGER.error("Unable to read schema from: {}", key, e);
+      return new String("");
+    } finally {
+      IOUtils.closeQuietly(compress);
+      IOUtils.closeQuietly(inputStream);
+    }
   }
 
   private String getContainerName(String externalLocation) {
@@ -247,23 +347,11 @@ public class AzureStorageDriver implements BackupStorageDriver {
         container = serviceClient.getContainerReference(containerName);
         container.createIfNotExists();
       } catch (StorageException | URISyntaxException | InvalidKeyException e) {
-        logger.error("Error connecting to container for account {} and container name {}", accountName, containerName, e);
+        LOGGER.error("Error connecting to container for account {} and container name {}", accountName, containerName, e);
       }
     }
 
     return container;
-  }
-
-  private boolean createParentDir(File file) {
-    final File parentDir = new File(file.getParent());
-    if (!parentDir.isDirectory()) {
-      final boolean parentDirCreated = parentDir.mkdirs();
-      if (!parentDirCreated) {
-        logger.error("Error creating parent directory for file: {}. Skipping to next");
-        return false;
-      }
-    }
-    return true;
   }
 
   private Map<String, Long> getSnapshotFileKeys(CloudBlobContainer container, String keyPrefix) {
@@ -277,7 +365,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
         }
       }
     } catch (StorageException e) {
-      logger.error("Unable to retrieve metadata.", e);
+      LOGGER.error("Unable to retrieve metadata.", e);
       // all or none
       snapshotFiles = new HashMap<>();
     }
@@ -293,7 +381,7 @@ public class AzureStorageDriver implements BackupStorageDriver {
       try {
         size = Long.parseLong(map.get(ORIGINAL_SIZE_KEY));
       } catch (Exception e) {
-        logger.error("File size metadata missing or is not a number.");
+        LOGGER.error("File size metadata missing or is not a number.");
       }
     }
 
