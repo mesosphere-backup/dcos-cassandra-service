@@ -1,0 +1,391 @@
+name: {{SERVICE_NAME}}
+scheduler:
+  principal: {{SERVICE_PRINCIPAL}}
+  user: {{SERVICE_USER}}
+pods:
+  node:
+    count: {{NODES}}
+    placement: '{{{PLACEMENT_CONSTRAINT}}}'
+    {{#ENABLE_VIRTUAL_NETWORK}}
+    networks:
+      {{VIRTUAL_NETWORK_NAME}}:
+        labels: {{VIRTUAL_NETWORK_PLUGIN_LABELS}}
+    {{/ENABLE_VIRTUAL_NETWORK}}
+    volume:
+      path: container-path
+      type: {{CASSANDRA_DISK_TYPE}}
+      size: {{CASSANDRA_DISK_MB}}
+    uris:
+      - {{CASSANDRA_JAVA_URI}}
+      - {{CASSANDRA_PYTHON_URI}}
+      - {{CASSANDRA_OPENSSL_URI}}
+      - {{CASSANDRA_URI}}
+      - {{BOOTSTRAP_URI}}
+    rlimits:
+      RLIMIT_NOFILE:
+        soft: {{RLIMIT_NOFILE_SOFT}}
+        hard: {{RLIMIT_NOFILE_HARD}}
+    resource-sets:
+      server-resources:
+        cpus: {{CASSANDRA_CPUS}}
+        memory: {{CASSANDRA_MEMORY_MB}}
+        ports:
+          jmx:
+            port: {{TASKCFG_ALL_JMX_PORT}}
+          storage:
+            port: {{TASKCFG_ALL_CASSANDRA_STORAGE_PORT}}
+          ssl:
+            port: {{TASKCFG_ALL_CASSANDRA_SSL_STORAGE_PORT}}
+          native-client:
+            port: {{TASKCFG_ALL_CASSANDRA_NATIVE_TRANSPORT_PORT}}
+            advertise: true
+          {{#TASKCFG_ALL_CASSANDRA_START_RPC}}
+          thrift-client:
+            port: {{TASKCFG_ALL_CASSANDRA_RPC_PORT}}
+            advertise: true
+          {{/TASKCFG_ALL_CASSANDRA_START_RPC}}
+      sidecar-resources:
+        cpus: 1
+        memory: 1024
+    tasks:
+      server:
+        goal: RUNNING
+        resource-set: server-resources
+        cmd: |
+                set -e
+
+                ./bootstrap
+                export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jdk*/jre/)
+                ARGS='-f'
+
+                if [ -n "$STATSD_UDP_HOST" ]; then
+                    ARGS="$ARGS -Dcassandra.metricsReporterConfigFile=metrics-reporter-config.yaml"
+                fi
+
+                if [ "$CASSANDRA_USER" = "root" ]; then
+                    ARGS="$ARGS -R"
+                fi
+
+                # Honor jmx_port config otherwise Cassandra will hardcode to 7199
+                sed -i 's/JMX_PORT=.*/JMX_PORT="{{TASKCFG_ALL_JMX_PORT}}"/' apache-cassandra-{{CASSANDRA_VERSION}}/conf/cassandra-env.sh
+
+                exec ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/cassandra $ARGS
+        configs:
+          cassandra:
+            template: cassandra.yaml
+            dest: apache-cassandra-{{CASSANDRA_VERSION}}/conf/cassandra.yaml
+          jvm:
+            template: jvm_{{CASSANDRA_HEAP_GC}}.options
+            dest: apache-cassandra-{{CASSANDRA_VERSION}}/conf/jvm.options
+          metrics:
+            template: metrics-reporter-config.yaml
+            dest: apache-cassandra-{{CASSANDRA_VERSION}}/conf/metrics-reporter-config.yaml
+          rack:
+            template: cassandra-rackdc.properties
+            dest: apache-cassandra-{{CASSANDRA_VERSION}}/conf/cassandra-rackdc.properties
+        readiness-check:
+          cmd: >
+                export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jdk*/jre/) ;
+                export TASK_IP=$(./bootstrap --get-task-ip) &&
+                ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/nodetool status -p {{TASKCFG_ALL_JMX_PORT}} | grep -q "UN  $TASK_IP"
+          interval: {{READINESS_CHECK_INTERVAL}}
+          delay: {{READINESS_CHECK_DELAY}}
+          timeout: {{READINESS_CHECK_TIMEOUT}}
+        {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+        transport-encryption:
+          - name: node
+            type: KEYSTORE
+        {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+      repair:
+        goal: ONCE
+        cmd: export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jdk*/jre/) && ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/nodetool repair -pr -p ${JMX_PORT} -- $CASSANDRA_KEYSPACE
+        resource-set: sidecar-resources
+      cleanup:
+        goal: ONCE
+        cmd: export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jdk*/jre/) && ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/nodetool cleanup -p ${JMX_PORT} -- $CASSANDRA_KEYSPACE
+        resource-set: sidecar-resources
+      backup-schema:
+        goal: ONCE
+        cmd: >
+                export PATH=$MESOS_SANDBOX/python-dist/bin:$PATH ;
+                export LD_LIBRARY_PATH=$MESOS_SANDBOX/openssl-dist:$LD_LIBRARY_PATH ;
+        {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+                ./bootstrap --resolve=false
+
+                export SSL_CERTFILE=$MESOS_SANDBOX/cqlsh.ca ;
+        {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+                mkdir container-path/snapshot ;
+                ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/cqlsh {{{CASSANDRA_CQLSH_SSL_FLAGS}}} -e "DESC SCHEMA" "node-${POD_INSTANCE_INDEX}-server.${FRAMEWORK_HOST}" ${CASSANDRA_NATIVE_TRANSPORT_PORT} > container-path/snapshot/schema.cql
+        resource-set: sidecar-resources
+        {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+        configs:
+          cqlshrc:
+            template: cqlshrc
+            dest: ./apache-cassandra-{{CASSANDRA_VERSION}}/conf/cqlshrc
+        transport-encryption:
+          - name: cqlsh
+            type: TLS
+        {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+      snapshot:
+        goal: ONCE
+        cmd: >
+                export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jdk*/jre/) ;
+                ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/nodetool snapshot -p ${JMX_PORT} -t "$SNAPSHOT_NAME" -- $(eval "echo $CASSANDRA_KEYSPACES")
+
+                for f in $(find container-path/data/ -type d -name "$SNAPSHOT_NAME") ; do
+                    qualified_table="$(echo "$f" | sed -E 's/[^\/]+\/[^\/]+\/([^\/]+)\/([^-]+)-.*/\1 \2/g')" ;
+                    keyspace=$(echo "$qualified_table" | cut -d ' ' -f 1) ;
+                    table=$(echo "$qualified_table" | cut -d ' ' -f 2) ;
+
+                    mkdir -p container-path/snapshot/"$keyspace" ;
+                    (cd container-path/snapshot/"$keyspace" && ln -s ../../../"$f" "$table") ;
+                done
+        resource-set: sidecar-resources
+      upload-s3:
+        goal: ONCE
+        cmd: >
+                export PATH=$MESOS_SANDBOX/python-dist/bin:$PATH ;
+                export LD_LIBRARY_PATH=$MESOS_SANDBOX/openssl-dist:$LD_LIBRARY_PATH ;
+                if [ ! -z $S3_ENDPOINT_URL ]; then ENDPOINT="--endpoint-url=${S3_ENDPOINT_URL}"; fi ;
+                aws s3 cp container-path/snapshot/ s3://${S3_BUCKET_NAME}/${SNAPSHOT_NAME}/node-${POD_INSTANCE_INDEX}/ --recursive $ENDPOINT
+        resource-set: sidecar-resources
+      upload-azure:
+        goal: ONCE
+        cmd: >
+                export PATH=$MESOS_SANDBOX/python-dist/bin:$PATH ;
+                export LD_LIBRARY_PATH=$MESOS_SANDBOX/openssl-dist:$LD_LIBRARY_PATH ;
+                az login -u $CLIENT_ID --service-principal --tenant $TENANT_ID -p $CLIENT_SECRET
+
+                (cd container-path && tar cvhzf snapshot.tar.gz snapshot/) ;
+                az storage blob upload -c "$CONTAINER_NAME" -f container-path/snapshot.tar.gz -n node-${POD_INSTANCE_INDEX}.tar.gz
+        resource-set: sidecar-resources
+      cleanup-snapshot:
+        goal: ONCE
+        cmd: >
+                export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jdk*/jre/) ;
+                ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/nodetool clearsnapshot -p ${JMX_PORT} -t "$SNAPSHOT_NAME" -- $(eval "echo $CASSANDRA_KEYSPACES") ;
+                rm -r container-path/snapshot
+        resource-set: sidecar-resources
+      fetch-s3:
+        goal: ONCE
+        cmd: >
+                export PATH=$MESOS_SANDBOX/python-dist/bin:$PATH ;
+                export LD_LIBRARY_PATH=$MESOS_SANDBOX/openssl-dist:$LD_LIBRARY_PATH ;
+                mkdir container-path/snapshot ;
+                if [ ! -z $S3_ENDPOINT_URL ]; then ENDPOINT="--endpoint-url=${S3_ENDPOINT_URL}"; fi ;
+                aws s3 cp s3://${S3_BUCKET_NAME}/${SNAPSHOT_NAME}/node-${POD_INSTANCE_INDEX} container-path/snapshot --recursive $ENDPOINT
+        resource-set: sidecar-resources
+      fetch-azure:
+        goal: ONCE
+        cmd: >
+                export PATH=$MESOS_SANDBOX/python-dist/bin:$PATH ;
+                export LD_LIBRARY_PATH=$MESOS_SANDBOX/openssl-dist:$LD_LIBRARY_PATH ;
+                az login -u $CLIENT_ID --service-principal --tenant $TENANT_ID -p $CLIENT_SECRET
+
+                az storage blob download -c "$CONTAINER_NAME" -f container-path/snapshot.tar.gz -n node-${POD_INSTANCE_INDEX}.tar.gz ;
+                (cd container-path && tar xvzf snapshot.tar.gz)
+
+                rm container-path/snapshot.tar.gz
+        resource-set: sidecar-resources
+      restore-schema:
+        goal: ONCE
+        cmd: >
+                export PATH=$MESOS_SANDBOX/python-dist/bin:$PATH ;
+                export LD_LIBRARY_PATH=$MESOS_SANDBOX/openssl-dist:$LD_LIBRARY_PATH ;
+        {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+                ./bootstrap --resolve=false
+
+                export SSL_CERTFILE=$MESOS_SANDBOX/cqlsh.ca ;
+        {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+                ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/cqlsh {{{CASSANDRA_CQLSH_SSL_FLAGS}}} -e "source 'container-path/snapshot/schema.cql'" node-${POD_INSTANCE_INDEX}-server.${FRAMEWORK_HOST} ${CASSANDRA_NATIVE_TRANSPORT_PORT}
+        resource-set: sidecar-resources
+        {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+        configs:
+          cqlshrc:
+            template: cqlshrc
+            dest: ./apache-cassandra-{{CASSANDRA_VERSION}}/conf/cqlshrc
+        transport-encryption:
+          - name: cqlsh
+            type: TLS
+        {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+      restore-snapshot:
+        goal: ONCE
+        cmd: >
+                ./bootstrap --resolve=false ;
+                export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jdk*/jre/) ;
+                for f in $(find container-path/snapshot/ -maxdepth 1 -mindepth 1 -type d ! -name "system_*" ! -name "system") ; do
+                    for t in $(find "$f" -maxdepth 1 -mindepth 1 -type d) ; do
+                        ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/sstableloader \
+                {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+                            --keystore node.keystore \
+                            --keystore-password notsecure \
+                            --truststore node.truststore \
+                            --truststore-password notsecure \
+                            --ssl-protocol TLSv1.2 \
+                            --ssl-ciphers TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA \
+                {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+                            -f ./apache-cassandra-{{CASSANDRA_VERSION}}/conf/cassandra.yaml \
+                            -d ${LOCAL_SEEDS} \
+                            -p ${CASSANDRA_NATIVE_TRANSPORT_PORT} "$t" ;
+                        result=$?
+                        if [ $result != 0 ]
+                        then
+                            echo sstableloader failed with exit code $result
+                            exit $result
+                        fi
+                    done
+                done
+
+                rm -r container-path/snapshot
+        resource-set: sidecar-resources
+        configs:
+          cassandra:
+            template: cassandra.yaml
+            dest: apache-cassandra-{{CASSANDRA_VERSION}}/conf/cassandra.yaml
+        {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+        transport-encryption:
+          - name: node
+            type: KEYSTORE
+        {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+      init_system_keyspaces:
+        goal: ONCE
+        cmd: >
+                export PATH=$MESOS_SANDBOX/python-dist/bin:$PATH ;
+                export LD_LIBRARY_PATH=$MESOS_SANDBOX/openssl-dist:$LD_LIBRARY_PATH ;
+                echo Using $(python --version 2>&1) in $(which python) ;
+                {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+                export SSL_CERTFILE=$MESOS_SANDBOX/cqlsh.ca ;
+                {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+                ./bootstrap --resolve=false &&
+                ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/cqlsh {{{CASSANDRA_CQLSH_SSL_FLAGS}}} -e "alter keyspace system_traces      WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};" "node-0-server.${FRAMEWORK_HOST}" {{TASKCFG_ALL_CASSANDRA_NATIVE_TRANSPORT_PORT}} &&
+                ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/cqlsh {{{CASSANDRA_CQLSH_SSL_FLAGS}}} -e "alter keyspace system_auth        WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};" "node-0-server.${FRAMEWORK_HOST}" {{TASKCFG_ALL_CASSANDRA_NATIVE_TRANSPORT_PORT}} &&
+                ./apache-cassandra-{{CASSANDRA_VERSION}}/bin/cqlsh {{{CASSANDRA_CQLSH_SSL_FLAGS}}} -e "alter keyspace system_distributed WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};" "node-0-server.${FRAMEWORK_HOST}" {{TASKCFG_ALL_CASSANDRA_NATIVE_TRANSPORT_PORT}}
+        resource-set: sidecar-resources
+        configs:
+          cassandra:
+            template: cassandra.yaml
+            dest: apache-cassandra-{{CASSANDRA_VERSION}}/conf/cassandra.yaml
+          cqlshrc:
+            template: cqlshrc
+            dest: ./apache-cassandra-{{CASSANDRA_VERSION}}/conf/cqlshrc
+        {{#TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+        transport-encryption:
+          - name: cqlsh
+            type: TLS
+        {{/TASKCFG_ALL_SECURITY_TRANSPORT_ENCRYPTION_ENABLED}}
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      node-deploy:
+        strategy: serial
+        pod: node
+        steps:
+          - 0: [[server], [init_system_keyspaces]]
+          - default: [[server]]
+  replace:
+    strategy: serial
+    phases:
+      node-deploy:
+        strategy: serial
+        pod: node
+        steps:
+          - default: [[server]]
+  repair:
+    strategy: serial
+    phases:
+      repair-deploy:
+        strategy: serial
+        pod: node
+        steps:
+          - default: [[repair]]
+  cleanup:
+    strategy: serial
+    phases:
+      cleanup-deploy:
+        strategy: serial
+        pod: node
+        steps:
+          - default: [[cleanup]]
+  backup-s3:
+    strategy: serial
+    phases:
+      backup-schema:
+        strategy: serial
+        pod: node
+        steps:
+          - default: [[backup-schema]]
+      create-snapshots:
+        strategy: parallel
+        pod: node
+        steps:
+          - default: [[snapshot]]
+      upload-backups:
+        strategy: {{BACKUP_RESTORE_STRATEGY}}
+        pod: node
+        steps:
+          - default: [[upload-s3]]
+      cleanup-snapshots:
+        strategy: {{BACKUP_RESTORE_STRATEGY}}
+        pod: node
+        steps:
+          - default: [[cleanup-snapshot]]
+  restore-s3:
+    strategy: serial
+    phases:
+      fetch-s3:
+        strategy: {{BACKUP_RESTORE_STRATEGY}}
+        pod: node
+        steps:
+          - default: [[fetch-s3]]
+      restore-schema:
+        strategy: serial
+        pod: node
+        steps:
+          - default: [[restore-schema]]
+      restore-snapshots:
+        strategy: {{BACKUP_RESTORE_STRATEGY}}
+        pod: node
+        steps:
+          - default: [[restore-snapshot]]
+  backup-azure:
+    strategy: serial
+    phases:
+      backup-schema:
+        strategy: serial
+        pod: node
+        steps:
+          - default: [[backup-schema]]
+      create-snapshots:
+        strategy: parallel
+        pod: node
+        steps:
+          - default: [[snapshot]]
+      upload-backups:
+        strategy: {{BACKUP_RESTORE_STRATEGY}}
+        pod: node
+        steps:
+          - default: [[upload-azure]]
+      cleanup-snapshots:
+        strategy: {{BACKUP_RESTORE_STRATEGY}}
+        pod: node
+        steps:
+          - default: [[cleanup-snapshot]]
+  restore-azure:
+    strategy: serial
+    phases:
+      fetch-azure:
+        strategy: {{BACKUP_RESTORE_STRATEGY}}
+        pod: node
+        steps:
+          - default: [[fetch-azure]]
+      restore-schema:
+        strategy: serial
+        pod: node
+        steps:
+          - default: [[restore-schema]]
+      restore-snapshots:
+        strategy: {{BACKUP_RESTORE_STRATEGY}}
+        pod: node
+        steps:
+          - default: [[restore-snapshot]]

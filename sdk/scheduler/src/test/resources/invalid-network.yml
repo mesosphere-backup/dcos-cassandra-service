@@ -1,0 +1,17 @@
+name: "invalid-network-definition"
+pods:
+  server:
+    count: 1
+    networks:
+      dcos:
+        host-ports: [8080]
+        container-ports: [4040]
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "cmd"
+        cpus: 1
+        memory: 1024
+        ports:
+          test:
+            port: 8080

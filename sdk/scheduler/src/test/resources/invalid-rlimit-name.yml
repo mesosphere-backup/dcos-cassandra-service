@@ -1,0 +1,15 @@
+name: "invalid-rlimit-name-test"
+pods:
+  meta-data:
+    count: 2
+    rlimits:
+      # Invalid rlimit. See man setrlimit for valid values.
+      RLIMIT_NONSENSE:
+        soft: 5
+        hard: 10
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "cmd"
+        cpus: 1
+        memory: 1024

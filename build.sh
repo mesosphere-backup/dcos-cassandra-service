@@ -1,56 +1,63 @@
 #!/usr/bin/env bash
+set -e
 
-# Prevent jenkins from immediately killing the script when a step fails, allowing us to notify github:
-set +e
-
-export REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $REPO_ROOT_DIR
-
-# Grab dcos-commons build/release tools:
-rm -rf dcos-commons-tools/ && curl https://infinity-artifacts.s3.amazonaws.com/dcos-commons-tools.tgz | tar xz
-
-# GitHub notifier config
-_notify_github() {
-    $REPO_ROOT_DIR/dcos-commons-tools/github_update.py $1 build $2
+usage() {
+    # This script does a full build/test of the SDK's own artifacts: bootstrap and default CLI
+    # This does not upload the artifacts, instead see test.sh or frameworks/*/build.sh.
+    # This script (and test.sh) are executed by CI upon pull requests to the repository, or may be run locally by developers.
+    echo "Syntax: build.sh [options]"
+    echo "Options:"
+    echo "  -b  Just build -- skip tests (or set GO_TESTS=false and JAVA_TESTS=false)"
+    echo "Env:"
+    echo "  BOOTSTRAP_DIR: Custom directory where bootstrap is located, or 'disable' to disable bootstrap build"
+    echo "  CLI_DIR: Custom directory where default CLI is located, or 'disable' to disable default CLI build"
 }
 
-# Build steps for Cassandra
+while getopts 'b' opt; do
+    case $opt in
+        b)
+            JAVA_TESTS="false"
+            export GO_TESTS="false"
+            ;;
+        \?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND-1))
 
-_notify_github pending "Build running"
+REPO_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Scheduler/Executor (Java):
+BOOTSTRAP_DIR=${BOOTSTRAP_DIR:=${REPO_ROOT_DIR}/sdk/bootstrap}
+CLI_DIR=${CLI_DIR:=${REPO_ROOT_DIR}/sdk/cli}
+EXECUTOR_DIR=${EXECUTOR_DIR:=${REPO_ROOT_DIR}/sdk/executor}
 
-./gradlew --refresh-dependencies distZip
-if [ $? -ne 0 ]; then
-  _notify_github failure "Gradle build failed"
-  exit 1
-fi
+DISABLED_VALUE="disable"
 
-# try disabling 'org.gradle.parallel', which seems to cause this step to hang:
-sed -i 's/parallel=true/parallel=false/g' gradle.properties
-./gradlew check
-if [ $? -ne 0 ]; then
-  _notify_github failure "Unit tests failed"
-  exit 1
-fi
-
-# CLI (Go):
-
-cd cli/ && ./build-cli.sh
-if [ $? -ne 0 ]; then
-  _notify_github failure "CLI build failed"
-  exit 1
-fi
 cd $REPO_ROOT_DIR
 
-_notify_github success "Build succeeded"
+##
+# GO BUILD
+##
 
-./dcos-commons-tools/publish_aws.py \
-  cassandra \
-  universe/ \
-  cassandra-scheduler/build/distributions/scheduler.zip \
-  cassandra-executor/build/distributions/executor.zip \
-  cli/dcos-cassandra/dcos-cassandra-darwin \
-  cli/dcos-cassandra/dcos-cassandra-linux \
-  cli/dcos-cassandra/dcos-cassandra.exe \
-  cli/python/dist/*.whl
+# Build Go bits: bootstrap and default CLI
+BOOTSTRAP_ARTIFACT=""
+if [ "$BOOTSTRAP_DIR" != $DISABLED_VALUE ]; then
+    # Produces: ${BOOTSTRAP_DIR}/bootstrap.zip
+    ${BOOTSTRAP_DIR}/build.sh
+fi
+if [ "$CLI_DIR" != $DISABLED_VALUE ]; then
+    # Produces: ${CLI_DIR}/dcos-service-cli-linux ${CLI_DIR}/dcos-service-cli-darwin ${CLI_DIR}/dcos-service-cli.exe
+    ${CLI_DIR}/build.sh
+fi
+
+##
+# JAVA BUILD
+##
+
+# Run ALL Java unit tests
+if [ x"${JAVA_TESTS:-true}" == x"true" ]; then
+    # Build steps for SDK libraries:
+    ./gradlew clean check
+fi

@@ -16,4 +16,9 @@
     <Match>
         <Bug code="SnVI"/>
     </Match>
+
+    <Match>
+        <Class name="com.mesosphere.sdk.executor.ProcessTask" />
+        <Bug pattern="DM_EXIT"/>
+    </Match>
 </FindBugsFilter>

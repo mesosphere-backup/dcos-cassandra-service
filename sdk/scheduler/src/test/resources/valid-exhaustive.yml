@@ -1,0 +1,133 @@
+name: "data-store"
+web-url: http://webui.data-store.mesos
+scheduler:
+  principal: "some-other-principal"
+  zookeeper: non-default-zk:2181
+pods:
+  meta-data:
+    placement: '[["hostname", "UNIQUE"]]'
+    count: 2
+    networks:
+      dcos:
+        labels: "key1:value1"
+    rlimits:
+      RLIMIT_AS:
+        soft: 5
+        hard: 10
+    volumes:
+      shared:
+        path: "shared-container-path"
+        type: ROOT
+        size: 3000
+    resource-sets:
+      meta-data-resources:
+        cpus: 0.1
+        gpus: 1.0
+        memory: 512
+        ports:
+          meta-data-http:
+            port: 8080
+            env-key: HTTP_PORT
+            advertise: true
+            vip:
+              port: 80
+        volumes:
+          index:
+            path: "index-container-path"
+            type: MOUNT
+            size: 4321
+          metadata:
+            path: "meta-data-container-path"
+            type: ROOT
+            size: 5000
+    tasks:
+      meta-data-task:
+        goal: RUNNING
+        cmd: "echo $TASK_NAME >> $TASK_NAME$CONTAINER_PATH_SUFFIX/output && sleep $SLEEP_DURATION"
+        resource-set: meta-data-resources
+        labels: "label1:label1-value,label2:label2-value"
+        env:
+          TASK_NAME: "meta-data"
+          CONTAINER_PATH_SUFFIX: "-container-path"
+          SLEEP_DURATION: "1000"
+        configs:
+          config-one:
+            template: config-one.conf.mustache
+            dest: conf/config-one.conf
+          config-two:
+            template: config-two.xml.mustache
+            dest: conf/config-two.xml
+        health-check:
+          cmd: "stat $TASK_NAME$CONTAINER_PATH_SUFFIX/output"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10
+        transport-encryption:
+          - name: secure-pod-pem
+            type: TLS
+          - name: different-cert
+            type: KEYSTORE
+  data-store:
+    placement: '[["hostname", "UNIQUE"]]'
+    count: 3
+    networks:
+      mesos-bridge:
+    resource-sets:
+      data-store-resources:
+        cpus: 0.1
+        memory: 512
+        ports:
+          data-http:
+            port: 8080
+            vip:
+              port: 80
+        volume:
+          path: "meta-data-container-path"
+          type: ROOT
+          size: 5000
+    tasks:
+      data-store-task:
+        goal: RUNNING
+        cmd: "echo $TASK_NAME >> $TASK_NAME$CONTAINER_PATH_SUFFIX/output && sleep $SLEEP_DURATION"
+        resource-set: data-store-resources
+        env:
+          TASK_NAME: "data-store"
+          CONTAINER_PATH_SUFFIX: "-container-path"
+          SLEEP_DURATION: "1000"
+        configs:
+          config-three:
+            template: config-three.conf.mustache
+            dest: conf/config-three.conf
+        health-check:
+          cmd: "stat $TASK_NAME$CONTAINER_PATH_SUFFIX/output"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10
+        transport-encryption:
+          - name: secure-pod-pem
+            type: KEYSTORE
+
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      journal-deploy:
+        strategy: serial
+        pod: journal
+      nn-deploy:
+        strategy: serial
+        pod: nn
+        steps:
+          - 0: [[format, routing]]
+          - 0: [[server]]
+          - 1: [[bootstrap]]
+          - 1: [[server]]
+      dn-deploy:
+        strategy: serial
+        pod: dn
+        steps:
+          - default: [[format, routing]]

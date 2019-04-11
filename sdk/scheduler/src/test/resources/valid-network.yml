@@ -1,0 +1,18 @@
+name: "valid-container-network-test"
+pods:
+  server:
+    count: 1
+    networks:
+      dcos:
+        labels: "key1:val1,key2:val2a:val2b"
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "cmd"
+        cpus: 1
+        memory: 1024
+        ports:
+          test:
+            port: 8080
+          test-2:
+            port: 8081

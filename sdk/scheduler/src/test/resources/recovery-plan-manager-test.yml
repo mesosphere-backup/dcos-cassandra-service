@@ -1,0 +1,10 @@
+name: "hello-world"
+pods:
+  test-task-type:
+    count: 1
+    tasks:
+      test-task-name:
+        goal: RUNNING
+        cmd: "echo 'Hello World'"
+        cpus: 1.0
+        memory: 1000

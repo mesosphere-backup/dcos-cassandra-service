@@ -1,0 +1,656 @@
+---
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: "DC/OS SDK API Reference"
+  description: "The DC/OS Stateful Service SDK"
+basePath: "/v1"
+tags:
+- name: "endpoints"
+  description: "The endpoints that the service offers for client access"
+- name: "plans"
+  description: "Deployment, maintenance, and recovery plans being executed by the service"
+- name: "pod"
+  description: "Management of the pods and tasks which are being managed by the service"
+- name: "artifacts"
+  description: "Files served by the service scheduler to its tasks"
+- name: "configurations"
+  description: "Historical and current target configurations for the service"
+- name: "state"
+  description: "Additional persisted state"
+- name: "metrics"
+  description: "Scheduler metrics"
+schemes:
+- "http"
+paths:
+  /endpoints:
+    get:
+      tags:
+      - "endpoints"
+      summary: "Returns connection information for all endpoints."
+      operationId: "endpointsList"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "format"
+        in: "query"
+        description: "The hostname format in the returned data, either unset for hostnames or 'native' for IPs."
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Connection information for all endpoints."
+        500:
+          description: "Failed to retrieve connection information."
+  /endpoints/{name}:
+    get:
+      tags:
+      - "endpoints"
+      summary: "Returns connection information for the requested endpoint."
+      operationId: "endpointsGet"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the endpoint."
+        required: true
+        type: "string"
+      - name: "format"
+        in: "query"
+        description: "The hostname format in the returned data, either unset for hostnames or 'native' for IPs."
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Connection information for the endpoint."
+        404:
+          description: "Requested endpoint not found."
+        500:
+          description: "Failed to retrieve connection information."
+  /plans:
+    get:
+      tags:
+      - "plans"
+      summary: "Returns list of all configured plans."
+      operationId: "plansList"
+      parameters: []
+      responses:
+        200:
+          description: "List of plans."
+        404:
+          description: "Plans not found."
+  /plans/{name}:
+    get:
+      tags:
+      - "plans"
+      summary: "Returns a full list of the Plan's contents (incl all Phases/Steps)."
+      operationId: "plansGet"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "List of the plan's contents."
+        404:
+          description: "Plan not found."
+        417:
+          description: "Plan is in an error state."
+  /plans/{name}/start:
+    post:
+      tags:
+      - "plans"
+      summary: "Restarts or resumes the execution of the plan. If the plan is complete, it is restarted. If the plan is stopped, its progress is resumed. If the plan is already in progress this has no effect."
+      operationId: "plansStart"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Received cmd: start"
+        404:
+          description: "Plan not found."
+  /plans/{name}/stop:
+    post:
+      tags:
+      - "plans"
+      summary: "Stops and resets the execution of the plan."
+      operationId: "plansStop"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Received cmd: stop"
+        404:
+          description: "Plan not found."
+  /plans/{plan}/continue:
+    post:
+      tags:
+      - "plans"
+      summary: "Continues the execution of the plan."
+      operationId: "plansContinue"
+      parameters:
+      - name: "plan"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Received cmd continue."
+        404:
+          description: "Plan not found."
+  /plans/{plan}/{phase}/continue:
+    post:
+      tags:
+      - "plans"
+      summary: "Continues the execution of the phase."
+      operationId: "plansPhaseContinue"
+      parameters:
+      - name: "plan"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      - name: "phase"
+        in: "query"
+        description: "The name or id of the phase."
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Received cmd continue."
+        404:
+          description: "Plan not found."
+  /plans/{plan}/forceComplete:
+    post:
+      tags:
+      - "plans"
+      summary: "Force complete your plan."
+      operationId: "plansForcecomplete"
+      parameters:
+      - name: "plan"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      - name: "phase"
+        in: "query"
+        description: "The name or id of the phase."
+        required: true
+        type: "string"
+      - name: "step"
+        in: "query"
+        description: "The name or id of the step."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Received cmd forceComplete."
+        404:
+          description: "Plan not found."
+  /plans/{plan}/interrupt:
+    post:
+      tags:
+      - "plans"
+      summary: "Interrupts the execution of the specified plan."
+      operationId: "plansInterrupt"
+      parameters:
+      - name: "plan"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Received cmd interrupt."
+        404:
+          description: "Plan not found."
+  /plans/{plan}/{phase}/interrupt:
+    post:
+      tags:
+      - "plans"
+      summary: "Interrupts the execution of the specified phase."
+      operationId: "plansPhaseInterrupt"
+      parameters:
+      - name: "plan"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      - name: "phase"
+        in: "query"
+        description: "The name or id of the phase."
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Received cmd interrupt."
+        404:
+          description: "Plan not found."
+  /plans/{plan}/restart:
+    post:
+      tags:
+      - "plans"
+      summary: "Restarts the specified plan or step regardless of its current state."
+      operationId: "plansRestart"
+      parameters:
+      - name: "plan"
+        in: "path"
+        description: "The name of the plan."
+        required: true
+        type: "string"
+      - name: "phase"
+        in: "query"
+        description: "The optional name or id of the phase."
+        required: false
+        type: "string"
+      - name: "step"
+        in: "query"
+        description: "The optional name or id of the step."
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Received cmd restart."
+        400:
+          description: "Only one of phase/step is specified. Either both or neither must be provided."
+        404:
+          description: "Plan not found."
+  /pod:
+    get:
+      tags:
+      - "pod"
+      summary: "Produces a listing of the names of all pods."
+      operationId: "podList"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "List of pods."
+        500:
+          description: "Failed to fetch list of pod names."
+  /pod/status:
+    get:
+      tags:
+      - "pod"
+      summary: "Produces a summarized listing of all pod statuses."
+      operationId: "podListStatus"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "List of pod statuses."
+        500:
+          description: "Failed to fetch list of pod statuses."
+  /pod/{name}/info:
+    get:
+      tags:
+      - "pod"
+      summary: "Returns information about the specified pod."
+      operationId: "podGet"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the pod."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Information about the pod."
+        404:
+          description: "Requested pod was not found."
+        500:
+          description: "Failed to fetch information for pod."
+  /pod/{name}/restart:
+    post:
+      tags:
+      - "pod"
+      summary: "Restarts a pod and attempts to relaunch it on the same cluster node."
+      operationId: "podRestart"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the pod."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Pod restarted."
+        404:
+          description: "Requested pod was not found."
+        409:
+          description: "Custom restart hook rejected pod restart."
+        500:
+          description: "Failed to restart pod."
+  /pod/{name}/replace:
+    post:
+      tags:
+      - "pod"
+      summary: "Restarts a pod and attempts to relaunch it on the next available cluster node."
+      operationId: "podReplace"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the pod."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Pod replaced."
+        404:
+          description: "Requested pod was not found."
+        409:
+          description: "Custom replace hook rejected pod replace."
+        500:
+          description: "Failed to replace pod."
+  /pod/{name}/start:
+    get:
+      tags:
+      - "pod"
+      summary: "Restarts a pod's tasks in normal execution mode following a prior 'stop' request."
+      operationId: "podStart"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the pod."
+        required: true
+        type: "string"
+      - name: "tasks"
+        in: "body"
+        description: "List of specific tasks in the pod to be started, otherwise all tasks are started"
+        required: false
+        schema:
+          type: "array"
+          items:
+            type: "string"
+      responses:
+        200:
+          description: "Pod started."
+        404:
+          description: "Requested pod was not found."
+        500:
+          description: "Failed to start pod."
+  /pod/{name}/status:
+    get:
+      tags:
+      - "pod"
+      summary: "Produces the status for the requested pod name."
+      operationId: "podStatus"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the pod."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Status of the pod."
+        404:
+          description: "Requested pod was not found."
+        500:
+          description: "Failed to fetch requested status for pod."
+  /pod/{name}/stop:
+    get:
+      tags:
+      - "pod"
+      summary: "Restarts a pod's tasks in a stopped state, allowing the tasks to be debugged. They may be resumed with a 'start' request."
+      operationId: "podStop"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "The name of the pod."
+        required: true
+        type: "string"
+      - name: "tasks"
+        in: "body"
+        description: "List of specific tasks in the pod to be stopped, otherwise all tasks are stopped"
+        required: false
+        schema:
+          type: "array"
+          items:
+            type: "string"
+      responses:
+        200:
+          description: "Pod stopped."
+        404:
+          description: "Requested pod was not found."
+        500:
+          description: "Failed to stop pod."
+  /artifacts/template/{configurationId}/{podType}/{taskName}/{configurationName}:
+    get:
+      tags:
+      - "artifacts"
+      summary: "Produces the content of a configuration file with mustache templating for rendering and use at a task."
+      operationId: "artifactsGet"
+      produces:
+      - "text/plain"
+      parameters:
+      - name: "configurationId"
+        in: "path"
+        description: "The ID of the configuration to be retrieved from."
+        required: true
+        type: "string"
+      - name: "podType"
+        in: "path"
+        description: "The pod type for the task."
+        required: true
+        type: "string"
+      - name: "taskName"
+        in: "path"
+        description: "The task name."
+        required: true
+        type: "string"
+      - name: "configurationName"
+        in: "path"
+        description: "The name of the configuration template file."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Content of the requested file with mustache templating."
+        400:
+          description: "Invalid request: configurationId couldn't be parsed as a UUID."
+        404:
+          description: "No file was found at that location."
+  /configurations:
+    get:
+      tags:
+      - "configurations"
+      summary: "Produces an ID listing of all stored configurations."
+      operationId: "configurationsList"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "List of stored configurations."
+        500:
+          description: "Failed to fetch list of configuration ids."
+  /configurations/{configurationId}:
+    get:
+      tags:
+      - "configurations"
+      summary: "Produces the content of the requested configuration ID."
+      operationId: "configurationsGet"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "configurationId"
+        in: "path"
+        description: "The ID of the configuration."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "The content of the configuration."
+        400:
+          description: "Invalid request: configurationId couldn't be parsed as a UUID."
+        404:
+          description: "Requested configuration was not found."
+        500:
+          description: "Failed to retrieve configuration with requested ID."
+  /configurations/targetId:
+    get:
+      tags:
+      - "configurations"
+      summary: "Produces the ID of the current target configuration."
+      operationId: "configurationsTargetidGet"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "The ID of the current target configuration."
+        404:
+          description: "No target configuration ID was found."
+        500:
+          description: "Failed to fetch target configuration ID."
+  /configurations/target:
+    get:
+      tags:
+      - "configurations"
+      summary: "Produces the content of the current target configuration."
+      operationId: "configurationsTargetGet"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "The content of the current target configuration."
+        404:
+          description: "No target configuration was found."
+        500:
+          description: "Failed to fetch target configuration."
+  /state/frameworkId:
+    get:
+      tags:
+      - "state"
+      summary: "Produces the currently registered Mesos Framework ID."
+      operationId: "stateFrameworkidGet"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "The current Framework ID."
+        404:
+          description: "No Framework ID was found."
+        500:
+          description: "Framework ID not available."
+  /state/properties:
+    get:
+      tags:
+      - "state"
+      summary: "Lists any custom property keys in persistent storage."
+      operationId: "statePropertiesList"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "The list of custom property keys."
+        500:
+          description: "Unable to fetch list of properties."
+  /state/properties/{key}:
+    get:
+      tags:
+      - "state"
+      summary: "Produces the content of the requested property key."
+      operationId: "statePropertiesGet"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "key"
+        in: "path"
+        description: "The name of the property to be retrieved."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "The deserialized content of the property."
+        404:
+          description: "Requested property wasn't found."
+        409:
+          description: "No deserializer was provided by the service developer to deserialize custom properties."
+        500:
+          description: "Failed to fetch requested property."
+  /state/refresh:
+    put:
+      tags:
+      - "state"
+      summary: "Refreshes the state cache. Should only be needed for debugging or if zk was manually edited while the scheduler is running."
+      operationId: "stateRefreshCache"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "The scheduler state cache has been cleared and updated with current zk content."
+        409:
+          description: "The scheduler isn't using a state cache so there's nothing to do."
+        500:
+          description: "Failed to retrieve state data from zk."
+  /metrics:
+    get:
+      tags:
+      - "metrics"
+      summary: "Returns a snapshot of the current scheduler metrics in JSON format."
+      operationId: "metricsJson"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "The metrics snapshot has been returned."
+  /metrics/prometheus:
+    get:
+      tags:
+      - "metrics"
+      summary: "Returns a snapshot of the current scheduler metrics in Prometheus format."
+      operationId: "metricsPrometheus"
+      produces:
+      - "text/plain"
+      responses:
+        200:
+          description: "The metrics snapshot has been returned."
+  /health:
+    get:
+      tags:
+      - "health"
+      summary: "Health check endpoint to be used by Marathon to determine Scheduler health based on the status of the 'deploy' and/or 'recovery' Plans."
+      operationId: "healthCheck"
+      produces:
+      - "text/plain"
+      responses:
+        200:
+          description: "All monitored Plans are complete."
+        202:
+          description: "One or more monitored plans is incomplete."
+        417:
+          description: "One or more monitored plans has an error."
+  /debug/offers:
+    get:
+      tags:
+      - "debug"
+      summary: "Returns an HTML table of Mesos Offers that were recently evaluated by the Scheduler. Used for manual debugging by operators"
+      operationId: "debugOffers"
+      produces:
+      - "text/html"
+      responses:
+        200:
+          description: "HTML table listing offer evaluation outcomes."
