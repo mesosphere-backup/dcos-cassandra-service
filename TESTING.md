@@ -61,17 +61,11 @@ The subfolders of the `frameworks` folder are considered frameworks. For example
 tree --dirsfirst -L 1 frameworks
 frameworks
 ├── cassandra
-├── elastic
-├── hdfs
-└── helloworld
 
 6 directories, 0 files
 ```
 The detected frameworks would be:
 - `cassandra`
-- `elastic`
-- `hdfs`
-- `helloworld`
 
 * If no `frameworks` folder exists
 

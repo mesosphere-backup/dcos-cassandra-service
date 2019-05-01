@@ -1836,7 +1836,7 @@ plans:
           - default: [[initialize], [server]]
 ```
 
-The plan defined above, the instance of the hello pod with index 0 should first have the initialize task run, followed by the server task. Because they refer to the same resource set and their commands print to the same file in the same volume, the sequencing of tasks has a cumulative effect on the container context. For a fully featured practical example of this pattern, [see the HDFS service here](https://github.com/mesosphere/dcos-commons/blob/master/frameworks/hdfs/src/main/dist/svc.yml).
+The plan defined above, the instance of the hello pod with index 0 should first have the initialize task run, followed by the server task. Because they refer to the same resource set and their commands print to the same file in the same volume, the sequencing of tasks has a cumulative effect on the container context. For a fully featured practical example of this pattern, [see the Cassandra service here](https://github.com/dcos-cassandra-service/blob/master/frameworks/cassandra/src/main/dist/svc.yml).
 
 ### Sidecar Plans
 

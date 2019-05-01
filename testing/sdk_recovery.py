@@ -25,10 +25,6 @@ def check_permanent_recovery(
 
     Any remaining pods are checked to ensure that their tasks are not changed.
 
-    For example, performing a pod replace kafka-0 on a Kafka framework should
-    result in ONLY the kafa-0-broker task being restarted. In this case,
-    pods_with_updated_tasks is specified as None.
-
     When performing a pod replace operation on a Cassandra seed node (node-0),
     a rolling restart of other nodes is triggered, and
     pods_with_updated_tasks = ["node-0", "node-1", "node-2"]

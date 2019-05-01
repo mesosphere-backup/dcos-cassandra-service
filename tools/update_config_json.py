@@ -118,11 +118,7 @@ def process(filename: str):
 
 if __name__ == "__main__":
     files = [
-        "frameworks/cassandra/universe/config.json",
-        "frameworks/elastic/universe-kibana/config.json",
-        "frameworks/elastic/universe/config.json",
-        "frameworks/hdfs/universe/config.json",
-        "frameworks/helloworld/universe/config.json",
+        "frameworks/cassandra/universe/config.json"
     ]
 
     for f in files:

@@ -10,7 +10,7 @@
 [__Slack__](http://chat.dcos.io)
 
 ---
-__DC/OS SDK__ is a collection of tools, libraries, and documentation for easy integration of technologies such as Kafka, Cassandra, HDFS, Spark, and TensorFlow with DC/OS.
+__DC/OS SDK__ is a collection of tools, libraries, and documentation for easy integration of technologies such as Cassandra with DC/OS.
 
 ---
 ### Understanding the Hello World Service Specification

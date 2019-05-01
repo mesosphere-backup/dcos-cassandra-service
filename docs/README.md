@@ -4,7 +4,7 @@
 
 # Creating Docs for the DC/OS SDK
 
-This directory contains developer-facing documentation of the SDK itself. User-facing documentation for the Cassandra, Elastic, HDFS, and Kafka services can be found at the [Main DC/OS docs site](https://docs.mesosphere.com/services/).
+This directory contains developer-facing documentation of the SDK itself. User-facing documentation for the Cassandra service can be found at the [Main DC/OS docs site](https://docs.mesosphere.com/services/cassandra).
 
 Docs are published automatically whenever a commit is pushed to `master`. The rendered HTML output is placed in a separate `gh-pages` branch by CI.
 You should therefore be able to simply edit the contents of this directory and have the changes apply shortly after they're merged into `master`.
